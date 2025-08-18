@@ -1,0 +1,25 @@
+google-api-python-client==2.116.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+requests
+openai
+loguru>=0.7.0            # Superior logging with automatic rotation and structured output
+qdrant-client
+PyPDF2
+pdfplumber
+pytesseract>=0.3.10      # Python wrapper for Tesseract OCR
+pdf2image>=1.16.3        # Convert PDF pages to images for OCR
+Pillow>=10.0.0           # Image processing for OCR
+opencv-python>=4.8.0     # Advanced image processing for better OCR
+numpy>=1.24.0            # Required by OpenCV
+python-dotenv
+mcp>=0.8.0
+spacy>=3.7.0
+librosa>=0.10.0
+openai-whisper
+psutil>=5.9.0
+scipy>=1.10.0
+python-dateutil>=2.8.2
+python-frontmatter>=1.0.0  # YAML frontmatter for markdown documents
+transformers>=4.30.0
+torch>=2.0.0

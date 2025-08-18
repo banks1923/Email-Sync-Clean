@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/ocr_coordinator.py
+# hypothesis_version: 6.138.2
+
+[0.0, 400, 'all_available', 'confidence', 'dependencies', 'error', 'images', 'metadata', 'method', 'ocr', 'ocr_engine', 'ocr_used', 'page_count', 'quality', 'rasterizer', 'ready', 'success', 'text', 'text_extraction', 'use_ocr']

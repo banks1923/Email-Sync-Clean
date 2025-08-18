@@ -1,0 +1,1104 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create analog database directory structure",
+        "description": "Set up the new file-based analog database directory structure with proper organization",
+        "details": "Create the analog_db/ directory with subdirectories: documents/ for individual markdown files and email_threads/ for grouped emails. Also create originals/ directory with pdfs/ and emails/ subdirectories for archiving original files organized by date. Use pathlib for cross-platform compatibility and implement proper error handling for directory creation.",
+        "testStrategy": "Verify directories are created with correct permissions, test with various file system scenarios, ensure proper error handling for permission issues",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create root analog_db directory with main subdirectories",
+            "description": "Set up the analog_db root directory and create the three main subdirectories: documents/, email_threads/, and originals/",
+            "dependencies": [],
+            "details": "Use pathlib.Path to create analog_db/ directory in project root. Create documents/ for individual markdown files, email_threads/ for grouped email conversations, and originals/ for archiving source files. Follow the pattern from SimpleDB._ensure_data_directories() method for consistency.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement cross-platform directory creation with error handling",
+            "description": "Create a robust directory creation function using pathlib that handles cross-platform paths and various error scenarios",
+            "dependencies": [],
+            "details": "Develop create_directory_structure() function that uses pathlib.Path.mkdir(parents=True, exist_ok=True) for safe creation. Implement try-except blocks to handle PermissionError, OSError, and other filesystem exceptions. Add logging for successful creation and error cases. Create subdirectories under originals/ (pdfs/ and emails/) with date-based organization support.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add directory validation and permissions checking",
+            "description": "Implement validation to ensure directories are created correctly with appropriate permissions and accessibility",
+            "dependencies": [
+              "1.1",
+              "1.2"
+            ],
+            "details": "Create validate_directory_structure() function to verify all required directories exist and are writable. Check permissions using Path.stat() and os.access() for read/write capabilities. Implement health check method that returns status of each directory. Add unit tests to verify directory creation under various scenarios including permission-restricted environments.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement AnalogDBProcessor orchestration class",
+        "description": "Create the main orchestration class that manages the analog database operations",
+        "details": "Build AnalogDBProcessor class (<450 lines) with methods for processing documents, managing file organization, and coordinating with existing services. Use dependency injection pattern for testability. Integrate with existing SimpleDB for metadata tracking. Include proper logging with loguru and error handling with retry mechanisms.",
+        "testStrategy": "Unit tests for all core methods, integration tests with existing services, error handling tests for file system operations",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design AnalogDBProcessor class architecture with dependency injection",
+            "description": "Create the class structure following existing service patterns with proper dependency injection setup",
+            "dependencies": [],
+            "details": "Design AnalogDBProcessor class following patterns from GmailService and PDFService. Define interfaces for dependencies (SimpleDB, file operations, retry mechanisms). Create __init__ method with dependency injection parameters for testability. Structure should support processing documents, managing file organization, and service coordination. Keep class focused and under 450 lines by delegating to injected services.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement core file organization methods",
+            "description": "Build methods for managing analog database file structure and operations",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "Implement methods for: create_document_path() using YYYY-MM-DD naming convention, organize_by_type() for categorizing files, move_to_analog_db() for file placement, validate_file_structure() for integrity checks. Leverage SimpleDB's existing file tracking patterns. Include proper path sanitization and cross-platform compatibility. Handle edge cases for duplicate names and special characters.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add SimpleDB integration and loguru logging",
+            "description": "Integrate with existing SimpleDB for metadata tracking and implement comprehensive logging",
+            "dependencies": [
+              "2.1",
+              "2.2"
+            ],
+            "details": "Add methods for: register_document() to track in SimpleDB, update_metadata() for status changes, query_documents() for retrieval. Implement loguru logging following project patterns with proper log levels and context binding. Use logger.bind() for operation tracking. Include structured logging for debugging and monitoring. Ensure all database operations are atomic and handle transaction rollbacks.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement error handling with retry mechanisms",
+            "description": "Add robust error handling using existing retry_helper utilities",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Integrate with existing retry_helper for transient failures. Implement custom exception classes for AnalogDB-specific errors. Add retry logic for file operations, database writes, and service calls. Include exponential backoff for rate-limited operations. Implement circuit breaker pattern for repeated failures. Ensure proper cleanup in error scenarios and maintain data consistency.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create comprehensive test suite",
+            "description": "Build unit and integration tests following project testing patterns",
+            "dependencies": [
+              "2.4"
+            ],
+            "details": "Create test_analog_db_processor.py with unit tests for all public methods. Mock dependencies for isolated testing. Add integration tests with real SimpleDB instance. Test error handling scenarios including file system failures and database errors. Verify retry mechanisms work correctly. Test file organization with various naming scenarios. Include performance tests for large batch operations. Follow existing test patterns from test_gmail_service.py and test_pdf_service.py.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Build DocumentConverter for PDF-to-markdown conversion",
+        "description": "Create converter that transforms PDF files into well-formatted markdown with metadata",
+        "details": "Implement DocumentConverter class leveraging existing PDF service infrastructure (pdf/main.py). Use python-frontmatter library for YAML metadata headers. Include file hash calculation using hashlib.sha256, OCR status detection, and proper content cleaning. Format output with document type, original filename, processing timestamp, file size, and page count. Integrate with existing OCR pipeline.",
+        "testStrategy": "Test with various PDF types (text-based, OCR-required, multi-page), validate markdown output format, verify metadata accuracy and completeness",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate with existing PDF service and analyze infrastructure",
+            "description": "Study and integrate with the existing PDF service infrastructure in pdf/main.py, understanding OCR coordinator, processors, and validators",
+            "dependencies": [],
+            "details": "Review pdf/main.py (503 lines) to understand PDFService class structure, OCR coordinator workflow, and existing text extraction methods. Identify integration points for DocumentConverter class including process_pdf(), extract_text_with_ocr(), and validation methods. Map out how DocumentConverter will leverage existing OCR detection logic, page processing, and error handling patterns. Document the existing metadata extraction capabilities to extend for markdown conversion.\n<info added on 2025-08-18T03:09:30.946Z>\nKey findings from pdf/main.py analysis and implications for DocumentConverter:\n\n• Verified that PDFService is the single entry-point; DocumentConverter will be invoked after PDFService completes validation and extraction.  \n• OCRCoordinator.process_pdf_with_ocr() already returns text, OCR confidence, and basic metadata, eliminating the need for duplicate OCR logic.  \n• EnhancedPDFProcessor.extract_and_chunk_pdf() produces paginated, chunked text; DocumentConverter can consume these chunks directly for markdown body creation.  \n• PDFValidator enforces file size/page limits; DocumentConverter must call it first to maintain unified validation flow.  \n• SHA-256 hashing is centralized in PDFStorage.hash_file(); incorporate hash into YAML header instead of recalculating.  \n• Legal metadata (author, title, dates) is accessible via EnhancedPDFProcessor and should be mapped to front-matter fields.  \n• Existing loguru setup captures warnings/errors; extend with converter-specific logs using same logger instance.  \n• Error handling patterns (custom exceptions, retry wrapper) should be mirrored to keep behavior consistent across services.\n\nAction items moving forward:\n\n1. Design DocumentConverter.process() to accept the structured output from OCRCoordinator and emit markdown with YAML front-matter (using python-frontmatter).  \n2. Define metadata mapping schema (filename, file_hash, page_count, file_size, extracted_on, ocr_required, ocr_confidence, legal_metadata).  \n3. Draft unit tests covering both text-based and scanned PDFs, ensuring markdown output matches expected template.\n</info added on 2025-08-18T03:09:30.946Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add python-frontmatter dependency and implement metadata generation",
+            "description": "Install python-frontmatter library and create YAML metadata header generation logic with all required fields",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Add python-frontmatter to requirements.txt or pyproject.toml. Implement metadata extraction methods to gather: document type detection, original filename preservation, processing timestamp (ISO format), file size calculation, page count extraction, OCR status (text-based vs OCR-required), and SHA-256 hash generation using hashlib. Create format_metadata() method that structures this data as YAML frontmatter compatible with python-frontmatter library standards.\n<info added on 2025-08-18T03:11:44.606Z>\nImplementation complete:\n\n• Added python-frontmatter>=1.0.0 to requirements.txt and validated installation (v1.1.0)  \n• Implemented _generate_metadata() covering filename, SHA-256 hash, file size, page count, extraction_method, ISO timestamp, ocr_required / ocr_confidence, and inherited legal metadata with graceful fallbacks  \n• Added _format_as_markdown() to emit YAML front-matter via python-frontmatter with toggle for front-matter-free output  \n• Introduced DocumentConverter class (435 LOC) that ties into OCRCoordinator, PDFValidator, and EnhancedPDFProcessor; supports single-file & directory batch conversion with comprehensive logging and error handling  \n\nAll unit and integration tests pass; subtask 3.2 can be marked done and work can proceed to 3.3 (content formatting and cleaning logic).\n</info added on 2025-08-18T03:11:44.606Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement content formatting and cleaning logic",
+            "description": "Create markdown conversion methods that transform PDF content into clean, well-formatted markdown following existing patterns",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "Develop convert_to_markdown() method that processes extracted text into proper markdown format. Implement content cleaning routines to handle: extra whitespace normalization, paragraph detection and separation, header detection and markdown heading conversion, list formatting preservation, special character escaping, and table structure detection where applicable. Leverage existing text cleaning patterns from pdf/main.py and ensure compatibility with frontmatter headers.\n<info added on 2025-08-18T03:12:12.563Z>\nImplemented _clean_text_for_markdown() and _format_as_markdown() within DocumentConverter, providing full whitespace normalization, paragraph delineation, empty-line limiting, optional YAML front-matter injection, and robust error handling that mirrors pdf/main.py logging conventions. convert_to_markdown() now routes extracted text through these helpers, producing clean, structurally consistent markdown ready for downstream processing. Content formatting and cleaning scope is complete—subtask prepared for handoff to testing phase (3.4).\n</info added on 2025-08-18T03:12:12.563Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add comprehensive testing with various PDF types",
+            "description": "Create test suite covering different PDF scenarios using existing test fixtures and patterns",
+            "dependencies": [
+              "3.1",
+              "3.2",
+              "3.3"
+            ],
+            "details": "Write test_document_converter.py in tests/ directory following existing test patterns. Create tests for: text-based PDF conversion (verify direct text extraction), OCR-required PDF handling (test OCR integration), multi-page document processing, metadata accuracy validation (all fields present and correct), markdown formatting verification, edge cases (empty PDFs, corrupted files, very large documents). Use existing PDF test fixtures or create minimal test PDFs. Ensure 100% code coverage for DocumentConverter class.\n<info added on 2025-08-18T03:15:35.110Z>\nComprehensive test suite implemented (23 tests) in tests/infrastructure/test_document_converter.py covering initialization, hash/metadata generation, text cleaning/markdown formatting, single & batch PDF conversion (text-based and OCR), error/edge cases, and factory functions. Achieves 100 % coverage; all tests passing. Fixed a constructor bug by adding required db_path parameter to DocumentConverter. Subtask test objectives fulfilled—component is now ready for broader integration testing.\n</info added on 2025-08-18T03:15:35.110Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Develop EmailThreadProcessor for Gmail thread conversion",
+        "description": "Create processor to convert Gmail threads into chronological markdown files",
+        "details": "Build EmailThreadProcessor that integrates with existing Gmail service (gmail/main.py). Group emails by thread ID, sort chronologically, and format as markdown with proper headers. Use existing HTML cleaner (shared/html_cleaner.py) for content cleanup. Include thread metadata: participants, date range, message count. Handle large threads (>100 emails) by splitting into multiple files with proper cross-references.",
+        "testStrategy": "Test with various thread sizes, verify chronological ordering, validate HTML cleaning, test thread splitting logic for large conversations",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create GmailThreadProcessor class with Gmail service integration",
+            "description": "Build the main EmailThreadProcessor class that integrates with existing GmailService from gmail/main.py to fetch and process email threads",
+            "dependencies": [],
+            "details": "Create EmailThreadProcessor class in infrastructure/documents/processors/. Initialize with GmailService instance from gmail/main.py. Implement methods to fetch threads by ID, retrieve all messages in a thread, and extract thread metadata (participants, date range, message count). Use existing GmailService methods like search_messages() and get_message() for data retrieval.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement thread grouping and chronological sorting logic",
+            "description": "Add functionality to group emails by thread ID and sort messages chronologically within each thread",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Implement group_by_thread() method to organize emails using Gmail thread IDs. Create sort_chronologically() method that orders messages by internal date timestamp. Handle edge cases like missing timestamps or duplicate messages. Ensure proper ordering for replies and forwards within thread context.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build markdown formatting with HTML content cleaning",
+            "description": "Create markdown formatter that converts email threads to structured markdown files with cleaned HTML content",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Implement format_thread_to_markdown() method that creates markdown structure with headers for each email (sender, date, subject). Integrate HTMLCleaner from shared/html_cleaner.py to process email body content. Format thread metadata as YAML frontmatter. Include proper formatting for attachments, inline images, and quoted text sections.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement large thread splitting with cross-references",
+            "description": "Add logic to detect and split large threads (>100 emails) into multiple files with proper linking",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "Create split_large_thread() method that chunks threads exceeding 100 messages into separate files. Generate consistent naming scheme (e.g., thread_id_part1.md, thread_id_part2.md). Add cross-reference links between parts in markdown frontmatter. Include navigation links at top/bottom of each file. Maintain thread continuity with overlap context between splits.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add metadata extraction and file writing functionality",
+            "description": "Extract comprehensive thread metadata and implement file saving to analog database structure",
+            "dependencies": [
+              "4.4"
+            ],
+            "details": "Implement extract_thread_metadata() to gather participant list (unique senders/recipients), date range (first to last message), total message count, and thread subject. Create save_to_analog_db() method to write markdown files to analog_db/email_threads/ directory with proper naming convention. Include error handling for file I/O operations and validation of output structure.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create ArchiveManager for original file organization",
+        "description": "Implement systematic organization of original files in the archive structure",
+        "details": "Develop ArchiveManager class that organizes original files by date and type in originals/ directory. Use YYYY-MM-DD directory structure for PDFs and thread-based organization for emails. Implement content deduplication using SHA-256 hashing to prevent duplicate storage. Include soft-linking capabilities for space efficiency when appropriate.",
+        "testStrategy": "Test file organization logic, verify deduplication works correctly, test various date formats and edge cases, validate space usage optimization",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement date-based directory organization system",
+            "description": "Create core directory structure and date-based organization logic for original files",
+            "dependencies": [],
+            "details": "Implement methods to create and manage YYYY-MM-DD directory structure for PDFs in originals/pdfs/ and thread-based organization for emails in originals/emails/. Use pathlib for cross-platform compatibility. Parse dates from file metadata and filenames using existing date utilities from the codebase. Include methods for directory creation, path resolution, and file placement based on document type and date.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build SHA-256 content deduplication system",
+            "description": "Implement content hashing and deduplication logic to prevent duplicate storage",
+            "dependencies": [],
+            "details": "Create deduplication module using SHA-256 hashing following patterns from existing codebase. Implement hash calculation for file content, maintain hash index in SimpleDB for fast lookups, and check for duplicates before storing. Include methods for handling hash collisions and verifying content integrity. Return existing file path when duplicate detected instead of storing redundant copy.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add soft-linking capabilities for space optimization",
+            "description": "Implement soft-linking system to optimize storage space for duplicate files",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Build soft-linking functionality using os.symlink() for Unix systems and appropriate Windows alternatives. When duplicate content is detected via SHA-256 hash, create soft links to original file instead of copying. Implement link verification, broken link detection, and fallback to copy if linking fails. Include methods to track and manage symbolic links with proper error handling for permission issues.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement comprehensive file management with error handling",
+            "description": "Create complete ArchiveManager class with robust file operations and error handling",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3"
+            ],
+            "details": "Integrate all components into cohesive ArchiveManager class following project patterns from DataPipelineOrchestrator and SimpleDB. Implement methods for archive_file(), retrieve_file(), check_duplicate(), organize_by_date(), and cleanup_orphaned_links(). Add comprehensive error handling for filesystem operations, permission issues, and space constraints. Include logging using loguru, transaction-like operations with rollback capability, and methods for reporting archive statistics and space savings.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Build SearchInterface for markdown-aware search",
+        "description": "Create search interface that works with markdown files and frontmatter metadata",
+        "details": "Implement SearchInterface that provides both full-text search using grep/ripgrep and metadata search using python-frontmatter. Include file listing, browsing capabilities, and integration with existing vector search when available. Support regex patterns, date range filtering, and content type filtering. Optimize for fast response times (<1 second for typical queries).",
+        "testStrategy": "Performance tests for search speed, accuracy tests for various query types, integration tests with existing search infrastructure",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement full-text search with ripgrep integration",
+            "description": "Create core search functionality using ripgrep for fast full-text search across markdown files",
+            "dependencies": [],
+            "details": "Build SearchInterface class that wraps ripgrep functionality for searching markdown content. Leverage existing search patterns from search_intelligence/main.py. Implement regex pattern support, file filtering by path/extension, and result ranking. Use subprocess for ripgrep calls with proper error handling. Return results with file paths, line numbers, and matched content snippets.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add frontmatter metadata search capabilities",
+            "description": "Implement python-frontmatter based metadata extraction and search functionality",
+            "dependencies": [],
+            "details": "Create metadata search methods using python-frontmatter to parse YAML frontmatter from markdown files. Build index of metadata fields (title, date, tags, type, etc.) for fast querying. Implement date range filtering, tag-based search, and metadata field queries. Cache parsed frontmatter to avoid repeated file reads. Support combined metadata and content searches.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate with search_intelligence and vector store",
+            "description": "Connect SearchInterface with existing search_intelligence service and vector search when available",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "Integrate with search_intelligence/main.py for query expansion and semantic search capabilities. Connect to utilities/vector_store when Qdrant is available for similarity search. Implement hybrid search combining full-text, metadata, and vector results. Use existing similarity.py patterns for result ranking. Maintain fallback to pure text search when vector store unavailable.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement performance optimization and caching",
+            "description": "Add caching layer and performance optimizations to achieve <1 second response times",
+            "dependencies": [
+              "6.3"
+            ],
+            "details": "Implement LRU cache for search results and parsed metadata using functools.lru_cache. Add file monitoring to invalidate cache on changes. Optimize ripgrep calls with proper flags (--max-count, --threads). Implement parallel search for multiple directories. Add query result pagination to handle large result sets efficiently. Monitor and log search performance metrics.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Integrate with existing upload handler",
+        "description": "Modify upload handler to route files to analog database instead of pipeline",
+        "details": "Update tools/cli/upload_handler.py to use AnalogDBProcessor instead of pipeline stages. Maintain backward compatibility and provide configuration option for migration period. Preserve existing upload validation and error handling. Update CLI commands in tools/scripts/vsearch to work with new system.",
+        "testStrategy": "Test upload workflows end-to-end, verify backward compatibility, test error scenarios and rollback capabilities",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Modify upload_handler.py routing logic",
+            "description": "Update the upload handler to route incoming files to AnalogDBProcessor instead of the existing pipeline stages",
+            "dependencies": [],
+            "details": "Modify tools/cli/upload_handler.py to import and use AnalogDBProcessor. Replace current pipeline stage routing (data/raw -> data/staged -> data/processed) with calls to AnalogDBProcessor methods. Ensure proper file type detection (PDF vs email) to route to appropriate converter. Maintain existing validation logic for file types and sizes. Preserve error handling and logging infrastructure. Update return values and status messages to reflect analog database storage locations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement configuration-based routing with backward compatibility",
+            "description": "Add configuration option to switch between pipeline and analog database modes while maintaining backward compatibility",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Create configuration parameter in shared/config.py or environment variable (UPLOAD_MODE=analog|pipeline|hybrid) to control routing behavior. Implement routing logic that checks configuration and directs files accordingly. For hybrid mode, process through both systems simultaneously. Add fallback mechanism to revert to pipeline if analog database processing fails. Ensure existing pipeline code paths remain functional and unchanged. Add logging to track which mode is being used for each upload.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Update vsearch CLI commands for analog database integration",
+            "description": "Modify tools/scripts/vsearch to work seamlessly with the new analog database system while preserving existing interfaces",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "Update vsearch upload command to work with modified upload_handler. Ensure existing command signatures remain unchanged for backward compatibility. Add optional --storage flag (analog|pipeline|hybrid) to vsearch upload command, defaulting to configuration value. Update command output messages to indicate where files are stored. Modify internal command routing to handle responses from AnalogDBProcessor. Test all existing vsearch commands (upload, search, info) to ensure they continue working with new routing.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Update Gmail service for thread-based processing",
+        "description": "Modify Gmail service to create analog database entries instead of individual email records",
+        "details": "Update gmail/main.py to group emails by thread and process using EmailThreadProcessor. Maintain existing History API integration and incremental sync capabilities. Preserve email deduplication logic and error handling. Update database schema to track thread processing status.",
+        "testStrategy": "Integration tests with Gmail API, verify thread grouping logic, test incremental sync with new system",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze and refactor Gmail service thread grouping logic",
+            "description": "Modify the existing Gmail service to group emails by thread ID instead of processing individually",
+            "dependencies": [],
+            "details": "Review current gmail/main.py (503 lines) to understand existing flow. Refactor fetch_messages() and related methods to group emails by threadId before processing. Maintain existing batch fetching (500+ emails/batch) and History API integration. Create helper method group_messages_by_thread() that takes batch results and returns thread-grouped structure. Ensure backward compatibility with existing error handling and retry logic.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Integrate EmailThreadProcessor into Gmail workflow",
+            "description": "Replace individual email processing with EmailThreadProcessor for thread-based analog database entry creation",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Import and integrate EmailThreadProcessor from infrastructure/documents/processors/email_thread_processor.py into gmail/main.py. Replace current individual email processing loop with thread-based processing. Modify process_email() method to process_thread() that takes grouped emails and calls EmailThreadProcessor. Ensure processor receives all emails in a thread with proper metadata. Maintain existing deduplication logic at thread level instead of individual email level.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Preserve History API and incremental sync capabilities",
+            "description": "Ensure History API integration continues to work with thread-based processing",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "Maintain existing history_id tracking and incremental sync logic in gmail/main.py. Update sync_gmail() method to handle thread-based processing while preserving incremental sync checkpoints. Ensure history changes are properly mapped to thread updates. Test with partial sync scenarios and verify no emails are missed during thread grouping. Keep existing error recovery and retry mechanisms intact.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update database schema for thread processing status",
+            "description": "Modify SimpleDB to track thread processing status instead of individual email status",
+            "dependencies": [
+              "8.3"
+            ],
+            "details": "Update shared/simple_db.py to add thread processing tracking. Create new fields: thread_id, thread_message_count, thread_processing_status, thread_last_updated. Modify existing email tracking to reference parent thread. Update get_last_sync_time() and related methods to work with thread-based tracking. Ensure migration path from existing email-based tracking to thread-based tracking. Add indexes for efficient thread queries.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement markdown file naming conventions",
+        "description": "Create consistent naming system for documents and email threads",
+        "details": "Implement naming convention system: YYYY-MM-DD_descriptive-name.md for documents and subject-based-thread-name.md for email threads. Handle special characters, length limits (255 chars max), and duplicate names. Use slugification for subject lines and implement collision resolution strategies. Include utilities for filename sanitization and validation.",
+        "testStrategy": "Test with various filename scenarios, validate cross-platform compatibility, test collision resolution, verify filename length handling",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement core naming utilities with slugification",
+            "description": "Create filename sanitization and slugification utilities for consistent naming",
+            "dependencies": [],
+            "details": "Build core utilities in shared/naming_utils.py including: slugify() function to convert text to URL-safe format (lowercase, replace spaces with hyphens, remove special chars), sanitize_filename() to handle OS-specific restrictions, truncate_filename() to enforce 255 char limit while preserving extension. Use regex for character replacement and handle Unicode normalization. Leverage patterns from infrastructure/documents/naming_convention.py if applicable.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add collision resolution and duplicate handling",
+            "description": "Implement strategies for handling filename collisions and duplicates",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Create collision_resolver.py with methods: check_collision() to detect existing files, generate_unique_name() to append counters or timestamps for duplicates, resolve_thread_collision() for email threads with same subject. Implement strategies: counter suffix (_1, _2), timestamp suffix, hash suffix for guaranteed uniqueness. Include configurable resolution strategy pattern.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create cross-platform validation utilities",
+            "description": "Build validation utilities ensuring filename compatibility across Windows, macOS, and Linux",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Develop filename_validator.py with: validate_filename() to check against OS-specific restrictions (reserved names like CON/PRN on Windows, path length limits), validate_characters() for illegal chars per OS, validate_path_length() for full path restrictions. Include comprehensive test cases for edge cases: Unicode characters, very long names, reserved words, special characters. Return detailed validation errors for user feedback.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Create content hash-based deduplication system",
+        "description": "Implement deduplication to prevent duplicate content in analog database",
+        "details": "Build deduplication system using SHA-256 content hashing for exact duplicates and cosine similarity for near-duplicates (leveraging existing Legal BERT embeddings). Store hash index in SimpleDB for fast lookup. Handle edge cases like email replies with quoted content and PDF versions with different metadata but same content.",
+        "testStrategy": "Test with identical and near-duplicate content, verify hash collision handling, test performance with large content sets",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement SHA-256 exact duplicate detection system",
+            "description": "Create core hashing functionality for exact duplicate detection using SHA-256",
+            "dependencies": [],
+            "details": "Build ContentHasher class in shared/deduplication.py that generates SHA-256 hashes for content. Implement methods for text normalization (strip whitespace, lowercase for case-insensitive matching), hash generation, and comparison. Follow existing SimpleDB patterns for storing hash mappings with content_hash as key and document metadata as value. Include configurable normalization options for different content types.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Integrate Legal BERT embeddings for near-duplicate detection",
+            "description": "Leverage existing embedding service to detect semantically similar content",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Create SimilarityDetector class that uses utilities/embeddings/embedding_service.py to generate Legal BERT embeddings for content. Implement cosine similarity calculation with configurable threshold (default 0.85). Build efficient similarity matrix computation for batch comparisons. Store embedding vectors in SimpleDB with document_id mapping for fast retrieval. Include caching mechanism to avoid re-computing embeddings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create hash index storage system in SimpleDB",
+            "description": "Implement persistent storage for content hashes and similarity indexes following SimpleDB patterns",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "Extend SimpleDB with new tables: content_hashes (hash, document_id, created_at) and similarity_index (doc_id_1, doc_id_2, similarity_score). Create HashIndexManager class with methods for storing, retrieving, and updating hash mappings. Implement batch operations for efficiency. Add indexes on hash and document_id columns for fast lookups. Include cleanup methods for orphaned hashes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Handle edge cases for email threads and PDF metadata",
+            "description": "Implement specialized handling for quoted content and metadata-only differences",
+            "dependencies": [
+              "10.1",
+              "10.2",
+              "10.3"
+            ],
+            "details": "Create EmailContentProcessor to extract and normalize email content, removing quoted replies and signatures using regex patterns. Build PDFMetadataHandler to separate content from metadata, allowing content-only comparison. Implement configurable rules for handling timestamps, sender variations, and formatting differences. Add thread-aware deduplication that preserves conversation context while removing redundant quoted content.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Optimize performance for large-scale content processing",
+            "description": "Implement performance optimizations for handling thousands of documents efficiently",
+            "dependencies": [
+              "10.3",
+              "10.4"
+            ],
+            "details": "Implement batch processing with configurable chunk sizes (default 100 documents). Add multi-threading support for hash computation using ThreadPoolExecutor. Create bloom filter pre-check to quickly eliminate non-duplicates before expensive similarity calculations. Implement incremental processing to handle new content without full re-indexing. Add performance metrics logging and progress tracking for large operations.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Update search system for markdown file compatibility",
+        "description": "Modify existing search infrastructure to work with markdown files",
+        "details": "Update search_intelligence/main.py to include markdown file search capabilities. Integrate frontmatter parsing for metadata queries. Maintain existing vector search integration and Legal BERT embeddings. Update search handlers in tools/cli/search_handler.py to support file-based queries alongside database queries during migration period.",
+        "testStrategy": "Test search accuracy across different content types, verify vector search integration, performance benchmarks against existing system",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add markdown file search capability to search_intelligence service",
+            "description": "Extend the existing search_intelligence/main.py to support searching through markdown files in the analog database structure",
+            "dependencies": [],
+            "details": "Modify the SearchIntelligenceService class to include methods for searching markdown files. Add file path indexing and content search capabilities while maintaining existing SimpleDB search functionality. Implement file traversal logic for data/analog_db/ directory structure. Ensure the service can handle both database queries and file-based searches transparently.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement frontmatter metadata parsing and querying",
+            "description": "Add functionality to parse YAML frontmatter from markdown files and enable metadata-based search queries",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Integrate python-frontmatter library for parsing YAML headers in markdown files. Create metadata extraction methods that handle document_type, source, created_at, tags, and other custom fields. Build query interfaces that can filter by metadata fields (e.g., date ranges, document types, tags). Cache parsed metadata for performance optimization during repeated searches.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Maintain vector search and Legal BERT embedding compatibility",
+            "description": "Ensure the updated search system continues to work with existing vector store and Legal BERT embeddings",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Preserve existing integration with utilities/embeddings/embedding_service.py and utilities/vector_store/vector_store_service.py. Implement hybrid search that combines file-based text search with semantic vector search when Qdrant is available. Maintain the existing embedding generation pipeline for new markdown content. Ensure Legal BERT embeddings can be generated and stored for analog database entries.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update search handlers with backward compatibility support",
+            "description": "Modify tools/cli/search_handler.py to support both database and file-based queries during the migration period",
+            "dependencies": [
+              "11.1",
+              "11.2",
+              "11.3"
+            ],
+            "details": "Update SearchHandler class to accept --mode flag (analog|database|hybrid) for operation mode selection. Implement query routing logic that directs searches to appropriate backends based on mode. Create unified result formatting that normalizes outputs from both database and file sources. Add fallback mechanisms to try alternative search methods if primary fails. Ensure all existing search commands continue to work without modification.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Develop markdown metadata indexing system",
+        "description": "Create indexing system for efficient querying of markdown frontmatter",
+        "details": "Build metadata indexing system that parses YAML frontmatter from all markdown files and creates searchable index in SimpleDB. Include support for tags, dates, document types, and custom metadata fields. Implement incremental indexing for new/updated files. Use file modification timestamps for change detection.",
+        "testStrategy": "Test indexing performance with large file sets, verify incremental updates work correctly, test various metadata schemas",
+        "priority": "medium",
+        "dependencies": [
+          6,
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement YAML frontmatter parser with python-frontmatter",
+            "description": "Create robust frontmatter extraction system for markdown files",
+            "dependencies": [],
+            "details": "Implement parser using python-frontmatter library to extract YAML metadata from markdown files. Handle various frontmatter formats, missing frontmatter, and malformed YAML gracefully. Extract standard fields (tags, date, type, title) and preserve custom metadata fields. Create data structures for parsed metadata with validation. Include utilities for frontmatter manipulation and standardization.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design and implement metadata schema in SimpleDB",
+            "description": "Create database schema and storage layer for markdown metadata",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Design metadata table schema in SimpleDB following existing patterns. Include columns for file_path, frontmatter_json, tags (array), document_type, created_date, modified_date, title, and custom_fields (JSON). Implement storage methods for batch insertion and updates. Create indexes on commonly queried fields (tags, dates, document_type). Handle schema migrations for future metadata field additions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build incremental indexing with file modification tracking",
+            "description": "Implement change detection and incremental update system",
+            "dependencies": [
+              "12.2"
+            ],
+            "details": "Create file scanner that tracks modification timestamps using os.stat() and compares against last_indexed timestamp in SimpleDB. Implement incremental indexer that only processes new/modified files. Handle file deletions by removing stale entries from index. Add bulk indexing mode for initial setup. Include progress tracking and resumable indexing for large file sets. Store indexing state and statistics.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement metadata search API with query capabilities",
+            "description": "Create search interface for querying indexed metadata",
+            "dependencies": [
+              "12.3"
+            ],
+            "details": "Build search API that queries metadata index in SimpleDB. Support tag-based queries with AND/OR logic, date range filtering, document type filtering, and custom field searches. Implement result ranking and pagination. Add aggregation queries for tag counts and document statistics. Include search result caching for performance. Integrate with existing search_intelligence service for unified search experience.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement file system monitoring for changes",
+        "description": "Add file system watching to detect and process changes in analog database",
+        "details": "Use watchdog library to monitor analog_db/ directory for file changes, additions, and deletions. Automatically update metadata index when files change. Implement debouncing to handle bulk operations efficiently. Include proper error handling for file system events and recovery mechanisms for missed events.",
+        "testStrategy": "Test file monitoring accuracy, verify debouncing works correctly, test recovery from monitoring failures",
+        "priority": "low",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up watchdog-based file monitoring system",
+            "description": "Implement watchdog library integration to monitor analog_db/ directory for file system events",
+            "dependencies": [],
+            "details": "Install and configure watchdog library. Create FileSystemMonitor class that uses watchdog.observers to monitor the analog_db/ directory recursively. Set up event handlers for file creation, modification, deletion, and move events. Implement proper observer lifecycle management with start/stop methods. Include configuration for ignored patterns (.tmp, .swp, etc.) and ensure thread-safe operation. Add loguru logging for all detected events.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement debouncing and bulk operation handling",
+            "description": "Add debouncing mechanism to efficiently handle rapid file changes and bulk operations",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "Create DebounceHandler class that collects file events over a configurable time window (default 1 second). Implement event aggregation to combine multiple events for the same file. Handle bulk operations like directory copies by batching related events. Add configurable thresholds for triggering immediate vs. delayed processing. Include special handling for move operations that appear as delete+create pairs. Ensure thread-safe queue management for event collection.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate monitoring with metadata indexing system",
+            "description": "Connect file monitoring to automatic metadata index updates with error recovery",
+            "dependencies": [
+              "13.1",
+              "13.2"
+            ],
+            "details": "Create UpdateCoordinator that receives debounced events and triggers appropriate metadata updates in SimpleDB. Implement update strategies: full reindex for new files, incremental updates for modifications, cleanup for deletions. Add error handling with retry logic for failed index updates. Implement recovery mechanism to detect and process events missed during downtime by comparing file system state with metadata index on startup. Include health checks and monitoring status endpoints.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Create migration utility for existing pipeline data",
+        "description": "Build tool to migrate existing processed documents to analog database format",
+        "details": "Create migration script that processes existing documents in data/processed/ and data/export/ directories. Convert existing database entries to markdown files with proper metadata. Handle email records from SimpleDB and group into threads. Include data validation and rollback capabilities. Preserve all existing metadata and relationships.",
+        "testStrategy": "Test migration completeness and accuracy, verify data integrity after migration, test rollback functionality",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5,
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze existing data structures in processed and export directories",
+            "description": "Scan and catalog all document types, formats, and metadata in data/processed/ and data/export/ directories",
+            "dependencies": [],
+            "details": "Traverse data/processed/ and data/export/ directories to identify all document types (PDFs, emails, text files). Extract and catalog metadata formats, naming conventions, and directory structures. Create inventory of unique document types and their characteristics. Document edge cases and inconsistent formats found. Generate statistics on document counts, sizes, and types for migration planning.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Extract and analyze email records from SimpleDB",
+            "description": "Query SimpleDB for all email records and implement thread grouping logic",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Connect to SimpleDB and extract all email-related records including metadata, timestamps, and relationships. Analyze email threading patterns using subject lines, in-reply-to headers, and references. Implement thread reconstruction algorithm to group related emails. Handle orphaned emails and broken thread chains. Create mapping between SimpleDB record IDs and proposed thread structure.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build markdown conversion engine for documents",
+            "description": "Create converter that transforms existing documents to markdown format with proper metadata headers",
+            "dependencies": [
+              "14.1",
+              "14.2"
+            ],
+            "details": "Develop conversion functions for each document type (PDF metadata, email content, text files). Create YAML frontmatter generator with fields for date, source, type, thread_id, hash, and custom metadata. Implement content sanitization to handle special characters and markdown escaping. Preserve all existing metadata from SimpleDB and file attributes. Handle binary attachments and embedded content appropriately.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement data validation and integrity checking",
+            "description": "Create comprehensive validation system to ensure data consistency during migration",
+            "dependencies": [
+              "14.3"
+            ],
+            "details": "Build validators for markdown file structure, metadata completeness, and content integrity. Implement checksum verification using SHA-256 for content validation. Create cross-reference checker to validate relationships between documents and threads. Verify all SimpleDB records have corresponding markdown files. Generate detailed validation reports with error locations and suggested fixes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create rollback mechanism for failed migrations",
+            "description": "Implement system to revert changes if migration fails or encounters critical errors",
+            "dependencies": [
+              "14.3",
+              "14.4"
+            ],
+            "details": "Design transaction-like migration process with checkpoint capabilities. Create backup of SimpleDB before migration starts. Implement file system snapshot or staging area for safe file operations. Build rollback function that can restore to any checkpoint. Include partial rollback for handling specific failed documents while preserving successful ones.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Handle edge cases and data inconsistencies",
+            "description": "Implement special handling for problematic data patterns identified during analysis",
+            "dependencies": [
+              "14.1",
+              "14.2",
+              "14.3",
+              "14.4"
+            ],
+            "details": "Create handlers for corrupted metadata, missing timestamps, and malformed content. Implement fuzzy matching for duplicate detection when hashes don't match. Handle circular email thread references and infinite loops. Process orphaned attachments and dangling references. Create quarantine system for unprocessable documents with detailed error logs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Comprehensive testing with production data samples",
+            "description": "Execute thorough testing of migration utility with real existing data",
+            "dependencies": [
+              "14.5",
+              "14.6"
+            ],
+            "details": "Create test suite using samples from actual processed/ and export/ directories. Test migration of complete email threads with all variations. Verify markdown conversion preserves all metadata and content. Test rollback scenarios including partial failures and corrupted data. Perform performance testing with full dataset to estimate migration time. Validate deduplication works correctly with existing duplicate content.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Performance optimization for large file sets",
+        "description": "Optimize system performance for handling thousands of markdown files",
+        "details": "Implement performance optimizations: file system caching using existing cache manager (from README showing CacheManager with 461 lines), lazy loading of file contents, efficient directory traversal using os.scandir(), and parallel processing for bulk operations using concurrent.futures. Monitor memory usage and implement streaming for large files.",
+        "testStrategy": "Performance benchmarks with varying file counts (100, 1K, 10K files), memory usage profiling, concurrent access testing",
+        "priority": "medium",
+        "dependencies": [
+          11,
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement file system caching with existing CacheManager",
+            "description": "Integrate and extend the existing CacheManager infrastructure to cache file system operations and markdown file contents",
+            "dependencies": [],
+            "details": "Leverage the existing 461-line CacheManager from shared/cache_manager.py to implement file system caching. Create a FileSystemCache wrapper that caches directory listings, file metadata, and frequently accessed markdown content. Implement cache invalidation based on file modification times. Configure appropriate TTL values for different cache types (metadata vs content). Ensure thread-safe operations for concurrent access.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add lazy loading and streaming for large file operations",
+            "description": "Implement lazy loading mechanisms and streaming capabilities for handling large markdown files efficiently",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "Create LazyFileReader class that loads file content on-demand using generator patterns. Implement streaming markdown parser that processes files in chunks without loading entire content into memory. Add file size thresholds to automatically switch between full loading and streaming modes. Integrate with existing markdown processors in infrastructure/documents/processors/markdown_processor.py. Include proper resource cleanup and context managers.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Optimize directory traversal using os.scandir()",
+            "description": "Replace existing directory traversal methods with optimized os.scandir() implementation for faster file system operations",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "Refactor all directory traversal code to use os.scandir() instead of os.listdir() or os.walk(). Implement efficient recursive traversal with early filtering based on file extensions and patterns. Create DirectoryScanner utility class with methods for filtered scanning, batch operations, and progress tracking. Integrate with existing file discovery patterns in analog_db/ structure. Add caching of directory structure to minimize repeated scans.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement parallel processing using concurrent.futures",
+            "description": "Add parallel processing capabilities for bulk file operations using concurrent.futures ThreadPoolExecutor and ProcessPoolExecutor",
+            "dependencies": [
+              "15.2",
+              "15.3"
+            ],
+            "details": "Create ParallelFileProcessor class using concurrent.futures for bulk operations like indexing, metadata extraction, and content processing. Implement adaptive worker pool sizing based on system resources and file count. Use ThreadPoolExecutor for I/O-bound operations (file reading) and ProcessPoolExecutor for CPU-bound operations (markdown parsing, embedding generation). Add progress tracking and cancellation support. Ensure proper error handling and result aggregation from parallel tasks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add memory usage monitoring and optimization",
+            "description": "Implement comprehensive memory monitoring and optimization strategies for handling thousands of files",
+            "dependencies": [
+              "15.2",
+              "15.4"
+            ],
+            "details": "Create MemoryMonitor class using psutil to track memory usage during file operations. Implement automatic garbage collection triggers when memory exceeds thresholds. Add memory-aware batch sizing for parallel operations. Create memory profiling decorators for performance-critical functions. Implement file content eviction strategies for the cache when memory pressure is detected. Add logging of memory metrics using loguru for performance analysis.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Update CLI commands for analog database operations",
+        "description": "Modify vsearch CLI to provide file-based operations alongside existing database queries",
+        "details": "Update tools/scripts/vsearch to include analog database commands: browse files, search markdown content, query metadata, and export operations. Maintain existing command structure for backward compatibility. Add new flags: --mode analog|database|hybrid for operation mode selection during migration period.",
+        "testStrategy": "Test all CLI commands with new system, verify backward compatibility, test hybrid mode functionality",
+        "priority": "high",
+        "dependencies": [
+          11
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add analog database command structure to vsearch CLI",
+            "description": "Extend the existing vsearch CLI with new analog database commands while preserving current functionality",
+            "dependencies": [],
+            "details": "Modify tools/scripts/vsearch to add new command groups for analog operations: 'vsearch analog browse' for file browsing, 'vsearch analog search' for markdown content search, 'vsearch analog query' for metadata queries, and 'vsearch analog export' for export operations. Implement command routing logic that maintains backward compatibility with existing database commands. Add --mode flag (analog|database|hybrid) to the root command parser to control operation mode globally.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement hybrid mode operation logic",
+            "description": "Create hybrid mode functionality that allows simultaneous operation with both analog and database systems",
+            "dependencies": [
+              "16.1"
+            ],
+            "details": "Implement HybridModeHandler class in tools/cli/ that coordinates between analog file operations and existing database queries. Add logic to merge and deduplicate results from both systems when in hybrid mode. Implement fallback mechanisms when one system is unavailable. Create configuration options to set default mode and preference order for hybrid operations. Ensure search results clearly indicate source system (analog vs database).",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Ensure backward compatibility and command migration",
+            "description": "Maintain full backward compatibility with existing vsearch commands and provide smooth migration path",
+            "dependencies": [
+              "16.1",
+              "16.2"
+            ],
+            "details": "Audit all existing vsearch commands to ensure they continue working unchanged. Create command aliases that map old commands to appropriate mode selections. Implement deprecation warnings for commands that will be phased out post-migration. Add environment variable VSEARCH_MODE to set default operation mode without breaking existing scripts. Test all existing command patterns with sample data to verify compatibility.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update CLI help documentation and user guides",
+            "description": "Comprehensive documentation update for new analog commands and migration guidance",
+            "dependencies": [
+              "16.1",
+              "16.2",
+              "16.3"
+            ],
+            "details": "Update vsearch --help output to include new analog commands and mode flags. Add detailed help text for each new command with usage examples. Create migration guide section explaining hybrid mode and transition process. Update tools/scripts/vsearch inline documentation and docstrings. Add command examples demonstrating analog file browsing, markdown search, metadata queries, and export operations. Include troubleshooting section for common migration scenarios.\n<info added on 2025-08-18T11:44:24.792Z>\nIntegrated the finalized help output and supporting docs:\n\n• Added “Migration Guide” banner detailing analog | database | hybrid modes, command equivalence tables, and rollout checklist  \n• Wrote full usage blocks for browse, search, meta, hybrid, export, and stats commands with live-tested examples and expected JSON/CSV outputs  \n• Inserted ENVIRONMENT VARIABLES section covering VSEARCH_MODE, VSEARCH_ANALOG_ROOT, VSEARCH_DB_URL, and VSEARCH_CACHE_SIZE with sample shell exports  \n• Created TROUBLESHOOTING group exposing info and health diagnostics, common error signatures, and self-repair tips  \n• Applied emoji call-outs (🚀 New, 🔧 Config, 🐞 Debug) and alphabetical grouping for quick scanning while preserving man-page compliance  \n• Synced docstrings and inline --help text; updated docs/vsearch_help.md, docs/migration_guide.md, and generated scripts/vsearch.1 manpage\n</info added on 2025-08-18T11:44:24.792Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Implement backup and export capabilities",
+        "description": "Create backup and export utilities for analog database maintenance",
+        "details": "Build backup utility that creates compressed archives of analog database with integrity verification. Include export capabilities to various formats (JSON, CSV, SQL). Implement incremental backup using file modification times and checksums. Support restoration with verification and conflict resolution.",
+        "testStrategy": "Test backup creation and restoration, verify data integrity across export formats, test incremental backup accuracy",
+        "priority": "low",
+        "dependencies": [
+          9,
+          10,
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create compressed archive backup system with integrity verification",
+            "description": "Implement core backup functionality that creates compressed archives of the analog database with SHA-256 checksums for integrity verification",
+            "dependencies": [],
+            "details": "Build backup utility using Python's zipfile or tarfile modules to create compressed archives of analog_db/ directory. Generate SHA-256 checksums for each file before compression and store in manifest file. Include metadata (timestamp, file count, total size) in backup. Support exclusion patterns for temporary files. Implement verification routine that checks archive integrity against stored checksums.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement multi-format export capabilities",
+            "description": "Create export functionality to convert analog database content to JSON, CSV, and SQL formats",
+            "dependencies": [],
+            "details": "Develop export module that reads markdown files and metadata from analog database. For JSON: export full document structure with metadata. For CSV: flatten data into tabular format with configurable columns. For SQL: generate INSERT statements compatible with SQLite/PostgreSQL. Leverage existing SimpleDB export patterns where applicable. Handle large datasets with streaming/chunked processing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add incremental backup using timestamps and checksums",
+            "description": "Implement incremental backup system that tracks file changes using modification times and content checksums",
+            "dependencies": [
+              "17.1"
+            ],
+            "details": "Create incremental backup logic that maintains state file with last backup timestamp and file checksums (MD5/SHA-256). Compare current files against last backup state to identify added/modified/deleted files. Generate delta archives containing only changed files. Implement backup chain management (full + incrementals). Include option to merge incremental backups into new full backup.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create restoration utilities with conflict resolution",
+            "description": "Build restoration system that can recover from backups with proper verification and conflict handling",
+            "dependencies": [
+              "17.1",
+              "17.3"
+            ],
+            "details": "Implement restore functionality that extracts archives and verifies checksums before restoration. Support full and incremental restore operations. Create conflict resolution strategies: skip, overwrite, rename, or merge. Implement dry-run mode to preview restoration changes. Add rollback capability using temporary staging directory. Include progress reporting and detailed logging of restoration process.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Create comprehensive documentation and cleanup legacy pipeline",
+        "description": "Document new analog database system and safely remove old pipeline infrastructure",
+        "details": "Create user documentation for analog database operations, update existing docs (README.md, CLAUDE.md), and provide migration guide. After successful migration, safely archive or remove complex pipeline infrastructure (data_pipeline.py, orchestrator.py, etc.) while preserving essential functionality. Update all references in codebase.",
+        "testStrategy": "Verify documentation completeness and accuracy, test system functionality after pipeline cleanup, validate all references are updated",
+        "priority": "medium",
+        "dependencies": [
+          14,
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Document analog database user operations",
+            "description": "Create comprehensive user documentation for analog database operations following existing documentation patterns",
+            "dependencies": [],
+            "details": "Write user-friendly documentation covering: how to add/update documents manually, directory structure explanation, file naming conventions, metadata format, search capabilities, backup procedures. Follow the style and structure of existing docs like USER_GUIDE.md. Include practical examples and common use cases.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Update README.md and CLAUDE.md with analog system",
+            "description": "Update existing core documentation files to reflect the new analog database system",
+            "dependencies": [],
+            "details": "Update README.md to mention analog database as primary storage system, update quick start commands, modify architecture diagrams. Update CLAUDE.md development guide to include analog database development patterns, remove references to complex pipeline, add new service descriptions. Ensure consistency across both files.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create step-by-step migration guide",
+            "description": "Write detailed migration guide for users transitioning from pipeline to analog database",
+            "dependencies": [
+              "18.1",
+              "18.2"
+            ],
+            "details": "Create MIGRATION_GUIDE.md with: pre-migration checklist, backup instructions, step-by-step migration process using migration utility, verification steps, rollback procedures, troubleshooting common issues. Include command examples and expected outputs. Document data format changes and how to access migrated data.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Archive pipeline infrastructure files",
+            "description": "Safely archive complex pipeline infrastructure while preserving essential functionality",
+            "dependencies": [
+              "18.3"
+            ],
+            "details": "Create archived/ directory and move data_pipeline.py, orchestrator.py, and related pipeline modules. Extract any essential utility functions that other services depend on and relocate to shared/. Document what was archived and why in ARCHIVE_LOG.md. Ensure no active code references remain to archived files.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Update imports and code references",
+            "description": "Update all code references and imports throughout the codebase",
+            "dependencies": [
+              "18.4"
+            ],
+            "details": "Search and update all import statements referencing pipeline modules. Update configuration files removing pipeline-related settings. Modify service integration points to use analog database instead of pipeline. Update test files to remove pipeline-related tests. Use grep/ripgrep to ensure no orphaned references remain.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Validate system functionality post-cleanup",
+            "description": "Thoroughly test system functionality after pipeline removal",
+            "dependencies": [
+              "18.5"
+            ],
+            "details": "Run comprehensive test suite ensuring all services still function. Test document upload, processing, and retrieval workflows. Verify search functionality works with analog database. Check that all MCP servers and CLI tools operate correctly. Document any functionality gaps and create issues for missing features. Update test documentation.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-14T20:57:32.199Z",
+      "updated": "2025-08-18T11:57:08.278Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

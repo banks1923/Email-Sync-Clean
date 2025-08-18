@@ -1,0 +1,34 @@
+## Automated Testing Standards for Email Sync Project
+
+### Test Structure Requirements
+1. **Test File Location**: tests/{module_name}/test_{component}.py
+2. **Test Coverage**: Minimum 85% line coverage using pytest-cov
+3. **Test Categories**:
+   - Unit tests: Test individual functions/methods
+   - Integration tests: Test service interactions
+   - Error handling tests: Test failure scenarios
+   - Performance tests: Test with realistic data volumes
+
+### Required Test Types Per Subtask
+- **Schema/Database**: Migration tests, data integrity tests, constraint validation
+- **Service Classes**: Method behavior tests, state management tests, error condition tests
+- **Algorithms**: Correctness tests, edge case tests, performance benchmark tests
+- **Integration**: Cross-service tests, end-to-end workflow tests, CLI integration tests
+
+### Test Naming Convention
+- test_{function_name}_success_case()
+- test_{function_name}_error_case()
+- test_{function_name}_edge_case()
+- test_{function_name}_performance()
+
+### Required Fixtures
+- sample_legal_documents
+- test_database_setup
+- mock_external_services
+- performance_test_data
+
+### Performance Test Requirements
+- Large dataset tests (1000+ items)
+- Memory usage validation
+- Response time benchmarks
+- Concurrent operation tests

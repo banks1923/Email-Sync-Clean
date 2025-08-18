@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/documents/format_detector.py
+# hypothesis_version: 6.138.2
+
+[b'# ', b'## ', b'### ', b'%PDF', b'---\n', b'---\r\n', b'PK\x03\x04', b'PK\x05\x06', b'PK\x07\x08', 0.8, 127, 1024, '.doc', '.docx', '.markdown', '.md', '.mdown', '.mkd', '.pdf', '.text', '.txt', 'DocxProcessor', 'Markdown', 'MarkdownProcessor', 'PDFProcessor', 'Plain Text', 'TextProcessor', 'binary', 'doc', 'docx', 'extensions', 'md', 'name', 'pdf', 'processor', 'rb', 'txt', 'utf-8']

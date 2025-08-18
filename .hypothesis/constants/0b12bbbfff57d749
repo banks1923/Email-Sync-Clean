@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/page_processor.py
+# hypothesis_version: 6.138.2
+
+[0.0, 100, 400, 500, 'confidence', 'current_page', 'error', 'images', 'method', 'page', 'page_by_page_ocr', 'pages_processed', 'progress_percent', 'rb', 'success', 'text', 'total_pages']

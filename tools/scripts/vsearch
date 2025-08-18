@@ -1,0 +1,1399 @@
+#!/usr/bin/env python3
+"""
+AI-Powered Hybrid Vector Search CLI - Fixed Version
+Uses new clean services architecture with improved error handling
+Usage: scripts/vsearch [command] [options]
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Import new clean services with error handling
+try:
+    from search_intelligence import get_search_intelligence_service as get_search_service
+    from shared.error_handler import ErrorHandler
+    from shared.health_check import run_health_check
+    from shared.simple_db import SimpleDB
+
+    SERVICES_AVAILABLE = True
+except ImportError as e:
+    SERVICES_AVAILABLE = False
+    print(f"⚠️  Some services not available: {e}")
+    print("💡 Tip: Run 'pip install -r requirements.txt' to install dependencies")
+
+
+def search_command(query, limit=5, hybrid=True, verbose=False, filters=None, mode=None):
+    """AI-Powered Unified Search using clean services with better error handling and filters"""
+    import os
+
+    # Determine search mode (priority: parameter > env var > default)
+    if mode is None:
+        mode = os.environ.get("VSEARCH_MODE", "hybrid")
+
+    # Display search info with filters
+    filter_info = ""
+    if filters:
+        filter_parts = []
+        if filters.get("since"):
+            filter_parts.append(f"since {filters['since']}")
+        if filters.get("until"):
+            filter_parts.append(f"until {filters['until']}")
+        if filters.get("content_types"):
+            types_str = ",".join(filters["content_types"])
+            filter_parts.append(f"types: {types_str}")
+        if filters.get("tags"):
+            tags_str = (
+                ",".join(filters["tags"]) if isinstance(filters["tags"], list) else filters["tags"]
+            )
+            logic = filters.get("tag_logic", "OR")
+            filter_parts.append(f"tags: {tags_str} ({logic})")
+        if filter_parts:
+            filter_info = f" (Filters: {', '.join(filter_parts)})"
+
+    print(f"🤖 AI-Powered Search for: '{query}'{filter_info} [Mode: {mode}]")
+
+    # Use unified search from SearchIntelligenceService if available
+    if SERVICES_AVAILABLE:
+        print(f"🔍 Running {mode} search...")
+        try:
+            search_service = get_search_service()
+
+            # Check if unified_search method is available (from Task 11)
+            if hasattr(search_service, "unified_search"):
+                # For hybrid mode, use enhanced HybridModeHandler for better result merging
+                if mode == "hybrid":
+                    try:
+                        from tools.scripts.cli.hybrid_handler import HybridModeHandler
+
+                        # Get separate results for database and analog
+                        db_results = search_service.unified_search(
+                            query=query,
+                            mode="database",
+                            limit=limit * 2,
+                            use_expansion=True,
+                            filters=filters,
+                        )
+
+                        analog_results = search_service.unified_search(
+                            query=query,
+                            mode="analog",
+                            limit=limit * 2,
+                            use_expansion=True,
+                            filters=filters,
+                        )
+
+                        # Use HybridModeHandler for intelligent merging
+                        handler = HybridModeHandler()
+                        results = handler.merge_results(
+                            database_results=db_results,
+                            analog_results=analog_results,
+                            limit=limit,
+                            query=query,
+                        )
+
+                        # Show merge statistics if verbose
+                        if verbose:
+                            stats = handler.get_merge_stats(
+                                len(db_results), len(analog_results), len(results)
+                            )
+                            print(
+                                f"📊 Merge stats: {stats['database_results']} DB + "
+                                f"{stats['analog_results']} analog → "
+                                f"{stats['final_results']} final "
+                                f"({stats['deduplication_rate']:.1f}% dedup)"
+                            )
+
+                    except ImportError:
+                        # Fallback to basic unified_search if HybridModeHandler not available
+                        if verbose:
+                            print("⚠️  HybridModeHandler not available, using basic hybrid search")
+                        results = search_service.unified_search(
+                            query=query, mode=mode, limit=limit, use_expansion=True, filters=filters
+                        )
+                else:
+                    # For database/analog modes, use standard unified_search
+                    results = search_service.unified_search(
+                        query=query, mode=mode, limit=limit, use_expansion=True, filters=filters
+                    )
+
+                if results:
+                    print(f"✅ Found {len(results)} {mode} matches")
+                    display_unified_search_results(results, f"🔍 {mode.capitalize()} Search")
+                    return True
+                else:
+                    print("❌ No results found")
+                    print("💡 Try different keywords or check if content has been indexed")
+                    return False
+            else:
+                # Fallback to legacy method if unified_search not available
+                print("⚠️  Using legacy search method...")
+                results = search_service.search(query, limit=limit, filters=filters)
+
+                if results:
+                    print(f"✅ Found {len(results)} legacy matches")
+                    display_results(results, "🧠 Legacy Search")
+                    return True
+                else:
+                    print("❌ No legacy results found")
+                    return False
+
+        except Exception as e:
+            if verbose:
+                print(f"⚠️  Unified search error: {e}")
+
+            # Provide helpful error message
+            error_response = {"error": str(e), "details": {"category": "service_error"}}
+            suggestion = ErrorHandler.get_recovery_suggestion(error_response)
+
+            if suggestion:
+                print(f"💡 {suggestion}")
+            else:
+                print("⚠️  Unified search unavailable, falling back to keyword search")
+
+    # Final fallback to keyword search using SimpleDB
+    print("🔍 Running fallback keyword search...")
+    try:
+        db = SimpleDB()
+        results = db.search_content(query, limit=limit, filters=filters)
+
+        if results:
+            # Enhance results with snippets
+            from shared.snippet_utils import format_search_result
+
+            enhanced_results = []
+            for result in results:
+                enhanced_result = format_search_result(result, query)
+                enhanced_results.append(enhanced_result)
+
+            print(f"✅ Found {len(enhanced_results)} keyword matches")
+            display_keyword_results(enhanced_results, "🔤 Keyword Search")
+            return True
+        else:
+            print("❌ No results found")
+            print("💡 Try different keywords or check if content has been indexed")
+            return False
+    except Exception as e:
+        if verbose:
+            import traceback
+
+            print(f"❌ Search error: {e}")
+            print(traceback.format_exc())
+        else:
+            user_msg = ErrorHandler.format_user_message(
+                {
+                    "error": str(e),
+                    "details": {"category": ErrorHandler.DATABASE_ERROR, "context": "searching"},
+                }
+            )
+            print(f"❌ {user_msg}")
+
+            suggestion = ErrorHandler.get_recovery_suggestion(
+                {"error": str(e), "details": {"category": ErrorHandler.DATABASE_ERROR}}
+            )
+            if suggestion:
+                print(f"💡 {suggestion}")
+        return False
+
+
+def display_results(results, search_type):
+    """Display semantic search results with enhanced snippets"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        score = result.get("score", 1.0)
+        metadata = result.get("metadata", {})
+        content = result.get("content", {})
+
+        # Determine content type from metadata
+        content_type = metadata.get("content_type", metadata.get("type", "unknown"))
+        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
+        icon = type_icons.get(content_type, "📄")
+
+        print(f"\n--- {icon} Result {i} (Score: {score:.3f}) ---")
+
+        # Display based on what's available
+        if isinstance(content, dict):
+            print(f"Title: {content.get('title', 'No title')}")
+
+            # Show metadata based on content type
+            if content.get("sender"):
+                print(f"From: {content['sender']}")
+            if content.get("date") or content.get("datetime_utc"):
+                date_str = content.get("date", content.get("datetime_utc", ""))
+                print(f"Date: {date_str}")
+
+            # Show enhanced snippet with highlighting if available
+            if content.get("highlighted_snippet"):
+                print(f"Content: {content['highlighted_snippet']}")
+            elif content.get("snippet"):
+                print(f"Content: {content['snippet']}")
+            else:
+                # Fallback to original logic
+                body = content.get("content", content.get("body", ""))
+                if body:
+                    snippet = body[:200].replace("\n", " ")
+                    print(f"Content: {snippet}...")
+        else:
+            # Fallback display
+            print(f"Content: {str(content)[:200]}...")
+
+
+def display_keyword_results(results, search_type):
+    """Display keyword search results from SimpleDB with enhanced snippets"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        # SimpleDB returns dict with id, type, title, content, metadata, etc.
+        content_type = result.get("content_type", result.get("type", "unknown"))
+        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
+        icon = type_icons.get(content_type, "📄")
+
+        print(f"\n--- {icon} Result {i} ---")
+        print(f"Title: {result.get('title', 'No title')}")
+        print(f"Type: {content_type}")
+
+        # Parse metadata if it's a string
+        metadata = result.get("metadata", {})
+        if isinstance(metadata, str):
+            try:
+                import json
+
+                metadata = json.loads(metadata)
+            except:
+                metadata = {}
+
+        # Show metadata based on type
+        if content_type == "email" and metadata:
+            print(f"From: {metadata.get('sender', 'Unknown')}")
+            print(f"Date: {metadata.get('date', 'Unknown')}")
+
+        # Show enhanced snippet with highlighting if available
+        if result.get("highlighted_snippet"):
+            print(f"Content: {result['highlighted_snippet']}")
+        elif result.get("snippet"):
+            print(f"Content: {result['snippet']}")
+        else:
+            # Fallback to original content display
+            content = result.get("content", "")
+            if content:
+                snippet = content[:200].replace("\n", " ")
+                print(f"Content: {snippet}...")
+
+
+def display_unified_search_results(results, search_type):
+    """Display unified search results from search intelligence service"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        score = result.get("score", 0.0)
+        source = result.get("search_source", "unknown")
+
+        print(f"\n--- Result {i} (Score: {score:.3f}, Source: {source}) ---")
+        print(f"Title: {result.get('title', 'Untitled')}")
+
+        # Show type-specific fields
+        content_type = result.get("content_type", "document")
+        if content_type == "email":
+            print(f"From: {result.get('sender', 'Unknown')}")
+            print(f"To: {result.get('recipient', 'Unknown')}")
+
+        print(f"Date: {result.get('created_time', 'Unknown')}")
+
+        # Show file path for analog results
+        if result.get("file_path"):
+            print(f"File: {result.get('file_path')}")
+
+        # Show content preview
+        content = result.get("content", "")
+        if content:
+            print(f"Preview: {content[:150]}...")
+
+        if i >= 5:  # Limit display to top 5 results
+            remaining = len(results) - i
+            if remaining > 0:
+                print(f"\n... and {remaining} more results")
+            break
+
+
+def health_command(verbose=False):
+    """Run comprehensive health check on all services"""
+    print("🏥 Running System Health Check...")
+
+    try:
+        health_status = run_health_check()
+
+        # Overall status
+        if health_status["overall_health"]:
+            print(f"✅ System Status: HEALTHY ({health_status['summary']})")
+        else:
+            print(f"⚠️  System Status: DEGRADED ({health_status['summary']})")
+
+        # Individual service status
+        for service_name, status in health_status["services"].items():
+            if status["healthy"]:
+                icon = "✅"
+            else:
+                icon = "❌" if service_name != "qdrant" else "⚠️"
+
+            print(f"\n{icon} {service_name.title()} Service:")
+
+            if verbose or not status["healthy"]:
+                for key, value in status.items():
+                    if key != "healthy" and key != "service":
+                        print(f"  {key}: {value}")
+            elif status["healthy"]:
+                print("  Status: Operational")
+
+        # Provide recovery suggestions for unhealthy services
+        for service_name, status in health_status["services"].items():
+            if not status["healthy"] and "error" in status:
+                suggestion = ErrorHandler.get_recovery_suggestion(
+                    {"error": status["error"], "details": {"category": "service_error"}}
+                )
+                if suggestion:
+                    print(f"\n💡 {service_name.title()} fix: {suggestion}")
+
+    except Exception as e:
+        print(f"❌ Health check failed: {e}")
+        if verbose:
+            import traceback
+
+            print(traceback.format_exc())
+
+    print("\n✅ Health check complete")
+
+
+def info_command():
+    """Display system information using new services"""
+    print("📊 System Information")
+    print("=" * 50)
+
+    # Database stats
+    try:
+        db = SimpleDB()
+        stats = db.get_content_stats()
+        print("\n📁 Database Statistics:")
+        print(f"  Total emails: {stats.get('total_emails', 0)}")
+        print(f"  Total PDFs: {stats.get('total_pdfs', 0)}")
+        print(f"  Total transcripts: {stats.get('total_transcripts', 0)}")
+        print(f"  Total content: {stats.get('total_content', 0)}")
+    except Exception as e:
+        print(f"  ⚠️  Database unavailable: {e}")
+
+    # Vector service status
+    if SERVICES_AVAILABLE:
+        try:
+            from utilities.vector_store import get_vector_store
+
+            store = get_vector_store()
+            print("\n🧠 Vector Service:")
+            print("  Status: ✅ Connected")
+            print(f"  Collection: {store.collection}")
+            print(f"  Dimensions: {store.dimensions}")
+        except Exception as e:
+            print("\n🧠 Vector Service:")
+            print(f"  Status: ❌ Not available ({e})")
+
+    # Embeddings status
+    if SERVICES_AVAILABLE:
+        try:
+            from utilities.embeddings import get_embedding_service
+
+            emb = get_embedding_service()
+            print("\n🤖 Embedding Service:")
+            print(f"  Model: {emb.model_name}")
+            print(f"  Dimensions: {emb.dimensions}")
+            print(f"  Device: {emb.device}")
+        except Exception as e:
+            print("\n🤖 Embedding Service:")
+            print(f"  Status: ⚠️  Not configured ({e})")
+
+    print("\n✅ System check complete")
+
+
+def upload_command(file_path, storage_mode=None):
+    """Upload and process a document with configurable storage routing."""
+    from pathlib import Path
+
+    file_path = Path(file_path)
+    if not file_path.exists():
+        print(f"❌ File not found: {file_path}")
+        return False
+
+    print(f"📤 Uploading: {file_path.name}")
+
+    # Show storage mode info
+    if storage_mode:
+        print(f"📋 Storage mode: {storage_mode}")
+
+    try:
+        # Handle based on file type
+        if file_path.suffix.lower() == ".pdf":
+            # Use the new upload_handler for PDF files
+            from tools.scripts.cli.upload_handler import upload_pdf
+
+            success = upload_pdf(str(file_path), source="vsearch", storage_mode=storage_mode)
+            return success
+        else:
+            # For other file types, try AnalogDB first, then fallback
+            try:
+                from shared.analog_db_processor import AnalogDBProcessor
+
+                processor = AnalogDBProcessor()
+                result = processor.process_document(
+                    file_path=file_path,
+                    doc_type="document",
+                    metadata={"source": "vsearch", "upload_method": "analog_db"},
+                )
+
+                if result["success"]:
+                    print(f"✅ Stored in AnalogDB: {file_path.name}")
+                    print(f"📍 Location: {result['target_path']}")
+                    print(f"🆔 Document ID: {result['doc_id']}")
+                    return True
+                else:
+                    print(f"❌ AnalogDB processing failed: {result['error']}")
+                    return False
+
+            except ImportError:
+                print(f"❌ Unsupported file type for legacy pipeline: {file_path.suffix}")
+                print("💡 Supported types: PDF")
+                return False
+
+    except Exception as e:
+        print(f"❌ Upload failed: {e}")
+        return False
+
+    return True
+
+
+def analog_browse_command(path="", recursive=False, json_output=False):
+    """Browse analog database directories"""
+    import os
+    from pathlib import Path
+
+    try:
+        from analog_db import SearchInterface
+
+        search_interface = SearchInterface()
+        base_path = search_interface.analog_db_path
+
+        # Determine target path
+        if path:
+            target_path = base_path / path
+        else:
+            target_path = base_path
+
+        if not target_path.exists():
+            print(f"❌ Path not found: {target_path}")
+            return False
+
+        print(f"📁 Browsing: {target_path}")
+
+        files_info = []
+
+        if recursive:
+            # Recursive browse
+            for root, dirs, files in os.walk(target_path):
+                root_path = Path(root)
+                for file in files:
+                    file_path = root_path / file
+                    if file.endswith(".md"):
+                        stat = file_path.stat()
+                        file_info = {
+                            "path": str(file_path.relative_to(base_path)),
+                            "size": stat.st_size,
+                            "modified": stat.st_mtime,
+                        }
+                        files_info.append(file_info)
+        else:
+            # List current directory only
+            for item in target_path.iterdir():
+                if item.is_file() and item.suffix == ".md":
+                    stat = item.stat()
+                    file_info = {
+                        "path": str(item.relative_to(base_path)),
+                        "size": stat.st_size,
+                        "modified": stat.st_mtime,
+                    }
+                    files_info.append(file_info)
+                elif item.is_dir():
+                    file_info = {
+                        "path": str(item.relative_to(base_path)) + "/",
+                        "type": "directory",
+                        "items": len(list(item.iterdir())),
+                    }
+                    files_info.append(file_info)
+
+        if json_output:
+            import json
+
+            print(json.dumps(files_info, indent=2))
+        else:
+            print(f"📋 Found {len(files_info)} items:")
+            for info in files_info:
+                if info.get("type") == "directory":
+                    print(f"  📁 {info['path']} ({info['items']} items)")
+                else:
+                    size_str = f"{info['size']} bytes"
+                    print(f"  📄 {info['path']} ({size_str})")
+
+        return True
+
+    except Exception as e:
+        print(f"❌ Browse failed: {e}")
+        return False
+
+
+def analog_export_command(query=None, output_dir=None, format="markdown", include_metadata=False):
+    """Export analog database files"""
+    import json
+    import shutil
+    from pathlib import Path
+
+    try:
+        from analog_db import SearchInterface
+
+        if not output_dir:
+            print("❌ Output directory required")
+            return False
+
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        search_interface = SearchInterface()
+
+        # Get files to export
+        if query:
+            print(f"🔍 Finding files matching: '{query}'")
+            results = search_interface.search_content(query, limit=1000)
+            file_paths = [Path(r["file_path"]) for r in results if r.get("file_path")]
+        else:
+            print("📁 Exporting all analog database files...")
+            file_paths = list(search_interface.analog_db_path.rglob("*.md"))
+
+        exported_count = 0
+
+        for file_path in file_paths:
+            try:
+                if format == "markdown":
+                    # Copy markdown file
+                    dest = output_path / file_path.name
+                    shutil.copy2(file_path, dest)
+                    exported_count += 1
+
+                elif format == "json":
+                    # Extract content and metadata
+                    import frontmatter
+
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        post = frontmatter.load(f)
+
+                    export_data = {
+                        "content": post.content,
+                        "metadata": post.metadata if include_metadata else {},
+                    }
+
+                    json_file = output_path / f"{file_path.stem}.json"
+                    with open(json_file, "w", encoding="utf-8") as f:
+                        json.dump(export_data, f, indent=2, ensure_ascii=False)
+                    exported_count += 1
+
+            except Exception as e:
+                print(f"⚠️  Failed to export {file_path.name}: {e}")
+                continue
+
+        print(f"✅ Exported {exported_count} files to {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"❌ Export failed: {e}")
+        return False
+
+
+def analog_search_command(
+    query,
+    limit=10,
+    content_only=False,
+    metadata_only=False,
+    use_vector=True,
+    regex=False,
+    case_sensitive=False,
+    json_output=False,
+):
+    """Search analog database with various options"""
+    print(f"🔍 Analog Database Search: '{query}'")
+
+    try:
+        from analog_db import SearchInterface
+
+        search_interface = SearchInterface()
+
+        if metadata_only:
+            # Use a basic metadata filter with the query as title search
+            filters = {"title": query}
+            results = search_interface.search_metadata(filters, limit)
+            search_type = "📋 Metadata Search"
+        elif content_only:
+            results = search_interface.search_content(
+                query, limit=limit, regex=regex, case_sensitive=case_sensitive
+            )
+            search_type = "📄 Content Search"
+        else:
+            # Hybrid search
+            metadata_filters = None
+            results = search_interface.hybrid_search(
+                query, metadata_filters, limit, use_vector=use_vector
+            )
+            search_type = "🔀 Hybrid Search"
+
+        if json_output:
+            import json
+
+            print(json.dumps(results, indent=2, default=str))
+        else:
+            display_analog_results(results, search_type)
+
+    except ImportError as e:
+        print(f"❌ Analog database not available: {e}")
+    except Exception as e:
+        print(f"❌ Analog search failed: {e}")
+
+
+def analog_metadata_search_command(filters, limit=10, json_output=False):
+    """Search analog database by metadata filters only"""
+    print(f"📋 Analog Metadata Search with {len(filters)} filters")
+
+    try:
+        from analog_db import SearchInterface
+
+        search_interface = SearchInterface()
+        results = search_interface.search_metadata(filters, limit)
+
+        if json_output:
+            import json
+
+            print(json.dumps(results, indent=2, default=str))
+        else:
+            display_analog_results(results, "📋 Metadata Search")
+
+    except ImportError as e:
+        print(f"❌ Analog database not available: {e}")
+    except Exception as e:
+        print(f"❌ Metadata search failed: {e}")
+
+
+def analog_hybrid_search_command(
+    query, metadata_filters=None, limit=15, use_vector=True, json_output=False
+):
+    """Perform hybrid search combining content and metadata"""
+    print(f"🔀 Analog Hybrid Search: '{query}'")
+    if metadata_filters:
+        print(f"📋 With {len(metadata_filters)} metadata filters")
+
+    try:
+        from analog_db import SearchInterface
+
+        search_interface = SearchInterface()
+        results = search_interface.hybrid_search(query, metadata_filters, limit, use_vector)
+
+        if json_output:
+            import json
+
+            print(json.dumps(results, indent=2, default=str))
+        else:
+            display_analog_results(results, "🔀 Hybrid Search")
+
+    except ImportError as e:
+        print(f"❌ Analog database not available: {e}")
+    except Exception as e:
+        print(f"❌ Hybrid search failed: {e}")
+
+
+def analog_stats_command(json_output=False):
+    """Show analog database statistics"""
+    print("📊 Analog Database Statistics")
+
+    try:
+        from pathlib import Path
+
+        from analog_db import SearchInterface
+
+        search_interface = SearchInterface()
+        base_path = search_interface.analog_db_path
+
+        # Count files
+        documents_path = base_path / "documents"
+        email_threads_path = base_path / "email_threads"
+
+        stats = {
+            "base_path": str(base_path),
+            "exists": base_path.exists(),
+            "documents_count": (
+                len(list(documents_path.glob("*.md"))) if documents_path.exists() else 0
+            ),
+            "email_threads_count": (
+                len(list(email_threads_path.glob("*.md"))) if email_threads_path.exists() else 0
+            ),
+            "total_files": 0,
+            "search_stats": search_interface.get_search_stats(),
+        }
+
+        stats["total_files"] = stats["documents_count"] + stats["email_threads_count"]
+
+        if json_output:
+            import json
+
+            print(json.dumps(stats, indent=2, default=str))
+        else:
+            print(f"📁 Base Path: {stats['base_path']}")
+            print(f"✅ Database Exists: {stats['exists']}")
+            print(f"📄 Documents: {stats['documents_count']}")
+            print(f"📧 Email Threads: {stats['email_threads_count']}")
+            print(f"📊 Total Files: {stats['total_files']}")
+
+            # Search performance stats
+            search_stats = stats["search_stats"]
+            if search_stats["total_searches"] > 0:
+                print("\n🔍 Search Performance:")
+                print(f"  Total Searches: {search_stats['total_searches']}")
+                print(f"  Average Time: {search_stats['avg_search_time']:.3f}s")
+                print(f"  Cache Hits: {search_stats['cache_hits']}")
+                print(f"  Cache Misses: {search_stats['cache_misses']}")
+
+    except ImportError as e:
+        print(f"❌ Analog database not available: {e}")
+    except Exception as e:
+        print(f"❌ Stats command failed: {e}")
+
+
+def display_analog_results(results, search_type):
+    """Display analog database search results"""
+    if not results:
+        print("\n❌ No results found")
+        return
+
+    print(f"\n=== {search_type} Results ({len(results)}) ===")
+
+    for i, result in enumerate(results, 1):
+        file_path = result.get("file_path", "Unknown")
+        score = result.get("score", 0.0)
+        source = result.get("source", "unknown")
+        match_type = result.get("match_type", "unknown")
+
+        # Get metadata
+        metadata = result.get("metadata", {})
+        title = metadata.get("title", "No title")
+        doc_type = metadata.get("doc_type", "unknown")
+
+        # Type icons
+        type_icons = {"email": "📧", "document": "📄", "pdf": "📄", "transcript": "🎙️", "note": "📝"}
+        icon = type_icons.get(doc_type, "📄")
+
+        print(f"\n--- {icon} Result {i} (Score: {score:.2f}, {source}) ---")
+        print(f"Title: {title}")
+        print(f"File: {Path(file_path).name}")
+        print(f"Type: {doc_type}")
+
+        # Show matched content or preview
+        if "matched_content" in result:
+            content = result["matched_content"][:200]
+            print(f"Match: {content}...")
+        elif "content_preview" in result:
+            preview = result["content_preview"][:200]
+            print(f"Preview: {preview}...")
+
+        # Show metadata fields
+        if metadata.get("sender"):
+            print(f"From: {metadata['sender']}")
+        if metadata.get("date_created") or metadata.get("datetime_utc"):
+            date_str = metadata.get("date_created", metadata.get("datetime_utc", ""))
+            print(f"Date: {date_str}")
+
+
+def main():
+    """Main CLI entry point"""
+    parser = argparse.ArgumentParser(
+        description="""AI-Powered Hybrid Vector Search CLI - New Analog Database Features!
+
+Search across databases and markdown files with Legal BERT embeddings.
+Supports three operation modes: database (SQLite), analog (markdown files), or hybrid (both).
+
+🔥 NEW: Analog Database Operations
+  The system now supports direct markdown file operations alongside traditional database search.
+  Use 'analog' commands for file-based operations and 'search' with --mode for unified queries.
+
+MIGRATION GUIDE:
+  • hybrid mode (default): Searches both database and analog files, merges results intelligently
+  • database mode: Traditional indexed search (legacy compatibility)
+  • analog mode: Direct markdown file search with ripgrep + semantic vectors
+  • Environment: Set VSEARCH_MODE=analog|database|hybrid to change system default
+
+Examples:
+  # Quick Start - Basic search (hybrid mode by default)
+  vsearch search "contract amendment"
+
+  # Search mode selection
+  vsearch search "legal memo" --mode database    # Legacy database only
+  vsearch search "notes about client" --mode analog    # New file-based search
+  vsearch search "discovery documents" --mode hybrid   # Best of both (default)
+
+  # Advanced search with filters
+  vsearch search "settlement" --since "last month" --type email --verbose
+  vsearch search "contract" --tag legal --tag draft --tag-logic AND
+
+  # NEW: Analog database operations (file-based)
+  vsearch analog browse --path documents/legal/ --recursive
+  vsearch analog search "meeting notes" --content-only --limit 20
+  vsearch analog meta --title "client" --doc-type email --json
+  vsearch analog hybrid "contract review" --tags legal
+  vsearch analog export "client notes" --output ./exports --format json
+  vsearch analog stats --json
+
+  # Set persistent default mode
+  export VSEARCH_MODE=analog     # Use analog by default
+  export VSEARCH_MODE=hybrid     # Use hybrid by default (recommended)
+  vsearch search "meeting notes"  # Will use your chosen default
+
+  # System information and troubleshooting
+  vsearch info          # Show system status and capabilities
+  vsearch health -v     # Detailed health check for debugging
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Search command
+    search_parser = subparsers.add_parser(
+        "search", help="Search content with AI-powered semantic search"
+    )
+    search_parser.add_argument(
+        "query", help="Natural language search query (e.g., 'contract amendments from last month')"
+    )
+    search_parser.add_argument("-n", "--limit", type=int, default=5, help="Number of results")
+    search_parser.add_argument(
+        "--keyword-only", action="store_true", help="Use keyword search only"
+    )
+    search_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed errors")
+    # Date filtering
+    search_parser.add_argument(
+        "--since", help="Start date (e.g., '2024-01-01', 'last week', '3 days ago')"
+    )
+    search_parser.add_argument(
+        "--until", help="End date (e.g., '2024-12-31', 'yesterday', 'this month')"
+    )
+    # Content type filtering
+    search_parser.add_argument(
+        "--type",
+        "--types",
+        dest="types",
+        action="append",
+        help="Content types to search (email, pdf, transcript, note). Can be used multiple times.",
+    )
+    # Tag filtering
+    search_parser.add_argument(
+        "--tag",
+        "--tags",
+        dest="tags",
+        action="append",
+        help="Tags to search for. Can be used multiple times.",
+    )
+    search_parser.add_argument(
+        "--tag-logic",
+        choices=["AND", "OR"],
+        default="OR",
+        help="Logic for combining multiple tags (default: OR)",
+    )
+    # Search mode selection
+    search_parser.add_argument(
+        "--mode",
+        choices=["database", "analog", "hybrid"],
+        default=None,  # Will be set by environment variable or defaults to hybrid
+        help="""Search mode selection:
+  database - Search indexed content in SQLite database (fast, structured)
+  analog   - Search markdown files directly with ripgrep (comprehensive)
+  hybrid   - Search both systems and merge results (recommended, default)
+
+Override default with VSEARCH_MODE environment variable""",
+    )
+
+    # Info command
+    subparsers.add_parser("info", help="Display system information")
+
+    # Health command
+    health_parser = subparsers.add_parser("health", help="Check system health")
+    health_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed status")
+    health_parser.add_argument("--fix", action="store_true", help="Attempt to fix common issues")
+
+    # Upload command
+    upload_parser = subparsers.add_parser("upload", help="Upload and process a document")
+    upload_parser.add_argument("file", help="Path to file to upload")
+    upload_parser.add_argument(
+        "--storage",
+        choices=["analog", "pipeline", "hybrid"],
+        help="Storage mode: analog (default), pipeline, or hybrid",
+    )
+
+    # Legal Intelligence commands
+    legal_parser = subparsers.add_parser("legal", help="Legal Intelligence analysis tools")
+    legal_subparsers = legal_parser.add_subparsers(dest="legal_command", help="Legal commands")
+
+    # Process command
+    process_parser = legal_subparsers.add_parser("process", help="Process a legal case")
+    process_parser.add_argument("case_id", help="Case identifier or search pattern")
+    process_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output format (default: text)"
+    )
+
+    # Timeline command
+    timeline_parser = legal_subparsers.add_parser("timeline", help="Generate case timeline")
+    timeline_parser.add_argument("case_id", help="Case identifier or search pattern")
+    timeline_parser.add_argument("-o", "--output", help="Output file path (optional)")
+
+    # Graph command
+    graph_parser = legal_subparsers.add_parser("graph", help="Build relationship graph")
+    graph_parser.add_argument("case_id", help="Case identifier or search pattern")
+    graph_parser.add_argument(
+        "--depth", type=int, default=3, help="Maximum relationship depth (default: 3)"
+    )
+
+    # Search command
+    legal_search_parser = legal_subparsers.add_parser("search", help="Legal-specific search")
+    legal_search_parser.add_argument("query", help="Search query")
+    legal_search_parser.add_argument("--case", help="Filter by case ID")
+    legal_search_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+
+    # Missing documents command
+    missing_parser = legal_subparsers.add_parser("missing", help="Predict missing documents")
+    missing_parser.add_argument("case_id", help="Case identifier or search pattern")
+    missing_parser.add_argument(
+        "--confidence", type=float, default=0.6, help="Confidence threshold (default: 0.6)"
+    )
+
+    # Summarize command
+    summarize_parser = legal_subparsers.add_parser("summarize", help="Summarize legal documents")
+    summarize_parser.add_argument("case_id", help="Case identifier or search pattern")
+    summarize_parser.add_argument(
+        "--max-docs", type=int, default=10, help="Maximum documents to summarize (default: 10)"
+    )
+
+    # Search Intelligence commands
+    intelligence_parser = subparsers.add_parser(
+        "intelligence", help="Search Intelligence analysis tools"
+    )
+    intel_subparsers = intelligence_parser.add_subparsers(
+        dest="intel_command", help="Intelligence commands"
+    )
+
+    # Smart search command
+    smart_search_parser = intel_subparsers.add_parser(
+        "smart-search", help="Intelligent search with preprocessing"
+    )
+    smart_search_parser.add_argument("query", help="Search query")
+    smart_search_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+    smart_search_parser.add_argument(
+        "--no-expansion", action="store_true", help="Disable query expansion"
+    )
+    smart_search_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Similarity command
+    similarity_parser = intel_subparsers.add_parser("similarity", help="Find similar documents")
+    similarity_parser.add_argument("doc_id", help="Document ID to find similarities for")
+    similarity_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of similar documents (default: 10)"
+    )
+    similarity_parser.add_argument(
+        "--threshold", type=float, default=0.7, help="Similarity threshold (default: 0.7)"
+    )
+    similarity_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Cluster command
+    cluster_parser = intel_subparsers.add_parser("cluster", help="Cluster similar content")
+    cluster_parser.add_argument(
+        "--threshold", type=float, default=0.7, help="Similarity threshold (default: 0.7)"
+    )
+    cluster_parser.add_argument("--content-type", help="Filter by content type (email, pdf, etc.)")
+    cluster_parser.add_argument(
+        "-n", "--limit", type=int, default=100, help="Maximum documents to cluster (default: 100)"
+    )
+    cluster_parser.add_argument(
+        "--min-samples", type=int, default=2, help="Minimum samples for cluster (default: 2)"
+    )
+    cluster_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Duplicates command
+    duplicates_parser = intel_subparsers.add_parser("duplicates", help="Detect duplicate documents")
+    duplicates_parser.add_argument("--content-type", help="Filter by content type")
+    duplicates_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.95,
+        help="Similarity threshold for near-duplicates (default: 0.95)",
+    )
+    duplicates_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Entities command
+    entities_parser = intel_subparsers.add_parser("entities", help="Extract and cache entities")
+    entities_parser.add_argument("doc_id", help="Document ID to extract entities from")
+    entities_parser.add_argument(
+        "--force-refresh", action="store_true", help="Force re-extraction even if cached"
+    )
+    entities_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Summarize command (intelligence version)
+    intel_summarize_parser = intel_subparsers.add_parser(
+        "summarize", help="Auto-summarize document"
+    )
+    intel_summarize_parser.add_argument("doc_id", help="Document ID to summarize")
+    intel_summarize_parser.add_argument(
+        "--sentences", type=int, default=3, help="Maximum sentences (default: 3)"
+    )
+    intel_summarize_parser.add_argument(
+        "--keywords", type=int, default=10, help="Maximum keywords (default: 10)"
+    )
+    intel_summarize_parser.add_argument(
+        "--no-cache", action="store_true", help="Don't cache the summary"
+    )
+    intel_summarize_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Analog Database commands
+    analog_parser = subparsers.add_parser("analog", help="Analog database search and operations")
+    analog_subparsers = analog_parser.add_subparsers(dest="analog_command", help="Analog commands")
+
+    # Analog search command
+    analog_search_parser = analog_subparsers.add_parser(
+        "search", help="Search analog database files"
+    )
+    analog_search_parser.add_argument("query", help="Search query")
+    analog_search_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+    analog_search_parser.add_argument(
+        "--content-only", action="store_true", help="Search only file content"
+    )
+    analog_search_parser.add_argument(
+        "--metadata-only", action="store_true", help="Search only frontmatter metadata"
+    )
+    analog_search_parser.add_argument(
+        "--no-vector", action="store_true", help="Disable semantic/vector search"
+    )
+    analog_search_parser.add_argument(
+        "--regex", action="store_true", help="Treat query as regex pattern"
+    )
+    analog_search_parser.add_argument(
+        "--case-sensitive", action="store_true", help="Enable case-sensitive search"
+    )
+    analog_search_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Analog metadata search with filters
+    analog_meta_parser = analog_subparsers.add_parser("meta", help="Search by metadata filters")
+    analog_meta_parser.add_argument("--title", help="Filter by title (partial match)")
+    analog_meta_parser.add_argument(
+        "--doc-type", help="Filter by document type (email, document, etc.)"
+    )
+    analog_meta_parser.add_argument("--sender", help="Filter by email sender")
+    analog_meta_parser.add_argument(
+        "--tag",
+        "--tags",
+        dest="tags",
+        action="append",
+        help="Filter by tags (can use multiple times)",
+    )
+    analog_meta_parser.add_argument(
+        "--tag-logic", choices=["AND", "OR"], default="OR", help="Logic for combining tags"
+    )
+    analog_meta_parser.add_argument(
+        "--since", help="Files created since date (ISO format or relative like '2 days ago')"
+    )
+    analog_meta_parser.add_argument(
+        "--until", help="Files created until date (ISO format or relative)"
+    )
+    analog_meta_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+    analog_meta_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Analog hybrid search
+    analog_hybrid_parser = analog_subparsers.add_parser(
+        "hybrid", help="Combined content and metadata search"
+    )
+    analog_hybrid_parser.add_argument("query", help="Search query")
+    analog_hybrid_parser.add_argument("--title", help="Also filter by title")
+    analog_hybrid_parser.add_argument("--doc-type", help="Also filter by document type")
+    analog_hybrid_parser.add_argument(
+        "--tag", "--tags", dest="tags", action="append", help="Also filter by tags"
+    )
+    analog_hybrid_parser.add_argument(
+        "-n", "--limit", type=int, default=15, help="Number of results (default: 15)"
+    )
+    analog_hybrid_parser.add_argument(
+        "--no-vector", action="store_true", help="Disable semantic search"
+    )
+    analog_hybrid_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Analog stats command
+    analog_stats_parser = analog_subparsers.add_parser(
+        "stats", help="Show analog database statistics"
+    )
+    analog_stats_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Analog browse command
+    analog_browse_parser = analog_subparsers.add_parser(
+        "browse", help="Browse markdown files in analog database"
+    )
+    analog_browse_parser.add_argument(
+        "--path",
+        default="",
+        help="Directory path to browse (relative to project root, e.g., 'documents/legal/')",
+    )
+    analog_browse_parser.add_argument(
+        "--recursive", "-r", action="store_true", help="Browse subdirectories recursively"
+    )
+    analog_browse_parser.add_argument(
+        "--json", action="store_true", help="Output as structured JSON"
+    )
+
+    # Analog export command
+    analog_export_parser = analog_subparsers.add_parser(
+        "export", help="Export markdown files with metadata"
+    )
+    analog_export_parser.add_argument(
+        "query", nargs="?", help="Optional search query to filter exported files"
+    )
+    analog_export_parser.add_argument(
+        "--output", "-o", required=True, help="Output directory for exported files"
+    )
+    analog_export_parser.add_argument(
+        "--format",
+        choices=["markdown", "pdf", "json"],
+        default="markdown",
+        help="Export format: markdown (preserves structure), pdf (printable), json (structured data)",
+    )
+    analog_export_parser.add_argument(
+        "--include-metadata",
+        action="store_true",
+        help="Include YAML frontmatter metadata in export",
+    )
+
+    # Deduplication commands
+    dedup_parser = subparsers.add_parser("dedup", help="Duplicate detection and removal")
+    dedup_subparsers = dedup_parser.add_subparsers(dest="dedup_command", help="Dedup commands")
+
+    # Find duplicates command
+    find_dupes_parser = dedup_subparsers.add_parser("find", help="Find duplicate content")
+    find_dupes_parser.add_argument(
+        "--type", dest="content_type", help="Filter by content type (email, pdf, etc.)"
+    )
+    find_dupes_parser.add_argument(
+        "--threshold", type=float, default=0.8, help="Similarity threshold (default: 0.8)"
+    )
+    find_dupes_parser.add_argument(
+        "--show-groups", action="store_true", help="Show detailed duplicate groups"
+    )
+    find_dupes_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Compare documents command
+    compare_parser = dedup_subparsers.add_parser("compare", help="Compare two documents")
+    compare_parser.add_argument("doc1", help="First document ID")
+    compare_parser.add_argument("doc2", help="Second document ID")
+    compare_parser.add_argument("--show-diff", action="store_true", help="Show content differences")
+
+    # Remove duplicates command
+    remove_dupes_parser = dedup_subparsers.add_parser("remove", help="Remove duplicate content")
+    remove_dupes_parser.add_argument(
+        "--threshold", type=float, default=0.95, help="Similarity threshold (default: 0.95)"
+    )
+    remove_dupes_parser.add_argument(
+        "--dry-run", action="store_true", default=True, help="Preview only (default)"
+    )
+    remove_dupes_parser.add_argument(
+        "--force", action="store_true", help="Actually delete (overrides dry-run)"
+    )
+    remove_dupes_parser.add_argument("--type", dest="content_type", help="Filter by content type")
+
+    # Build index command
+    index_parser = dedup_subparsers.add_parser("index", help="Build duplicate detection index")
+    index_parser.add_argument("--rebuild", action="store_true", help="Rebuild existing index")
+
+    args = parser.parse_args()
+
+    # Default to search if no command but arguments provided
+    if not args.command and len(sys.argv) > 1:
+        # Treat first argument as search query
+        query = " ".join(sys.argv[1:])
+        search_command(query)
+    elif args.command == "search":
+        # Build filters dictionary
+        filters = {}
+        if args.since:
+            filters["since"] = args.since
+        if args.until:
+            filters["until"] = args.until
+        if args.types:
+            filters["content_types"] = args.types
+        if args.tags:
+            filters["tags"] = args.tags
+            filters["tag_logic"] = args.tag_logic
+
+        # Pass filters only if any are specified
+        filters_to_pass = filters if filters else None
+        search_command(
+            args.query,
+            args.limit,
+            hybrid=not args.keyword_only,
+            verbose=args.verbose,
+            filters=filters_to_pass,
+            mode=args.mode,
+        )
+    elif args.command == "info":
+        info_command()
+    elif args.command == "health":
+        from tools.cli.health_monitor import health_check_command
+
+        exit_code = health_check_command(verbose=args.verbose)
+        sys.exit(exit_code)
+    elif args.command == "upload":
+        upload_command(args.file, storage_mode=args.storage)
+    elif args.command == "legal":
+        # Import legal handlers
+        from tools.cli.legal_handler import (
+            build_legal_graph,
+            generate_legal_timeline,
+            predict_missing_documents,
+            process_legal_case,
+            search_legal,
+            summarize_legal_docs,
+        )
+
+        if args.legal_command == "process":
+            process_legal_case(args.case_id, args.format)
+        elif args.legal_command == "timeline":
+            generate_legal_timeline(args.case_id, args.output)
+        elif args.legal_command == "graph":
+            build_legal_graph(args.case_id, args.depth)
+        elif args.legal_command == "search":
+            search_legal(args.query, args.case, args.limit)
+        elif args.legal_command == "missing":
+            predict_missing_documents(args.case_id, args.confidence)
+        elif args.legal_command == "summarize":
+            summarize_legal_docs(args.case_id, args.max_docs)
+        else:
+            legal_parser.print_help()
+    elif args.command == "intelligence":
+        # Import intelligence handlers
+        from tools.cli.intelligence_handler import (
+            cluster_command,
+            duplicates_command,
+            entities_command,
+            intel_summarize_command,
+            similarity_command,
+            smart_search_command,
+        )
+
+        if args.intel_command == "smart-search":
+            smart_search_command(args.query, args.limit, not args.no_expansion, args.json)
+        elif args.intel_command == "similarity":
+            similarity_command(args.doc_id, args.limit, args.threshold, args.json)
+        elif args.intel_command == "cluster":
+            cluster_command(
+                args.threshold, args.content_type, args.limit, args.min_samples, args.json
+            )
+        elif args.intel_command == "duplicates":
+            duplicates_command(args.content_type, args.threshold, args.json)
+        elif args.intel_command == "entities":
+            entities_command(args.doc_id, args.force_refresh, args.json)
+        elif args.intel_command == "summarize":
+            intel_summarize_command(
+                args.doc_id, args.sentences, args.keywords, not args.no_cache, args.json
+            )
+        else:
+            intelligence_parser.print_help()
+    elif args.command == "analog":
+        # Handle analog database commands
+        if args.analog_command == "search":
+            analog_search_command(
+                args.query,
+                args.limit,
+                content_only=args.content_only,
+                metadata_only=args.metadata_only,
+                use_vector=not args.no_vector,
+                regex=args.regex,
+                case_sensitive=args.case_sensitive,
+                json_output=args.json,
+            )
+        elif args.analog_command == "meta":
+            filters = {}
+            if args.title:
+                filters["title"] = args.title
+            if args.doc_type:
+                filters["doc_type"] = args.doc_type
+            if args.sender:
+                filters["sender"] = args.sender
+            if args.tags:
+                filters["tags"] = args.tags
+                filters["tag_logic"] = args.tag_logic
+            if args.since:
+                filters["since"] = args.since
+            if args.until:
+                filters["until"] = args.until
+
+            analog_metadata_search_command(filters, args.limit, args.json)
+        elif args.analog_command == "hybrid":
+            filters = {}
+            if args.title:
+                filters["title"] = args.title
+            if args.doc_type:
+                filters["doc_type"] = args.doc_type
+            if args.tags:
+                filters["tags"] = args.tags
+
+            analog_hybrid_search_command(
+                args.query,
+                filters if filters else None,
+                args.limit,
+                use_vector=not args.no_vector,
+                json_output=args.json,
+            )
+        elif args.analog_command == "stats":
+            analog_stats_command(args.json)
+        elif args.analog_command == "browse":
+            analog_browse_command(args.path, args.recursive, args.json)
+        elif args.analog_command == "export":
+            analog_export_command(args.query, args.output, args.format, args.include_metadata)
+        else:
+            analog_parser.print_help()
+    elif args.command == "dedup":
+        # Import deduplication handlers
+        from tools.cli.dedup_handler import (
+            build_duplicate_index_command,
+            compare_documents_command,
+            deduplicate_database_command,
+            find_duplicates_command,
+        )
+
+        if args.dedup_command == "find":
+            find_duplicates_command(args.content_type, args.threshold, args.show_groups, args.json)
+        elif args.dedup_command == "compare":
+            compare_documents_command(args.doc1, args.doc2, args.show_diff)
+        elif args.dedup_command == "remove":
+            dry_run = args.dry_run and not args.force
+            deduplicate_database_command(args.threshold, dry_run, args.content_type)
+        elif args.dedup_command == "index":
+            build_duplicate_index_command()
+        else:
+            dedup_parser.print_help()
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

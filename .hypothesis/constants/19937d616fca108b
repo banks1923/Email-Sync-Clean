@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/pipelines/processors.py
+# hypothesis_version: 6.138.2
+
+[0.1, '(\\w+)-\\n(\\w+)', ':', 'Date', 'Empty PDF content', 'Empty email content', 'From', 'From:', 'Message-ID', 'Missing From header', 'No Subject', 'SPEAKER', 'Speaker:', 'Subject', 'Subject:', 'To', 'Z', '[Speaker', '\\1\\2', '\\n[\\1 - \\2]\\n', '\\n[\\1]\\n', '\\n\\s*\\n\\s*\\n+', '^Page \\d+ of \\d+\\s*$', '^Page\\s+\\d+\\s*$', '^\\d+\\s*$', 'audio', 'content_length', 'content_type', 'date', 'email', 'extracted_at', 'extracted_title', 'from', 'headers', 'line_count', 'message_id', 'pdf', 'processed_at', 'subject', 'to', 'transcript', 'transcription', 'word_count', '�']

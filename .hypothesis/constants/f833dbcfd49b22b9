@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/entity/processors/entity_normalizer.py
+# hypothesis_version: 6.138.2
+
+[0.0, 0.2, 0.3, 0.7, 0.8, '.', 'Co', 'Company', 'Corp', 'Corporation', 'Inc', 'LLC', 'LLP', 'LP', 'ORG', 'PA', 'PC', 'PERSON', 'PLLC', 'UNKNOWN', '[.,\\\'"()]', '\\.?\\b', '\\b', '\\s+', 'additional_info', 'advocate', 'aliases', 'attorney', 'client', 'confidence', 'confidence_score', 'consolidated_count', 'counsel', 'customer', 'entity_id', 'entity_mappings', 'entity_type', 'error', 'extractor_type', 'first', 'first_message_id', 'full_name', 'honorable', 'initial_last', 'judge', 'justice', 'last', 'last_first', 'lawyer', 'legal_suffixes', 'magistrate', 'message_id', 'middle', 'normalize_spaces', 'normalized_form', 'original_count', 'party', 'primary_name', 'remove_chars', 'role_type', 'solicitor', 'success', 'suffix_name', 'text', 'title_name', 'total_mentions', 'type', 'unknown']

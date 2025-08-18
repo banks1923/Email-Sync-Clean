@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/validator.py
+# hypothesis_version: 6.138.2
+
+[0.0, 0.5, 1.0, 100, 1000, 'OCR forced by user', 'Scanned PDF detected', 'Text PDF detected', 'all_available', 'confidence', 'cv2_available', 'error', 'is_scanned', 'ocr_available', 'pypdf2', 'rb', 'reason', 'success', 'use_ocr']

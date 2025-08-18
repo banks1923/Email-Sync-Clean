@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/entity/extractors/relationship_extractor.py
+# hypothesis_version: 6.138.2
+
+[0.05, 0.1, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 1.0, 100, '(?:and|,\\s*and|;\\s*)', '(?:v\\.|vs\\.|versus)', 'ALL', 'aliases', 'colleagues', 'communication', 'confidence', 'context_snippet', 'count', 'email_communication', 'end', 'entity_id', 'error', 'legal_relationship', 'mentioned_together', 'message_id', 'normalized_form', 'patterns', 'recipient_to', 'relationship', 'relationship_type', 'relationships', 'sender', 'source_entity_id', 'source_entity_text', 'source_message_id', 'start', 'success', 'target_entity_id', 'target_entity_text', 'text', 'works_for']

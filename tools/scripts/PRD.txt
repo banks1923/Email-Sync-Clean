@@ -1,0 +1,181 @@
+# Email Sync System - Product Requirements Document
+
+## Overview
+Email Sync System is an AI-powered personal knowledge management platform that combines semantic search capabilities with document processing to create a unified, searchable knowledge base. It uses Legal BERT embeddings for sophisticated semantic understanding and provides intelligent search across emails, PDFs, transcripts, and notes. The system emphasizes clean architecture with minimal code complexity while delivering powerful search and organization capabilities.
+
+## Core Features
+
+### 1. Hybrid AI Search System
+- **Semantic Search**: Legal BERT 1024D embeddings for contextual understanding of queries
+- **Keyword Fallback**: Automatic fallback to SQLite full-text search when vector service is unavailable
+- **Unified Search Interface**: Single search endpoint for all content types (emails, PDFs, transcripts, notes)
+- **Intelligent Ranking**: Combined scoring from semantic similarity and keyword relevance
+
+### 2. Document Processing Pipeline
+- **PDF Processing**: Extract and index text from PDF documents with metadata preservation
+- **OCR Capability**: Extract text from scanned PDFs and images (MVP requirement)
+- **Audio/Video Transcription**: Convert media files to searchable text using Whisper (local setup)
+- **Email Ingestion**: Gmail API integration for syncing and indexing email content with deduplication
+- **Note Management**: Create and organize searchable notes with tagging support
+- **Format Support**: All document formats supported from start (PDF, DOCX, TXT, MD)
+
+### 3. Clean Service Architecture
+- **EmbeddingService**: Singleton pattern for Legal BERT model management
+- **VectorStore**: Qdrant wrapper with graceful fallback handling
+- **SearchService**: Orchestrates search across vector and database systems
+- **SimpleDB**: Direct SQLite operations with batch insert capabilities
+
+### 4. MCP (Model Context Protocol) Integration
+- **35+ MCP Tools**: Comprehensive tool set for Claude Desktop integration
+- **11 Specialized Agents**: Task-specific agents for development workflows
+- **Thin MCP Layer**: Tools/functions standalone and callable through MCP without tight coupling
+
+## User Experience
+
+### User Personas
+1. **Knowledge Worker**: Needs to quickly find information across emails, documents, and notes
+2. **Legal Professional**: Requires accurate semantic search for legal documents and contracts
+3. **Developer**: Wants to integrate search capabilities into existing workflows
+
+### Key User Flows
+1. **Quick Search**: User enters query → System searches all content → Returns ranked results
+2. **Document Upload**: User uploads PDF → System extracts text (with OCR if needed) → Indexes for search
+3. **Email Sync**: User connects Gmail → System syncs emails with deduplication → Makes them searchable
+4. **Note Creation**: User creates note → System indexes content → Available in search
+
+### UI/UX Considerations
+- Command-line interface for developer-friendly interaction (vsearch [command] [args])
+- Real-time feedback for long-running operations
+- Clear error messages with fallback options
+- Web UI is future consideration, not MVP or near-term
+
+## Technical Architecture
+
+### System Components
+- **CLI Layer**: User-facing command interface (scripts/vsearch)
+- **Service Layer**: Clean services (embeddings, vector, search)
+- **Data Layer**: SQLite database + Qdrant vector store
+- **Integration Layer**: Gmail API, FFmpeg, Whisper, MCP servers
+
+### Data Models
+- **Content**: Unified model for all searchable content (type, title, body, metadata)
+- **Embeddings**: 1024-dimensional vectors from Legal BERT
+- **Relationships**: Content-to-content relationships for knowledge graph
+- **Timeline**: Chronological organization of all content
+- **Deduplication**: Message/document handling with INSERT OR IGNORE and batch operations
+
+### APIs and Integrations
+- **Gmail API**: Email synchronization with deduplication
+- **Qdrant API**: Vector similarity search
+- **FFmpeg/Whisper**: Audio/video transcription (local setup)
+- **MCP Protocol**: Claude Desktop integration (thin layer)
+
+### Infrastructure Requirements
+- **Minimum**: Python 3.8+, SQLite, 4GB RAM
+- **Recommended**: Qdrant running locally, 8GB+ RAM
+- **Hardware**: Post-development, RAM/compute not an issue
+
+## Development Roadmap
+
+### Phase 1: MVP - Core Functionality
+- Semantic search with Legal BERT embeddings
+- Keyword search fallback via SQLite FTS5
+- PDF processing with OCR for scanned documents
+- Gmail sync with email deduplication
+- Whisper transcription for audio/video
+- All document formats support (PDF, DOCX, TXT, MD)
+- Batch insert operations for SimpleDB
+- Basic error handling and logging
+- CLI interface fully operational
+
+### Phase 2: Search Enhancement & Knowledge Features
+- Advanced search filters (date range, content type, tags)
+- Search result snippets with highlighting
+- Entity extraction system (people, organizations, topics)
+- Content relationship mapping
+- Smart content suggestions
+- Search history and saved searches
+- Topic clustering and categorization
+
+### Phase 3: Interface & Integration Expansion
+- Web-based search interface
+- Real-time search suggestions
+- Advanced search query builder
+- Dashboard with usage analytics
+- Knowledge graph visualization
+- Docker containers for deployment
+
+### Phase 4: Advanced AI & Collaboration
+- Multiple embedding models for comparison
+- Question-answering on search results
+- Content summarization
+- Smart alerts for new relevant content
+- Multi-user support with permissions
+- Shared knowledge bases
+- Collaborative annotations
+
+## Logical Dependency Chain
+
+### Foundation (Must Complete First)
+1. Core search functionality with both semantic and keyword
+2. OCR integration for scanned PDFs
+3. Gmail sync with deduplication
+4. Whisper transcription setup
+5. SimpleDB batch operations
+
+### Core Features (Build on Foundation)
+1. Advanced search capabilities
+2. Entity extraction and relationship mapping
+3. Knowledge graph construction
+
+### Advanced Features (Require Core)
+1. Web interface development
+2. AI-powered features (Q&A, summarization)
+3. Multi-user support and collaboration
+
+## Risks and Mitigations
+
+### Technical Considerations
+- **Search Latency**: Implement caching layer for frequent queries
+- **Vector DB Availability**: Fallback to keyword search is already implemented
+- **Embedding Memory**: Acceptable memory usage, not a critical risk
+- **Build Quality**: Focus on robustness over patchwork mitigations
+
+### MVP Definition
+- ✅ Search across all content types (semantic + keyword)
+- ✅ Document upload with OCR capability
+- ✅ PDF processing with metadata
+- ✅ Gmail sync with deduplication
+- ✅ Whisper transcription operational
+- ✅ CLI fully functional
+- ✅ Error handling in place
+- ✅ All formats supported
+
+## Success Metrics
+- Search response time < 500ms for 95% of queries
+- Zero data loss during processing
+- 90%+ search relevance accuracy
+- Support for 100k+ documents
+- < 1% error rate in document processing
+- No duplicate emails in database
+
+## Appendix
+
+### Technical Specifications
+- Legal BERT: 1024-dimensional embeddings
+- Qdrant: HNSW index with cosine similarity
+- SQLite: FTS5 with Porter stemming, batch insert operations
+- Python 3.8+ for compatibility
+- Whisper: Local setup for transcription
+- OCR: Integrated for scanned document processing
+
+### Architecture Decisions
+- Keep services separate and clean
+- MCP layer must remain thin
+- SQLite handling: Balance between direct operations and light abstraction (TBD)
+- Batch operations for email deduplication using INSERT OR IGNORE
+
+### Integration Guidelines
+- MCP server for Claude Desktop compatibility (thin layer)
+- Tools/functions standalone, callable through MCP
+- Environment variables for configuration

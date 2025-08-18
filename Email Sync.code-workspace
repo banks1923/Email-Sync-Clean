@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			".claude": true,
+			".benchmarks": true,
+			"email_sync.db": true
+		},
+		"python-envs.defaultEnvManager": "ms-python.python:system",
+		"python-envs.pythonProjects": []
+	},
+	"extensions": {
+		"recommendations": [
+			"anthropic.claude-code"
+		]
+	}
+}

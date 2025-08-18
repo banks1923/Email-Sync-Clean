@@ -1,0 +1,67 @@
+PROJECT REQUIREMENTS DOCUMENT: Gmail Service Test Suite Enhancement
+
+OBJECTIVE:
+Complete the Gmail service test suite fixes to achieve 90%+ test pass rate and improve overall code coverage. Currently at 73% pass rate (19/26 tests passing) with 7 failures requiring resolution.
+
+CURRENT STATE:
+- Gmail service test file: tests/services/gmail/test_gmail_service_focused.py
+- Tests passing: 19/26 (73%)
+- Database schema issues: RESOLVED (switched from temp_db to simple_db fixture)
+- Remaining failures: 7 tests in incremental sync, empty message handling, and partial failures
+
+REQUIREMENTS:
+
+1. FIX INCREMENTAL SYNC TESTS
+- test_sync_incremental_with_history: Fix History API mock to use get_history() not get_history_since()
+- test_sync_incremental_fallback_to_full: Ensure proper fallback when no history available
+- test_sync_incremental_history_api_failure: Handle History API failures gracefully
+- Mock profile.get_profile() to return proper email and history_id
+- Mock storage.get_sync_state() and update_sync_state() correctly
+
+2. FIX EMPTY MESSAGE HANDLING
+- test_sync_emails_empty_messages: Expects success=False with "CRITICAL FAILURE" for empty results
+- This is intentional behavior to detect system issues
+- Test should verify this behavior correctly
+
+3. FIX FETCH AND SAVE OPERATIONS
+- test_fetch_and_save_messages: Ensure proper account_email parameter passing
+- test_fetch_and_save_partial_failures: Handle partial failures correctly
+- Mock summarizer.extract_summary() appropriately
+
+4. VERIFY STORAGE OPERATIONS
+- test_get_emails_storage_failure: Should handle storage exceptions
+- Ensure proper error propagation and handling
+
+5. IMPROVE TEST COVERAGE
+- Add missing edge case tests
+- Ensure all API methods are tested
+- Verify error handling paths
+
+6. PROPERTY-BASED TESTING
+- Enhance Hypothesis tests for robustness
+- Add more property-based test scenarios
+- Test with various input combinations
+
+7. INTEGRATION TESTING
+- Verify real database operations work correctly
+- Test pipeline integration
+- Test summarization integration
+
+SUCCESS CRITERIA:
+- All 26 tests passing (100% pass rate)
+- No database schema errors
+- Proper mock usage for external dependencies
+- Clear test documentation
+- Coverage improvement for Gmail service module
+
+TECHNICAL CONSTRAINTS:
+- Use existing test fixtures (simple_db, gmail_service_with_mocks)
+- Follow project testing philosophy (test real functionality, avoid excessive mocks)
+- Maintain test isolation
+- Keep tests fast and reliable
+
+DELIVERABLES:
+- Fixed test_gmail_service_focused.py with all tests passing
+- Updated mock configurations
+- Test execution report showing 100% pass rate
+- Coverage report showing improvement

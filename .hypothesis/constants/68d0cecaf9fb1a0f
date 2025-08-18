@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/documents/processors/base_processor.py
+# hypothesis_version: 6.138.2
+
+[0.3, 127, 'File not found', 'avg_line_length', 'avg_word_length', 'char_count', 'content', 'created_at', 'error', 'extension', 'filename', 'format', 'line_count', 'metadata', 'metrics', 'modified_at', 'processed_at', 'size_bytes', 'success', 'unknown', 'word_count']

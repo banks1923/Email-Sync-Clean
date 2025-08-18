@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/pdf_health.py
+# hypothesis_version: 6.138.2
+
+[100, 'Health check failed', 'available_space_mb', 'constants', 'database', 'database_health', 'disk', 'error', 'healthy', 'memory_available_mb', 'memory_threshold_mb', 'pdf_collection', 'pdf_service', 'pdf_stats', 'performance', 'resources', 'service', 'stats', 'success', 'system', 'timestamp']

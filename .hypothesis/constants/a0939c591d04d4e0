@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/rasterizer.py
+# hypothesis_version: 6.138.2
+
+[8.5, 200, 300, 600, 1000, 1024, '200-400', 'available', 'dpi', 'error', 'estimated_mb', 'images', 'optimal_dpi_range', 'page_count', 'pages', 'success', 'warning', 'warnings']

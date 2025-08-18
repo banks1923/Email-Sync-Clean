@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/gmail/storage.py
+# hypothesis_version: 6.138.2
+
+[100, 500, 1000, 'Email saved', 'Missing message_id', 'Missing sender', 'attachment_id', 'clean_recipient', 'clean_sender', 'content', 'count', 'datetime_utc', 'emails.db', 'error', 'errors', 'extracted_email', 'filename', 'idle', 'ignored', 'index', 'inserted', 'message', 'message_id', 'mime_type', 'query', 'recipient_to', 'sender', 'size_bytes', 'subject', 'success', 'total', 'utf-8', 'validation_errors']

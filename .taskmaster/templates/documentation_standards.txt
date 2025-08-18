@@ -1,0 +1,50 @@
+## Automated Documentation Standards for Email Sync Project
+
+### Documentation File Requirements
+1. **Module Documentation**: {module}/CLAUDE.md with architecture and usage
+2. **API Documentation**: Inline docstrings following Google/Sphinx format
+3. **Integration Guides**: docs/{feature}_integration.md for cross-service usage
+4. **User Documentation**: Update README.md with new functionality
+
+### Required Documentation Sections
+- **Quick Start**: 2-3 line usage example
+- **API Reference**: All public methods with parameters and return values
+- **Integration Examples**: Real-world usage scenarios
+- **Error Handling**: Common error conditions and solutions
+- **Performance Notes**: Expected performance characteristics and limits
+
+### Documentation Updates Per Subtask
+- **New Services**: Create {service}/CLAUDE.md with full API documentation
+- **Schema Changes**: Update database documentation and migration guides
+- **New Features**: Add usage examples to main README.md
+- **CLI Changes**: Update scripts documentation and help text
+
+### Inline Documentation Requirements
+```python
+def method_name(param1: Type, param2: Type) -> ReturnType:
+    """Brief description of what the method does.
+
+    Args:
+        param1: Description of parameter including type and constraints
+        param2: Description of parameter including type and constraints
+
+    Returns:
+        Description of return value including type and structure
+
+    Raises:
+        SpecificException: When and why this exception occurs
+
+    Example:
+        >>> service = ServiceClass()
+        >>> result = service.method_name("value1", "value2")
+        >>> print(result)
+        {'status': 'success', 'data': [...]}
+    """
+```
+
+### CLAUDE.md Update Requirements
+- Architecture compliance notes (file size, complexity)
+- Performance characteristics
+- Integration points with other services
+- Error handling approach
+- Usage examples with real code

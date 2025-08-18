@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/mcp_servers/__init__.py
+# hypothesis_version: 6.138.2
+
+['docs_mcp_server', 'entity_mcp_server', 'legal_mcp_server', 'search_mcp_server', 'timeline_mcp_server']

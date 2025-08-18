@@ -1,0 +1,186 @@
+# File-Based Analog DB Implementation PRD
+
+## Project Overview
+Replace the complex pipeline system (raw → staged → processed → quarantine → export) with a simple file-based "analog database" approach. Users want human-readable markdown files they can open and search directly, not a complex processing pipeline.
+
+## Current Problems
+- Complex 5-stage pipeline is overkill for single-user system
+- Files scattered across multiple directories (raw, staged, processed, quarantine, export)
+- User has to hunt for content across different pipeline stages
+- Over-engineered for actual user needs
+- Violates CLAUDE.md principles: "Simple > Complex", "Direct > Indirect"
+
+## Solution: File-Based Analog DB
+
+### Architecture Goals
+1. **Documents stay separate** - Each PDF becomes one markdown file
+2. **Email threads stay together** - Related emails in single thread files as they arrived
+3. **Human readable** - All content in markdown format
+4. **Searchable** - Standard text search tools work (grep, text editors)
+5. **Simple archive** - Original files preserved in organized structure
+
+### Directory Structure
+```
+Email Sync/
+├── analog_db/                     # User's file-based database
+│   ├── documents/                 # Individual documents as markdown
+│   │   ├── 2025-08-17_lab-results.md
+│   │   ├── 2025-08-16_court-filing.md
+│   │   └── 2025-08-15_inspection-report.md
+│   └── email_threads/             # Email threads as they arrived
+│       ├── legal-notice-thread.md
+│       ├── mold-inspection-thread.md
+│       └── court-communication-thread.md
+├── originals/                     # Simple archive
+│   ├── pdfs/                      # Original PDF files
+│   └── emails/                    # Original .eml files
+```
+
+## Technical Requirements
+
+### Phase 1: Core Infrastructure
+- Create analog_db/ directory structure (documents/, email_threads/)
+- Create originals/ archive structure (pdfs/, emails/)
+- Create shared/analog_db.py - main processor class
+- Remove complex pipeline dependencies
+
+### Phase 2: Document Processing 
+- PDF to markdown converter with metadata extraction
+- Clean text extraction and formatting
+- Filename generation: YYYY-MM-DD_descriptive-name.md
+- Archive original PDFs to originals/pdfs/
+
+### Phase 3: Email Thread Processing
+- Gmail thread grouping by thread_id
+- Chronological email ordering within threads
+- Thread naming based on subject/content
+- Archive original .eml files to originals/emails/
+- Preserve Message-ID for thread reconstruction
+
+### Phase 4: Service Integration
+- Modify upload_handler.py to use analog DB instead of pipeline
+- Modify gmail/main.py to create thread files instead of database storage
+- Update search system to work with markdown files
+- Remove DataPipelineOrchestrator dependencies
+
+### Phase 5: Pipeline Cleanup
+- Archive or remove infrastructure/pipelines/ directory
+- Remove data/staged/, data/processed/, data/quarantine/ directories
+- Simplify data/ structure to just originals/ and analog_db/
+- Update documentation
+
+## File Format Specifications
+
+### Document Markdown Format
+```markdown
+# Lab Results - 03/12/25
+
+**Type:** PDF Document  
+**Original:** lab-results-031225.pdf  
+**Processed:** 2025-08-17 16:30  
+**File Hash:** a1b2c3d4e5f6...
+**Size:** 385KB
+
+## Content
+[Clean extracted text from PDF...]
+
+## Metadata
+- **File Type:** PDF
+- **Pages:** 3
+- **Extraction Method:** OCR/Text
+- **Processing Status:** Complete
+```
+
+### Email Thread Markdown Format
+```markdown
+# Legal Notice Thread - 24NNCV
+
+**Thread ID:** 12345abcdef
+**Started:** 2025-08-15 10:30
+**Last Updated:** 2025-08-16 09:15
+**Participants:** attorney@law.com, jim@email.com
+
+## Email 1: Initial Notice (2025-08-15 10:30)
+**From:** attorney@law.com  
+**To:** jim@email.com  
+**Subject:** Legal Notice - 24NNCV
+**Message-ID:** <msg1@gmail.com>
+
+[Clean email content...]
+
+---
+
+## Email 2: Response (2025-08-15 14:20)  
+**From:** jim@email.com  
+**To:** attorney@law.com  
+**Subject:** Re: Legal Notice - 24NNCV
+**Message-ID:** <msg2@gmail.com>
+
+[Response content...]
+
+---
+
+## Email 3: Follow-up (2025-08-16 09:15)
+**From:** attorney@law.com  
+**Subject:** Re: Legal Notice - 24NNCV
+**Message-ID:** <msg3@gmail.com>
+
+[Follow-up content...]
+```
+
+## Implementation Details
+
+### Core Components
+1. **AnalogDBProcessor** - Main processing class
+2. **DocumentConverter** - PDF to markdown conversion
+3. **EmailThreadProcessor** - Email thread to markdown conversion
+4. **ArchiveManager** - Original file archiving
+5. **SearchInterface** - Markdown file search functionality
+
+### Processing Flow
+```
+Input (PDF/Email) → Clean/Extract → Markdown + Archive Original → Done
+```
+
+### Search Capabilities
+- Text search: `grep -r "search term" analog_db/`
+- File listing: `ls analog_db/documents/`
+- Thread browsing: `ls analog_db/email_threads/`
+- Content browsing: Open any .md file in text editor
+
+## Success Criteria
+1. All PDFs converted to readable markdown files in analog_db/documents/
+2. All email threads grouped and converted to markdown in analog_db/email_threads/
+3. Original files preserved in organized originals/ structure
+4. Upload command creates markdown files instead of pipeline processing
+5. Gmail sync creates thread files instead of database entries
+6. Search works across all markdown files
+7. Complex pipeline directories removed/archived
+8. User can find and read any content by browsing file system
+
+## Benefits
+- **Human Readable**: Open any file in any text editor
+- **Searchable**: Standard text search tools work everywhere
+- **Simple**: No complex state management or stage transitions
+- **Portable**: Copy files anywhere, no database dependencies
+- **Organized**: Documents separate, threads together as requested
+- **Fast**: Direct file access, no database queries
+- **Reliable**: No processing stages to fail or get stuck
+
+## Timeline
+- Phase 1 (Infrastructure): 1-2 hours
+- Phase 2 (Document Processing): 2-3 hours  
+- Phase 3 (Email Processing): 2-3 hours
+- Phase 4 (Service Integration): 2-3 hours
+- Phase 5 (Cleanup): 1-2 hours
+- **Total**: 8-13 hours of development work
+
+## Risks & Mitigation
+- **Risk**: Large email threads create huge files
+  - **Mitigation**: Split very large threads (>100 emails) into multiple files
+- **Risk**: Duplicate content across files  
+  - **Mitigation**: Use content hashes to detect and prevent duplicates
+- **Risk**: Search performance with many files
+  - **Mitigation**: Standard grep/text search is very fast, add indexing if needed later
+
+This approach gives the user exactly what they want: a simple, human-readable "analog database" of all their processed content that they can browse, search, and use with standard tools.

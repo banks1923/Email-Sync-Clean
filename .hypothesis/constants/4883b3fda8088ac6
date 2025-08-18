@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/search_intelligence/duplicate_detector.py
+# hypothesis_version: 6.138.2
+
+[0.95, 0.98, 100, 86400, 'avg_similarity', 'body', 'content', 'content_id', 'content_type', 'count', 'created_at', 'date', 'duplicate_count', 'duplicate_of', 'duplicate_percentage', 'email', 'emails', 'exact', 'exact_duplicates', 'first', 'group_size', 'hash', 'kept_count', 'kept_documents', 'last', 'marked_at', 'members', 'message_id', 'near_duplicates', 'newest', 'removed_count', 'removed_documents', 'semantic', 'subject', 'title', 'total_documents', 'type', 'unknown', 'utf-8', 'vector']

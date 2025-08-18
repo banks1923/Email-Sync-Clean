@@ -1,0 +1,147 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SENSITIVE FILES - NEVER COMMIT
+credentials.json
+token.json
+*.key
+*.pem
+*.p12
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db.backup_*
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+.tmp/
+
+# Test files
+test_*.db
+data/test/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.cache
+.mypy_cache/
+
+# Vector database
+qdrant_data/
+storage/
+
+# Build artifacts
+build/
+
+# Private/sensitive documents
+private/
+
+# Large media files
+WHISPER/data/
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+
+# Data directory - exclude files but preserve structure
+data/raw/*
+data/staged/*
+data/processed/*
+data/quarantine/*
+data/export/*
+!data/raw/.gitkeep
+!data/staged/.gitkeep
+!data/processed/.gitkeep
+!data/quarantine/.gitkeep
+!data/export/.gitkeep
+!data/README.md
+
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/
+
+# BFG cleanup artifacts (temporary)
+..bfg-report/
+.git-backup/
+bfg.jar
+
+# Large/sensitive document files
+"S520 Standard for Professional Mold Remediation"

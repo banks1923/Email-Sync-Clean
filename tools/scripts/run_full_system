@@ -1,0 +1,588 @@
+#!/usr/bin/env python3
+"""
+Full System Runner - Orchestrates the complete Email Sync pipeline
+Starts all services, runs sync, processes documents, and generates reports
+"""
+
+import os
+import signal
+import subprocess
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from loguru import logger
+
+from gmail.main import GmailService
+from search_intelligence import get_search_intelligence_service
+from shared.simple_db import SimpleDB
+from summarization import get_document_summarizer
+from utilities.embeddings import get_embedding_service
+
+
+class SystemRunner:
+    """Orchestrates the full email sync system"""
+
+    def __init__(self):
+        self.qdrant_process: Optional[subprocess.Popen] = None
+        self.start_time = datetime.now()
+        self.stats = {
+            "emails_synced": 0,
+            "embeddings_generated": 0,
+            "summaries_created": 0,
+            "errors": [],
+        }
+
+        # Configure logging
+        logger.remove()
+        logger.add(
+            sys.stdout,
+            level="INFO",
+            format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>",
+        )
+
+        # Also log to file
+        log_file = f"logs/full_system_run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        os.makedirs("logs", exist_ok=True)
+        logger.add(log_file, level="DEBUG")
+
+    def check_prerequisites(self) -> bool:
+        """Check if all prerequisites are met"""
+        logger.info("🔍 Checking prerequisites...")
+
+        # Check for Gmail credentials
+        if not Path("gmail/token.json").exists():
+            logger.warning("⚠️  Gmail token not found. Running authentication...")
+            try:
+                from gmail.oauth import GmailAuth
+
+                auth = GmailAuth()
+                result = auth.get_credentials()
+                if not result["success"]:
+                    logger.error("❌ Gmail authentication failed")
+                    return False
+            except Exception as e:
+                logger.error(f"❌ Could not authenticate Gmail: {e}")
+                return False
+        else:
+            logger.info("  ✅ Gmail token found")
+
+        # Check database
+        db_path = Path("emails.db")
+        if not db_path.exists():
+            logger.info("📊 Creating new database...")
+            db = SimpleDB()
+        else:
+            # Check database integrity
+            try:
+                db = SimpleDB()
+                stats = db.get_content_stats()
+                logger.info(f"  ✅ Database found ({stats.get('total_content', 0)} items)")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Database check failed: {e}")
+                
+        # Check configuration files
+        if Path("gmail/config.py").exists():
+            logger.info("  ✅ Gmail config found")
+        else:
+            logger.warning("  ⚠️  Gmail config missing")
+            
+        # Check environment variables
+        import os
+        if os.getenv("OPENAI_API_KEY"):
+            logger.info("  ✅ OpenAI API key found")
+        elif os.getenv("ANTHROPIC_API_KEY"):
+            logger.info("  ✅ Anthropic API key found")
+        else:
+            logger.info("  ℹ️  No AI API keys found (optional)")
+
+        logger.success("✅ All prerequisites checked")
+        return True
+
+    def start_qdrant(self) -> bool:
+        """Start Qdrant vector database if not already running"""
+        logger.info("🚀 Checking Qdrant vector database...")
+
+        # Check if Qdrant is already running
+        try:
+            import requests
+
+            response = requests.get("http://localhost:6333/readiness", timeout=2)
+            if response.status_code == 200:
+                logger.info("✅ Qdrant already running")
+                return True
+        except:
+            logger.info("Qdrant not running, attempting to start...")
+
+        # Check if Qdrant binary exists
+        qdrant_paths = [
+            Path.home() / "bin" / "qdrant",
+            Path("/usr/local/bin/qdrant"),
+            Path("/opt/homebrew/bin/qdrant"),
+        ]
+
+        qdrant_binary = None
+        for path in qdrant_paths:
+            if path.exists():
+                qdrant_binary = path
+                break
+
+        if not qdrant_binary:
+            logger.warning("⚠️  Qdrant binary not found. Vector search will be unavailable.")
+            logger.info("💡 To install: See instructions in README.md")
+            return False
+
+        # Start Qdrant
+        try:
+            env = os.environ.copy()
+            env["QDRANT__STORAGE__PATH"] = "./qdrant_data"
+
+            self.qdrant_process = subprocess.Popen(
+                [str(qdrant_binary)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+
+            # Wait for Qdrant to start
+            logger.info("⏳ Waiting for Qdrant to start...")
+            for i in range(30):
+                try:
+                    import requests
+
+                    response = requests.get("http://localhost:6333/readiness", timeout=1)
+                    if response.status_code == 200:
+                        logger.success("✅ Qdrant started successfully")
+                        return True
+                except:
+                    time.sleep(1)
+
+            logger.error("❌ Qdrant failed to start")
+            return False
+
+        except Exception as e:
+            logger.error(f"❌ Could not start Qdrant: {e}")
+            return False
+
+    def sync_emails(self) -> dict:
+        """Run email synchronization"""
+        logger.info("📧 Starting email synchronization...")
+
+        try:
+            service = GmailService()
+
+            # Run incremental sync
+            result = service.sync_incremental(max_results=100)
+
+            if result["success"]:
+                self.stats["emails_synced"] = result.get("processed", 0)
+                logger.success(
+                    f"✅ Synced {result['processed']} new emails ({result.get('duplicates', 0)} duplicates)"
+                )
+            else:
+                error = f"Email sync failed: {result.get('error', 'Unknown error')}"
+                logger.error(f"❌ {error}")
+                self.stats["errors"].append(error)
+
+            return result
+
+        except Exception as e:
+            error = f"Email sync error: {str(e)}"
+            logger.error(f"❌ {error}")
+            self.stats["errors"].append(error)
+            return {"success": False, "error": error}
+
+    def generate_embeddings(self) -> bool:
+        """Generate embeddings for new content"""
+        logger.info("🧠 Generating embeddings for new content...")
+
+        try:
+            db = SimpleDB()
+            embedding_service = get_embedding_service()
+
+            # Get emails without embeddings
+            emails = db.search_content("", content_type="email", limit=50)
+
+            if not emails:
+                logger.info("No new emails to process")
+                return True
+
+            success_count = 0
+            for email in emails:
+                try:
+                    content = email.get("content", "")[:2000]  # Limit content size
+                    if content:
+                        vector = embedding_service.encode(content)
+                        success_count += 1
+                except Exception as e:
+                    logger.warning(f"Could not generate embedding: {e}")
+
+            self.stats["embeddings_generated"] = success_count
+            logger.success(f"✅ Generated {success_count} embeddings")
+            return True
+
+        except Exception as e:
+            error = f"Embedding generation error: {str(e)}"
+            logger.error(f"❌ {error}")
+            self.stats["errors"].append(error)
+            return False
+
+    def generate_summaries(self) -> bool:
+        """Generate summaries for documents"""
+        logger.info("📝 Generating document summaries...")
+
+        try:
+            db = SimpleDB()
+            summarizer = get_document_summarizer()
+
+            # Get recent emails
+            emails = db.search_content("", content_type="email", limit=20)
+
+            success_count = 0
+            for email in emails:
+                try:
+                    content = email.get("content", "")
+                    if content and len(content) > 100:
+                        summary = summarizer.extract_summary(
+                            content[:2000],
+                            max_sentences=3,
+                            max_keywords=10,
+                            summary_type="combined",
+                        )
+                        if summary:
+                            success_count += 1
+                except Exception as e:
+                    logger.warning(f"Could not generate summary: {e}")
+
+            self.stats["summaries_created"] = success_count
+            logger.success(f"✅ Generated {success_count} summaries")
+            return True
+
+        except Exception as e:
+            error = f"Summary generation error: {str(e)}"
+            logger.error(f"❌ {error}")
+            self.stats["errors"].append(error)
+            return False
+
+    def test_search(self) -> bool:
+        """Test search functionality"""
+        logger.info("🔍 Testing search functionality...")
+
+        try:
+            search_service = get_search_intelligence_service()
+
+            # Test queries
+            test_queries = ["maintenance", "contract", "payment"]
+
+            for query in test_queries:
+                results = search_service.search(query, limit=3)
+                logger.info(f"  Query '{query}': {len(results)} results")
+
+            logger.success("✅ Search functionality operational")
+            return True
+
+        except Exception as e:
+            error = f"Search test error: {str(e)}"
+            logger.error(f"❌ {error}")
+            self.stats["errors"].append(error)
+            return False
+            
+    def populate_vector_store(self) -> bool:
+        """Populate vector store with embeddings"""
+        logger.info("🗄️ Populating vector store...")
+        
+        try:
+            from utilities.vector_store import get_vector_store
+            from utilities.embeddings import get_embedding_service
+            
+            db = SimpleDB()
+            vector_store = get_vector_store()
+            embedding_service = get_embedding_service()
+            
+            # Get emails that need vectors
+            emails = db.search_content("", content_type="email", limit=100)
+            
+            vectors_added = 0
+            for email in emails:
+                try:
+                    # Generate embedding
+                    content = email.get("content", "")[:2000]
+                    if content:
+                        vector = embedding_service.encode(content)
+                        
+                        # Store in vector database
+                        vector_store.upsert(
+                            vector=vector.tolist(),
+                            payload={
+                                "id": email["id"],
+                                "title": email.get("title", ""),
+                                "type": "email",
+                                "date": email.get("metadata", {}).get("datetime_utc", "")
+                            },
+                            id=str(email["id"])
+                        )
+                        vectors_added += 1
+                except Exception as e:
+                    logger.warning(f"Could not add vector: {e}")
+                    
+            logger.success(f"✅ Added {vectors_added} vectors to store")
+            self.stats["vectors_added"] = vectors_added
+            return True
+            
+        except Exception as e:
+            error = f"Vector store population error: {str(e)}"
+            logger.error(f"❌ {error}")
+            self.stats["errors"].append(error)
+            return False
+            
+    def process_pipeline_documents(self) -> bool:
+        """Process documents in the pipeline directories"""
+        logger.info("📄 Processing pipeline documents...")
+        
+        try:
+            from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
+            
+            pipeline = DataPipelineOrchestrator()
+            
+            # Check for documents in raw directory
+            import os
+            raw_path = Path("data/raw")
+            staged_path = Path("data/staged")
+            
+            raw_count = len(list(raw_path.glob("*"))) if raw_path.exists() else 0
+            staged_count = len(list(staged_path.glob("*"))) if staged_path.exists() else 0
+            
+            logger.info(f"  Raw documents: {raw_count}")
+            logger.info(f"  Staged documents: {staged_count}")
+            
+            # Process PDFs if any
+            pdf_files = list(raw_path.glob("*.pdf")) if raw_path.exists() else []
+            if pdf_files:
+                try:
+                    from pdf.main import PDFService
+                    pdf_service = PDFService()
+                    
+                    for pdf_file in pdf_files[:5]:  # Process max 5 PDFs
+                        try:
+                            logger.info(f"  Processing PDF: {pdf_file.name}")
+                            result = pdf_service.process_pdf(str(pdf_file))
+                            if result.get("success"):
+                                # Move to processed
+                                pipeline.move_to_processed(pdf_file.name, {"type": "pdf"})
+                        except Exception as e:
+                            logger.warning(f"  Could not process {pdf_file.name}: {e}")
+                except ImportError as e:
+                    logger.warning(f"  PDF processing unavailable: {e}")
+                        
+            return True
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Pipeline processing skipped: {e}")
+            return False
+            
+    def cleanup_old_data(self) -> bool:
+        """Clean up old logs and temporary files"""
+        logger.info("🧹 Cleaning up old data...")
+        
+        try:
+            from datetime import timedelta
+            
+            # Clean old logs (older than 7 days)
+            log_dir = Path("logs")
+            if log_dir.exists():
+                cutoff = datetime.now() - timedelta(days=7)
+                old_logs = 0
+                
+                for log_file in log_dir.glob("*.log"):
+                    try:
+                        mtime = datetime.fromtimestamp(log_file.stat().st_mtime)
+                        if mtime < cutoff:
+                            log_file.unlink()
+                            old_logs += 1
+                    except:
+                        pass
+                        
+                if old_logs > 0:
+                    logger.info(f"  Deleted {old_logs} old log files")
+                    
+            # Clean quarantine directory (older than 30 days)
+            quarantine_dir = Path("data/quarantine")
+            if quarantine_dir.exists():
+                cutoff = datetime.now() - timedelta(days=30)
+                old_files = 0
+                
+                for file in quarantine_dir.glob("*"):
+                    try:
+                        mtime = datetime.fromtimestamp(file.stat().st_mtime)
+                        if mtime < cutoff:
+                            file.unlink()
+                            old_files += 1
+                    except:
+                        pass
+                        
+                if old_files > 0:
+                    logger.info(f"  Cleaned {old_files} old quarantined files")
+                    
+            return True
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Cleanup skipped: {e}")
+            return False
+            
+    def check_mcp_servers(self) -> bool:
+        """Check MCP server status"""
+        logger.info("🔌 Checking MCP servers...")
+        
+        try:
+            import json
+            mcp_config_path = Path(".mcp.json")
+            
+            if mcp_config_path.exists():
+                with open(mcp_config_path) as f:
+                    config = json.load(f)
+                    
+                servers = config.get("mcpServers", {})
+                logger.info(f"  Found {len(servers)} MCP servers configured:")
+                
+                for server_name in servers:
+                    logger.info(f"    • {server_name}")
+                    
+                # Check if sequential-thinking session exists
+                session_path = Path("data/sequential_thinking/current_session.json")
+                if session_path.exists():
+                    logger.info("  ✅ Sequential thinking session active")
+                    
+            else:
+                logger.info("  No MCP configuration found")
+                
+            return True
+            
+        except Exception as e:
+            logger.warning(f"⚠️ MCP check skipped: {e}")
+            return False
+
+    def generate_report(self):
+        """Generate final system report"""
+        logger.info("\n" + "=" * 60)
+        logger.info("📊 SYSTEM RUN REPORT")
+        logger.info("=" * 60)
+
+        runtime = datetime.now() - self.start_time
+
+        # Database stats
+        try:
+            db = SimpleDB()
+            email_count = len(db.search_content("", content_type="email", limit=1000))
+            logger.info(f"📧 Total emails in database: {email_count}")
+        except:
+            pass
+
+        # Run stats
+        logger.info(f"⏱️  Runtime: {runtime}")
+        logger.info(f"📥 New emails synced: {self.stats['emails_synced']}")
+        logger.info(f"🧠 Embeddings generated: {self.stats['embeddings_generated']}")
+        logger.info(f"📝 Summaries created: {self.stats['summaries_created']}")
+        
+        if "vectors_added" in self.stats:
+            logger.info(f"🗄️ Vectors added: {self.stats['vectors_added']}")
+
+        if self.stats["errors"]:
+            logger.warning(f"⚠️  Errors encountered: {len(self.stats['errors'])}")
+            for error in self.stats["errors"]:
+                logger.warning(f"  - {error}")
+        else:
+            logger.success("✅ No errors encountered")
+
+        logger.info("=" * 60)
+
+    def cleanup(self):
+        """Clean up resources"""
+        logger.info("🧹 Cleaning up...")
+
+        # Stop Qdrant if we started it
+        if self.qdrant_process:
+            logger.info("Stopping Qdrant...")
+            self.qdrant_process.terminate()
+            try:
+                self.qdrant_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.qdrant_process.kill()
+
+    def run(self):
+        """Run the complete system pipeline"""
+        logger.info("🚀 STARTING FULL SYSTEM RUN")
+        logger.info("=" * 60)
+
+        try:
+            # Check prerequisites
+            if not self.check_prerequisites():
+                logger.error("Prerequisites check failed. Exiting.")
+                return 1
+
+            # Start Qdrant (optional)
+            qdrant_running = self.start_qdrant()
+            if not qdrant_running:
+                logger.warning("Continuing without vector search...")
+
+            # Run email sync
+            sync_result = self.sync_emails()
+
+            # Generate embeddings and populate vector store if we have Qdrant
+            if qdrant_running:
+                self.generate_embeddings()
+                self.populate_vector_store()
+
+            # Generate summaries
+            self.generate_summaries()
+
+            # Process any documents in pipeline
+            self.process_pipeline_documents()
+            
+            # Test search
+            self.test_search()
+            
+            # Cleanup old data
+            self.cleanup_old_data()
+            
+            # Check MCP servers
+            self.check_mcp_servers()
+
+            # Generate report
+            self.generate_report()
+
+            return 0
+
+        except KeyboardInterrupt:
+            logger.warning("\n⚠️  Interrupted by user")
+            return 130
+
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            return 1
+
+        finally:
+            self.cleanup()
+
+
+def main():
+    """Main entry point"""
+    runner = SystemRunner()
+
+    # Handle signals
+    def signal_handler(signum, frame):
+        logger.warning("\nReceived interrupt signal")
+        runner.cleanup()
+        sys.exit(130)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # Run the system
+    exit_code = runner.run()
+    sys.exit(exit_code)
+
+
+if __name__ == "__main__":
+    main()

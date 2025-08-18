@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/postprocessor.py
+# hypothesis_version: 6.138.2
+
+[0.3, 0.5, 0.6, 0.8, ' 0 ', ' I ', ' O ', ' l ', ' m ', ' rn ', '!', '([.,!?;:])\\1+', '([.,!?;:])\\s*', '.', '?', 'No text extracted', '[^a-zA-Z0-9\\s.,!?]', '\\1', '\\1 ', '\\b\\w\\b\\s*', '\\s+([.,!?;:])', 'agreement', 'confidence', 'contract', 'document_types', 'empty', 'extracted_dates', 'high', 'invoice', 'letter', 'low', 'medium', 'memorandum', 'quality', 'receipt', 'report', 'statement', 'valid', 'warnings', 'word_count']

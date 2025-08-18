@@ -1,0 +1,45 @@
+[flake8]
+max-line-length = 100
+extend-ignore = E203, W503, E501
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    venv,
+    .venv,
+    *.egg-info,
+    logs,
+    qdrant_data,
+    .mypy_cache,
+    .pytest_cache
+per-file-ignores =
+    __init__.py: F401
+    agent_framework/__init__.py: F401
+    tests/*: D100,D101,D102,D103,D104,E402,F841,F811,F402,E722,C901
+    # Allow path setup before imports in service modules
+    */main.py: E402,C901
+    */database.py: E402
+    */storage.py: E402
+    gmail_service/storage.py: E402,C901
+    */search.py: E402
+    mcp_server/*.py: E402,C901
+    agent_framework/*.py: E402
+    # Allow unused imports in availability checks
+    */extractors/*.py: F401
+    # Allow trailing whitespace in temp scripts
+    search_harassment_emails.py: W291
+    temp_email_search.py: W291
+    # Allow complexity in specific modules
+    pdf_service/main.py: C901,E402
+    shared/database_error_recovery.py: C901
+    shared/database_health_monitor.py: C901
+    shared/validators.py: C901
+    gmail_service/gmail_api.py: C901
+    gmail_service/storage.py: C901
+    vector_service/embeddings.py: C901
+max-complexity = 10
+docstring-convention = google
+import-order-style = google
+application-import-names = gmail_service,search_service,vector_service
+inline-quotes = double

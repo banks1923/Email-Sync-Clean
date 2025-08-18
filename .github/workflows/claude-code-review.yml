@@ -1,0 +1,95 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "src/**/*.py"
+      - "scripts/**/*.py"
+      - "tests/**/*.py"
+      - "*.py"
+
+jobs:
+  claude-review:
+    # Optional: Filter by PR author
+    # if: |
+    #   github.event.pull_request.user.login == 'external-contributor' ||
+    #   github.event.pull_request.user.login == 'new-developer' ||
+    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
+          # model: "claude-opus-4-20250514"
+
+          # Direct prompt for automated review (no @claude mention needed)
+          direct_prompt: |
+            Review this PR against Email Sync project standards:
+
+            **Architecture Compliance:**
+            - Files must be ≤450 lines (check file sizes)
+            - Functions must be ≤30 lines (check function sizes)
+            - Cyclomatic complexity must be ≤10 (identify C901 violations)
+            - Single responsibility principle adherence
+
+            **Code Quality:**
+            - No over-engineering (factory patterns for <3 implementations)
+            - Simple > Complex (if/else over patterns)
+            - Direct > Indirect (no unnecessary wrappers)
+            - Delete unused code, don't comment
+
+            **Project Standards:**
+            - Legal BERT 1024D preservation
+            - Standard error format: {"success": bool, "error": str}
+            - Modular service architecture compliance
+            - No cross-service imports
+
+            **Testing:**
+            - Real functionality tests, not mocks
+            - Test actual workflows end-to-end
+
+            Be direct and focus on what violates project philosophy.
+
+          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+          # use_sticky_comment: true
+
+          # Optional: Customize review based on file types
+          # direct_prompt: |
+          #   Review this PR focusing on:
+          #   - For TypeScript files: Type safety and proper interface usage
+          #   - For API endpoints: Security, input validation, and error handling
+          #   - For React components: Performance, accessibility, and best practices
+          #   - For tests: Coverage, edge cases, and test quality
+
+          # Optional: Different prompts for different authors
+          # direct_prompt: |
+          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
+          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
+          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
+
+          # Add specific tools for running tests and linting
+          allowed_tools: "Bash(make test),Bash(make lint),Bash(pytest tests/),Bash(ruff check),Bash(mypy)"
+
+          # Skip review for certain conditions
+          if: |
+            !contains(github.event.pull_request.title, '[skip-review]') &&
+            !contains(github.event.pull_request.title, '[WIP]') &&
+            !contains(github.event.pull_request.title, '[docs]') &&
+            (github.event.pull_request.additions > 10 || github.event.pull_request.deletions > 10)

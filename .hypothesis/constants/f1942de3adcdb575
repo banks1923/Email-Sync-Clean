@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/utilities/vector_store/__init__.py
+# hypothesis_version: 6.138.2
+
+[1024, 6333, 'collection_name', 'emails', 'id', 'limit', 'localhost', 'payload', 'query_filter', 'query_vector', 'score', 'vector']

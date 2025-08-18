@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/entity/main.py
+# hypothesis_version: 6.138.2
+
+[0.5, 100, 'additional_info', 'aliases', 'confidence', 'consolidated_info', 'content', 'context_snippet', 'data', 'emails.db', 'entities', 'entities_by_type', 'entity_count', 'entity_type', 'error', 'errors', 'extractor_type', 'extractor_used', 'limit_requested', 'message_id', 'name', 'primary_name', 'processed', 'processed_count', 'relationship_count', 'relationship_type', 'relationships', 'source_entity_id', 'source_message_id', 'success', 'target_entity_id', 'total_entities', 'total_relationships', 'unknown']

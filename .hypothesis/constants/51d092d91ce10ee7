@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/main.py
+# hypothesis_version: 6.138.2
+
+[100, 900, 1024, 'INFO', 'Processing failed', 'Validation failed', 'chunk_id', 'chunk_index', 'chunks', 'chunks_processed', 'combined', 'confidence', 'content_id', 'db_path', 'details', 'duplicate', 'emails.db', 'error', 'error_count', 'extraction_method', 'file', 'file_hash', 'file_name', 'file_size_mb', 'files', 'hash', 'legal_metadata', 'metadata', 'ocr', 'ocr_confidence', 'ocr_used', 'path', 'processed_at', 'reason', 'result', 'results', 'skipped', 'skipped_count', 'status', 'success', 'success_count', 'summary_text', 'text', 'textrank_sentences', 'tf_idf_keywords', 'total_processed', 'unknown', 'upload']

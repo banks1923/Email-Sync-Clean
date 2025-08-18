@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/shared/service_interfaces.py
+# hypothesis_version: 6.138.2
+
+['data', 'error', 'success']

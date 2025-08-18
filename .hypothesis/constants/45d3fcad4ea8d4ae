@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/ocr_engine.py
+# hypothesis_version: 6.138.2
+
+[0.0, 0.5, 1.0, 1.1, 2.0, 100.0, 255, 'L', 'conf', 'confidence', 'cv2_available', 'error', 'ready', 'success', 'tesseract_available', 'tesseract_version', 'text', 'unknown', 'word_count']

@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/documents/__init__.py
+# hypothesis_version: 6.138.2
+
+['DocxProcessor', 'FormatDetector', 'MarkdownProcessor', 'NamingConvention', 'TextProcessor']

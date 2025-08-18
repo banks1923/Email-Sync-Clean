@@ -1,0 +1,157 @@
+{
+	"meta": {
+		"generatedAt": "2025-08-18T01:01:07.291Z",
+		"tasksAnalyzed": 18,
+		"totalTasks": 18,
+		"analysisCount": 18,
+		"thresholdScore": 5,
+		"projectName": "Email Sync",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Create analog database directory structure",
+			"complexityScore": 2,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down directory creation into: 1) Create analog_db root with subdirectories (documents/, email_threads/, originals/) 2) Implement pathlib-based cross-platform directory creation with proper error handling 3) Add validation and permissions checking for created directories",
+			"reasoning": "Simple file system operations using pathlib. Project already has similar directory management in SimpleDB._ensure_data_directories() and DataPipelineOrchestrator. Low complexity due to straightforward requirements and existing patterns."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement AnalogDBProcessor orchestration class",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: 1) Design class architecture with dependency injection similar to existing services 2) Implement file organization methods leveraging existing SimpleDB patterns 3) Add integration points with existing services (SimpleDB, loguru logging) 4) Implement error handling with retry mechanisms using existing retry_helper 5) Add comprehensive testing following project patterns",
+			"reasoning": "Medium-high complexity due to orchestration responsibilities. Must integrate with existing SimpleDB (500+ lines), follow established patterns in GmailService/PDFService, and coordinate multiple operations. Existing infrastructure reduces complexity but coordination adds challenges."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Build DocumentConverter for PDF-to-markdown conversion",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Structure as: 1) Integrate with existing PDF service infrastructure (pdf/main.py - 503 lines) and OCR pipeline 2) Add python-frontmatter dependency and implement YAML metadata generation 3) Implement content formatting and cleaning using existing patterns 4) Add comprehensive testing with various PDF types leveraging existing test fixtures",
+			"reasoning": "Moderate complexity. Can leverage extensive existing PDF infrastructure (OCR coordinator, processors, validators) and established patterns. Main complexity is frontmatter integration (new dependency) and format conversion logic."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Develop EmailThreadProcessor for Gmail thread conversion",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: 1) Integrate with existing Gmail service (gmail/main.py - 503 lines) and thread grouping logic 2) Implement chronological sorting and markdown formatting 3) Integrate with existing HTML cleaner (shared/html_cleaner.py) for content processing 4) Handle large thread splitting with cross-references 5) Add metadata extraction for participants and thread information",
+			"reasoning": "Medium-high complexity due to Gmail API integration complexity. Existing GmailService provides foundation but thread processing, chronological ordering, and large thread handling add significant logic. HTML cleaning already exists."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Create ArchiveManager for original file organization",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Structure as: 1) Implement date-based organization using existing date utilities 2) Create deduplication system using SHA-256 hashing (patterns exist in codebase) 3) Add soft-linking capabilities for space optimization 4) Implement comprehensive file management with error handling following project patterns",
+			"reasoning": "Moderate complexity. Can leverage existing file management patterns from DataPipelineOrchestrator and SimpleDB. Date handling and hashing patterns exist. Main complexity is soft-linking and deduplication logic."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Build SearchInterface for markdown-aware search",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide into: 1) Implement full-text search using existing search patterns and ripgrep integration 2) Add frontmatter metadata search capabilities 3) Integrate with existing search_intelligence service and vector search infrastructure 4) Implement performance optimization and caching using existing patterns",
+			"reasoning": "Moderate complexity. Can leverage existing search_intelligence service (main.py, similarity.py) and vector store integration. Main complexity is frontmatter parsing integration and metadata search logic."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Integrate with existing upload handler",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Structure as: 1) Modify tools/cli/upload_handler.py to route to AnalogDBProcessor instead of pipeline 2) Implement backward compatibility and configuration switching 3) Update CLI commands in tools/scripts/vsearch maintaining existing interface",
+			"reasoning": "Moderate complexity. Upload handler already exists and is well-structured. Main work is routing changes and maintaining backward compatibility. CLI integration follows established patterns."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Update Gmail service for thread-based processing",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Modify existing Gmail service (503 lines) to use thread grouping instead of individual emails 2) Integrate EmailThreadProcessor into existing workflow 3) Maintain History API and incremental sync capabilities 4) Update database schema and processing status tracking",
+			"reasoning": "Moderate complexity. Existing Gmail service is substantial (503 lines) with established patterns. Main complexity is changing from individual email to thread processing while preserving existing API integration and sync logic."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Implement markdown file naming conventions",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Structure as: 1) Implement naming convention utilities with slugification and sanitization 2) Add collision resolution and duplicate handling 3) Create validation utilities for cross-platform filename compatibility",
+			"reasoning": "Low-moderate complexity. Straightforward text processing and file naming logic. Can leverage existing naming patterns from infrastructure/documents/naming_convention.py. Main complexity is collision resolution and cross-platform compatibility."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Create content hash-based deduplication system",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: 1) Implement SHA-256 exact duplicate detection using existing hashing patterns 2) Integrate with Legal BERT embeddings for near-duplicate detection leveraging existing embedding service 3) Create hash index storage in SimpleDB following existing patterns 4) Handle edge cases (quoted content, metadata differences) 5) Implement performance optimization for large content sets",
+			"reasoning": "Medium-high complexity. Can leverage existing embedding service (utilities/embeddings/) and SimpleDB patterns, but similarity detection and edge case handling add significant complexity. Performance optimization for large datasets is challenging."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Update search system for markdown file compatibility",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Structure as: 1) Modify existing search_intelligence service to include markdown file search 2) Integrate frontmatter parsing for metadata queries 3) Maintain existing vector search and Legal BERT integration 4) Update search handlers maintaining backward compatibility during migration",
+			"reasoning": "Moderate complexity. Can leverage extensive existing search infrastructure (search_intelligence/, vector store, Legal BERT). Main complexity is integrating file-based search with existing database search and maintaining compatibility."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Develop markdown metadata indexing system",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Implement YAML frontmatter parsing and extraction 2) Create metadata indexing in SimpleDB following established schema patterns 3) Implement incremental indexing using file modification timestamps 4) Add search capabilities for indexed metadata",
+			"reasoning": "Moderate complexity. Can leverage existing SimpleDB infrastructure and indexing patterns. Main complexity is frontmatter parsing (new dependency) and incremental indexing logic with change detection."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Implement file system monitoring for changes",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Structure as: 1) Implement watchdog-based file monitoring for analog_db directory 2) Add debouncing and bulk operation handling 3) Integrate with metadata indexing system for automatic updates",
+			"reasoning": "Moderate complexity. File system monitoring is well-understood problem with watchdog library. Main complexity is debouncing logic and integration with existing update mechanisms. Lower priority helps reduce pressure."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Create migration utility for existing pipeline data",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Divide into: 1) Analyze existing data in processed/ and export/ directories 2) Extract email records from SimpleDB and group by threads 3) Convert existing documents to markdown with proper metadata 4) Implement data validation and integrity checking 5) Create rollback mechanisms for failed migrations 6) Handle edge cases and data inconsistencies 7) Comprehensive testing with existing data",
+			"reasoning": "High complexity. Must handle existing complex data structures, preserve relationships, and ensure data integrity. Depends on multiple other tasks and requires deep understanding of existing data formats and relationships. Critical for system transition."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Performance optimization for large file sets",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Structure as: 1) Implement file system caching leveraging existing cache infrastructure 2) Add lazy loading and streaming for large file operations 3) Optimize directory traversal using os.scandir() and existing patterns 4) Implement parallel processing using concurrent.futures 5) Add memory usage monitoring and optimization",
+			"reasoning": "Medium-high complexity. Can leverage existing cache infrastructure and performance patterns. Main complexity is optimizing file operations at scale and memory management. Performance optimization requires careful profiling and testing."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Update CLI commands for analog database operations",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Add analog database commands to existing vsearch CLI structure 2) Implement hybrid mode for migration period supporting both systems 3) Maintain backward compatibility with existing commands 4) Update CLI help and documentation",
+			"reasoning": "Moderate complexity. Can leverage existing CLI infrastructure in tools/scripts/vsearch. Main complexity is hybrid mode implementation and maintaining command compatibility during migration."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implement backup and export capabilities",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Structure as: 1) Create compressed archive backup system with integrity verification 2) Implement export to multiple formats (JSON, CSV, SQL) 3) Add incremental backup using file timestamps and checksums 4) Create restoration utilities with conflict resolution",
+			"reasoning": "Moderate complexity. Backup and export operations are well-understood. Can leverage existing file handling patterns and SimpleDB export capabilities. Main complexity is incremental backup logic and format conversion."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Create comprehensive documentation and cleanup legacy pipeline",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide into: 1) Create user documentation for analog database operations following existing doc patterns 2) Update existing documentation (README.md, CLAUDE.md) with new system information 3) Create migration guide with step-by-step instructions 4) Safely archive complex pipeline infrastructure (data_pipeline.py, orchestrator.py) 5) Update all code references and imports 6) Validate system functionality after cleanup",
+			"reasoning": "High complexity due to scope and risk. Must create comprehensive documentation, safely remove substantial existing infrastructure (data_pipeline, orchestrator files), and ensure no functionality is lost. Critical dependencies on successful migration make this high-risk."
+		}
+	]
+}

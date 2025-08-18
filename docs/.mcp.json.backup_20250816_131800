@@ -1,0 +1,103 @@
+{
+	"mcpServers": {
+		"email-sync": {
+			"type": "stdio",
+			"command": "python3",
+			"args": [
+				"/Users/jim/Projects/Email Sync/mcp_server/email_sync_mcp.py"
+			],
+			"env": {
+				"PYTHONPATH": "/Users/jim/Projects/Email Sync"
+			}
+		},
+		"sequential-thinking": {
+			"type": "stdio",
+			"command": "python3",
+			"args": [
+				"/Users/jim/Projects/mcp-sequential-thinking/run_server.py"
+			],
+			"env": {
+				"PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
+				"MCP_STORAGE_DIR": "/Users/jim/Projects/Email Sync/data/sequential_thinking"
+			}
+		},
+		"puppeteer": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-puppeteer"
+			]
+		},
+		"task-master-ai": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"--package=task-master-ai",
+				"task-master-ai"
+			],
+			"env": {
+				"ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+				"PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
+				"OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
+				"GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
+				"XAI_API_KEY": "YOUR_XAI_KEY_HERE",
+				"OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
+				"MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
+				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
+				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
+			}
+		},
+		"memory": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-memory"
+			]
+		},
+		"firecrawl": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"firecrawl-mcp"
+			],
+			"env": {
+				"FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_API_KEY_HERE"
+			}
+		},
+		"qdrant": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"mcp-server-qdrant",
+				"--qdrant-url",
+				"http://localhost:6333",
+				"--collection-name",
+				"claude_memories"
+			]
+		},
+		"legal-intelligence": {
+			"type": "stdio",
+			"command": "python3",
+			"args": [
+				"/Users/jim/Projects/Email Sync/mcp_servers/legal_intelligence_mcp.py"
+			],
+			"env": {
+				"PYTHONPATH": "/Users/jim/Projects/Email Sync"
+			}
+		},
+		"search-intelligence": {
+			"type": "stdio",
+			"command": "python3",
+			"args": [
+				"/Users/jim/Projects/Email Sync/mcp_servers/search_intelligence_mcp.py"
+			],
+			"env": {
+				"PYTHONPATH": "/Users/jim/Projects/Email Sync"
+			}
+		}
+	}
+}

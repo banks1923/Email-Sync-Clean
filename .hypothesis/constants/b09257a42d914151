@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pipelines/data_pipeline.py
+# hypothesis_version: 6.138.2
+
+[86400, '%Y%m%d_%H%M%S', '.', '.error.json', '.meta.json', 'data', 'error', 'export', 'filename', 'from_stage', 'path', 'processed', 'quarantine', 'raw', 'stage', 'staged', 'success', 'timestamp', 'w']

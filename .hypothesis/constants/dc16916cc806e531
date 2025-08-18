@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/pdf/ocr/loader.py
+# hypothesis_version: 6.138.2
+
+[b'%PDF-', 100, 1024, 8192, '**/*.pdf', '*.pdf', '.pdf', 'File does not exist', 'File is not a PDF', 'Invalid PDF header', 'Path is not a file', 'created_at', 'error', 'file_hash', 'file_name', 'file_path', 'file_size_mb', 'modified_at', 'rb', 'success']

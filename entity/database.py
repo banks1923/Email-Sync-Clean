@@ -1,0 +1,415 @@
+"""Database operations for entity service using SimpleDB.
+
+Follows CLAUDE.md principles - simple and direct.
+"""
+
+import hashlib
+import json
+
+from shared.simple_db import SimpleDB
+
+
+class EntityDatabase:
+    def __init__(self, db_path="emails.db"):
+        self.db = SimpleDB(db_path)
+        self.db_path = db_path
+        self.init_result = self._ensure_entities_table()
+
+    def _ensure_entities_table(self):
+        """
+        Create entity tables if they don't exist and handle schema migration.
+        """
+        try:
+            # Create basic table first
+            self.db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS email_entities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    message_id TEXT NOT NULL,
+                    entity_text TEXT NOT NULL,
+                    entity_type TEXT NOT NULL,
+                    entity_label TEXT NOT NULL,
+                    start_char INTEGER NOT NULL,
+                    end_char INTEGER NOT NULL,
+                    confidence REAL,
+                    normalized_form TEXT,
+                    processed_time TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (message_id) REFERENCES emails(message_id)
+                )
+            """
+            )
+
+            # Add new columns if they don't exist (schema migration)
+            new_columns = [
+                ("entity_id", "TEXT"),
+                ("aliases", "TEXT"),
+                ("frequency", "INTEGER DEFAULT 1"),
+                ("last_seen", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                ("extractor_type", "TEXT DEFAULT 'spacy'"),
+                ("role_type", "TEXT"),
+            ]
+
+            for column_name, column_def in new_columns:
+                try:
+                    self.db.execute(
+                        f"ALTER TABLE email_entities ADD COLUMN {column_name} {column_def}"
+                    )
+                except Exception:
+                    # Column already exists, that's fine
+                    pass
+
+            # Create consolidated entities table for deduplicated entities
+            self.db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS consolidated_entities (
+                    entity_id TEXT PRIMARY KEY,
+                    primary_name TEXT NOT NULL,
+                    entity_type TEXT NOT NULL,
+                    aliases TEXT,
+                    total_mentions INTEGER DEFAULT 1,
+                    first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    confidence_score REAL DEFAULT 0.8,
+                    additional_info TEXT
+                )
+            """
+            )
+
+            # Create entity relationships table for knowledge graph
+            self.db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS entity_relationships (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source_entity_id TEXT NOT NULL,
+                    target_entity_id TEXT NOT NULL,
+                    relationship_type TEXT NOT NULL,
+                    confidence REAL DEFAULT 0.5,
+                    source_message_id TEXT,
+                    context_snippet TEXT,
+                    extraction_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (source_entity_id) REFERENCES consolidated_entities(entity_id),
+                    FOREIGN KEY (target_entity_id) REFERENCES consolidated_entities(entity_id),
+                    UNIQUE(source_entity_id, target_entity_id, relationship_type)
+                )
+            """
+            )
+
+            # Create performance indexes
+            indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_entities_message_id ON email_entities(message_id)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_type ON email_entities(entity_type)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_label ON email_entities(entity_label)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_normalized ON email_entities(normalized_form)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_entity_id ON email_entities(entity_id)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_extractor ON email_entities(extractor_type)",
+                "CREATE INDEX IF NOT EXISTS idx_consolidated_type ON consolidated_entities(entity_type)",
+                "CREATE INDEX IF NOT EXISTS idx_consolidated_name ON consolidated_entities(primary_name)",
+                "CREATE INDEX IF NOT EXISTS idx_relationships_source ON entity_relationships(source_entity_id)",
+                "CREATE INDEX IF NOT EXISTS idx_relationships_target ON entity_relationships(target_entity_id)",
+                "CREATE INDEX IF NOT EXISTS idx_relationships_type ON entity_relationships(relationship_type)",
+            ]
+
+            for index_sql in indexes:
+                self.db.execute(index_sql)
+
+        except Exception as e:
+            return {"success": False, "error": f"Failed to create entity tables: {str(e)}"}
+
+        return {"success": True}
+
+    def store_entities(self, entities_data):
+        """
+        Store extracted entities for an email with enhanced fields.
+        """
+        if not entities_data:
+            return {"success": True, "stored": 0}
+
+        stored_count = 0
+        try:
+            for entity in entities_data:
+                # Generate entity_id if not provided
+                entity_id = entity.get("entity_id", self._generate_entity_id(entity))
+
+                self.db.execute(
+                    """
+                    INSERT INTO email_entities
+                    (message_id, entity_text, entity_type, entity_label, start_char, end_char,
+                     confidence, normalized_form, entity_id, extractor_type, role_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        entity["message_id"],
+                        entity["text"],
+                        entity["type"],
+                        entity["label"],
+                        entity["start"],
+                        entity["end"],
+                        entity.get("confidence", 1.0),
+                        entity.get("normalized_form", entity["text"].lower()),
+                        entity_id,
+                        entity.get("extractor_type", "unknown"),
+                        entity.get("role_type"),
+                    ),
+                )
+                stored_count += 1
+
+        except Exception as e:
+            return {"success": False, "error": f"Failed to store entities: {str(e)}"}
+
+        return {"success": True, "stored": stored_count}
+
+    def _generate_entity_id(self, entity):
+        """
+        Generate a unique entity ID based on normalized form and type.
+        """
+        normalized = entity.get("normalized_form", entity["text"].lower())
+        entity_type = entity["type"]
+        # Create hash of normalized form + type for uniqueness
+        hash_input = f"{normalized}|{entity_type}"
+        return hashlib.md5(hash_input.encode()).hexdigest()[:12]
+
+    def get_entities_for_email(self, message_id):
+        """
+        Get all entities for a specific email.
+        """
+        try:
+            entities = self.db.fetch(
+                "SELECT * FROM email_entities WHERE message_id = ? ORDER BY start_char",
+                (message_id,),
+            )
+            return {"success": True, "data": entities}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_entities_by_type(self, entity_type, limit=100):
+        """
+        Get entities of a specific type.
+        """
+        try:
+            entities = self.db.fetch(
+                "SELECT * FROM email_entities WHERE entity_type = ? LIMIT ?", (entity_type, limit)
+            )
+            return {"success": True, "data": entities}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def count_entities(self):
+        """
+        Get total entity count.
+        """
+        try:
+            result = self.db.fetch_one("SELECT COUNT(*) as count FROM email_entities")
+            return result["count"] if result else 0
+        except Exception:
+            return 0
+
+    def count_entities_by_type(self):
+        """
+        Get entity counts grouped by type.
+        """
+        try:
+            results = self.db.fetch(
+                "SELECT entity_type, COUNT(*) as count FROM email_entities GROUP BY entity_type"
+            )
+            return {"success": True, "data": results}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def store_consolidated_entity(
+        self, entity_id, primary_name, entity_type, aliases=None, additional_info=None
+    ):
+        """
+        Store or update a consolidated entity.
+        """
+        try:
+            aliases_json = json.dumps(aliases) if aliases else None
+            info_json = json.dumps(additional_info) if additional_info else None
+
+            self.db.execute(
+                """
+                INSERT OR REPLACE INTO consolidated_entities
+                (entity_id, primary_name, entity_type, aliases, additional_info, last_seen)
+                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+                (entity_id, primary_name, entity_type, aliases_json, info_json),
+            )
+
+            return {"success": True, "entity_id": entity_id}
+
+        except Exception as e:
+            return {"success": False, "error": f"Failed to store consolidated entity: {str(e)}"}
+
+    def get_consolidated_entity(self, entity_id):
+        """
+        Get a consolidated entity by ID.
+        """
+        try:
+            entity = self.db.fetch_one(
+                "SELECT * FROM consolidated_entities WHERE entity_id = ?", (entity_id,)
+            )
+            return {"success": True, "data": entity}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def search_consolidated_entities(self, entity_type=None, name_pattern=None, limit=100):
+        """
+        Search consolidated entities.
+        """
+        try:
+            conditions = []
+            params = []
+
+            if entity_type:
+                conditions.append("entity_type = ?")
+                params.append(entity_type)
+
+            if name_pattern:
+                conditions.append("primary_name LIKE ?")
+                params.append(f"%{name_pattern}%")
+
+            where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+            query = f"SELECT * FROM consolidated_entities{where_clause} ORDER BY total_mentions DESC LIMIT ?"
+            params.append(limit)
+
+            results = self.db.fetch(query, tuple(params))
+            return {"success": True, "data": results}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def store_entity_relationship(
+        self,
+        source_entity_id,
+        target_entity_id,
+        relationship_type,
+        confidence=0.5,
+        source_message_id=None,
+        context_snippet=None,
+    ):
+        """
+        Store an entity relationship.
+        """
+        try:
+            self.db.execute(
+                """
+                INSERT OR REPLACE INTO entity_relationships
+                (source_entity_id, target_entity_id, relationship_type, confidence,
+                 source_message_id, context_snippet)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    source_entity_id,
+                    target_entity_id,
+                    relationship_type,
+                    confidence,
+                    source_message_id,
+                    context_snippet,
+                ),
+            )
+
+            return {"success": True}
+
+        except Exception as e:
+            return {"success": False, "error": f"Failed to store relationship: {str(e)}"}
+
+    def get_entity_relationships(self, entity_id, relationship_type=None):
+        """
+        Get relationships for an entity.
+        """
+        try:
+            conditions = ["(source_entity_id = ? OR target_entity_id = ?)"]
+            params = [entity_id, entity_id]
+
+            if relationship_type:
+                conditions.append("relationship_type = ?")
+                params.append(relationship_type)
+
+            where_clause = " WHERE " + " AND ".join(conditions)
+            query = f"SELECT * FROM entity_relationships{where_clause} ORDER BY confidence DESC"
+
+            results = self.db.fetch(query, tuple(params))
+            return {"success": True, "data": results}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_knowledge_graph(self, entity_ids=None, max_depth=2):
+        """
+        Get knowledge graph data for visualization.
+        """
+        try:
+            if entity_ids:
+                # Get relationships for specific entities
+                placeholders = ",".join(["?"] * len(entity_ids))
+                query = f"""
+                    SELECT DISTINCT r.*,
+                           s.primary_name as source_name, s.entity_type as source_type,
+                           t.primary_name as target_name, t.entity_type as target_type
+                    FROM entity_relationships r
+                    JOIN consolidated_entities s ON r.source_entity_id = s.entity_id
+                    JOIN consolidated_entities t ON r.target_entity_id = t.entity_id
+                    WHERE r.source_entity_id IN ({placeholders})
+                       OR r.target_entity_id IN ({placeholders})
+                    ORDER BY r.confidence DESC
+                """
+                params = tuple(entity_ids + entity_ids)
+            else:
+                # Get all relationships (limited for performance)
+                query = """
+                    SELECT DISTINCT r.*,
+                           s.primary_name as source_name, s.entity_type as source_type,
+                           t.primary_name as target_name, t.entity_type as target_type
+                    FROM entity_relationships r
+                    JOIN consolidated_entities s ON r.source_entity_id = s.entity_id
+                    JOIN consolidated_entities t ON r.target_entity_id = t.entity_id
+                    WHERE r.confidence > 0.3
+                    ORDER BY r.confidence DESC
+                    LIMIT 1000
+                """
+                params = ()
+
+            results = self.db.fetch(query, params)
+            return {"success": True, "data": results}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_entity_statistics(self):
+        """
+        Get comprehensive entity statistics.
+        """
+        try:
+            # Basic counts
+            total_raw = self.db.fetch_one("SELECT COUNT(*) as count FROM email_entities")["count"]
+            total_consolidated = self.db.fetch_one(
+                "SELECT COUNT(*) as count FROM consolidated_entities"
+            )["count"]
+            total_relationships = self.db.fetch_one(
+                "SELECT COUNT(*) as count FROM entity_relationships"
+            )["count"]
+
+            # Entity types breakdown
+            types_breakdown = self.db.fetch(
+                "SELECT entity_type, COUNT(*) as count FROM consolidated_entities GROUP BY entity_type"
+            )
+            types_breakdown = [
+                {"type": row["entity_type"], "count": row["count"]} for row in types_breakdown
+            ]
+
+            # Relationship types breakdown
+            relationships_breakdown = self.db.fetch(
+                "SELECT relationship_type, COUNT(*) as count FROM entity_relationships GROUP BY relationship_type"
+            )
+            relationships_breakdown = [
+                {"type": row["relationship_type"], "count": row["count"]}
+                for row in relationships_breakdown
+            ]
+
+            return {
+                "success": True,
+                "raw_entities": total_raw,
+                "consolidated_entities": total_consolidated,
+                "relationships": total_relationships,
+                "entity_types": types_breakdown,
+                "relationship_types": relationships_breakdown,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": f"Failed to get statistics: {str(e)}"}

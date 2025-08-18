@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""
+AI-Powered Hybrid Vector Search CLI - Modular Architecture
+Combines semantic similarity with traditional keyword search
+Usage: scripts/vsearch [command] [options]
+"""
+
+import sys
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Import modular CLI
+from scripts.cli.cli_main import main
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)

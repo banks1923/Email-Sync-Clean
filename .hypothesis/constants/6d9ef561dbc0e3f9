@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/infrastructure/pipelines/formats.py
+# hypothesis_version: 6.138.2
+
+['\n---\n', '---', 'Z', 'content', 'content_type', 'date', 'document', 'embeddings', 'frontmatter', 'generated_at', 'intelligence', 'json', 'markdown', 'pipeline_id', 'search_index', 'summary', 'tags', 'title', 'w']

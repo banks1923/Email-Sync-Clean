@@ -1,0 +1,4 @@
+# file: /Users/jim/Projects/Email Sync/entity/extractors/__init__.py
+# hypothesis_version: 6.138.2
+
+['BaseExtractor', 'ExtractorFactory', 'SpacyExtractor']
