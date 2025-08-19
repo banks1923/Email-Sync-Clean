@@ -88,7 +88,7 @@ self.preferred_senders = [
 
 ### Gmail API Setup
 1. Get credentials from Google Cloud Console
-2. Save as `gmail/credentials.json`
+2. Save as `.config/credentials.json`
 3. Run initial auth flow
 
 ## API Examples

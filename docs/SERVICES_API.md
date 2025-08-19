@@ -740,4 +740,52 @@ def check_service_health():
     return health
 ```
 
+## 🛠️ Maintenance Utilities
+
+### Vector Maintenance (`utilities/maintenance/vector_maintenance.py`)
+Consolidated tool for all vector store operations:
+
+```bash
+# Verify sync status across all collections
+python utilities/maintenance/vector_maintenance.py verify
+
+# Sync missing vectors for specific collection
+python utilities/maintenance/vector_maintenance.py sync-missing --collection pdfs
+
+# Reconcile vectors with database (dry run)
+python utilities/maintenance/vector_maintenance.py reconcile
+
+# Apply fixes for reconciliation
+python utilities/maintenance/vector_maintenance.py reconcile --fix
+
+# Sync emails to vector store
+python utilities/maintenance/vector_maintenance.py sync-emails --limit 100
+
+# Purge test vectors (dry run)
+python utilities/maintenance/vector_maintenance.py purge-test
+
+# Actually purge test vectors
+python utilities/maintenance/vector_maintenance.py purge-test --execute
+```
+
+### Schema Maintenance (`utilities/maintenance/schema_maintenance.py`)
+Consolidated tool for database schema operations:
+
+```bash
+# Validate schema integrity
+python utilities/maintenance/schema_maintenance.py validate
+
+# Fix schema issues (dry run)
+python utilities/maintenance/schema_maintenance.py fix-schema
+
+# Apply schema fixes
+python utilities/maintenance/schema_maintenance.py fix-schema --execute
+
+# Migrate legacy email tables
+python utilities/maintenance/schema_maintenance.py migrate-emails --batch-size 100
+
+# Update schema references after table changes
+python utilities/maintenance/schema_maintenance.py update-refs
+```
+
 For more detailed implementation examples and advanced usage patterns, see individual service documentation in their respective directories.

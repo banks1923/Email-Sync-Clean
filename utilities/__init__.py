@@ -2,6 +2,7 @@
 Utilities module - Collection of utility services for Email Sync system.
 """
 
-from .archive_manager import ArchiveManager, get_archive_manager
+# ArchiveManager moved to zarchive (archived)
+# Use EnhancedArchiveManager for archive functionality
 
-__all__ = ["ArchiveManager", "get_archive_manager"]
+__all__ = []

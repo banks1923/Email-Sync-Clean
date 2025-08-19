@@ -1,5 +1,113 @@
 # Changelog
 
+## [2025-08-19] - Archive Consolidation and Import Cleanup 📦
+
+### 🗂️ Archive Management Consolidation
+- **Archived Original ArchiveManager**: Moved `zarchive.archive_manager` to archive storage
+- **Enhanced Replacement**: `EnhancedArchiveManager` now provides unified archiving functionality
+  - Combines file organization with space-saving deduplication
+  - Simple archive creation (date-based structure + file copy)
+  - Maintains all essential archiving features without complex compression
+- **Updated Dependencies**: All references now use `EnhancedArchiveManager`
+  - Fixed `utilities/enhanced_archive_manager.py` imports
+  - Updated `infrastructure/documents/lifecycle_manager.py` integration
+  - Moved archived tests to `tests/archived/`
+
+### 🧹 Entity Service Consolidation  
+- **Removed Duplicate**: Deleted unused `utilities/entities/` directory (dead code)
+- **Single Source**: Consolidated to main `entity/main.py` (375 lines)
+  - Full-featured EntityService with comprehensive NER capabilities
+  - Email-specific entity extraction, relationship detection, knowledge graphs
+  - Used by 13+ files across the codebase
+- **Eliminated Confusion**: No more duplicate entity extraction systems
+
+### 🔧 PDF/OCR Import Cleanup
+- **Fixed Validator Dependencies**: Cleaned up `pdf/ocr/validator.py`
+  - Removed 5 redundant imports (pdf2image, pytesseract, PIL.Image, numpy, cv2)
+  - Now uses existing availability flags from actual OCR modules
+  - Eliminated duplicate dependency checking logic
+
+### 📊 Results
+- **Cleaner Architecture**: Single entity system, unified archive management
+- **No Broken Imports**: All modules import successfully after archiving changes  
+- **Better Organization**: Clear separation of concerns, no dead code
+- **Reduced Complexity**: Fewer duplicated systems to maintain
+
+## [2025-01-19] - Major Cleanup: Documentation, MCP Servers, and Maintenance Scripts 🧹
+
+### 📚 Documentation Consolidation
+- **Reduced from 14 → 9 docs** (36% reduction in docs/ directory)
+- **Archived Outdated**: Moved completed migration guides to `/zarchive/`
+  - `LOGURU_MIGRATION_PLAN_ENHANCED.md` (migration completed)
+  - `MIGRATION_GUIDE.md` (schema migration done)
+  - `GET_STARTED.md` (duplicated README content)
+- **Consolidated Related Docs**:
+  - `TESTING_GUIDE.md` + `TEST_COVERAGE_ANALYSIS.md` → `TESTING.md`
+  - `CODE_TRANSFORMATION_TOOLS.md` + `RECOMMENDED_DEPENDENCIES.md` → `DEVELOPMENT_TOOLS.md`
+
+### 🔌 MCP Server Cleanup
+- **Archived 5 Deprecated Servers** to `/zarchive/deprecated_mcp_servers_2025-01-19/`:
+  - `docs_mcp_server.py`, `entity_mcp_server.py`, `legal_mcp_server.py`
+  - `search_mcp_server.py`, `timeline_mcp_server.py`
+- **Active Servers Remain**:
+  - `legal_intelligence_mcp.py` - Unified legal analysis
+  - `search_intelligence_mcp.py` - Unified search services
+
+### 🛠️ Maintenance Scripts Consolidation (8 → 2 files)
+- **Created `vector_maintenance.py`** - Unified vector operations:
+  - `sync-emails` - Sync emails to vector store
+  - `sync-missing` - Find and sync missing vectors
+  - `reconcile` - Reconcile vectors with database
+  - `verify` - Verify sync status across collections
+  - `purge-test` - Remove test vectors from production
+- **Created `schema_maintenance.py`** - Unified schema operations:
+  - `fix-schema` - Fix schema issues and inconsistencies
+  - `migrate-emails` - Migrate legacy email tables
+  - `update-refs` - Update schema references after table changes
+  - `validate` - Validate schema integrity
+- **Impact**: 85% reduction in maintenance script files
+
+### 🧪 Test Cleanup
+- **Removed 5 Empty Test Files**: Cleaned up empty `__init__.py` files in test directories
+
+### 📊 Overall Impact
+- **Files Reduced**: 27 files removed/consolidated
+- **Better Organization**: Clear separation of concerns
+- **Improved CLI**: Unified command interfaces for maintenance tools
+- **Cleaner Structure**: Archived deprecated code properly
+
+---
+
+## [2025-08-19] - Configuration Consolidation & Root Directory Cleanup 🗂️
+
+### 🧹 Root Directory Decluttering
+- **Configuration Centralization**: Moved 8 config files to `.config/` directory
+- **Tool Updates**: All Make commands now use `--config .config/[file]` syntax  
+- **Documentation Linting**: Added markdownlint configuration and `make docs-check`/`make docs-fix`
+- **File Cleanup**: Moved `qdrant.log` to `logs/`, consolidated database files
+- **VS Code Integration**: Updated explorer exclusions for cleaner project view
+
+### 📁 Config Files Centralized
+```
+.config/
+├── .coveragerc              # Coverage.py configuration
+├── .flake8                  # Flake8 linting rules
+├── .markdownlint.json      # Markdownlint documentation style rules
+├── .mcpignore              # MCP server ignore patterns
+├── .pre-commit-config.yaml # Pre-commit hooks configuration
+├── mypy.ini                # MyPy type checking settings
+├── pyrightconfig.json      # Pyright (VS Code) type checking
+├── pytest.ini             # Pytest configuration
+└── settings.py             # Centralized application settings (Pydantic)
+```
+
+### 🛠️ Enhanced Development Workflow
+- **LibCST Success**: Cleaned unused imports from 195/203 files successfully
+- **Make Commands**: `docs-check`, `docs-fix` added to `fix-all` and `cleanup` workflows
+- **Directory Reduction**: Root items reduced from 63 to 52 (-17% hidden clutter)
+
+---
+
 ## [2025-08-19] - Schema Migration Complete: Business Keys & Deterministic UUIDs 🎯
 
 ### 🎉 MILESTONE: Complete Schema Migration Success
@@ -24,7 +132,7 @@
 - **Migration Guide**: Complete documentation in `docs/MIGRATION_GUIDE.md`
 
 ### ⚡ Performance & Reliability  
-- **SQLite Optimizations**: WAL mode, 64MB cache, optimized synchronization 
+- **SQLite Optimizations**: WAL mode, 64MB cache, optimized synchronization
 - **Benchmark Results**: Write 9.58ms avg (vs 10.08ms baseline), Read 0.09ms avg (vs 0.08ms baseline)
 - **Vector Sync**: Perfect 1:1 mapping between content (398) and vectors (398)
 - **Database Integrity**: All foreign key checks passing, zero constraint violations
@@ -52,7 +160,7 @@
 
 ### ✅ Architecture Improvements
 - **Zero broken imports** (was 107)
-- **Zero layer violations** (was 14) 
+- **Zero layer violations** (was 14)
 - **Clean architecture restored**: proper layer separation (shared → utilities → infrastructure → services → tools)
 - **Dependency injection pattern**: Infrastructure no longer imports from services
 
@@ -84,7 +192,7 @@
 
 ### 🚀 Fixed Chronic System Issues
 - **Fixed schema migration spam**: EntityDatabase no longer runs ALTER TABLE on every instantiation
-- **Fixed missing relationship_cache**: Database schema migration now runs automatically 
+- **Fixed missing relationship_cache**: Database schema migration now runs automatically
 - **Fixed column name mismatches**: Search intelligence queries now use correct table schema
 - **Fixed vector/database sync**: Cleaned up 491 stale vectors, system now starts with clean state
 - **Performance improvement**: Eliminated hundreds of duplicate column errors per search
@@ -460,7 +568,7 @@ tools/              # Development and user tools
 - **Maintained Accessibility**: Core services still easily accessible
 - **Clean Architecture**: Follows "flat > nested" principle while organizing utilities
 
-## [2025-08-16] - PROJECT COMPLETE 🎉 All 18 Tasks Finished!
+## [2025-08-16] - PROJECT COMPLETE 🎉 All 18 Tasks Finished
 
 ### ✅ Task 13 Completion - Migration and Deployment
 - **Task 13**: Migration and Deployment ✅ COMPLETED

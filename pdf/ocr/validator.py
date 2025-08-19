@@ -23,36 +23,24 @@ class PDFValidator:
         return PyPDF2 is not None
 
     def validate_dependencies(self) -> dict[str, Any]:
-        """Validate all required dependencies."""
+        """Validate all required dependencies using existing OCR module flags."""
+        # Import availability flags from actual OCR modules
+        try:
+            from .ocr_engine import TESSERACT_AVAILABLE, CV2_AVAILABLE
+            from .rasterizer import PDF2IMAGE_AVAILABLE
+        except ImportError:
+            TESSERACT_AVAILABLE = False
+            CV2_AVAILABLE = False
+            PDF2IMAGE_AVAILABLE = False
+
         result = {
             "pypdf2": PyPDF2 is not None,
-            "ocr_available": self._check_ocr_dependencies(),
-            "cv2_available": self._check_cv2_dependencies(),
+            "ocr_available": TESSERACT_AVAILABLE and PDF2IMAGE_AVAILABLE,
+            "cv2_available": CV2_AVAILABLE,
         }
 
         result["all_available"] = all(result.values())
         return result
-
-    def _check_ocr_dependencies(self) -> bool:
-        """Check OCR dependencies."""
-        try:
-            import pdf2image  # noqa: F401
-            import pytesseract  # noqa: F401
-            from PIL import Image  # noqa: F401
-
-            return True
-        except ImportError:
-            return False
-
-    def _check_cv2_dependencies(self) -> bool:
-        """Check OpenCV dependencies."""
-        try:
-            import cv2  # noqa: F401
-            import numpy as np  # noqa: F401
-
-            return True
-        except ImportError:
-            return False
 
     def is_scanned_pdf(self, pdf_path: str) -> tuple[bool, float]:
         """

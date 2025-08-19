@@ -7,15 +7,17 @@ import re
 import sys
 from pathlib import Path
 
+from loguru import logger
+
 import networkx as nx
+
 import numpy as np
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Add parent to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
-
-from loguru import logger
 
 # Logger is now imported globally from loguru
 
@@ -48,8 +50,8 @@ class TFIDFSummarizer:
         # Convert to lowercase
         text = text.lower()
 
-        # Remove special characters but keep spaces and alphanumeric
-        text = re.sub(r"[^a-z0-9\s\-]", " ", text)
+        # Remove special characters but keep spaces and alphanumeric, Unicode-preserving
+        text = re.sub(r"[^\w\s\-]", " ", text, flags=re.UNICODE)
 
         # Remove extra whitespace
         text = " ".join(text.split())
@@ -120,10 +122,20 @@ class TFIDFSummarizer:
             return []
 
         try:
-            # Preprocess all texts
-            processed_texts = [self.preprocess_text(text) for text in texts]
+            # Sanitize inputs and preprocess texts
+            processed_texts = []
+            non_empty_indices = []
+            for idx, t in enumerate(texts):
+                t = t or ""
+                pt = self.preprocess_text(t)
+                if pt.strip():
+                    processed_texts.append(pt)
+                    non_empty_indices.append(idx)
 
-            # Create and fit TF-IDF vectorizer on all documents
+            if not processed_texts:
+                return [{} for _ in texts]
+
+            # Create and fit TF-IDF vectorizer on non-empty documents
             self.vectorizer = TfidfVectorizer(
                 max_features=self.max_features,
                 ngram_range=self.ngram_range,
@@ -131,27 +143,28 @@ class TFIDFSummarizer:
                 min_df=1,
                 max_df=0.95,
             )
-
-            # Fit and transform all texts
-            tfidf_matrix = self.vectorizer.fit_transform(processed_texts)
+            self.vectorizer.fit(processed_texts)
             feature_names = self.vectorizer.get_feature_names_out()
 
-            # Extract keywords for each document
+            # Extract per-document keywords using transform to avoid indexing issues
             results = []
-            for i in range(len(texts)):
-                scores = tfidf_matrix[i].toarray()[0]
-                keyword_scores = list(zip(feature_names, scores))
+            for i, original in enumerate(texts):
+                pt = self.preprocess_text(original or "")
+                if not pt.strip():
+                    results.append({})
+                    continue
+                vec = self.vectorizer.transform([pt]).toarray()[0]
+                keyword_scores = list(zip(feature_names, vec))
                 keyword_scores.sort(key=lambda x: x[1], reverse=True)
                 top_keywords = keyword_scores[:max_keywords]
-                result = {keyword: float(score) for keyword, score in top_keywords if score > 0}
-                results.append(result)
+                results.append({k: float(s) for k, s in top_keywords if s > 0})
 
             logger.info(f"Batch extracted keywords from {len(texts)} documents")
             return results
 
         except Exception as e:
             logger.error(f"Error in batch keyword extraction: {e}")
-            return [{}] * len(texts)
+            return [{} for _ in texts]
 
 
 class TextRankSummarizer:
@@ -183,28 +196,38 @@ class TextRankSummarizer:
         return self.embedding_service
 
     def split_sentences(self, text: str) -> list[str]:
-        """Split text into sentences.
+        """Split text into sentences with basic abbreviation protection.
 
-        Args:
-            text: Document text
-
-        Returns:
-            List of sentences
+        We keep punctuation and avoid splitting on common abbreviations like "e.g.",
+        "i.e.", "U.S.", names ("Dr.", "Mr."), and legal shorthands ("Sec.", "No.").
         """
-        # Split on sentence delimiters but don't remove trailing text
-        sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+        if not text:
+            return []
 
-        # Clean and filter sentences
-        cleaned = []
-        for s in sentences:
-            s = s.strip()
-            # Remove trailing punctuation if sentence already has internal punctuation
-            if s and len(s) > 10:
-                cleaned.append(s.rstrip(".!?"))
-            elif s and not cleaned:  # Keep short first sentence
-                cleaned.append(s.rstrip(".!?"))
+        abbrevs = [
+            "e.g.", "i.e.", "etc.", "Mr.", "Mrs.", "Ms.", "Dr.", "Prof.",
+            "Jr.", "Sr.", "St.", "vs.", "No.", "Sec.", "Art.", "Inc.", "Ltd.",
+            "U.S.", "U.K.", "Cal.", "Gov.", "Dept."
+        ]
+        placeholder = "§DOT§"
+        protected = text
+        for a in abbrevs:
+            protected = protected.replace(a, a.replace(".", placeholder))
 
-        return cleaned
+        # Split on end punctuation followed by whitespace and a capital/digit to reduce false splits
+        parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", protected.strip())
+
+        # Restore periods and clean
+        sentences = []
+        for p in parts:
+            s = p.replace(placeholder, ".").strip()
+            if not s:
+                continue
+            # Keep very short first sentence; otherwise require some length
+            if len(s) > 1:
+                sentences.append(s)
+
+        return sentences
 
     def extract_sentences(self, text: str, max_sentences: int = 3) -> list[str]:
         """Extract key sentences using TextRank.
@@ -247,6 +270,9 @@ class TextRankSummarizer:
                     embeddings = np.array(embeddings)
                     # Calculate similarity matrix
                     similarity_matrix = cosine_similarity(embeddings)
+                    # Remove self-similarity and sparsify by threshold
+                    np.fill_diagonal(similarity_matrix, 0.0)
+                    similarity_matrix[similarity_matrix < self.similarity_threshold] = 0.0
                 else:
                     # Fallback to TF-IDF for similarity
                     similarity_matrix = self._tfidf_similarity(sentences)
@@ -260,24 +286,21 @@ class TextRankSummarizer:
             # Apply TextRank (PageRank on the graph)
             scores = nx.pagerank(nx_graph, max_iter=100)
 
-            # Sort sentences by score
-            ranked_sentences = sorted(
-                [(sentences[i], scores[i]) for i in range(len(sentences))],
-                key=lambda x: x[1],
-                reverse=True,
-            )
+            # Rank by PageRank score (indices)
+            ranked_indices = sorted(range(len(sentences)), key=lambda i: scores[i], reverse=True)
 
-            # Return top sentences in original order
-            top_sentences = ranked_sentences[:max_sentences]
-            top_sentences_text = [s[0] for s in top_sentences]
-
-            # Maintain original order
-            result = []
-            for sentence in sentences:
-                if sentence in top_sentences_text:
-                    result.append(sentence)
-                if len(result) >= max_sentences:
+            # Greedy diversity: avoid selecting sentences that are too similar to already selected ones
+            redundancy_threshold = 0.85
+            selected_indices = []
+            for idx in ranked_indices:
+                if all(similarity_matrix[idx, j] < redundancy_threshold for j in selected_indices):
+                    selected_indices.append(idx)
+                if len(selected_indices) >= max_sentences:
                     break
+
+            # Preserve original order of appearance
+            selected_indices.sort()
+            result = [sentences[i] for i in selected_indices]
 
             logger.debug(f"Extracted {len(result)} key sentences from {len(sentences)} total")
             return result
@@ -301,10 +324,9 @@ class TextRankSummarizer:
             vectorizer = TfidfVectorizer(stop_words="english", min_df=1, max_df=0.95)
             tfidf_matrix = vectorizer.fit_transform(sentences)
             similarity_matrix = cosine_similarity(tfidf_matrix)
-
-            # Apply threshold
-            similarity_matrix[similarity_matrix < self.similarity_threshold] = 0
-
+            # Remove self-similarity and apply threshold
+            np.fill_diagonal(similarity_matrix, 0.0)
+            similarity_matrix[similarity_matrix < self.similarity_threshold] = 0.0
             return similarity_matrix
         except Exception as e:
             logger.error(f"Error calculating TF-IDF similarity: {e}")
@@ -376,6 +398,17 @@ class DocumentSummarizer:
                 else:
                     result["summary_text"] = "Unable to extract keywords from document."
 
+            # Attach basic meta for debugging/analytics
+            try:
+                num_sentences_total = len(self.textrank_summarizer.split_sentences(text))
+            except Exception:
+                num_sentences_total = None
+            result["meta"] = {
+                "num_chars": len(text),
+                "num_words": len(text.split()),
+                "num_sentences": num_sentences_total,
+            }
+
             logger.info(f"Generated {summary_type} summary for text of length {len(text)}")
             return result
 
@@ -426,6 +459,20 @@ class DocumentSummarizer:
             elif summary_type == "tfidf" and result["tf_idf_keywords"]:
                 top_keywords = list(result["tf_idf_keywords"].keys())[:5]
                 result["summary_text"] = f"Key topics: {', '.join(top_keywords)}"
+
+            # Attach meta per document
+            if text:
+                try:
+                    num_sentences_total = len(self.textrank_summarizer.split_sentences(text))
+                except Exception:
+                    num_sentences_total = None
+                result["meta"] = {
+                    "num_chars": len(text),
+                    "num_words": len(text.split()),
+                    "num_sentences": num_sentences_total,
+                }
+            else:
+                result["meta"] = {"num_chars": 0, "num_words": 0, "num_sentences": 0}
 
             results.append(result)
 

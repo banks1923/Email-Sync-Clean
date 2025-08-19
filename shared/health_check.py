@@ -109,7 +109,6 @@ class HealthCheck:
             # Check Whisper
             try:
                 import whisper
-from config.settings import settings
                 models_status["whisper"] = "available"
             except ImportError:
                 models_status["whisper"] = "not installed"

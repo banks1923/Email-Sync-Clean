@@ -452,21 +452,21 @@ Based on your Email Sync system with legal document processing:
 Add new commands to your Makefile:
 ```makefile
 complexity-check: ## Check code complexity
-	radon cc . -s -nb
-	xenon . --max-absolute B --max-modules A --max-average A
+ radon cc . -s -nb
+ xenon . --max-absolute B --max-modules A --max-average A
 
 doc-coverage: ## Check documentation coverage
-	interrogate -vv .
+ interrogate -vv .
 
 security-audit: ## Audit dependencies for vulnerabilities
-	pip-audit
-	detect-secrets scan
+ pip-audit
+ detect-secrets scan
 
 profile: ## Profile the application
-	py-spy record -o profile.svg -- python scripts/vsearch search "test"
+ py-spy record -o profile.svg -- python scripts/vsearch search "test"
 
 deps-tree: ## Show dependency tree
-	pipdeptree --graph-output png > dependencies.png
+ pipdeptree --graph-output png > dependencies.png
 ```
 
 ## 🔄 Pre-commit Config Update

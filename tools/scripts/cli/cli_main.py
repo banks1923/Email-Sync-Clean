@@ -22,7 +22,7 @@ from tools.scripts.cli.docs_handler import (
 from tools.scripts.cli.info_handler import show_info, show_pdf_stats
 from tools.scripts.cli.notes_handler import create_note, show_notes_for_content
 from tools.scripts.cli.process_handler import embed_content, process_emails
-from tools.scripts.cli.search_handler from search_intelligence import basic_search as search_emails, search_multi_content
+from tools.scripts.cli.search_handler import search_emails, search_multi_content
 from tools.scripts.cli.timeline_handler import show_timeline
 from tools.scripts.cli.upload_handler import (
     process_pdf_uploads,

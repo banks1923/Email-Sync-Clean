@@ -14,11 +14,11 @@ from loguru import logger
 
 # Import ArchiveManager for integration
 try:
-    from utilities.archive_manager import get_archive_manager
+    from utilities.enhanced_archive_manager import get_enhanced_archive_manager
     ARCHIVE_ENABLED = True
 except ImportError:
     ARCHIVE_ENABLED = False
-    logger.warning("ArchiveManager not available - archiving disabled")
+    logger.warning("EnhancedArchiveManager not available - archiving disabled")
 
 
 class DocumentLifecycleManager:
@@ -39,7 +39,10 @@ class DocumentLifecycleManager:
         # Initialize archive manager if available and enabled
         self.archive_manager = None
         if ARCHIVE_ENABLED and enable_archiving:
-            self.archive_manager = get_archive_manager(str(self.base_path / "archives"))
+            self.archive_manager = get_enhanced_archive_manager(
+                str(self.base_path / "originals"),
+                str(self.base_path / "archives")
+            )
             logger.info("Document archiving enabled")
 
     def _ensure_folders_exist(self):

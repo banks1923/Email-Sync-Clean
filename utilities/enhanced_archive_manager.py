@@ -13,7 +13,6 @@ from loguru import logger
 
 from shared.original_file_manager import OriginalFileManager
 from shared.simple_db import SimpleDB
-from utilities.archive_manager import ArchiveManager
 
 
 class EnhancedArchiveManager:
@@ -35,14 +34,15 @@ class EnhancedArchiveManager:
     ):
         """Initialize enhanced archive manager with dual functionality."""
         self.originals_manager = OriginalFileManager(originals_path, use_hard_links)
-        self.archive_manager = ArchiveManager(archives_path)
+        self.archives_path = Path(archives_path)
+        self.archives_path.mkdir(parents=True, exist_ok=True)
         self.db = SimpleDB()
         self.use_hard_links = use_hard_links
         
         # Ensure space savings tracking table
         self._ensure_space_savings_table()
         
-        logger.info(f"EnhancedArchiveManager initialized - originals: {originals_path}, archives: {archives_path}")
+        logger.info(f"EnhancedArchiveManager initialized - originals: {originals_path}, archives: {self.archives_path}")
 
     def _ensure_space_savings_table(self):
         """Create space savings tracking table."""
@@ -115,10 +115,8 @@ class EnhancedArchiveManager:
         
         # Create compressed archive if requested
         if create_archive:
-            archive_path = self.archive_manager.archive_file(
-                organized_path, metadata, file_type
-            )
-            result["archive_path"] = str(archive_path)
+            archive_path = self._create_simple_archive(organized_path, file_type)
+            result["archive_path"] = str(archive_path) if archive_path else None
         
         logger.info(f"File archived successfully: {file_path.name}")
         return result
@@ -191,8 +189,8 @@ class EnhancedArchiveManager:
     def get_archive_stats(self) -> dict[str, Any]:
         """Get comprehensive archive statistics including space savings."""
         
-        # Get basic archive stats
-        archive_stats = self.archive_manager.get_archive_stats()
+        # Get basic archive stats (simple file count)
+        archive_stats = self._get_simple_archive_stats()
         
         # Get space savings stats
         savings_stats = self._get_space_savings_stats()
@@ -358,6 +356,50 @@ class EnhancedArchiveManager:
             logger.debug("Space savings updated after link cleanup")
         except Exception as e:
             logger.warning(f"Error updating space savings after cleanup: {e}")
+
+    def _create_simple_archive(self, file_path: Path, file_type: str) -> Path | None:
+        """Create a simple archive copy (replacement for archived ArchiveManager)."""
+        try:
+            # Create date-based archive structure
+            archive_date = datetime.now().strftime("%Y-%m-%d")
+            archive_dir = self.archives_path / archive_date / file_type
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Copy file to archive location
+            archive_file_path = archive_dir / file_path.name
+            import shutil
+            shutil.copy2(file_path, archive_file_path)
+            
+            logger.debug(f"Created simple archive: {archive_file_path}")
+            return archive_file_path
+            
+        except Exception as e:
+            logger.error(f"Error creating simple archive: {e}")
+            return None
+
+    def _get_simple_archive_stats(self) -> dict[str, Any]:
+        """Get simple archive statistics (replacement for archived ArchiveManager)."""
+        try:
+            if not self.archives_path.exists():
+                return {"total_files": 0, "total_size_mb": 0}
+            
+            total_files = 0
+            total_size = 0
+            
+            for file_path in self.archives_path.rglob("*"):
+                if file_path.is_file():
+                    total_files += 1
+                    total_size += file_path.stat().st_size
+            
+            return {
+                "total_files": total_files,
+                "total_size_mb": round(total_size / (1024 * 1024), 2),
+                "archive_path": str(self.archives_path)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting archive stats: {e}")
+            return {"error": str(e)}
 
 
 # Simple factory function following CLAUDE.md principles

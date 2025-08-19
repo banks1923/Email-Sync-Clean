@@ -317,7 +317,7 @@ observation = {
 - **Server**: `firecrawl` in `.mcp.json`
 - **Package**: `firecrawl-mcp` (v1.12.0)
 - **Status**: 🔧 Available (requires API key)
-- **API Key**: Get from https://www.firecrawl.dev/app/api-keys
+- **API Key**: Get from <https://www.firecrawl.dev/app/api-keys>
 
 **Key Features**:
 - Web scraping with clean markdown output

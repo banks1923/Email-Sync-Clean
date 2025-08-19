@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from utilities.archive_manager import ArchiveManager, get_archive_manager
+from zarchive.archive_manager import ArchiveManager, get_archive_manager
 
 
 class TestArchiveManager:

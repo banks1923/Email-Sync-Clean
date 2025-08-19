@@ -79,6 +79,12 @@ make lint-all                 # Run both flake8 and ruff linters
 make check                    # Comprehensive quality checks
 make clean                    # Clean up caches and generated files
 
+# Database & Vector Maintenance
+make db-validate              # Validate database schema integrity
+make vector-status            # Check vector store sync status
+make vector-sync              # Sync missing vectors with database
+make maintenance-all          # Run all maintenance checks
+
 # Legal Intelligence commands
 tools/scripts/vsearch legal process "24NNCV"
 tools/scripts/vsearch legal timeline "24NNCV" -o timeline.json
@@ -164,8 +170,10 @@ Email Sync/
 .config/
 ├── .coveragerc              # Coverage.py configuration
 ├── .flake8                  # Flake8 linting rules
+├── .markdownlint.json      # Markdownlint documentation style rules
 ├── .mcpignore              # MCP server ignore patterns
 ├── .pre-commit-config.yaml # Pre-commit hooks configuration
+├── .radon.cfg              # Radon complexity analysis configuration
 ├── mypy.ini                # MyPy type checking settings
 ├── pyrightconfig.json      # Pyright (VS Code) type checking
 ├── pytest.ini             # Pytest configuration
@@ -176,6 +184,8 @@ Email Sync/
 - **Make commands**: All use `--config .config/[file]` syntax
 - **PyProject.toml**: Contains consolidated tool settings where supported
 - **External secrets**: Use `~/Secrets/.env` with direnv auto-loading via `.envrc`
+- **Documentation linting**: `make docs-check` and `make docs-fix` for markdown quality
+- **Complexity analysis**: `make complexity-check` and `make complexity-report` with radon
 
 **Major Update (2025-08-17)**: Directory reorganization completed:
 - **53% reduction**: Root directory items reduced from 34 to 16
@@ -252,9 +262,13 @@ Email Sync/
 - **Timeline** (`utilities/timeline/`): Chronological event tracking
 
 ### Infrastructure Services
-- **MCP Servers** (`infrastructure/mcp_servers/`): Claude Desktop integration
+- **MCP Servers** (`infrastructure/mcp_servers/`): Claude Desktop integration (2 active servers)
 - **Pipelines** (`infrastructure/pipelines/`): Document processing workflows with HTML email cleaning
 - **Documents** (`infrastructure/documents/`): Document lifecycle management
+
+### Maintenance Utilities
+- **Vector Maintenance** (`utilities/maintenance/vector_maintenance.py`): Unified vector operations
+- **Schema Maintenance** (`utilities/maintenance/schema_maintenance.py`): Database schema operations
 
 For detailed API documentation and usage examples, see **[docs/SERVICES_API.md](docs/SERVICES_API.md)**
 
