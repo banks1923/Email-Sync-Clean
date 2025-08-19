@@ -208,16 +208,21 @@ class SearchInterface:
         return results
     
     def _get_all_vector_results(self, query: str, limit: int) -> List[Dict[str, Any]]:
-        """Get combined vector search results."""
+        """Get combined vector search results with analog-first approach."""
         all_vector_results = []
         
-        # Try analog semantic search
+        # PRIMARY: Analog semantic search (always works, files are source of truth)
         analog_results = self.vector_searcher.get_analog_semantic_results(query, limit)
         all_vector_results.extend(analog_results)
+        logger.debug(f"Analog search: {len(analog_results)} results")
         
-        # Try database vector search
-        db_results = self.vector_searcher.get_database_vector_results(query, limit)
-        all_vector_results.extend(db_results)
+        # SECONDARY: Database vector search (optional enhancement)
+        try:
+            db_results = self.vector_searcher.get_database_vector_results(query, limit)
+            all_vector_results.extend(db_results)
+            logger.debug(f"Database search: {len(db_results)} results")
+        except Exception as e:
+            logger.info(f"Database search unavailable, continuing with analog-only: {e}")
         
         return all_vector_results
     

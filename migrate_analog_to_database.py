@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """
-Migrate analog database content to SQL database tables.
+DEPRECATED: Migrate analog database content to SQL database tables.
 
-Processes markdown files from analog_db and populates the database tables
-needed for search intelligence and vector search integration.
+WARNING: This script is deprecated as of 2025-08-18. The system now uses
+analog-first architecture with graceful database fallback, making this
+migration unnecessary.
+
+RECOMMENDED: Use the new analog-first search which works directly on markdown
+files without requiring database migration.
+
+LEGACY PURPOSE: This script was a temporary bandaid fix that processed 
+markdown files from analog_db and populated database tables for search 
+intelligence integration when database search was required.
+
+REMOVAL SCHEDULE: Q2 2025 after validation period.
 """
 
 import os

@@ -21,9 +21,14 @@ class VectorSearcher:
         self.analog_db_path = base_path / "analog_db"
     
     def get_database_vector_results(self, query: str, limit: int) -> List[Dict[str, Any]]:
-        """Get vector search results from existing search_intelligence service."""
+        """Get vector search results with graceful database fallback."""
         try:
             from search_intelligence import get_search_intelligence_service
+            
+            # Check if database is ready before attempting search
+            if not self._is_database_ready():
+                logger.debug("Database not ready for vector search, using analog-only")
+                return []
             
             search_service = get_search_intelligence_service()
             vector_results = search_service.smart_search_with_preprocessing(
@@ -56,8 +61,8 @@ class VectorSearcher:
             logger.debug("Search intelligence service not available")
             return []
         except Exception as e:
-            logger.debug(f"Database vector search failed: {e}")
-            return []
+            logger.debug(f"Database vector search failed gracefully: {e}")
+            return []  # Graceful degradation - analog search will still work
     
     def get_analog_semantic_results(self, query: str, limit: int) -> List[Dict[str, Any]]:
         """Perform semantic search on analog database markdown files."""
@@ -181,3 +186,14 @@ class VectorSearcher:
                 "source": "analog_semantic",
                 "match_type": "semantic"
             }
+    
+    def _is_database_ready(self) -> bool:
+        """Check if database has required tables without creating them."""
+        try:
+            from shared.simple_db import SimpleDB
+            db = SimpleDB()
+            # Test with a simple query that won't create missing tables
+            result = db.fetch("SELECT name FROM sqlite_master WHERE type='table' AND name='content'")
+            return len(result) > 0
+        except Exception:
+            return False
