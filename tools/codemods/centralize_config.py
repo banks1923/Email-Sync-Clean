@@ -214,9 +214,9 @@ def main():
         if transform_file(file_path):
             transformed_count += 1
 
-    print(f"\n✨ Transformation complete!")
+    print("\n✨ Transformation complete!")
     print(f"   - Transformed {transformed_count} files")
-    print(f"   - Centralized config in config/settings.py")
+    print("   - Centralized config in config/settings.py")
 
     # Step 4: Update requirements.txt
     print("\n📦 Updating requirements...")

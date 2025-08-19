@@ -16,7 +16,7 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 - **No Complex Hierarchies**: Simple agent classes
 - **No Abstract Patterns**: Direct implementation
 - **No Meta-Programming**: Keep it simple
-- **No Long Context**: Break tasks into tiny chunks
+- **No Long Context**: Break tasks into tiny chunks — Goal: Conserve context, don’t waste it. Use a subagent for just reading a pile of code and reporting back.
 
 ### Good Patterns (ALWAYS DO)
 - **Read CLAUDE.md First**: Every agent starts by reading project principles
@@ -30,7 +30,7 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 2. **Create Todo List** - Break work into tiny tasks
 3. **Execute Tasks** - One small task at a time
 4. **Write Logs** - Document all actions and decisions in logs folder
-5. **QC Review** - QC Agent reviews and summarizes logs
+5. **QC Review (Deprecated)** - Previously required, no longer part of the active workflow.
 
 <!-- END PROTECTED SECTION - DO NOT MODIFY WITHOUT 3X CONFIRMATION -->
 
@@ -57,7 +57,7 @@ QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant &
 
 ### Core Commands
 ```bash
-# Search (works with or without Qdrant)
+# Search (requires Qdrant — system is useless without it)
 tools/scripts/vsearch search "query"
 
 # Advanced search with filters
@@ -79,6 +79,10 @@ make lint-all                 # Run both flake8 and ruff linters
 make check                    # Comprehensive quality checks
 make clean                    # Clean up caches and generated files
 
+# System Diagnostics
+make diag-wiring              # Full system diagnostic - validate wiring & efficiency
+make vector-smoke             # Quick vector smoke test - upsert 50 points & run 2 searches
+
 # Database & Vector Maintenance
 make db-validate              # Validate database schema integrity
 make vector-status            # Check vector store sync status
@@ -96,7 +100,7 @@ tools/scripts/vsearch intelligence similarity doc_123 --threshold 0.7
 tools/scripts/vsearch intelligence cluster --threshold 0.8 -n 100
 ```
 
-### Optional: Enable Vector Search
+### Enable Vector Search (Required)
 ```bash
 # Install Qdrant locally (no Docker required)
 curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-aarch64-apple-darwin.tar.gz
@@ -197,10 +201,11 @@ Email Sync/
 
 #### File Size Guidelines
 
-##### For New Development (ENFORCED)
-- **New Files**: Target under 450 lines to prevent AI-generated bloat
-- **Function Size**: Maximum 30 lines per function
+##### For New Development (GOALS, NOT ENFORCED)
+- **New Files (Goal)**: Aim to keep files under 450 lines to prevent unmaintainable monster files.
+- **Function Size (Goal)**: Try to keep functions ~30 lines for readability.
 - **Rationale**: Keeps AI development focused and prevents monster files
+These are guidance targets to prevent monster files; they are not hard caps.
 
 ##### For Existing Code (PRAGMATIC)
 - **Core Infrastructure** (SimpleDB, main services): Size guided by functionality
@@ -318,9 +323,7 @@ logger.info("Message")
 ```
 
 ### Production Safety
-- **Sensitive Data Filtering**: Passwords, tokens, emails automatically redacted in production
-- **Error-Only Logs**: Separate error log file in production for critical issues
-- **Diagnose Mode**: Disabled in production to prevent data leaks
+- **Security**: Not a focus — private hobby project in private git. Do not spend effort on redaction or enterprise security here.
 
 ## 🧪 Testing Philosophy
 
@@ -341,7 +344,7 @@ from shared.simple_db import SimpleDB
 emb = get_embedding_service()
 db = SimpleDB()
 search = get_search_intelligence_service()
-# Vector/Search may fail if Qdrant not running (expected)
+# Vector/Search will fail if Qdrant is not running (by design)
 ```
 
 ## 🛠️ Development Tools
@@ -442,6 +445,7 @@ This is a **single-user hobby project**, not enterprise software. Every line of 
 ### Detailed References
 - **[docs/SERVICES_API.md](docs/SERVICES_API.md)** - Complete services API reference
 - **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)** - MCP server integration guide
+- **[docs/DIAGNOSTIC_SYSTEM.md](docs/DIAGNOSTIC_SYSTEM.md)** - System diagnostic tools and troubleshooting
 - **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)** - Code cleanup tools
 - **[docs/CLEANUP_QUICK_REFERENCE.md](docs/CLEANUP_QUICK_REFERENCE.md)** - Quick cleanup reference
 

@@ -14,14 +14,14 @@ def test_single_file(file_path: str):
     with open(path, 'r') as f:
         original_content = f.read()
     
-    print(f"📄 Original content preview:")
+    print("📄 Original content preview:")
     print("=" * 50)
     print(original_content[:300] + "..." if len(original_content) > 300 else original_content)
     print("=" * 50)
     
     try:
         # Parse
-        tree = cst.parse_module(original_content)
+        cst.parse_module(original_content)
         print("✅ File parsed successfully")
         
         # Simple string replacement approach (safer than AST transformation)
@@ -64,11 +64,11 @@ def test_single_file(file_path: str):
                 modified_content = '\n'.join(lines)
                 changes_made.append("Added config.settings import")
             
-            print(f"🔧 Changes made:")
+            print("🔧 Changes made:")
             for change in changes_made:
                 print(f"   - {change}")
             
-            print(f"\n📝 Modified content preview:")
+            print("\n📝 Modified content preview:")
             print("=" * 50)
             print(modified_content[:500] + "..." if len(modified_content) > 500 else modified_content)
             print("=" * 50)

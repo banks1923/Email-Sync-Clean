@@ -63,7 +63,7 @@ class TestSchemaInvariants(unittest.TestCase):
                 continue
         
         self.assertEqual([], violations, 
-                        f"Found prohibited content_id references in SQL strings:\\n" +
+                        "Found prohibited content_id references in SQL strings:\\n" +
                         "\\n".join(violations))
 
     def test_upsert_idempotent_business_key(self):
@@ -188,7 +188,7 @@ class TestSchemaInvariants(unittest.TestCase):
         
         try:
             # Insert first record
-            id1 = db.upsert_content(
+            db.upsert_content(
                 source_type="test-constraint",
                 external_id="unique-test-001",
                 content_type="test", 

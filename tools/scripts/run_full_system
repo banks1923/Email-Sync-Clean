@@ -196,35 +196,21 @@ class SystemRunner:
 
     def generate_embeddings(self) -> bool:
         """Generate embeddings for new content"""
-        logger.info("🧠 Generating embeddings for new content...")
+        logger.info("🧠 Generating embeddings and syncing to vector store (batched)...")
 
         try:
-            db = SimpleDB()
-            embedding_service = get_embedding_service()
+            from utilities.maintenance.vector_maintenance import VectorMaintenance
 
-            # Get emails without embeddings
-            emails = db.search_content("", content_type="email", limit=50)
-
-            if not emails:
-                logger.info("No new emails to process")
-                return True
-
-            success_count = 0
-            for email in emails:
-                try:
-                    content = email.get("content", "")[:2000]  # Limit content size
-                    if content:
-                        embedding_service.encode(content)
-                        success_count += 1
-                except Exception as e:
-                    logger.warning(f"Could not generate embedding: {e}")
-
-            self.stats["embeddings_generated"] = success_count
-            logger.success(f"✅ Generated {success_count} embeddings")
+            maint = VectorMaintenance()
+            # VectorMaintenance handles batching internally
+            result = maint.sync_emails_to_vectors(limit=None)
+            synced = int(result.get("synced", 0))
+            self.stats["embeddings_generated"] = synced
+            logger.success(f"✅ Batched vector sync complete: {synced} items")
             return True
 
         except Exception as e:
-            error = f"Embedding generation error: {str(e)}"
+            error = f"Embedding/vector sync error: {str(e)}"
             logger.error(f"❌ {error}")
             self.stats["errors"].append(error)
             return False
@@ -274,13 +260,23 @@ class SystemRunner:
             search_service = get_search_intelligence_service()
 
             # Test queries
-            test_queries = ["maintenance", "contract", "payment"]
-
-            for query in test_queries:
+            import time
+            any_hits = False
+            latencies = []
+            for query in ["maintenance", "contract", "payment"]:
+                t0 = time.perf_counter()
                 results = search_service.search(query, limit=3)
-                logger.info(f"  Query '{query}': {len(results)} results")
+                dt = (time.perf_counter() - t0) * 1000.0
+                latencies.append(dt)
+                hits = len(results)
+                any_hits = any_hits or hits > 0
+                logger.info(f"  Query '{query}': {hits} results in {dt:.1f} ms")
 
-            logger.success("✅ Search functionality operational")
+            if not any_hits:
+                raise RuntimeError("search returned no results for all test queries")
+
+            p95 = sorted(latencies)[int(0.95 * (len(latencies) - 1))]
+            logger.success(f"✅ Search operational (p95={p95:.1f} ms)")
             return True
 
         except Exception as e:
@@ -291,48 +287,24 @@ class SystemRunner:
             
     def populate_vector_store(self) -> bool:
         """Populate vector store with embeddings"""
-        logger.info("🗄️ Populating vector store...")
-        
+        logger.info("🗄️ Ensuring vector store completeness (missing + reconcile)...")
+
         try:
-            from utilities.embeddings import get_embedding_service
-            from utilities.vector_store import get_vector_store
-            
-            db = SimpleDB()
-            vector_store = get_vector_store()
-            embedding_service = get_embedding_service()
-            
-            # Get emails that need vectors
-            emails = db.search_content("", content_type="email", limit=100)
-            
-            vectors_added = 0
-            for email in emails:
-                try:
-                    # Generate embedding
-                    content = email.get("content", "")[:2000]
-                    if content:
-                        vector = embedding_service.encode(content)
-                        
-                        # Store in vector database
-                        vector_store.upsert(
-                            vector=vector.tolist(),
-                            payload={
-                                "id": email["id"],
-                                "title": email.get("title", ""),
-                                "type": "email",
-                                "date": email.get("metadata", {}).get("datetime_utc", "")
-                            },
-                            id=str(email["id"])
-                        )
-                        vectors_added += 1
-                except Exception as e:
-                    logger.warning(f"Could not add vector: {e}")
-                    
-            logger.success(f"✅ Added {vectors_added} vectors to store")
-            self.stats["vectors_added"] = vectors_added
+            from utilities.maintenance.vector_maintenance import VectorMaintenance
+
+            maint = VectorMaintenance()
+            missing_result = maint.sync_missing_vectors(collection="emails")
+            missing_synced = int(missing_result.get("synced", 0))
+
+            reconcile_result = maint.reconcile_vectors(fix=True)
+            fixes = int(reconcile_result.get("fixes_applied", 0)) if isinstance(reconcile_result, dict) else 0
+
+            self.stats["vectors_added"] = missing_synced
+            logger.success(f"✅ Vector store verified: synced_missing={missing_synced}, fixes_applied={fixes}")
             return True
-            
+
         except Exception as e:
-            error = f"Vector store population error: {str(e)}"
+            error = f"Vector store verification error: {str(e)}"
             logger.error(f"❌ {error}")
             self.stats["errors"].append(error)
             return False
@@ -520,10 +492,11 @@ class SystemRunner:
                 logger.error("Prerequisites check failed. Exiting.")
                 return 1
 
-            # Start Qdrant (optional)
+            # Start Qdrant (required)
             qdrant_running = self.start_qdrant()
             if not qdrant_running:
-                logger.warning("Continuing without vector search...")
+                logger.error("Qdrant is required and is not running. Exiting.")
+                return 2
 
             # Run email sync
             self.sync_emails()

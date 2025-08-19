@@ -99,7 +99,7 @@ def consolidate_search():
     if search_dir.exists():
         remaining_files = list(search_dir.rglob("*"))
         if len(remaining_files) <= 2:  # Only __pycache__ and __init__.py
-            print(f"🗑️ Removing empty search directory")
+            print("🗑️ Removing empty search directory")
             shutil.rmtree(search_dir)
         else:
             print(f"⚠️ search directory still has files: {[f.name for f in remaining_files]}")

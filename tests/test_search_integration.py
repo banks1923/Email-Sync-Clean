@@ -15,7 +15,7 @@ def test_search_intelligence():
     
     # Import with error handling
     try:
-        from search_intelligence.basic_search from search_intelligence import basic_search as search
+        from search_intelligence import basic_search as search
         print("✅ SearchIntelligenceService imported")
     except ImportError as e:
         print(f"❌ Failed to import SearchIntelligenceService: {e}")
@@ -75,7 +75,7 @@ def test_cli_integration():
     print("=" * 50)
     
     try:
-        from tools.scripts.cli.search_handler from search_intelligence import basic_search as search_emails
+        from search_intelligence import basic_search as search_emails
         print("✅ search_emails function imported")
         
         # Check if function accepts mode parameter

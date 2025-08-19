@@ -91,7 +91,7 @@ class TestSearchService:
         """
         Test search service initialization.
         """
-        from search_intelligence.basic_search from search_intelligence import basic_search as search
+        from search_intelligence import basic_search as search
 
         # Search function should work directly
         assert search is not None
@@ -100,7 +100,7 @@ class TestSearchService:
         """
         Test basic search functionality.
         """
-        from search_intelligence.basic_search from search_intelligence import basic_search as search
+        from search_intelligence import basic_search as search
 
         results = search("test query", limit=10)
 
@@ -112,7 +112,7 @@ class TestSearchService:
         """
         Test search with advanced filters.
         """
-        from search_intelligence.basic_search from search_intelligence import basic_search as search
+        from search_intelligence import basic_search as search
 
         filters = {
             "since": "last week",
@@ -144,19 +144,23 @@ class TestVectorStoreService:
         store = VectorStore()
         assert store is not None
 
-    @patch("utilities.vector_store.main.QdrantClient")
+    @patch("utilities.vector_store.QdrantClient")
     def test_vector_operations(self, mock_qdrant):
         """
         Test vector store operations.
         """
-        from utilities.vector_store.main import VectorStoreService
+        from utilities.vector_store import VectorStore
 
         # Setup mock
         client = Mock()
         mock_qdrant.return_value = client
-        client.get_collections.return_value.collections = []
+        
+        # Mock collection info with proper structure
+        collection_info = Mock()
+        collection_info.config.params.vectors.size = 1024
+        client.get_collection.return_value = collection_info
 
-        store = VectorStoreService()
+        store = VectorStore()
 
         # Test upsert
         vector = np.random.rand(1024).astype(np.float32)
@@ -164,8 +168,13 @@ class TestVectorStoreService:
 
         store.upsert(vector, metadata, id="test_1")
 
-        # Verify upsert was attempted
-        # Note: Actual call depends on implementation
+        # Verify upsert was called on the client
+        assert client.upsert.called
+        
+        # Test additional methods exist
+        assert hasattr(store, 'add_email_vector')
+        assert hasattr(store, 'health')
+        assert hasattr(store, 'iter_ids')
 
 
 class TestSimpleDBIntegration:
@@ -279,7 +288,7 @@ class TestServiceIntegration:
         Initialize all services.
         """
         from utilities.embeddings.embedding_service import EmbeddingService
-        from search_intelligence.basic_search from search_intelligence import basic_search as search
+        from search_intelligence import basic_search as search
         from entity.main import EntityService
         from summarization.main import DocumentSummarizer
         from shared.simple_db import SimpleDB

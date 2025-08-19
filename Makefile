@@ -1,4 +1,4 @@
-.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-fix complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report
+.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-fix complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke
 
 # Default target
 .DEFAULT_GOAL := help
@@ -242,3 +242,26 @@ maintenance-all: ## Run all maintenance checks
 	@make db-validate
 	@make vector-status
 	@echo "✅ Maintenance checks complete!"
+
+diag-wiring: ## Full system diagnostic - validate wiring & efficiency
+	@echo "🔍 Running system diagnostic..."
+	$(PYTHON) tools/diag_wiring.py
+
+vector-smoke: ## Quick vector smoke test - upsert 50 points & run 2 searches  
+	@echo "💨 Running vector smoke test..."
+	$(PYTHON) -c "import sys, os, uuid; sys.path.insert(0, '.'); \
+	from utilities.vector_store import get_vector_store; \
+	from utilities.embeddings import get_embedding_service; \
+	vs = get_vector_store('emails'); emb = get_embedding_service(); \
+	texts = ['smoke test ' + str(i) for i in range(50)]; \
+	embeddings = emb.batch_encode(texts, batch_size=16); \
+	test_ids = [str(uuid.uuid4()) for _ in range(50)]; \
+	points = [{'id': test_ids[i], 'vector': e, 'metadata': {'test': True}} for i, e in enumerate(embeddings)]; \
+	vs.batch_upsert('emails', points); \
+	print('✓ Upserted 50 test points'); \
+	results1 = vs.search(emb.encode('test'), limit=5); \
+	results2 = vs.search(emb.encode('smoke'), limit=5); \
+	print('✓ Search 1: {} hits, top score: {:.3f}'.format(len(results1), results1[0]['score']) if results1 else '✗ No hits'); \
+	print('✓ Search 2: {} hits, top score: {:.3f}'.format(len(results2), results2[0]['score']) if results2 else '✗ No hits'); \
+	vs.delete_many(test_ids); \
+	print('✓ Cleaned up test data')"

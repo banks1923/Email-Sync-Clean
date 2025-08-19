@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+
 """
+
 AI-Powered Hybrid Vector Search CLI - Fixed Version
 Uses new clean services architecture
 Usage: scripts/vsearch [command] [options]
@@ -25,7 +27,7 @@ except ImportError:
     print("⚠️  Clean services not available, using fallback")
 
 
-def search_command(query, limit=5, hybrid=True):
+def search_command(query: str, limit: int = 5, hybrid: bool = True) -> bool:
     """AI-Powered Unified Search using clean services"""
     print(f"🤖 AI-Powered Search for: '{query}'")
 
@@ -33,6 +35,7 @@ def search_command(query, limit=5, hybrid=True):
         # Try semantic search with new SearchService
         print("🔍 Running semantic search...")
         try:
+            # Only call get_search_service if SERVICES_AVAILABLE is True
             search = get_search_service()
             results = search.search(query, limit=limit)
 

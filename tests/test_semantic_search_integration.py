@@ -12,7 +12,7 @@ import sys
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from search_intelligence.basic_search from search_intelligence import basic_search as search, semantic_search, vector_store_available
+from search_intelligence import basic_search as search, semantic_search, vector_store_available
 from shared.simple_db import SimpleDB
 
 
@@ -155,7 +155,7 @@ class TestSemanticSearchIntegration:
     def test_legal_handler_compatibility(self):
         """Test that legal handlers still work"""
         try:
-            from tools.scripts.cli.legal_handler from search_intelligence import basic_search as search_legal
+            from search_intelligence import basic_search as search_legal
             # This should not crash - actual execution tested via CLI
             assert hasattr(search_legal, '__call__'), "Legal handlers should be callable"
             print("✅ Legal handler compatibility OK")

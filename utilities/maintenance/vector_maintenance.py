@@ -11,13 +11,9 @@ Combines functionality from:
 """
 
 import sys
-import hashlib
 import argparse
-from pathlib import Path
-from typing import Optional, Set, Dict, Any
+from typing import Optional, Dict, Any
 from loguru import logger
-from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct
 
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service

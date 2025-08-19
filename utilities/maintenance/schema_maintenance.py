@@ -10,7 +10,7 @@ Combines functionality from:
 
 import sys
 import argparse
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime
 from loguru import logger
 
@@ -378,7 +378,7 @@ def main():
     migrate.add_argument('--batch-size', type=int, default=100, help='Batch size for migration')
     
     # Update refs command
-    update = subparsers.add_parser('update-refs', help='Update schema references')
+    subparsers.add_parser('update-refs', help='Update schema references')
     
     # Validate command
     subparsers.add_parser('validate', help='Validate schema integrity')
