@@ -1,0 +1,29 @@
+Processing 218 Python files...
+DRY RUN MODE - no files will be modified
+
+[DRY RUN] CHANGED: tests/migration/test_schema_migration_comprehensive.py
+--- tests/migration/test_schema_migration_comprehensive.py+++ tests/migration/test_schema_migration_comprehensive.py@@ -47,7 +47,7 @@         # Create old-style content table with content_id
+         cursor.execute("""
+             CREATE TABLE content (
+-                content_id TEXT PRIMARY KEY,
++                id TEXT PRIMARY KEY,
+                 type TEXT NOT NULL,
+                 title TEXT,
+                 content TEXT NOT NULL,
+@@ -72,7 +72,7 @@         
+         # Insert test data
+         cursor.execute("""
+-            INSERT INTO content (content_id, type, title, content)
++            INSERT INTO content (id, type, title, content)
+             VALUES ('old-content-1', 'document', 'Old Document', 'Old content')
+         """)
+         
+
+--------------------------------------------------------------------------------
+
+Summary:
+  Files processed: 218
+  Files changed: 1
+  Total changes: 2
+
+To apply these changes, run with --apply instead of --dry-run

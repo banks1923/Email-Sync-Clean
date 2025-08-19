@@ -28,7 +28,6 @@ def test_openai_transcription():
     
     try:
         from transcription.config import TranscriptionMode
-        from transcription.main import get_transcription_service
 
         # Initialize service
         service = TranscriptionService()

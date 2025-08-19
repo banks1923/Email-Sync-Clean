@@ -24,7 +24,7 @@ class TestEmbeddingsService:
         """
         Test that embedding service initializes correctly.
         """
-        from utilities.embeddings.main import EmbeddingService
+        from utilities.embeddings.embedding_service import EmbeddingService
 
         service = EmbeddingService()
         assert service is not None
@@ -33,7 +33,7 @@ class TestEmbeddingsService:
         """
         Test text encoding to embeddings.
         """
-        from utilities.embeddings.main import EmbeddingService
+        from utilities.embeddings.embedding_service import EmbeddingService
 
         service = EmbeddingService()
         text = "This is a test legal document"
@@ -50,7 +50,7 @@ class TestEmbeddingsService:
         """
         Test batch encoding of multiple texts.
         """
-        from utilities.embeddings.main import EmbeddingService
+        from utilities.embeddings.embedding_service import EmbeddingService
 
         service = EmbeddingService()
         texts = ["First legal document", "Second legal document", "Third legal document"]
@@ -278,7 +278,7 @@ class TestServiceIntegration:
         """
         Initialize all services.
         """
-        from utilities.embeddings.main import EmbeddingService
+        from utilities.embeddings.embedding_service import EmbeddingService
         from search.main import search
         from entity.main import EntityService
         from summarization.main import DocumentSummarizer
@@ -353,7 +353,7 @@ class TestServiceIntegration:
             doc_ids.append(doc_id)
 
         # Generate embeddings for query
-        from utilities.embeddings.main import EmbeddingService
+        from utilities.embeddings.embedding_service import EmbeddingService
         embedding_service = EmbeddingService()
         query = "contract agreement"
         query_embedding = embedding_service.encode(query)

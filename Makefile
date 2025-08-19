@@ -1,4 +1,4 @@
-.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check validate clean help fix-all cleanup setup
+.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report
 
 # Default target
 .DEFAULT_GOAL := help
@@ -96,6 +96,33 @@ test-coverage: ## Run tests with coverage report
 # Security
 security-check: ## Run security checks with bandit
 	bandit -r gmail/ search/ vector_store/ embeddings/ shared/
+
+# SonarQube Code Quality
+sonar-check: ## Run SonarLint analysis on Python codebase
+	@echo "🔍 Running SonarLint code quality analysis..."
+	@if command -v sonarlint >/dev/null 2>&1; then \
+		sonarlint --src . --language python --html-report sonar-report.html; \
+	else \
+		echo "⚠️  sonarlint-cli not installed. Install with: brew install sonarlint-cli"; \
+		echo "   Or use VS Code extension: SonarSource.sonarlint-vscode"; \
+	fi
+
+sonar-fix: ## Auto-fix SonarLint issues where possible
+	@echo "🔧 Auto-fixing SonarLint issues..."
+	@if command -v sonarlint >/dev/null 2>&1; then \
+		sonarlint --src . --language python --fix; \
+	else \
+		echo "⚠️  sonarlint-cli not installed. Install with: brew install sonarlint-cli"; \
+	fi
+
+sonar-report: ## Generate HTML quality report with SonarLint
+	@echo "📊 Generating SonarLint HTML report..."
+	@if command -v sonarlint >/dev/null 2>&1; then \
+		sonarlint --src . --language python --html-report reports/sonar-quality.html; \
+		echo "✅ Report generated: reports/sonar-quality.html"; \
+	else \
+		echo "⚠️  sonarlint-cli not installed. Install with: brew install sonarlint-cli"; \
+	fi
 
 # Validation
 validate: ## Run complete validation suite

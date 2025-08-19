@@ -254,8 +254,6 @@ class TestTimelineIntegration(unittest.TestCase):
 
         # Check if timeline service is available
         try:
-            from utilities.timeline.main import get_timeline_service
-
             self.timeline_service = TimelineService()
             self.integration_available = True
         except ImportError:

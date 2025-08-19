@@ -179,6 +179,22 @@ Email Sync/
   - Clear functional separation opportunities
   - Multiple developers working on same areas
 
+##### SimpleDB Specific (DOCUMENTED TRIGGERS)
+**SimpleDB will remain as-is unless these specific triggers occur:**
+1. **Need async/multiprocess writes** - Currently single-threaded is sufficient
+2. **Sustained SQLITE_BUSY or p95 latency issues for 2+ weeks** - Currently zero lock issues
+3. **Migration off SQLite to Postgres/Cloud SQL** - SQLite perfect for single-user
+4. **Method count exceeds 60 or complexity exceeds agreed caps** - Currently 47 methods
+5. **p95 write latency >2× baseline for 2 weeks OR busy_events >0.5% of writes** - Objective SLO
+
+**SQLite Optimizations Applied (2025-08-19):**
+- WAL mode enabled for better concurrency
+- 64MB cache for batch operations
+- NORMAL synchronous mode (safe for single-user)
+- 5-second busy timeout for resilience
+- Slow-query logging (>100ms)
+- `db_maintenance()` method for WAL checkpointing after large batches
+
 #### Other Hard Limits (ENFORCED)
 - **Cyclomatic Complexity**: Maximum 10 per function
 - **Service Independence**: No cross-service imports
@@ -307,6 +323,34 @@ make check          # Quality checks + tests (no modifications)
 - **LibCST**: Recommended for large-scale Python refactoring (import fixes, renaming)
   - Preserves formatting and comments perfectly
   - See **[docs/CODE_TRANSFORMATION_TOOLS.md](docs/CODE_TRANSFORMATION_TOOLS.md)** for usage
+
+### SonarQube for IDE (Code Quality Analysis)
+Real-time code quality and security analysis directly in your IDE. Catches bugs, vulnerabilities, and code smells as you type.
+
+#### Installation
+```bash
+# VS Code: Install from marketplace
+# Extension ID: SonarSource.sonarlint-vscode
+# Or search "SonarQube for IDE" in VS Code Extensions
+
+# Command-line analysis (requires sonarlint-cli)
+make sonar-check       # Run SonarLint analysis on entire codebase
+make sonar-fix         # Auto-fix issues where possible
+make sonar-report      # Generate HTML quality report
+```
+
+#### What It Catches
+- **Security**: Hardcoded credentials, SQL injection, unsafe deserialization
+- **Bugs**: Null pointers, resource leaks, unreachable code
+- **Code Smells**: Complexity > 10, duplicate code, long functions > 30 lines
+- **Python-specific**: PEP8 violations, unused imports, mutable defaults
+- **Project-specific**: Validates our architecture principles (no god modules, simple patterns)
+
+#### Configuration
+Project rules are defined in `.sonarlint/` directory:
+- Connected to our linting standards (flake8, ruff)
+- Enforces our 450-line file limit for new code
+- Validates our flat architecture principles
 
 For complete cleanup documentation: **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)**
 

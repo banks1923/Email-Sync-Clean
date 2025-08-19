@@ -3,14 +3,17 @@ Dead simple database operations. No abstraction astronauts allowed.
 For a single user who just wants things to work.
 """
 
+import contextlib
 import hashlib
 import json
+import os
 import sqlite3
 import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Generator
 
 # Import new error handling and retry utilities
 from loguru import logger
@@ -19,6 +22,23 @@ from .retry_helper import retry_database
 
 # Configure logging for batch operations
 # Logger is now imported globally from loguru
+
+
+class DBMetrics:
+    """Simple metrics tracking for database operations."""
+    def __init__(self):
+        self.slow_sql_count = 0
+        self.busy_events = 0
+        self.checkpoint_ms = 0.0  # Changed to float for time calculations
+        self.total_queries = 0
+    
+    def report(self):
+        """Report metrics on exit or demand."""
+        if self.total_queries > 0:
+            logger.info(f"DB Metrics: {self.total_queries} queries, "
+                       f"{self.slow_sql_count} slow (>{100}ms), "
+                       f"{self.busy_events} busy events, "
+                       f"{self.checkpoint_ms:.0f}ms in checkpoints")
 
 
 class SimpleDB:
@@ -35,6 +55,53 @@ class SimpleDB:
             "total_time_seconds": 0.0,
             "avg_records_per_second": 0.0,
         }
+        # Initialize metrics tracking
+        self.metrics = DBMetrics()
+        # Initialize with optimized SQLite settings
+        self._initialize_pragmas()
+
+    def _initialize_pragmas(self) -> None:
+        """Initialize SQLite with optimized settings for single-user performance."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # Configure and verify on startup
+                self._configure_connection(conn, verify=True)
+        except Exception as e:
+            logger.warning(f"Could not initialize SQLite pragmas: {e}")
+
+    def _configure_connection(self, conn: sqlite3.Connection, verify: bool = False) -> None:
+        """Configure SQLite connection with optimized pragmas."""
+        # Enable foreign keys (already had this)
+        conn.execute("PRAGMA foreign_keys=ON")
+        
+        # Performance optimizations for single-user system
+        conn.execute("PRAGMA journal_mode=WAL")        # Persists per DB file
+        conn.execute("PRAGMA synchronous=NORMAL")      # Safe for single-user, faster
+        conn.execute("PRAGMA busy_timeout=5000")       # 5 second timeout
+        
+        # Cache size from environment or default to 64MB
+        cache_kb = int(os.getenv("SIMPLEDB_CACHE_KB", "64000"))
+        conn.execute(f"PRAGMA cache_size=-{abs(cache_kb)}")
+        
+        # Memory for temp tables
+        conn.execute("PRAGMA temp_store=MEMORY")
+        
+        # Memory-mapped I/O (opt-in via environment variable)
+        mmap_bytes = int(os.getenv("SIMPLEDB_MMAP_BYTES", "0"))
+        if mmap_bytes > 0:
+            conn.execute(f"PRAGMA mmap_size={mmap_bytes}")
+        
+        # Verify settings on first connection
+        if verify:
+            jm = conn.execute("PRAGMA journal_mode").fetchone()[0].upper()
+            if jm != "WAL":
+                logger.warning(f"Failed to set WAL mode, got: {jm}. May be on network FS.")
+            
+            sync = conn.execute("PRAGMA synchronous").fetchone()[0]
+            cache = conn.execute("PRAGMA cache_size").fetchone()[0]
+            mmap = conn.execute("PRAGMA mmap_size").fetchone()[0]
+            
+            logger.info(f"SQLite config: mode={jm}, sync={sync}, cache={abs(cache)}KB, mmap={mmap}B")
 
     def _ensure_data_directories(self) -> None:
         """Ensure /data/ directory structure exists for document processing pipeline."""
@@ -61,17 +128,49 @@ class SimpleDB:
         if data_dir.exists():
             logger.debug(f"Data directories verified at {data_dir}")
 
+    @contextlib.contextmanager
+    def durable_txn(self, conn: sqlite3.Connection) -> Generator[None, None, None]:
+        """Context manager for critical operations requiring full durability."""
+        prev_sync = conn.execute("PRAGMA synchronous").fetchone()[0]
+        conn.execute("PRAGMA synchronous=FULL")
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            yield conn
+            conn.commit()
+            logger.debug("Durable transaction committed with FULL synchronous")
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.execute(f"PRAGMA synchronous={prev_sync}")
+
     @retry_database
     def execute(self, query: str, params: tuple = ()) -> sqlite3.Cursor:
         """Just run SQL. No enterprise patterns. Now with retry for database locks."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
-                # Enable foreign key constraints
-                conn.execute("PRAGMA foreign_keys = ON")
+                self._configure_connection(conn)
+                
+                # Track metrics
+                self.metrics.total_queries += 1
+                
+                # Slow-query logging
+                t0 = time.perf_counter()
                 cursor = conn.execute(query, params)
+                dt_ms = (time.perf_counter() - t0) * 1000
+                
+                if dt_ms > 100:  # Log queries slower than 100ms
+                    self.metrics.slow_sql_count += 1
+                    logger.info(f"Slow SQL: {dt_ms:.1f}ms, rows={cursor.rowcount}, query={query[:50]}")
+                
                 conn.commit()
                 return cursor
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e) or "SQLITE_BUSY" in str(e):
+                self.metrics.busy_events += 1
+                logger.warning(f"Database busy/locked: {e}")
+            raise
         except sqlite3.Error as e:
             logger.error(f"Database execute error: {e}, Query: {query[:100]}")
             raise
@@ -82,10 +181,26 @@ class SimpleDB:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
-                # Enable foreign key constraints
-                conn.execute("PRAGMA foreign_keys = ON")
+                self._configure_connection(conn)
+                
+                # Track metrics
+                self.metrics.total_queries += 1
+                
+                # Slow-query logging
+                t0 = time.perf_counter()
                 results = conn.execute(query, params).fetchall()
+                dt_ms = (time.perf_counter() - t0) * 1000
+                
+                if dt_ms > 100:  # Log queries slower than 100ms
+                    self.metrics.slow_sql_count += 1
+                    logger.info(f"Slow SQL: {dt_ms:.1f}ms, rows={len(results)}, query={query[:50]}")
+                
                 return [dict(row) for row in results]
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e) or "SQLITE_BUSY" in str(e):
+                self.metrics.busy_events += 1
+                logger.warning(f"Database busy/locked: {e}")
+            return []
         except sqlite3.Error as e:
             logger.error(f"Database fetch error: {e}, Query: {query[:100]}")
             return []
@@ -104,7 +219,7 @@ class SimpleDB:
         metadata: dict | None = None,
         source_path: str | None = None,
     ) -> str:
-        """Add content - emails, transcripts, PDFs. Returns content_id."""
+        """Add content - emails, transcripts, PDFs. Returns content ID."""
         # Calculate content hash for deduplication
         normalized_title = (title or "").strip().lower()
         normalized_content = (content or "").strip()
@@ -113,14 +228,14 @@ class SimpleDB:
 
         # Check if content already exists by hash
         existing = self.fetch_one(
-            "SELECT content_id FROM content WHERE content_hash = ?", (content_hash,)
+            "SELECT id FROM content WHERE content_hash = ?", (content_hash,)
         )
 
         if existing:
             logger.info(
-                f"Duplicate content detected, returning existing content_id: {existing['content_id']}"
+                f"Duplicate content detected, returning existing ID: {existing['id']}"
             )
-            return existing["content_id"]
+            return existing["id"]
 
         # Create new content
         content_id = str(uuid.uuid4())
@@ -136,7 +251,7 @@ class SimpleDB:
 
         self.execute(
             """
-            INSERT OR IGNORE INTO content (content_id, content_type, title, content, source_path,
+            INSERT OR IGNORE INTO content (id, content_type, title, content, source_path,
                                metadata, word_count, char_count, content_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
@@ -152,6 +267,73 @@ class SimpleDB:
                 content_hash,
             ),
         )
+
+        return content_id
+
+    
+    def upsert_content(
+        self,
+        source_type: str,
+        external_id: str,
+        content_type: str,
+        title: str,
+        content: str,
+        metadata: dict = None,
+        parent_content_id: str = None
+    ) -> str:
+        """
+        Upsert content using business key (source_type, external_id).
+
+        Args:
+            source_type: Type of source (email, pdf, transcript, etc.)
+            external_id: External identifier (message_id, file_hash, etc.)
+            content_type: Type of content
+            title: Content title
+            content: Actual content text
+            metadata: Optional metadata dict
+            parent_content_id: Optional parent content ID for attachments
+
+        Returns:
+            Content ID (UUID)
+        """
+        from uuid import UUID, uuid5
+        import json
+        import hashlib
+
+        # Deterministic UUID from business key (namespace DNS as stable base)
+        UUID_NAMESPACE = UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
+        content_id = str(uuid5(UUID_NAMESPACE, f"{source_type}:{external_id}"))
+
+        # Calculate content hash for deduplication
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+
+        # Prepare metadata
+        if metadata is None:
+            metadata = {}
+        metadata_json = json.dumps(metadata, ensure_ascii=False)
+
+        # UPSERT operation
+        cursor = self.execute("""
+            INSERT INTO content (
+                id, type, source_type, external_id, content_type, title, 
+                content, metadata, content_hash, char_count, parent_content_id,
+                created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(source_type, external_id) DO UPDATE SET
+                type = excluded.type,
+                title = excluded.title,
+                content = excluded.content,
+                metadata = excluded.metadata,
+                content_hash = excluded.content_hash,
+                char_count = excluded.char_count,
+                updated_at = CURRENT_TIMESTAMP
+        """, (content_id, content_type, source_type, external_id, content_type, title,
+            content, metadata_json, content_hash, len(content), parent_content_id
+        ))
+
+        if cursor.rowcount > 0:
+            logger.info(f"Content upserted: {source_type}:{external_id} -> {content_id}")
 
         return content_id
 
@@ -184,14 +366,14 @@ class SimpleDB:
             params.extend([len(content.split()) if content else 0, len(content) if content else 0])
         
         params.append(content_id)
-        query = f"UPDATE content SET {', '.join(set_clauses)} WHERE content_id = ?"
+        query = f"UPDATE content SET {', '.join(set_clauses)} WHERE id = ?"
         
         cursor = self.execute(query, tuple(params))
         return cursor.rowcount > 0
 
     def delete_content(self, content_id: str) -> bool:
         """Delete content by ID. Returns True if successful."""
-        cursor = self.execute("DELETE FROM content WHERE content_id = ?", (content_id,))
+        cursor = self.execute("DELETE FROM content WHERE id = ?", (content_id,))
         return cursor.rowcount > 0
 
     # Simple thread tracking methods
@@ -227,8 +409,7 @@ class SimpleDB:
 
         self.execute(
             """
-            INSERT INTO content (
-                content_id, file_path, file_name, chunk_index,
+            INSERT INTO content (id, file_path, file_name, chunk_index,
                 text_content, char_count, file_size, file_hash,
                 source_type, processed_time, content_type, vector_processed,
                 extraction_method
@@ -255,7 +436,7 @@ class SimpleDB:
 
     def get_content(self, content_id: str) -> dict | None:
         """Get content by ID."""
-        return self.fetch_one("SELECT * FROM content WHERE content_id = ?", (content_id,))
+        return self.fetch_one("SELECT * FROM content WHERE id = ?", (content_id,))
 
     def search_content(
         self,
@@ -371,7 +552,7 @@ class SimpleDB:
         data_list: list[tuple],
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Generic batch insert with INSERT OR IGNORE for deduplication.
         Includes timing, logging, and performance metrics.
@@ -384,6 +565,9 @@ class SimpleDB:
         start_time = time.time()
         logger.info(f"Starting batch insert to {table_name}: {len(data_list)} records")
 
+        # NOTE: Metrics count one 'query' per chunked executemany(), not per row,
+        # to avoid inflating totals during large batches.
+
         # Build INSERT OR IGNORE query
         placeholders = ",".join(["?"] * len(columns))
         column_names = ",".join(columns)
@@ -395,36 +579,79 @@ class SimpleDB:
 
         # Process in chunks for memory efficiency
         with sqlite3.connect(self.db_path) as conn:
+            # Ensure pragmas are applied on this connection as well
+            self._configure_connection(conn)
             for i in range(0, len(data_list), batch_size):
                 chunk = data_list[i : i + batch_size]
-                chunk_start = time.time()
+                attempts = 0
+                max_attempts = 3
+                backoff = 0.1  # seconds
 
-                try:
-                    cursor = conn.executemany(query, chunk)
-                    total_inserted += cursor.rowcount
-                    total_processed += len(chunk)
+                while True:
+                    chunk_start = time.time()
+                    try:
+                        # Acquire write lock up-front; keep transaction short
+                        conn.execute("BEGIN IMMEDIATE")
+                        cursor = conn.executemany(query, chunk)
+                        conn.commit()
 
-                    # Log chunk performance
-                    chunk_time = time.time() - chunk_start
-                    chunk_rate = len(chunk) / chunk_time if chunk_time > 0 else 0
-                    logger.debug(
-                        f"Chunk {i//batch_size + 1}: {len(chunk)} records, "
-                        f"{chunk_time:.2f}s, {chunk_rate:.0f} rec/s"
-                    )
+                        # Metrics & counters
+                        self.metrics.total_queries += 1  # count per chunk
+                        total_inserted += cursor.rowcount
+                        total_processed += len(chunk)
 
-                    # Progress callback with percentage
-                    if progress_callback:
-                        percentage = (total_processed / len(data_list)) * 100
-                        progress_callback(total_processed, len(data_list))
+                        # Chunk performance logging
+                        chunk_time = time.time() - chunk_start
+                        if chunk_time * 1000 > 100:
+                            self.metrics.slow_sql_count += 1
+                            logger.info(
+                                f"Slow batch SQL: {chunk_time*1000:.1f}ms, rows={cursor.rowcount}, "
+                                f"table={table_name}, chunk={i//batch_size + 1}"
+                            )
+                        chunk_rate = len(chunk) / chunk_time if chunk_time > 0 else 0
                         logger.debug(
-                            f"Progress: {percentage:.1f}% ({total_processed}/{len(data_list)})"
+                            f"Chunk {i//batch_size + 1}: {len(chunk)} records, "
+                            f"{chunk_time:.2f}s, {chunk_rate:.0f} rec/s"
                         )
 
-                except Exception as e:
-                    logger.error(f"Error in batch {i//batch_size + 1}: {str(e)}")
-                    errors.append({"batch": i // batch_size + 1, "error": str(e)})
+                        # Progress callback with percentage
+                        if progress_callback:
+                            percentage = (total_processed / len(data_list)) * 100
+                            progress_callback(total_processed, len(data_list))
+                            logger.debug(
+                                f"Progress: {percentage:.1f}% ({total_processed}/{len(data_list)})"
+                            )
 
-            conn.commit()
+                        break  # success, next chunk
+
+                    except sqlite3.OperationalError as e:
+                        # Handle transient lock/contention with limited retries
+                        if "database is locked" in str(e) or "SQLITE_BUSY" in str(e):
+                            self.metrics.busy_events += 1
+                            attempts += 1
+                            logger.warning(
+                                f"Database busy on batch {i//batch_size + 1} (attempt {attempts}/{max_attempts}): {e}"
+                            )
+                            # Rollback any partial work in this txn
+                            with contextlib.suppress(Exception):
+                                conn.rollback()
+                            if attempts < max_attempts:
+                                time.sleep(backoff)
+                                backoff *= 2
+                                continue
+                        # Non-retryable or max attempts reached
+                        logger.error(f"Error in batch {i//batch_size + 1}: {str(e)}")
+                        errors.append({"batch": i // batch_size + 1, "error": str(e)})
+                        # Ensure rollback before moving on
+                        with contextlib.suppress(Exception):
+                            conn.rollback()
+                        break
+                    except Exception as e:
+                        logger.error(f"Error in batch {i//batch_size + 1}: {str(e)}")
+                        errors.append({"batch": i // batch_size + 1, "error": str(e)})
+                        with contextlib.suppress(Exception):
+                            conn.rollback()
+                        break
 
         # Calculate final metrics
         elapsed = time.time() - start_time
@@ -467,7 +694,7 @@ class SimpleDB:
         content_list: list[dict],
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Batch add content with auto-generation of IDs and metadata.
         Includes enhanced logging and performance tracking.
@@ -536,8 +763,7 @@ class SimpleDB:
 
         # Use batch_insert with content table columns (no created_time - uses DEFAULT)
         columns = [
-            "content_id",
-            "content_type",
+            "id", "content_type",
             "title",
             "content",
             "source_path",
@@ -563,7 +789,7 @@ class SimpleDB:
         chunk_list: list[dict],
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Batch add document chunks for PDF processing.
         Includes enhanced logging and performance metrics.
@@ -621,9 +847,9 @@ class SimpleDB:
             f"{len(file_paths)} unique files, {total_chars} total chars"
         )
 
-        # Use batch_insert with content table columns
+        # Use batch_insert with content table columns (correct primary key 'id')
         columns = [
-            "content_id",
+            "id",
             "file_path",
             "file_name",
             "chunk_index",
@@ -704,7 +930,7 @@ class SimpleDB:
                 textrank_sentences TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (document_id) REFERENCES content(content_id) ON DELETE CASCADE
+                FOREIGN KEY (document_id) REFERENCES content(id) ON DELETE CASCADE
             )
         """
         )
@@ -720,7 +946,7 @@ class SimpleDB:
                 confidence_score REAL DEFAULT 0.0 CHECK(confidence_score >= 0.0 AND confidence_score <= 1.0),
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (document_id) REFERENCES content(content_id) ON DELETE CASCADE
+                FOREIGN KEY (document_id) REFERENCES content(id) ON DELETE CASCADE
             )
         """
         )
@@ -737,8 +963,8 @@ class SimpleDB:
                 cached_data TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 expires_at TEXT,
-                FOREIGN KEY (source_id) REFERENCES content(content_id) ON DELETE CASCADE,
-                FOREIGN KEY (target_id) REFERENCES content(content_id) ON DELETE CASCADE,
+                FOREIGN KEY (source_id) REFERENCES content(id) ON DELETE CASCADE,
+                FOREIGN KEY (target_id) REFERENCES content(id) ON DELETE CASCADE,
                 UNIQUE(source_id, target_id, relationship_type)
             )
         """
@@ -1398,6 +1624,65 @@ class SimpleDB:
                 stats[dir_name] = -1
 
         return stats
+
+    def db_maintenance(self, wal_threshold_mb: int = 64) -> dict:
+        """Perform database maintenance: optimize and checkpoint WAL.
+        Run this after large batch operations.
+        
+        Args:
+            wal_threshold_mb: Only checkpoint if WAL file exceeds this size (MB)
+        """
+        try:
+            # Check WAL file size if it exists
+            wal_path = Path(f"{self.db_path}-wal")
+            wal_size_mb = 0
+            should_checkpoint = True
+            
+            if wal_path.exists():
+                wal_size_mb = wal_path.stat().st_size / (1024 * 1024)
+                should_checkpoint = wal_size_mb > wal_threshold_mb
+                logger.debug(f"WAL size: {wal_size_mb:.1f}MB, threshold: {wal_threshold_mb}MB")
+            
+            with sqlite3.connect(self.db_path) as conn:
+                self._configure_connection(conn)
+                
+                # Always optimize query planner statistics
+                conn.execute("PRAGMA optimize")
+                
+                checkpoint_result = None
+                if should_checkpoint:
+                    # Checkpoint and truncate WAL file
+                    t0 = time.perf_counter()
+                    result = conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+                    checkpoint_ms = (time.perf_counter() - t0) * 1000
+                    self.metrics.checkpoint_ms += checkpoint_ms
+                    
+                    checkpoint_result = {
+                        "wal_pages_moved": result[0] if result else 0,
+                        "wal_pages_total": result[1] if result else 0,
+                        "checkpoint_ms": round(checkpoint_ms, 1)
+                    }
+                    logger.info(f"WAL checkpoint completed in {checkpoint_ms:.1f}ms")
+                
+                # Get database stats after maintenance
+                page_count = conn.execute("PRAGMA page_count").fetchone()[0]
+                page_size = conn.execute("PRAGMA page_size").fetchone()[0]
+                db_size_mb = (page_count * page_size) / (1024 * 1024)
+                
+                maintenance_stats = {
+                    "success": True,
+                    "db_size_mb": round(db_size_mb, 2),
+                    "wal_size_mb": round(wal_size_mb, 2),
+                    "checkpoint": checkpoint_result,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                logger.info(f"Database maintenance completed: {maintenance_stats}")
+                return maintenance_stats
+                
+        except Exception as e:
+            logger.error(f"Database maintenance failed: {e}")
+            return {"success": False, "error": str(e)}
 
     # Batch operations for intelligence tables
     def batch_add_summaries(self, summaries: list[dict], batch_size: int = 1000) -> dict:

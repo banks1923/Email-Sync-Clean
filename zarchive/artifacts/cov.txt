@@ -1,0 +1,59 @@
+/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/pytest_isolate/plugin.py:322: UserWarning: Isolate is a replacement for pytest-timeout. Pytest-timeout will take precedence while installed, tests with timeout will not be isolated. Please uninstall one of the plugins
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/pytest_isolate/plugin.py:70: RuntimeWarning: Failed to get GPU count using pynvml
+  warnings.warn("Failed to get GPU count using pynvml", RuntimeWarning)
+============================= test session starts ==============================
+platform darwin -- Python 3.11.9, pytest-8.0.0, pluggy-1.5.0
+benchmark: 5.0.1 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/jim/Projects/Email-Sync-Clean-Backup
+configfile: pytest.ini
+testpaths: tests
+plugins: cleanslate-1.0.7, repeat-0.9.4, recording-0.13.4, anyio-4.9.0, benchmark-5.0.1, html-4.1.1, Faker-37.4.0, xdist-3.8.0, json-report-1.5.0, timeout-2.4.0, metadata-3.1.1, asyncio-0.21.1, clarity-1.0.1, langsmith-0.4.4, hypothesis-6.138.2, cov-6.2.1, django-4.7.0, mock-3.12.0, isolate-0.0.12, forked-1.6.0, sugar-1.1.0, picked-0.5.1
+asyncio: mode=Mode.STRICT
+collected 615 items
+
+tests/document_processing/test_document_processors.py .................. [  2%]
+                                                                         [  2%]
+tests/infrastructure/cli/test_vsearch_cli_output.py ssss.ss              [  4%]
+tests/infrastructure/database/test_simple_db_comprehensive.py ........F. [  5%]
+...FFF....sFFFFFF.F..s..........ss                                       [ 11%]
+tests/infrastructure/mcp/test_mcp_integration.py EEEEEEFFFFFF            [ 13%]
+tests/infrastructure/test_document_converter.py FFEEEEEEEEEEEFEEEEEEEEE  [ 16%]
+tests/infrastructure/test_email_thread_processor.py FFEEEEEEEEEEEEEEEEEE [ 20%]
+EEEE                                                                     [ 20%]
+tests/infrastructure/test_email_thread_processor_simple.py .........     [ 22%]
+tests/infrastructure/test_html_cleaning.py .........                     [ 23%]
+tests/integration/test_email_to_summary_flow.py FFFFFFF                  [ 24%]
+tests/integration/test_intelligence_tables_population.py FFFFFFF         [ 26%]
+tests/integration/test_ocr_pipeline.py ...F...F                          [ 27%]
+tests/integration/test_pdf_to_summary_flow.py FFFFFFF                    [ 28%]
+tests/integration/test_pipeline_directory_flow.py FFFFFFFFFF             [ 30%]
+tests/migration/test_schema_migration_comprehensive.py .FF.F.FFEE        [ 31%]
+tests/pdf_service/test_large_pdf_handling.py ...F....                    [ 33%]
+tests/pdf_service/test_ocr_components.py .....F.F.FF                     [ 34%]
+tests/services/gmail/test_gmail_service_core.py .EEEEEEEEEEEFFE          [ 37%]
+tests/services/knowledge_graph/test_knowledge_graph_consolidated.py FFFF [ 37%]
+FFFFFF.FFFFFFFFFFFFFFFFF                                                 [ 41%]
+tests/services/legal/test_legal_bert_integration.py ..FFFF......         [ 43%]
+tests/services/legal/test_legal_intelligence.py ........F.F.             [ 45%]
+tests/services/legal/test_legal_intelligence_mcp.py FFFFFFFFFFFFFFF.FFFF [ 48%]
+F                                                                        [ 49%]
+tests/services/search/test_search_intelligence.py EEEEEEEEEEEEEEEEEFF    [ 52%]
+tests/services/search/test_search_intelligence_mcp.py FFFFFF             [ 53%]
+tests/services/summarization/test_summarization.py .............         [ 55%]
+tests/services/summarization/test_summarization_integration.py FFFF      [ 55%]
+tests/shared/test_snippet_utils.py .................F................... [ 61%]
+.....F.                                                                  [ 63%]
+tests/smoke/test_system_health.py .F.....s.                              [ 64%]
+tests/smoke/test_user_workflows.py .............                         [ 66%]
+tests/static/test_lockfiles.py s..F                                      [ 67%]
+tests/test_core_services_integration.py FFF....FFEFEFEEEFFF              [ 69%]
+tests/test_intelligence_schema.py FFFFFF.FFFF.                           [ 71%]
+tests/test_pipeline_orchestrator.py ...........                          [ 73%]
+tests/test_search_integration.py ..                                      [ 73%]
+tests/test_semantic_search_integration.py .F.FFFF..                      [ 75%]
+tests/test_timeline_extractor.py ............FF                          [ 77%]
+tests/timeline/test_timeline_consolidated.py FFFFFFFFFFFFFFFFFFFF        [ 80%]
+tests/transcription/test_hybrid_transcription.py .                       [ 81%]
+tests/transcription/test_openai_transcription.py .                       [ 81%]
+tests/transcription_service/test_integration.py 

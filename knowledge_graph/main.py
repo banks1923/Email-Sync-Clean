@@ -52,10 +52,10 @@ class KnowledgeGraphService:
         self.db.execute(
             """
             CREATE TABLE IF NOT EXISTS kg_nodes (
-                node_id TEXT PRIMARY KEY, content_id TEXT NOT NULL,
+                node_id TEXT PRIMARY KEY, id TEXT NOT NULL,
                 content_type TEXT NOT NULL, title TEXT,
                 node_metadata TEXT, created_time TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (content_id) REFERENCES content(content_id)
+                FOREIGN KEY (id) REFERENCES content(id)
             )
         """
         )
@@ -131,7 +131,7 @@ class KnowledgeGraphService:
         """
         Get node by content_id.
         """
-        result = self.db.fetch_one("SELECT * FROM kg_nodes WHERE content_id = ?", (content_id,))
+        result = self.db.fetch_one("SELECT * FROM kg_nodes WHERE id = ?", (content_id,))
         if result and result.get("node_metadata"):
             try:
                 result["node_metadata"] = json.loads(result["node_metadata"])
@@ -253,8 +253,8 @@ class KnowledgeGraphService:
                 (e.source_node_id = n2.node_id AND n1.node_id != n2.node_id) OR
                 (e.target_node_id = n2.node_id AND n1.node_id != n2.node_id)
             )
-            JOIN content c ON n2.content_id = c.content_id
-            WHERE n1.content_id = ?
+            JOIN content c ON n2.id = c.id
+            WHERE n1.id = ?
         """
 
         if relationship_types:

@@ -13,9 +13,9 @@ from loguru import logger
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
-from entity.main import get_entity_service
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
+from entity.main import EntityService
 
 from .main import KnowledgeGraphService
 from .similarity_analyzer import SimilarityAnalyzer
@@ -33,7 +33,7 @@ class TopicClusteringService:
         self.db = SimpleDB(db_path)
         self.kg_service = KnowledgeGraphService(db_path)
         self.similarity_analyzer = SimilarityAnalyzer(db_path)
-        self.entity_service = EntityService(db_path)
+        self.entity_service = EntityService()
         self.embedding_service = get_embedding_service()
 
     def perform_hierarchical_clustering(
@@ -83,7 +83,7 @@ class TopicClusteringService:
         for content_id in content_ids:
             # Get content and generate embedding
             content = self.db.fetch_one(
-                "SELECT title, content FROM content WHERE content_id = ?", (content_id,)
+                "SELECT title, content FROM content WHERE id = ?", (content_id,)
             )
 
             if content:
@@ -124,7 +124,7 @@ class TopicClusteringService:
 
         for content_id in content_ids[:10]:  # Sample first 10 for efficiency
             content = self.db.fetch_one(
-                "SELECT content FROM content WHERE content_id = ?", (content_id,)
+                "SELECT content FROM content WHERE id = ?", (content_id,)
             )
 
             if content and content["content"]:
@@ -176,7 +176,7 @@ class TopicClusteringService:
         logger.info("Calculating entity co-occurrence matrix")
 
         # Get content to analyze
-        query = "SELECT content_id, content FROM content"
+        query = "SELECT id, content FROM content"
         params = []
         if content_type:
             query += " WHERE content_type = ?"
@@ -308,7 +308,7 @@ class TopicClusteringService:
 
         # If too many new items, trigger full recalculation
         if len(new_content_ids) > recalculate_threshold:
-            all_content = self.db.fetch("SELECT content_id FROM content")
+            all_content = self.db.fetch("SELECT id FROM content")
             all_ids = [item["content_id"] for item in all_content]
             return self.perform_hierarchical_clustering(all_ids)
 

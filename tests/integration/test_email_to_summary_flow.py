@@ -113,7 +113,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record to find content_id (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT content_id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
         )
 
         self.assertIsNotNone(content, "Content record not found")
@@ -150,7 +150,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT content_id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
         )
 
         # Get summary
@@ -200,7 +200,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT content_id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
         )
 
         # Get summary
@@ -247,7 +247,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         # Verify all emails have summaries
         for email in email_list:
             content = self.gmail_service.db.fetch_one(
-                "SELECT content_id FROM content WHERE title = ?", (email["subject"],)
+                "SELECT id FROM content WHERE title = ?", (email["subject"],)
             )
             if content:  # Some might be None if deduplication occurs
                 summary = get_summary_for_document(self.gmail_service.db, content["content_id"])

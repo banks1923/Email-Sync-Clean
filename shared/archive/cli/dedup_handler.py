@@ -279,7 +279,7 @@ def deduplicate_database_command(
                     try:
                         # Delete from content table
                         db.db.execute_query(
-                            "DELETE FROM content WHERE content_id = ?",
+                            "DELETE FROM content WHERE id = ?",
                             (doc_id,)
                         )
                         deleted += 1

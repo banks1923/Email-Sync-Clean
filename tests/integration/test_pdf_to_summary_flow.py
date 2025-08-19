@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from pdf.main import PDFService
+from pdf.wiring import get_pdf_service
 from tests.integration.test_helpers import (
     cleanup_test_files,
     create_test_database,
@@ -29,7 +29,7 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.db, self.db_path = create_test_database()
 
         # Initialize PDF service with test database
-        self.pdf_service = PDFService(self.db_path)
+        self.pdf_service = get_pdf_service(self.db_path)
 
         # Get test PDF path
         self.test_pdf = get_test_pdf_path()
@@ -58,7 +58,7 @@ class TestPDFToSummaryFlow(unittest.TestCase):
 
         # Get content record
         content = self.db.fetch_one(
-            "SELECT * FROM content WHERE content_id = ?", (result["content_id"],)
+            "SELECT * FROM content WHERE id = ?", (result["content_id"],)
         )
 
         # Verify content fields
@@ -181,7 +181,7 @@ class TestPDFToSummaryFlow(unittest.TestCase):
 
         # Get content and summary
         content = self.db.fetch_one(
-            "SELECT content FROM content WHERE content_id = ?", (content_id,)
+            "SELECT content FROM content WHERE id = ?", (content_id,)
         )
         summary = get_summary_for_document(self.db, content_id)
 

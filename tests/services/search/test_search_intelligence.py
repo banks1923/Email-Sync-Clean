@@ -14,9 +14,6 @@ import pytest
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from search.main import search
-from utilities.entities.main import extract_entities, extract_and_cache_entities
-from utilities.deduplication.near_duplicate_detector import NearDuplicateDetector
 
 
 class TestSearchIntelligenceService:

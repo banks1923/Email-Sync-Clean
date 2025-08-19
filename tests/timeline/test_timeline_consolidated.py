@@ -20,7 +20,6 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from utilities.timeline.database import TimelineDatabase
-from utilities.timeline.main import get_timeline_service
 
 
 class TestTimelineCore:

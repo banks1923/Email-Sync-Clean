@@ -72,7 +72,7 @@ class GraphQueryService:
         """
         Get node by content ID.
         """
-        return self.db.fetch_one("SELECT * FROM kg_nodes WHERE content_id = ?", (content_id,))
+        return self.db.fetch_one("SELECT * FROM kg_nodes WHERE id = ?", (content_id,))
 
     def _get_neighbors(
         self, node_id: str, relationship_types: list[str] | None = None
@@ -175,7 +175,7 @@ class GraphQueryService:
 
                 # Avoid cycles in current path
                 next_node = self.db.fetch_one(
-                    "SELECT content_id FROM kg_nodes WHERE node_id = ?", (next_id,)
+                    "SELECT id FROM kg_nodes WHERE node_id = ?", (next_id,)
                 )
 
                 if next_node and next_node["content_id"] not in path:
@@ -207,7 +207,7 @@ class GraphQueryService:
         Returns dict mapping content_id to PageRank score.
         """
         # Get all nodes
-        nodes = self.db.fetch("SELECT node_id, content_id FROM kg_nodes")
+        nodes = self.db.fetch("SELECT node_id, id FROM kg_nodes")
         if not nodes:
             return {}
 
@@ -348,7 +348,7 @@ class GraphQueryService:
         # Find temporal relationships
         temporal_edges = self.db.fetch(
             """
-            SELECT e.*, n1.content_id as source_content, n2.content_id as target_content,
+            SELECT e.*, n1.id as source_content, n2.id as target_content,
                    n1.title as source_title, n2.title as target_title
             FROM kg_edges e
             JOIN kg_nodes n1 ON e.source_node_id = n1.node_id

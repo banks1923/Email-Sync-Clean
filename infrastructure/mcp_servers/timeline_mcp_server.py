@@ -30,7 +30,7 @@ from mcp.types import TextContent, Tool
 # Import services
 try:
     from shared.simple_db import SimpleDB
-    from utilities.timeline.main import get_timeline_service
+    from utilities.timeline.main import TimelineService
 
     SERVICES_AVAILABLE = True
 except ImportError as e:

@@ -7,7 +7,7 @@ import os
 import sys
 import tempfile
 
-from pdf.main import PDFService
+from pdf.wiring import get_pdf_service
 from pdf.ocr import OCRCoordinator, PageByPageProcessor
 from pdf.ocr.validator import PDFValidator
 
@@ -99,7 +99,7 @@ class TestOCRPipelineIntegration:
 
     def test_pdf_service_integration(self):
         """Test PDFService with OCR integration."""
-        service = PDFService()
+        service = get_pdf_service()
 
         # Check health
         health = service.health_check()

@@ -17,6 +17,7 @@ from typing import Any
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from loguru import logger
 from typing import TYPE_CHECKING, Callable, Dict
 from shared.service_interfaces import IService
 

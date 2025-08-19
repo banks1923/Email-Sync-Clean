@@ -33,14 +33,23 @@ def process_all_embeddings(batch_size: int = 10):
     conn = sqlite3.connect(db.db_path)
     cursor = conn.cursor()
 
-    cursor.execute(
-        """
-        SELECT content_id, content_type, title, content
+    # Check if vector_processed column exists
+    cursor.execute("PRAGMA table_info(content)")
+    columns = {col[1] for col in cursor.fetchall()}
+    
+    if 'vector_processed' in columns:
+        where_clause = "WHERE vector_processed = 0 OR vector_processed IS NULL"
+    else:
+        # Add the column if it doesn't exist
+        cursor.execute("ALTER TABLE content ADD COLUMN vector_processed INTEGER DEFAULT 0")
+        where_clause = "WHERE vector_processed = 0 OR vector_processed IS NULL"
+    
+    cursor.execute(f"""
+        SELECT id, type as content_type, title, content
         FROM content
-        WHERE vector_processed = 0
-        ORDER BY created_time DESC
-    """
-    )
+        {where_clause}
+        ORDER BY created_at DESC
+    """)
 
     unprocessed = cursor.fetchall()
     total = len(unprocessed)
@@ -89,7 +98,7 @@ def process_all_embeddings(batch_size: int = 10):
                     """
                     UPDATE content
                     SET vector_processed = 1
-                    WHERE content_id = ?
+                    WHERE id = ?
                 """,
                     (content_id,),
                 )

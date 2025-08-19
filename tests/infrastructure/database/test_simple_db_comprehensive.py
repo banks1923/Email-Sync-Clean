@@ -56,7 +56,7 @@ class TestSimpleDBInitialization:
         # Create the content table (SimpleDB doesn't auto-create this)
         db.execute("""
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -99,7 +99,7 @@ class TestSimpleDBInitialization:
         # Create the content table first
         db1.execute("""
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -189,7 +189,7 @@ class TestContentOperations:
         # Get content added by populated_db fixture
         with sqlite3.connect(populated_db.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT content_id FROM content LIMIT 1")
+            cursor.execute("SELECT id FROM content LIMIT 1")
             content_id = cursor.fetchone()[0]
             
         content = populated_db.get_content(content_id)

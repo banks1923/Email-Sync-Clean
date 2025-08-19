@@ -34,7 +34,7 @@ def create_test_database(db_path: str | None = None) -> tuple[SimpleDB, str]:
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS content (
-            content_id TEXT PRIMARY KEY,
+            id TEXT PRIMARY KEY,
             content_type TEXT,
             title TEXT,
             content TEXT,

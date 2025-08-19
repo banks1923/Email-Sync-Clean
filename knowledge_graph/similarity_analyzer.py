@@ -152,7 +152,7 @@ class SimilarityAnalyzer:
         """
         # Get all content IDs except the target
         all_content = self.db.fetch(
-            "SELECT content_id FROM content WHERE content_id != ?", (content_id,)
+            "SELECT id FROM content WHERE id != ?", (content_id,)
         )
 
         similarities = []
@@ -267,10 +267,10 @@ class SimilarityAnalyzer:
         Precompute similarities for all content of a given type.
         """
         if content_type:
-            content_query = "SELECT content_id FROM content WHERE content_type = ?"
+            content_query = "SELECT id FROM content WHERE content_type = ?"
             params = (content_type,)
         else:
-            content_query = "SELECT content_id FROM content"
+            content_query = "SELECT id FROM content"
             params = ()
 
         content_rows = self.db.fetch(content_query, params)

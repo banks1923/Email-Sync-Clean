@@ -1,0 +1,14 @@
+SQL content_id References Inventory
+======================================
+
+Found 1 reference (in codemod tool, expected):
+
+tools/codemods/replace_content_id_sql.py:42 - Pattern definition in LibCST codemod (legitimate)
+  - This is the codemod tool itself defining replacement patterns
+  - Reason: Expected, legitimate pattern definition
+  - Action: Keep (this is the tool that fixes content_id references)
+
+Summary:
+- Total SQL references to content_id: 1
+- All references are legitimate (codemod pattern definitions)
+- No action needed

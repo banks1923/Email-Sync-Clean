@@ -218,14 +218,14 @@ class SimilarityIntegration:
         node_degrees = self.db.fetch(
             """
             SELECT
-                n.content_id,
+                n.id,
                 n.content_type,
                 COUNT(e.edge_id) as similarity_degree
             FROM kg_nodes n
             LEFT JOIN kg_edges e ON (
                 n.node_id = e.source_node_id OR n.node_id = e.target_node_id
             ) AND e.relationship_type = 'similar_to'
-            GROUP BY n.node_id, n.content_id, n.content_type
+            GROUP BY n.node_id, n.id, n.content_type
             HAVING similarity_degree > 0
         """
         )
@@ -267,8 +267,8 @@ class SimilarityIntegration:
         high_similarity_edges = self.db.fetch(
             """
             SELECT
-                n1.content_id as source_content,
-                n2.content_id as target_content,
+                n1.id as source_content,
+                n2.id as target_content,
                 e.strength
             FROM kg_edges e
             JOIN kg_nodes n1 ON e.source_node_id = n1.node_id
@@ -310,10 +310,10 @@ class SimilarityIntegration:
         Get content IDs for analysis.
         """
         if content_type:
-            query = "SELECT content_id FROM content WHERE content_type = ?"
+            query = "SELECT id FROM content WHERE content_type = ?"
             params = (content_type,)
         else:
-            query = "SELECT content_id FROM content"
+            query = "SELECT id FROM content"
             params = ()
 
         rows = self.db.fetch(query, params)

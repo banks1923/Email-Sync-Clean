@@ -84,19 +84,19 @@ class TestSemanticSearchIntegration:
         # Test keyword performance (should be very fast)
         start = time.time()
         db = SimpleDB()
-        keyword_results = db.search_content(query, limit=5)
+        db.search_content(query, limit=5)
         keyword_time = time.time() - start
         assert keyword_time < 1.0, f"Keyword search too slow: {keyword_time:.3f}s"
         
         # Test semantic performance (should complete within 10s after model load)
         start = time.time()
-        semantic_results = semantic_search(query, limit=5)
+        semantic_search(query, limit=5)
         semantic_time = time.time() - start
         assert semantic_time < 10.0, f"Semantic search too slow: {semantic_time:.3f}s"
         
         # Test hybrid performance (should be reasonable)
         start = time.time()
-        hybrid_results = search(query, limit=5)
+        search(query, limit=5)
         hybrid_time = time.time() - start
         assert hybrid_time < 10.0, f"Hybrid search too slow: {hybrid_time:.3f}s"
         

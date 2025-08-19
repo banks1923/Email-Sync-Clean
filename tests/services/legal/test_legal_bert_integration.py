@@ -35,7 +35,7 @@ class TestLegalBERTIntegration:
         db.execute(
             """
             CREATE TABLE content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT NOT NULL,
                 title TEXT,
                 content TEXT NOT NULL,
@@ -207,7 +207,7 @@ class TestLegalBERTIntegration:
             content_text = doc["content"].strip()
             db.execute(
                 """
-                INSERT INTO content (content_id, content_type, title, content,
+                INSERT INTO content (id, content_type, title, content,
                                    created_time, word_count, char_count, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
@@ -441,7 +441,7 @@ class TestLegalBERTIntegration:
         # Add empty content
         db.execute(
             """
-            INSERT INTO content (content_id, content_type, title, content, word_count, char_count)
+            INSERT INTO content (id, content_type, title, content, word_count, char_count)
             VALUES (?, ?, ?, ?, ?, ?)
         """,
             ("empty_doc", "pdf", "Empty", "", 0, 0),

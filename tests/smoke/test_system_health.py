@@ -23,7 +23,7 @@ class TestDatabaseHealth:
         cursor.execute("INSERT INTO test (name) VALUES (?)", ("test_entry",))
         temp_db.commit()
 
-        result = cursor.execute("SELECT name FROM test WHERE content_id = 1").fetchone()
+        result = cursor.execute("SELECT name FROM test WHERE id = 1").fetchone()
         assert result[0] == "test_entry"
 
     def test_database_service_import(self):
@@ -112,7 +112,6 @@ class TestBasicServices:
         Test that DatabaseService can be created.
         """
         try:
-            from shared.simple_db import SimpleDB
 
             # Test with in-memory database
             service = DatabaseService(":memory:")

@@ -34,7 +34,7 @@ class TimelineRelationships:
         Extract primary date from content based on type.
         """
         content = self.db.fetch_one(
-            "SELECT content_type, metadata, created_time FROM content WHERE content_id = ?",
+            "SELECT content_type, metadata, created_time FROM content WHERE id = ?",
             (content_id,),
         )
 
@@ -207,7 +207,7 @@ class TimelineRelationships:
         """
         Get all content IDs with their dates.
         """
-        content_items = self.db.fetch("SELECT content_id FROM content")
+        content_items = self.db.fetch("SELECT id FROM content")
 
         content_dates = []
         for item in content_items:

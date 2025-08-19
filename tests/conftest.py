@@ -96,7 +96,7 @@ def simple_db(temp_db: str) -> SimpleDB:
     # Create the content table that SimpleDB expects but doesn't create
     db.execute("""
         CREATE TABLE IF NOT EXISTS content (
-            content_id TEXT PRIMARY KEY,
+            id TEXT PRIMARY KEY,
             content_type TEXT,
             title TEXT,
             content TEXT,

@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pdf.main import PDFService
+from pdf.wiring import get_pdf_service
 from pdf.ocr.page_processor import PageByPageProcessor
 
 # Add project root to path
@@ -118,7 +118,7 @@ class TestLargePDFProcessing:
     @patch("os.path.getsize")
     def test_automatic_routing_threshold(self, mock_getsize):
         """Test automatic routing to page processor for large files"""
-        service = PDFService()
+        service = get_pdf_service()
 
         # Mock a 93MB file (like our real test case)
         mock_getsize.return_value = 93 * 1024 * 1024

@@ -1,0 +1,175 @@
+name: Schema Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  prevent-schema-regression:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install libcst loguru
+    
+    - name: Check for banned content_id usage
+      run: |
+        echo "Checking for prohibited content_id SQL references..."
+        
+        # Use ripgrep or grep to find content_id in SQL strings
+        if grep -r "content_id" --include="*.py" --exclude-dir=".git" --exclude-dir="__pycache__" . | grep -E "(SELECT|WHERE|INSERT|UPDATE|DELETE|REFERENCES).*content_id" | grep -v "# ALLOWED: content_id"; then
+          echo "❌ ERROR: Found prohibited content_id references in SQL strings!"
+          echo "After schema migration, use 'id' instead of 'content_id' in SQL."
+          echo "Add '# ALLOWED: content_id' comment if this is intentional (e.g., in migration scripts)."
+          exit 1
+        else
+          echo "✅ No prohibited content_id SQL references found"
+        fi
+    
+    - name: Verify LibCST codemod is idempotent
+      run: |
+        echo "Verifying LibCST codemod produces no changes on current codebase..."
+        
+        if [ -f "tools/codemods/replace_content_id_sql.py" ]; then
+          cd tools/codemods
+          python replace_content_id_sql.py --dry-run
+          
+          # Check that no changes would be made
+          if python replace_content_id_sql.py --dry-run | grep "Would transform"; then
+            echo "❌ ERROR: LibCST codemod would still make changes!"
+            echo "This indicates content_id references may have been reintroduced."
+            exit 1
+          else
+            echo "✅ LibCST codemod is idempotent - no changes needed"
+          fi
+        else
+          echo "⚠️ LibCST codemod not found - skipping idempotency check"
+        fi
+    
+    - name: Validate business key constraints
+      run: |
+        echo "Checking that business key patterns are maintained..."
+        
+        # Check that new upsert_content method exists
+        if ! grep -q "def upsert_content" shared/simple_db.py; then
+          echo "❌ ERROR: upsert_content method missing from SimpleDB"
+          exit 1
+        fi
+        
+        # Check for UNIQUE(source_type, external_id) constraint
+        if ! grep -q "source_type.*external_id" shared/simple_db.py; then
+          echo "❌ ERROR: Business key constraint pattern not found"
+          exit 1
+        fi
+        
+        echo "✅ Business key patterns verified"
+    
+    - name: Check for deterministic UUID usage
+      run: |
+        echo "Verifying deterministic UUID patterns are used..."
+        
+        # Look for uuid5 usage with consistent namespace
+        if grep -r "uuid5" --include="*.py" . | grep -v "6ba7b810-9dad-11d1-80b4-00c04fd430c8" | grep uuid5; then
+          echo "❌ ERROR: Inconsistent UUID namespace found!"
+          echo "All deterministic UUIDs must use the same namespace: 6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+          exit 1
+        fi
+        
+        echo "✅ Deterministic UUID patterns verified"
+    
+    - name: Run schema compliance checker
+      run: |
+        echo "Running comprehensive schema compliance check..."
+        python3 tools/linting/check_schema_compliance.py
+    
+    - name: Database integrity checks
+      run: |
+        echo "Running database integrity checks..."
+        
+        # Create temporary database for testing
+        python3 -c "
+        from shared.simple_db import SimpleDB
+        import tempfile
+        import os
+        
+        # Create a test database
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as f:
+            test_db = f.name
+        
+        db = SimpleDB(test_db)
+        
+        print('Testing foreign key constraints...')
+        # Enable foreign key checking
+        db.execute('PRAGMA foreign_keys = ON')
+        
+        # Run foreign key check
+        result = db.fetch('PRAGMA foreign_key_check')
+        if result:
+            print('❌ ERROR: Foreign key constraint violations found!')
+            for violation in result:
+                print(f'  - {violation}')
+            os.unlink(test_db)
+            exit(1)
+        else:
+            print('✅ No foreign key constraint violations')
+        
+        # Test schema integrity
+        integrity_result = db.fetch('PRAGMA integrity_check')
+        if integrity_result and integrity_result[0].get('integrity_check', '') != 'ok':
+            print('❌ ERROR: Database integrity check failed!')
+            for issue in integrity_result:
+                print(f'  - {issue}')
+            os.unlink(test_db)
+            exit(1)
+        else:
+            print('✅ Database integrity check passed')
+        
+        # Test business key uniqueness constraint
+        print('Testing business key uniqueness...')
+        duplicate_keys = db.fetch('''
+            SELECT source_type, external_id, COUNT(*) as count 
+            FROM content 
+            WHERE source_type IS NOT NULL AND external_id IS NOT NULL
+            GROUP BY source_type, external_id 
+            HAVING COUNT(*) > 1
+        ''')
+        if duplicate_keys:
+            print('❌ ERROR: Duplicate business keys found!')
+            for dup in duplicate_keys:
+                print(f'  - {dup[\"source_type\"]}:{dup[\"external_id\"]} (count: {dup[\"count\"]})')
+            os.unlink(test_db)
+            exit(1)
+        else:
+            print('✅ Business key uniqueness verified')
+        
+        # Test UPSERT method exists
+        print('Verifying UPSERT implementation...')
+        try:
+            # Test that upsert_content method can be called
+            test_id = db.upsert_content(
+                source_type='test',
+                external_id='ci-test',
+                content_type='test',
+                title='CI Test',
+                content='Test content for CI'
+            )
+            print(f'✅ UPSERT method working (test ID: {test_id[:8]}...)')
+        except Exception as e:
+            print(f'❌ ERROR: UPSERT method failed: {e}')
+            os.unlink(test_db)
+            exit(1)
+        
+        # Cleanup
+        os.unlink(test_db)
+        print('✅ All database integrity checks passed')
+        "

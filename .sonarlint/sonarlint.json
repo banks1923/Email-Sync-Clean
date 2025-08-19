@@ -1,0 +1,112 @@
+{
+  "connectedMode": {
+    "connections": [],
+    "project": {}
+  },
+  "rules": {
+    "python:S107": {
+      "level": "off",
+      "comment": "Allow more than 7 parameters for complex service functions"
+    },
+    "python:S1192": {
+      "level": "off",
+      "comment": "String literals duplicated - OK for single-user project"
+    },
+    "python:S3776": {
+      "level": "on",
+      "parameters": {
+        "threshold": "10"
+      },
+      "comment": "Cognitive Complexity - matches our limit of 10"
+    },
+    "python:S117": {
+      "level": "off",
+      "comment": "Variable naming - we use our own conventions"
+    },
+    "python:S125": {
+      "level": "off",
+      "comment": "Commented code - useful for single developer"
+    },
+    "python:S1066": {
+      "level": "on",
+      "comment": "Merge nested if statements - enforce simplicity"
+    },
+    "python:S1710": {
+      "level": "on",
+      "comment": "Avoid 'pass' in except blocks"
+    },
+    "python:S1716": {
+      "level": "on",
+      "comment": "Avoid bare 'except:' clauses"
+    },
+    "python:S5713": {
+      "level": "on",
+      "comment": "Avoid hardcoded secrets"
+    },
+    "python:S2068": {
+      "level": "on",
+      "comment": "Avoid hardcoded passwords"
+    },
+    "python:S6353": {
+      "level": "on",
+      "comment": "Regular expressions should not be vulnerable to Denial of Service"
+    },
+    "python:S5527": {
+      "level": "on",
+      "comment": "Server hostnames should be verified during SSL/TLS connections"
+    },
+    "python:FunctionComplexity": {
+      "level": "on",
+      "parameters": {
+        "maximumFunctionComplexityThreshold": "10"
+      },
+      "comment": "Enforce our cyclomatic complexity limit"
+    },
+    "python:FileLength": {
+      "level": "on",
+      "parameters": {
+        "maximumFileLength": "450"
+      },
+      "comment": "Enforce 450-line limit for new files"
+    },
+    "python:S104": {
+      "level": "on",
+      "parameters": {
+        "maximum": "450"
+      },
+      "comment": "Files should not have too many lines"
+    },
+    "python:S138": {
+      "level": "on",
+      "parameters": {
+        "max": "30"
+      },
+      "comment": "Functions should not have too many lines"
+    }
+  },
+  "fileExclusions": {
+    "globalExclusions": [
+      "**/__pycache__/**",
+      "**/venv/**",
+      "**/env/**",
+      "**/.venv/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.egg-info/**",
+      "**/migrations/**",
+      "**/tests/**",
+      "**/.pytest_cache/**",
+      "**/.mypy_cache/**",
+      "**/.ruff_cache/**",
+      "**/htmlcov/**",
+      "**/data/**",
+      "**/.taskmaster/**",
+      "**/qdrant_data/**"
+    ]
+  },
+  "includedLanguages": [
+    "python"
+  ],
+  "testFilePattern": "**/test_*.py,**/*_test.py"
+}

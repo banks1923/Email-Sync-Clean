@@ -30,7 +30,7 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.db.execute(
             """
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -44,14 +44,14 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.test_content_id2 = "test-doc-002"
         self.db.execute(
             """
-            INSERT INTO content (content_id, content_type, title, content)
+            INSERT INTO content (id, content_type, title, content)
             VALUES (?, 'test', 'Test Document', 'Test content')
         """,
             (self.test_content_id,),
         )
         self.db.execute(
             """
-            INSERT INTO content (content_id, content_type, title, content)
+            INSERT INTO content (id, content_type, title, content)
             VALUES (?, 'test', 'Test Document 2', 'Test content 2')
         """,
             (self.test_content_id2,),

@@ -73,7 +73,7 @@ class TestDatabase:
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -194,7 +194,7 @@ class TestDatabase:
 
         self.conn.execute(
             """
-            INSERT INTO content (content_id, content_type, title, content, metadata)
+            INSERT INTO content (id, content_type, title, content, metadata)
             VALUES (?, ?, ?, ?, ?)
         """,
             (content_id, content_type, title, content, metadata_json),
@@ -208,7 +208,7 @@ class TestDatabase:
     ) -> dict[str, Any]:
         """Simple keyword search in content."""
         sql = """
-            SELECT content_id, content_type, title, content, metadata
+            SELECT id, content_type, title, content, metadata
             FROM content
             WHERE (title LIKE ? OR content LIKE ?)
         """

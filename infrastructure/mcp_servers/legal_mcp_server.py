@@ -116,7 +116,7 @@ This tool is deprecated. Please use the unified Legal Intelligence MCP Server:
             db = SimpleDB()
             metadata = {"tags": tags, "entity_count": len(entities)}
             db.execute(
-                "UPDATE content SET metadata = ? WHERE content_id = ?",
+                "UPDATE content SET metadata = ? WHERE id = ?",
                 (json.dumps(metadata), doc_id),
             )
             output += f"\n✅ Tags saved to document: {doc_id}"

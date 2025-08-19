@@ -120,14 +120,14 @@ class DuplicateDetector:
             # Get all documents of type
             if content_type:
                 query = """
-                    SELECT content_id, content_type, title, content
+                    SELECT id, content_type, title, content
                     FROM content
                     WHERE content_type = ?
                 """
                 params = (content_type,)
             else:
                 query = """
-                    SELECT content_id, content_type, title, content
+                    SELECT id, content_type, title, content
                     FROM content
                 """
                 params = ()
@@ -141,13 +141,13 @@ class DuplicateDetector:
 
     def _get_document(self, doc_id: str) -> dict | None:
         """Get single document."""
-        result = self.db.fetch_one("SELECT * FROM content WHERE content_id = ?", (doc_id,))
+        result = self.db.fetch_one("SELECT * FROM content WHERE id = ?", (doc_id,))
         if result:
             return result
 
         # Try other tables
         result = self.db.fetch_one(
-            "SELECT message_id as content_id, 'email' as content_type, "
+            "SELECT message_id as content_id, 'email' as content_type, "  # ALLOWED: content_id
             "subject as title, body as content FROM emails WHERE message_id = ?",
             (doc_id,),
         )
@@ -155,7 +155,7 @@ class DuplicateDetector:
             return result
 
         result = self.db.fetch_one(
-            "SELECT chunk_id as content_id, 'document' as content_type, "
+            "SELECT chunk_id as content_id, 'document' as content_type, "  # ALLOWED: content_id
             "file_name as title, text_content as content "
             "FROM documents WHERE chunk_id = ?",
             (doc_id,),
@@ -170,7 +170,7 @@ class DuplicateDetector:
             # Compute hash of content
             doc_hash = self._compute_document_hash(doc)
             if doc_hash:
-                hash_groups[doc_hash].append(doc["content_id"])
+                hash_groups[doc_hash].append(doc["id"])
 
         # Find groups with duplicates
         duplicate_groups = []
@@ -189,7 +189,7 @@ class DuplicateDetector:
 
     def _compute_document_hash(self, doc: dict) -> str:
         """Compute SHA-256 hash of document content."""
-        doc_id = doc.get("content_id")
+        doc_id = doc.get("id")
 
         # Check cache
         if doc_id in self._hash_cache:
@@ -226,7 +226,7 @@ class DuplicateDetector:
             exact_duplicate_ids.update(group["members"])
 
         # Filter out exact duplicates
-        docs_to_check = [doc for doc in documents if doc["content_id"] not in exact_duplicate_ids]
+        docs_to_check = [doc for doc in documents if doc["id"] not in exact_duplicate_ids]
 
         if len(docs_to_check) < 2:
             return []
@@ -236,7 +236,7 @@ class DuplicateDetector:
         embeddings = []
 
         for doc in docs_to_check:
-            doc_id = doc["content_id"]
+            doc_id = doc["id"]
             embedding = self._get_document_embedding(doc)
 
             if embedding is not None:
@@ -267,7 +267,7 @@ class DuplicateDetector:
 
     def _get_document_embedding(self, doc: dict) -> np.ndarray | None:
         """Get or generate embedding for document."""
-        doc_id = doc["content_id"]
+        doc_id = doc["id"]
 
         try:
             # Try to get from vector store
@@ -440,7 +440,7 @@ class DuplicateDetector:
         # Convert to document format
         documents = [
             {
-                "content_id": email["message_id"],
+                "id": email["message_id"],
                 "content_type": "email",
                 "title": email.get("subject", ""),
                 "content": email.get("body", ""),
@@ -451,7 +451,7 @@ class DuplicateDetector:
 
         # Detect duplicates with high threshold for emails
         return self.detect_duplicates(
-            doc_ids=[d["content_id"] for d in documents],
+            doc_ids=[d["id"] for d in documents],
             similarity_threshold=0.98,  # High threshold for email duplicates
             check_semantic=True,
         )

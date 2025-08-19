@@ -113,7 +113,7 @@ def search_by_type(content_type: str, query: str = "", limit: int = 10) -> str:
         # If no query, get recent items of that type
         if not query:
             query_sql = """
-                SELECT content_id, title, content, content_type, created_date
+                SELECT id, title, content, content_type, created_date
                 FROM content
                 WHERE content_type = ?
                 ORDER BY created_date DESC

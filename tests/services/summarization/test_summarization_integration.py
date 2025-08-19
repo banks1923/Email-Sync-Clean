@@ -12,9 +12,8 @@ from unittest.mock import MagicMock, patch
 sys.path.append(str(Path(__file__).parent.parent))
 
 from gmail.main import GmailService
-from pdf.main import PDFService
+from pdf.wiring import get_pdf_service
 from shared.simple_db import SimpleDB
-from summarization.engine import DocumentSummarizer
 
 
 class TestPDFSummarizationIntegration(unittest.TestCase):
@@ -28,14 +27,14 @@ class TestPDFSummarizationIntegration(unittest.TestCase):
         self.temp_db.close()
 
         # Initialize services
-        self.pdf_service = PDFService(self.db_path)
+        self.pdf_service = get_pdf_service(self.db_path)
         self.db = SimpleDB(self.db_path)
 
         # Create necessary tables
         self.db.execute(
             """
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -123,7 +122,7 @@ class TestPDFSummarizationIntegration(unittest.TestCase):
                     # Check that summary was created
                     summaries = self.db.get_document_summaries(
                         self.db.fetch_one(
-                            "SELECT content_id FROM content WHERE content_type = 'pdf'"
+                            "SELECT id FROM content WHERE content_type = 'pdf'"
                         )["content_id"]
                     )
 
@@ -155,7 +154,7 @@ class TestGmailSummarizationIntegration(unittest.TestCase):
         self.db.execute(
             """
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,
@@ -224,7 +223,7 @@ class TestGmailSummarizationIntegration(unittest.TestCase):
 
         # Check that summaries were created
         content_records = self.db.fetch(
-            "SELECT content_id FROM content WHERE content_type = 'email'"
+            "SELECT id FROM content WHERE content_type = 'email'"
         )
         self.assertGreater(len(content_records), 0)
 
@@ -255,7 +254,7 @@ class TestSummaryRetrieval(unittest.TestCase):
         self.db.execute(
             """
             CREATE TABLE IF NOT EXISTS content (
-                content_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 content_type TEXT,
                 title TEXT,
                 content TEXT,

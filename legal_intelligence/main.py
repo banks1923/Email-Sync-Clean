@@ -11,11 +11,11 @@ from typing import Any
 from loguru import logger
 
 # Service imports based on investigation
-from entity.main import get_entity_service
 from knowledge_graph import get_knowledge_graph_service, get_similarity_analyzer
 from shared.simple_db import SimpleDB
+from entity.main import EntityService
+from utilities.timeline.main import TimelineService
 from utilities.embeddings import get_embedding_service
-from utilities.timeline.main import get_timeline_service
 
 # Logger is now imported globally from loguru
 

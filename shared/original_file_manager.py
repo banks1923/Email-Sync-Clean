@@ -321,7 +321,7 @@ class OriginalFileManager:
                 if not self.verify_link(link_path):
                     # Mark as invalid in database
                     self.db.execute(
-                        "UPDATE file_links SET is_valid = 0 WHERE content_id = ?",
+                        "UPDATE file_links SET is_valid = 0 WHERE id = ?",
                         (link_record['id'],)
                     )
                     

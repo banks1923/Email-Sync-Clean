@@ -137,7 +137,7 @@ class DocumentSimilarityAnalyzer:
     def _get_document_content(self, doc_id: str) -> dict | None:
         """Get document content from database."""
         # Try content table first
-        result = self.db.fetch_one("SELECT * FROM content WHERE content_id = ?", (doc_id,))
+        result = self.db.fetch_one("SELECT * FROM content WHERE id = ?", (doc_id,))
         if result:
             return result
 
@@ -247,10 +247,10 @@ class DocumentClusterer:
         try:
             # Get document IDs
             if content_type:
-                query = "SELECT content_id FROM content WHERE content_type = ? LIMIT ?"
+                query = "SELECT id FROM content WHERE content_type = ? LIMIT ?"
                 params = (content_type, limit)
             else:
-                query = "SELECT content_id FROM content LIMIT ?"
+                query = "SELECT id FROM content LIMIT ?"
                 params = (limit,)
 
             results = self.db.fetch(query, params)
