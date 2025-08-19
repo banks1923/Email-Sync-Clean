@@ -26,7 +26,7 @@ class EntityService:
     Follows service independence with database-only communication.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "emails.db") -> None:
         """
         Initialize EntityService with configuration validation.
         """

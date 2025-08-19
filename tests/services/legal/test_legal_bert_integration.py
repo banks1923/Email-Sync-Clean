@@ -11,7 +11,6 @@ import time
 
 import pytest
 
-from utilities.embeddings import get_embedding_service
 from knowledge_graph import (
     get_knowledge_graph_service,
     get_similarity_analyzer,
@@ -19,6 +18,7 @@ from knowledge_graph import (
     get_timeline_relationships,
 )
 from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
 
 
 class TestLegalBERTIntegration:
@@ -332,17 +332,17 @@ class TestLegalBERTIntegration:
     @pytest.mark.slow
     def test_timeline_relationships_with_real_data(self, temp_db, legal_documents):
         """Test timeline relationship creation with real documents."""
-        get_timeline_relationships(temp_db)
+        timeline_service = get_timeline_relationships(temp_db)
 
         # Create temporal relationships
-        result = utilities.timeline.create_temporal_relationships()
+        result = timeline_service.create_temporal_relationships()
 
         assert result["processed"] > 0
         assert result["relationships_created"] > 0
         assert result["sequential"] > 0  # Should have sequential relationships
 
         # Check temporal clustering
-        cluster = utilities.timeline.find_temporal_cluster("contract_1", window_days=10)
+        cluster = timeline_service.find_temporal_cluster("contract_1", window_days=10)
         assert len(cluster) > 0  # Should find nearby documents
 
         # contract_2 and email_1 should be in the temporal cluster
@@ -354,14 +354,14 @@ class TestLegalBERTIntegration:
         """Test combining similarity and timeline relationships."""
         # Create both types of relationships
         integration = get_similarity_integration(temp_db, similarity_threshold=0.4)
-        get_timeline_relationships(temp_db)
+        timeline_service = get_timeline_relationships(temp_db)
 
         # Add similarity relationships
         sim_result = integration.discover_and_store_similarities()
         assert sim_result["relationships_created"] > 0
 
         # Add temporal relationships
-        time_result = utilities.timeline.create_temporal_relationships()
+        time_result = timeline_service.create_temporal_relationships()
         assert time_result["relationships_created"] > 0
 
         # Query the combined graph

@@ -80,7 +80,9 @@ This tool is deprecated. Please use the unified Legal Intelligence MCP Server:
 
         if not events:
             # Try to sync from emails/content
-            utilities.timeline.sync_emails_to_timeline(limit=20)
+            # NOTE: Deprecated functionality - utilities.timeline no longer available
+            # Use legal_intelligence_mcp.py instead
+            print("Timeline sync unavailable in deprecated server")
             events = db.fetch(query, tuple(params))
 
         if not events:

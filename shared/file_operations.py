@@ -1,11 +1,11 @@
 """
-File operations utility for dependency injection in AnalogDBProcessor.
+File operations utility for document processing.
 Encapsulates file system operations for better testability.
 """
 
 import shutil
 from pathlib import Path
-from typing import Optional
+
 from loguru import logger
 
 
@@ -125,7 +125,7 @@ class FileOperations:
         """Check if directory exists."""
         return path.exists() and path.is_dir()
     
-    def get_file_size(self, path: Path) -> Optional[int]:
+    def get_file_size(self, path: Path) -> int | None:
         """Get file size in bytes."""
         try:
             return path.stat().st_size if path.exists() else None

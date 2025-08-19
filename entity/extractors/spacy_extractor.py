@@ -15,14 +15,14 @@ class SpacyExtractor(BaseExtractor):
     SpaCy-based named entity extractor.
     """
 
-    def __init__(self, model_name: str = "en_core_web_sm"):
+    def __init__(self, model_name: str = "en_core_web_sm") -> None:
         super().__init__("spacy")
         self.model_name = model_name
         self.nlp = None
         # Logger is now imported globally from loguru
         self._initialize_model()
 
-    def _initialize_model(self):
+    def _initialize_model(self) -> None:
         """
         Initialize spaCy model with lazy loading.
         """

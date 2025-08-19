@@ -12,7 +12,8 @@ import pytest
 
 try:
     from infrastructure.documents.processors.email_thread_processor import (
-        EmailThreadProcessor, get_email_thread_processor
+        EmailThreadProcessor,
+        get_email_thread_processor,
     )
     PROCESSOR_AVAILABLE = True
 except ImportError:

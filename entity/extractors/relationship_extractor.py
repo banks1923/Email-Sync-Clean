@@ -16,13 +16,13 @@ class RelationshipExtractor:
     Extract relationships between entities for knowledge graph construction.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = "relationship"
         # Logger is now imported globally from loguru
         self._initialize_patterns()
         self.validation_result = {"success": True}
 
-    def _initialize_patterns(self):
+    def _initialize_patterns(self) -> None:
         """
         Initialize relationship detection patterns.
         """

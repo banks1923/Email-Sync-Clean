@@ -13,18 +13,18 @@ This follows the 6-phase testing plan with:
 import os
 import sqlite3
 import tempfile
-import pytest
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
-from collections.abc import Generator
 from unittest.mock import Mock
 
+import pytest
+
 # Core testing dependencies
-from hypothesis import settings, Verbosity
+from hypothesis import Verbosity, settings
 
 # Project imports
 from shared.simple_db import SimpleDB
-
 
 # =============================================================================
 # Test Environment Configuration
@@ -282,6 +282,7 @@ def mock_vector_store():
 def performance_monitor():
     """Monitor test performance and resource usage."""
     import time
+
     import psutil
     
     start_time = time.time()

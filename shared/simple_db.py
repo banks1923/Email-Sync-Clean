@@ -24,7 +24,7 @@ from .retry_helper import retry_database
 class SimpleDB:
     """The entire database layer in under 100 lines. No BS."""
 
-    def __init__(self, db_path: str = "data/emails.db"):
+    def __init__(self, db_path: str = "emails.db") -> None:
         self.db_path = db_path
         self._ensure_data_directories()
         self.batch_stats = {
@@ -36,7 +36,7 @@ class SimpleDB:
             "avg_records_per_second": 0.0,
         }
 
-    def _ensure_data_directories(self):
+    def _ensure_data_directories(self) -> None:
         """Ensure /data/ directory structure exists for document processing pipeline."""
         # Get project root (parent of shared directory)
         project_root = Path(__file__).parent.parent
@@ -227,8 +227,8 @@ class SimpleDB:
 
         self.execute(
             """
-            INSERT INTO documents (
-                chunk_id, file_path, file_name, chunk_index,
+            INSERT INTO content (
+                content_id, file_path, file_name, chunk_index,
                 text_content, char_count, file_size, file_hash,
                 source_type, processed_time, content_type, vector_processed,
                 extraction_method
@@ -347,12 +347,12 @@ class SimpleDB:
         char_result = self.fetch_one("SELECT SUM(char_count) as total FROM content")
         stats["total_characters"] = char_result["total"] if char_result and char_result["total"] else 0
         
-        # Check if documents table exists before querying
+        # Check if content table exists before querying
         table_check = self.fetch_one(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='documents'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='content'"
         )
         if table_check:
-            doc_result = self.fetch_one("SELECT COUNT(*) as count FROM documents")
+            doc_result = self.fetch_one("SELECT COUNT(*) as count FROM content")
             stats["total_documents"] = doc_result["count"] if doc_result else 0
         else:
             stats["total_documents"] = 0
@@ -593,7 +593,7 @@ class SimpleDB:
             total_chars += char_count
             file_paths.add(chunk.get("file_path", "unknown"))
 
-            # Create tuple for batch insert (matches documents table + extraction_method)
+            # Create tuple for batch insert (matches content table + extraction_method)
             prepared_data.append(
                 (
                     chunk_id,
@@ -621,9 +621,9 @@ class SimpleDB:
             f"{len(file_paths)} unique files, {total_chars} total chars"
         )
 
-        # Use batch_insert with documents table columns
+        # Use batch_insert with content table columns
         columns = [
-            "chunk_id",
+            "content_id",
             "file_path",
             "file_name",
             "chunk_index",
@@ -639,7 +639,7 @@ class SimpleDB:
         ]
 
         stats = self.batch_insert(
-            "documents", columns, prepared_data, batch_size, progress_callback
+            "content", columns, prepared_data, batch_size, progress_callback
         )
 
         # Log document-specific stats
@@ -690,7 +690,7 @@ class SimpleDB:
             logger.error(f"Failed to create intelligence tables: {e}")
             return {"success": False, "error": str(e)}
 
-    def _create_inline_intelligence_schema(self):
+    def _create_inline_intelligence_schema(self) -> None:
         """Create intelligence tables with inline SQL (fallback method)."""
         # Document summaries table
         self.execute(
@@ -807,7 +807,7 @@ class SimpleDB:
             logger.warning(f"Could not get schema version: {e}")
             return 0
 
-    def _set_schema_version(self, version: int):
+    def _set_schema_version(self, version: int) -> None:
         """Set database schema version."""
         self.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
 

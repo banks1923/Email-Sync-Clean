@@ -11,8 +11,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from utilities.embeddings import get_embedding_service
 from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 
 
@@ -125,7 +125,7 @@ def process_all_embeddings(batch_size: int = 10):
             if "result" in data:
                 count = data["result"]["points_count"]
                 print(f"  🔍 Qdrant verified: {count} vectors")
-    except:
+    except (ImportError, requests.RequestException, KeyError, ValueError):
         pass
 
 

@@ -54,7 +54,7 @@ class DatabaseHealthMonitor:
     - Alerting for critical conditions
     """
 
-    def __init__(self, db_path: str, monitoring_window_minutes: int = 60):
+    def __init__(self, db_path: str, monitoring_window_minutes: int = 60) -> None:
         """
         Initialize database health monitor
 
@@ -134,7 +134,7 @@ class DatabaseHealthMonitor:
         start_time: float,
         success: bool,
         error_message: str | None = None,
-    ):
+    ) -> None:
         """
         Track database operation performance
 

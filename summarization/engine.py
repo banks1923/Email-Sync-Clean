@@ -25,7 +25,7 @@ class TFIDFSummarizer:
     Extract keywords using TF-IDF algorithm.
     """
 
-    def __init__(self, max_features: int = 100, ngram_range: tuple[int, int] = (1, 3)):
+    def __init__(self, max_features: int = 100, ngram_range: tuple[int, int] = (1, 3)) -> None:
         """Initialize TF-IDF summarizer.
 
         Args:
@@ -159,7 +159,7 @@ class TextRankSummarizer:
     Extract key sentences using TextRank algorithm with Legal BERT embeddings.
     """
 
-    def __init__(self, similarity_threshold: float = 0.3):
+    def __init__(self, similarity_threshold: float = 0.3) -> None:
         """Initialize TextRank summarizer.
 
         Args:
@@ -317,7 +317,7 @@ class DocumentSummarizer:
     Orchestrates both TF-IDF and TextRank summarization.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize document summarizer with both algorithms.
         """

@@ -285,7 +285,7 @@ def _display_cluster_results(results: list[dict[str, Any]]):
 
         print(f"\n--- 🎯 Cluster {cluster_id} ({size} documents) ---")
 
-        for j, doc in enumerate(infrastructure.documents[:5]):  # Show first 5 docs
+        for j, doc in enumerate(documents[:5]):  # Show first 5 docs
             doc_id = doc.get("content_id", doc.get("id", "Unknown"))
             title = doc.get("title", "No title")[:50]
             content_type = doc.get("content_type", "unknown")

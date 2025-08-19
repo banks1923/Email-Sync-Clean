@@ -9,7 +9,7 @@ import json
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -33,8 +33,8 @@ class ArchiveManager:
     def archive_file(
         self,
         file_path: Path,
-        metadata: Optional[dict] = None,
-        case_name: Optional[str] = None,
+        metadata: dict | None = None,
+        case_name: str | None = None,
         processing_status: str = "processed"
     ) -> Path:
         """
@@ -82,8 +82,8 @@ class ArchiveManager:
     def archive_batch(
         self,
         file_paths: list[Path],
-        batch_name: Optional[str] = None,
-        metadata: Optional[dict] = None
+        batch_name: str | None = None,
+        metadata: dict | None = None
     ) -> Path:
         """
         Archive multiple files together.
@@ -127,7 +127,7 @@ class ArchiveManager:
         logger.info(f"Created batch archive with {len(file_paths)} files: {archive_path}")
         return archive_path
 
-    def retrieve_archived(self, archive_name: str, extract_to: Optional[Path] = None) -> Path:
+    def retrieve_archived(self, archive_name: str, extract_to: Path | None = None) -> Path:
         """
         Retrieve and extract an archived file.
         
@@ -164,9 +164,9 @@ class ArchiveManager:
 
     def list_archives(
         self,
-        case_name: Optional[str] = None,
-        since: Optional[datetime] = None,
-        until: Optional[datetime] = None
+        case_name: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None
     ) -> list[dict]:
         """
         List available archives with optional filtering.
@@ -302,7 +302,7 @@ class ArchiveManager:
         self,
         file_path: Path,
         timestamp: datetime,
-        case_name: Optional[str] = None
+        case_name: str | None = None
     ) -> str:
         """Generate standardized archive name."""
         date_str = timestamp.strftime("%Y%m%d")

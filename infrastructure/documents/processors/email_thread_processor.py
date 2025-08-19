@@ -8,7 +8,7 @@ Integrates with existing Gmail service and HTML cleaner.
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import frontmatter
 from loguru import logger
@@ -16,7 +16,6 @@ from loguru import logger
 # Import existing services (avoid circular import)
 try:
     from shared.html_cleaner import clean_html_content
-    from shared.analog_db import AnalogDBManager
     DEPENDENCIES_AVAILABLE = True
 except ImportError:
     DEPENDENCIES_AVAILABLE = False
@@ -26,37 +25,35 @@ except ImportError:
 class EmailThreadProcessor:
     """Processes Gmail threads into chronological markdown files."""
 
-    def __init__(self, gmail_service = None, base_path: Optional[Path] = None):
-        """Initialize thread processor with analog DB.
+    def __init__(self, gmail_service = None, base_path: Path | None = None):
+        """Initialize thread processor.
         
         Args:
             gmail_service: Optional Gmail service instance (avoids circular import)
-            base_path: Base path for analog database
+            base_path: No longer used (analog database removed)
         """
         if not DEPENDENCIES_AVAILABLE:
             raise ImportError("Dependencies required for EmailThreadProcessor")
         
         self.gmail_service = gmail_service  # Set externally to avoid circular import
-        self.analog_db = AnalogDBManager(base_path)
+        # Analog DB removed - processor disabled
         self.max_emails_per_file = 100
         logger.info("EmailThreadProcessor initialized")
 
     def process_thread(
         self,
         thread_id: str,
-        include_metadata: bool = True,
-        save_to_db: bool = True
-    ) -> Dict[str, Any]:
+        include_metadata: bool = True
+    ) -> dict[str, Any]:
         """
         Process a Gmail thread into markdown format.
         
         Args:
             thread_id: Gmail thread ID
             include_metadata: Whether to include YAML frontmatter
-            save_to_db: Whether to save to analog database
             
         Returns:
-            Processing result with success status and file paths
+            Processing result with success status and markdown content
         """
         try:
             # Fetch thread messages
@@ -77,18 +74,18 @@ class EmailThreadProcessor:
             # Check if thread needs splitting
             if len(sorted_messages) > self.max_emails_per_file:
                 return self._process_large_thread(
-                    sorted_messages, metadata, include_metadata, save_to_db
+                    sorted_messages, metadata, include_metadata
                 )
             else:
                 return self._process_single_thread(
-                    sorted_messages, metadata, include_metadata, save_to_db
+                    sorted_messages, metadata, include_metadata
                 )
 
         except Exception as e:
             logger.error(f"Thread processing failed for {thread_id}: {e}")
             return {"success": False, "error": f"Processing failed: {str(e)}"}
 
-    def _fetch_thread_messages(self, thread_id: str) -> Dict[str, Any]:
+    def _fetch_thread_messages(self, thread_id: str) -> dict[str, Any]:
         """Fetch all messages in a Gmail thread."""
         try:
             # Connect to Gmail if not already connected
@@ -121,7 +118,7 @@ class EmailThreadProcessor:
             logger.error(f"Failed to fetch thread {thread_id}: {e}")
             return {"success": False, "error": f"Failed to fetch thread: {str(e)}"}
 
-    def _sort_chronologically(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _sort_chronologically(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Sort messages chronologically by internal date."""
         try:
             # Sort by internal date (Gmail's timestamp in milliseconds)
@@ -140,9 +137,9 @@ class EmailThreadProcessor:
 
     def _generate_thread_metadata(
         self, 
-        messages: List[Dict[str, Any]], 
+        messages: list[dict[str, Any]], 
         thread_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate comprehensive metadata for thread."""
         try:
             if not messages:
@@ -212,11 +209,10 @@ class EmailThreadProcessor:
 
     def _process_single_thread(
         self,
-        messages: List[Dict[str, Any]],
-        metadata: Dict[str, Any],
-        include_metadata: bool,
-        save_to_db: bool
-    ) -> Dict[str, Any]:
+        messages: list[dict[str, Any]],
+        metadata: dict[str, Any],
+        include_metadata: bool
+    ) -> dict[str, Any]:
         """Process a single thread (<=100 messages) into one markdown file."""
         try:
             # Format as markdown
@@ -224,21 +220,15 @@ class EmailThreadProcessor:
                 messages, metadata if include_metadata else None
             )
 
-            # Generate filename
+            # Generate filename for reference
             filename = self._generate_filename(metadata)
             
-            # Save to analog database if requested
-            if save_to_db:
-                file_path = self._save_to_analog_db(markdown_content, filename)
-            else:
-                file_path = None
-
             return {
                 "success": True,
                 "thread_id": metadata["thread_id"],
                 "message_count": len(messages),
-                "files_created": 1,
-                "file_paths": [str(file_path)] if file_path else [],
+                "markdown_content": markdown_content,
+                "suggested_filename": filename,
                 "metadata": metadata
             }
 
@@ -248,16 +238,16 @@ class EmailThreadProcessor:
 
     def _process_large_thread(
         self,
-        messages: List[Dict[str, Any]],
-        metadata: Dict[str, Any],
-        include_metadata: bool,
-        save_to_db: bool
-    ) -> Dict[str, Any]:
+        messages: list[dict[str, Any]],
+        metadata: dict[str, Any],
+        include_metadata: bool
+    ) -> dict[str, Any]:
         """Process a large thread (>100 messages) by splitting into multiple files."""
         try:
             # Split messages into chunks
             message_chunks = self._split_messages(messages)
-            file_paths = []
+            markdown_parts = []
+            filenames = []
             
             for i, chunk in enumerate(message_chunks):
                 part_num = i + 1
@@ -276,22 +266,19 @@ class EmailThreadProcessor:
                 markdown_content = self._format_thread_to_markdown(
                     chunk, part_metadata if include_metadata else None, part_num, total_parts
                 )
+                markdown_parts.append(markdown_content)
 
                 # Generate part filename
                 filename = self._generate_filename(metadata, part_num)
-                
-                # Save to analog database if requested
-                if save_to_db:
-                    file_path = self._save_to_analog_db(markdown_content, filename)
-                    if file_path:
-                        file_paths.append(str(file_path))
+                filenames.append(filename)
 
             return {
                 "success": True,
                 "thread_id": metadata["thread_id"],
                 "message_count": len(messages),
-                "files_created": len(file_paths),
-                "file_paths": file_paths,
+                "parts_created": len(markdown_parts),
+                "markdown_parts": markdown_parts,
+                "suggested_filenames": filenames,
                 "metadata": metadata,
                 "split_into_parts": True
             }
@@ -300,7 +287,7 @@ class EmailThreadProcessor:
             logger.error(f"Large thread processing failed: {e}")
             return {"success": False, "error": f"Processing failed: {str(e)}"}
 
-    def _split_messages(self, messages: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    def _split_messages(self, messages: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         """Split messages into chunks of max_emails_per_file."""
         chunks = []
         for i in range(0, len(messages), self.max_emails_per_file):
@@ -312,10 +299,10 @@ class EmailThreadProcessor:
 
     def _format_thread_to_markdown(
         self,
-        messages: List[Dict[str, Any]],
-        metadata: Optional[Dict[str, Any]] = None,
-        part_num: Optional[int] = None,
-        total_parts: Optional[int] = None
+        messages: list[dict[str, Any]],
+        metadata: dict[str, Any] | None = None,
+        part_num: int | None = None,
+        total_parts: int | None = None
     ) -> str:
         """Format messages as markdown with optional YAML frontmatter."""
         try:
@@ -365,7 +352,7 @@ class EmailThreadProcessor:
             logger.warning(f"Markdown formatting failed: {e}")
             return f"Error formatting thread: {str(e)}"
 
-    def _format_message_as_markdown(self, message: Dict[str, Any], message_num: int) -> str:
+    def _format_message_as_markdown(self, message: dict[str, Any], message_num: int) -> str:
         """Format a single message as markdown."""
         try:
             lines = []
@@ -385,7 +372,7 @@ class EmailThreadProcessor:
                     dt = datetime.fromisoformat(message["datetime_utc"].replace('Z', '+00:00'))
                     formatted_date = dt.strftime("%B %d, %Y at %I:%M %p")
                     lines.append(f"**Date:** {formatted_date}")
-                except:
+                except (ValueError, TypeError, KeyError):
                     lines.append(f"**Date:** {message['datetime_utc']}")
             
             lines.append("")
@@ -408,7 +395,7 @@ class EmailThreadProcessor:
             logger.warning(f"Message formatting failed: {e}")
             return f"*(Error formatting message: {str(e)})*"
 
-    def _generate_filename(self, metadata: Dict[str, Any], part_num: Optional[int] = None) -> str:
+    def _generate_filename(self, metadata: dict[str, Any], part_num: int | None = None) -> str:
         """Generate filename for thread markdown file."""
         try:
             # Get date for filename (from first message date or processing date)
@@ -417,7 +404,7 @@ class EmailThreadProcessor:
                 try:
                     dt = datetime.fromisoformat(metadata["date_range"]["start"].replace('Z', '+00:00'))
                     date_str = dt.strftime("%Y-%m-%d")
-                except:
+                except (ValueError, TypeError, KeyError):
                     pass
 
             # Create slug from subject
@@ -458,29 +445,13 @@ class EmailThreadProcessor:
         
         return slug or "untitled"
 
-    def _save_to_analog_db(self, markdown_content: str, filename: str) -> Optional[Path]:
-        """Save markdown content to analog database."""
-        try:
-            # Ensure email_threads directory exists
-            self.analog_db.create_directory_structure()
-            
-            # Write file
-            file_path = self.analog_db.directories["email_threads"] / filename
-            file_path.write_text(markdown_content, encoding='utf-8')
-            
-            logger.info(f"Saved thread to {file_path}")
-            return file_path
-
-        except Exception as e:
-            logger.error(f"Failed to save thread to analog DB: {e}")
-            return None
 
     def process_threads_by_query(
         self,
         query: str = "",
         max_threads: int = 10,
         include_metadata: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process multiple threads based on Gmail search query.
         
@@ -506,7 +477,7 @@ class EmailThreadProcessor:
                 return {"success": True, "message": "No threads found", "processed": 0}
 
             # Extract unique thread IDs
-            thread_ids = list(set(msg.get("threadId") for msg in messages if msg.get("threadId")))
+            thread_ids = list({msg.get("threadId") for msg in messages if msg.get("threadId")})
             
             # Process each thread
             results = []
@@ -514,7 +485,7 @@ class EmailThreadProcessor:
             error_count = 0
 
             for thread_id in thread_ids[:max_threads]:
-                result = self.process_thread(thread_id, include_metadata, save_to_db=True)
+                result = self.process_thread(thread_id, include_metadata)
                 
                 if result["success"]:
                     success_count += 1
@@ -542,38 +513,29 @@ class EmailThreadProcessor:
             logger.error(f"Batch thread processing failed: {e}")
             return {"success": False, "error": f"Batch processing failed: {str(e)}"}
 
-    def validate_setup(self) -> Dict[str, Any]:
+    def validate_setup(self) -> dict[str, Any]:
         """Validate EmailThreadProcessor setup and dependencies."""
         try:
             validation_result = {
-                "gmail_available": GMAIL_AVAILABLE,
+                "gmail_available": DEPENDENCIES_AVAILABLE,
                 "dependencies": {},
                 "directories": {}
             }
 
-            if GMAIL_AVAILABLE:
+            if DEPENDENCIES_AVAILABLE:
                 validation_result["dependencies"] = {
                     "gmail_service": self.gmail_service is not None,
-                    "analog_db": self.analog_db is not None,
                     "html_cleaner": True  # We imported it successfully
                 }
 
-                # Check directory access
-                try:
-                    self.analog_db.create_directory_structure()
-                    email_threads_dir = self.analog_db.directories["email_threads"]
-                    validation_result["directories"] = {
-                        "email_threads_exists": email_threads_dir.exists(),
-                        "email_threads_writable": email_threads_dir.exists() and os.access(email_threads_dir, os.W_OK)
-                    }
-                except Exception as e:
-                    validation_result["directories"]["error"] = str(e)
+                # Directory access no longer relevant since analog_db removed
+                validation_result["directories"] = {
+                    "note": "Analog database removed - no directory validation needed"
+                }
 
             validation_result["ready"] = all([
-                GMAIL_AVAILABLE,
-                validation_result["dependencies"].get("gmail_service", False),
-                validation_result["dependencies"].get("analog_db", False),
-                validation_result["directories"].get("email_threads_writable", False)
+                DEPENDENCIES_AVAILABLE,
+                validation_result["dependencies"].get("gmail_service", False)
             ])
 
             return validation_result
@@ -586,8 +548,8 @@ class EmailThreadProcessor:
 # Simple factory function following CLAUDE.md principles
 def get_email_thread_processor(
     gmail_service=None,
-    base_path: Optional[Path] = None
-) -> Optional[EmailThreadProcessor]:
+    base_path: Path | None = None
+) -> EmailThreadProcessor | None:
     """Get or create EmailThreadProcessor instance."""
     try:
         return EmailThreadProcessor(gmail_service, base_path)

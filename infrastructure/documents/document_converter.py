@@ -8,17 +8,17 @@ Leverages existing PDF service infrastructure for text extraction and validation
 import hashlib
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import frontmatter
 from loguru import logger
 
 # Import existing PDF infrastructure
 try:
-    from pdf.pdf_validator import PDFValidator
-    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
     from pdf.ocr.ocr_coordinator import OCRCoordinator
     from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
+    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
+    from pdf.pdf_validator import PDFValidator
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
@@ -42,7 +42,7 @@ class DocumentConverter:
     def convert_pdf_to_markdown(
         self, 
         pdf_path: Path, 
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
         include_metadata: bool = True
     ) -> dict[str, Any]:
         """
@@ -197,7 +197,7 @@ class DocumentConverter:
             logger.warning(f"Hash calculation failed for {file_path}: {e}")
             return "unknown"
 
-    def _format_as_markdown(self, text: str, metadata: Optional[dict] = None) -> str:
+    def _format_as_markdown(self, text: str, metadata: dict | None = None) -> str:
         """Format text as markdown with optional YAML frontmatter."""
         try:
             if metadata:
@@ -251,7 +251,7 @@ class DocumentConverter:
     def convert_directory(
         self, 
         directory_path: Path, 
-        output_dir: Optional[Path] = None,
+        output_dir: Path | None = None,
         recursive: bool = False
     ) -> dict[str, Any]:
         """
@@ -348,7 +348,7 @@ class DocumentConverter:
 
 
 # Simple factory function following CLAUDE.md principles
-def get_document_converter(db_path: str = "emails.db") -> Optional[DocumentConverter]:
+def get_document_converter(db_path: str = "emails.db") -> DocumentConverter | None:
     """Get or create DocumentConverter instance."""
     try:
         return DocumentConverter(db_path)

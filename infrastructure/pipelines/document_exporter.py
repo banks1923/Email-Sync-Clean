@@ -14,8 +14,8 @@ import re
 from datetime import datetime
 from typing import Any
 
-from shared.simple_db import SimpleDB
 from shared.html_cleaner import extract_email_content
+from shared.simple_db import SimpleDB
 
 
 class DocumentExporter:

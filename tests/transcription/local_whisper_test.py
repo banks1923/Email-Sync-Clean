@@ -3,11 +3,11 @@
 Test local Whisper with small model on the specified files.
 """
 
+# Add project root to path
+import sys
 import time
 from pathlib import Path
 
-# Add project root to path
-import sys
 sys.path.append("/Users/jim/Projects/Email Sync")
 
 def test_local_whisper():
@@ -174,7 +174,7 @@ def filter_repetitions(text):
         
         # Skip sentences that are just repeated words
         words = sentence.split()
-        if len(words) > 3 and len(set(word.lower() for word in words)) <= 2:
+        if len(words) > 3 and len({word.lower() for word in words}) <= 2:
             continue  # Too repetitive
             
         filtered_sentences.append(sentence)

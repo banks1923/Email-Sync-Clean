@@ -15,7 +15,7 @@ except ImportError:
 class PDFProcessor:
     """Handles PDF text extraction and chunking operations"""
 
-    def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100):
+    def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100) -> None:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         # Logger is now imported globally from loguru

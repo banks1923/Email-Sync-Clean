@@ -7,7 +7,7 @@ Handles date-based organization, SHA-256 deduplication, and space optimization w
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -63,10 +63,10 @@ class EnhancedArchiveManager:
         self,
         file_path: Path,
         file_type: str = "document",
-        target_date: Optional[datetime] = None,
+        target_date: datetime | None = None,
         create_archive: bool = False,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Main entry point for archiving files with deduplication.
         
@@ -128,7 +128,7 @@ class EnhancedArchiveManager:
         source_directory: Path, 
         file_pattern: str = "*.pdf",
         file_type: str = "pdf"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Organize files from source directory by date with deduplication.
         
@@ -176,7 +176,7 @@ class EnhancedArchiveManager:
         
         return results
 
-    def check_duplicate(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def check_duplicate(self, file_path: Path) -> dict[str, Any] | None:
         """
         Check if file is duplicate and return information about original.
         
@@ -188,7 +188,7 @@ class EnhancedArchiveManager:
         """
         return self.originals_manager.check_duplicate(file_path)
 
-    def get_archive_stats(self) -> Dict[str, Any]:
+    def get_archive_stats(self) -> dict[str, Any]:
         """Get comprehensive archive statistics including space savings."""
         
         # Get basic archive stats
@@ -218,7 +218,7 @@ class EnhancedArchiveManager:
         
         return cleaned
 
-    def _calculate_space_savings(self, original_path: Path, organized_path: Path) -> Dict[str, Any]:
+    def _calculate_space_savings(self, original_path: Path, organized_path: Path) -> dict[str, Any]:
         """Calculate space savings from deduplication."""
         try:
             original_size = original_path.stat().st_size
@@ -287,7 +287,7 @@ class EnhancedArchiveManager:
         except Exception as e:
             logger.warning(f"Error updating space savings record: {e}")
 
-    def _get_space_savings_stats(self) -> Dict[str, Any]:
+    def _get_space_savings_stats(self) -> dict[str, Any]:
         """Get space savings statistics."""
         try:
             stats = self.db.fetch_one("""
@@ -318,7 +318,7 @@ class EnhancedArchiveManager:
             logger.error(f"Error getting space savings stats: {e}")
             return {"error": str(e)}
 
-    def _get_link_stats(self) -> Dict[str, Any]:
+    def _get_link_stats(self) -> dict[str, Any]:
         """Get link usage statistics."""
         try:
             stats = self.db.fetch("""

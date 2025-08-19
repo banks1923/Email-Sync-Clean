@@ -64,7 +64,7 @@ class TestEmbeddingsService:
 
         # Verify batch embeddings
         assert isinstance(embeddings, np.ndarray)
-        assert utilities.embeddings.shape == (3, 1024)
+        assert embeddings.shape == (3, 1024)
 
 
 class TestSearchService:
@@ -284,11 +284,12 @@ class TestServiceIntegration:
         """
         Initialize all services.
         """
-        from utilities.embeddings import get_embedding_service
-        from entity import EntityService
         from search import get_search_service
+
+        from entity import EntityService
         from shared.simple_db import SimpleDB
         from summarization import get_document_summarizer
+        from utilities.embeddings import get_embedding_service
 
         return {
             "embeddings": get_embedding_service(),
@@ -359,8 +360,10 @@ class TestServiceIntegration:
             doc_ids.append(doc_id)
 
         # Generate embeddings for query
+        from utilities.embeddings import get_embedding_service
+        embedding_service = get_embedding_service()
         query = "contract agreement"
-        query_embedding = utilities.embeddings.encode(query)
+        query_embedding = embedding_service.encode(query)
 
         assert query_embedding is not None
         assert query_embedding.shape == (1024,)

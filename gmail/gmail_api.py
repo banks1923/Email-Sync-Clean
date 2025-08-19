@@ -16,7 +16,7 @@ from .oauth import GmailAuth
 class GmailAPI:
     """Gmail API wrapper with timeout handling and message parsing."""
 
-    def __init__(self, timeout: int = 30):
+    def __init__(self, timeout: int = 30) -> None:
         """Initialize Gmail API client with authentication.
 
         Args:
@@ -346,7 +346,7 @@ class GmailAPI:
 
         attachments = []
 
-        def extract_attachments_from_parts(parts):
+        def extract_attachments_from_parts(parts) -> None:
             """Recursively extract attachment info from message parts"""
             for part in parts:
                 if "parts" in part:

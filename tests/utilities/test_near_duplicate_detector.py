@@ -1,10 +1,13 @@
 """Comprehensive tests for NearDuplicateDetector."""
 
-import pytest
 import numpy as np
+import pytest
 
 from utilities.deduplication.near_duplicate_detector import (
-    MinHasher, LSHIndex, NearDuplicateDetector, get_duplicate_detector
+    LSHIndex,
+    MinHasher,
+    NearDuplicateDetector,
+    get_duplicate_detector,
 )
 
 

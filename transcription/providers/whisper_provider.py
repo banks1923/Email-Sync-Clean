@@ -30,7 +30,7 @@ class WhisperProvider(BaseTranscriptionProvider):
     Direct interface to OpenAI Whisper without complex architecture.
     """
 
-    def __init__(self, model_name: str = "base", forensic_mode: bool = False):
+    def __init__(self, model_name: str = "base", forensic_mode: bool = False) -> None:
         """Initialize Whisper provider with model name.
         
         Args:

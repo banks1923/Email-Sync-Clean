@@ -185,7 +185,7 @@ def route_command(args):
     """Route parsed arguments to appropriate handler"""
     # Command dispatch table
     command_handlers = {
-        "search": lambda: search_emails(args.query, args.limit, mode=getattr(args, 'mode', 'hybrid')),
+        "search": lambda: search_emails(args.query, args.limit, mode=getattr(args, 'mode', 'database')),
         "process": lambda: process_emails(args.limit),
         "embed": lambda: embed_content(args.content_type, args.limit),
         "info": show_info,

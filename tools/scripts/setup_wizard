@@ -4,12 +4,13 @@ Email Sync System - Interactive Setup Wizard
 Guides users through initial configuration and setup
 """
 
-import os
-import sys
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Optional
+
 import questionary
 from rich.console import Console
 from rich.panel import Panel

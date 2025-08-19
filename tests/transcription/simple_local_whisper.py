@@ -6,6 +6,7 @@ Simple local Whisper test - minimal settings.
 import time
 from pathlib import Path
 
+
 def test_simple_local_whisper():
     """Test local Whisper with minimal settings."""
     

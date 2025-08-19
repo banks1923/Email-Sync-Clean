@@ -5,10 +5,11 @@ Finds similar content even with minor variations
 
 import hashlib
 import re
-from typing import List, Dict, Set, Tuple, Optional
 from collections import defaultdict
+
 import numpy as np
 from loguru import logger
+
 
 class MinHasher:
     """MinHash implementation for similarity detection"""
@@ -28,7 +29,7 @@ class MinHasher:
         # Generate hash functions (a, b parameters for universal hashing)
         self.permutations = self._generate_permutations()
         
-    def _generate_permutations(self) -> List[Tuple[int, int]]:
+    def _generate_permutations(self) -> list[tuple[int, int]]:
         """Generate permutation functions for MinHash"""
         # Use large prime for modulo
         self.prime = 4294967311  # Next prime after 2^32
@@ -41,7 +42,7 @@ class MinHasher:
             permutations.append((a, b))
         return permutations
         
-    def _shingle_text(self, text: str, k: int = 3) -> Set[int]:
+    def _shingle_text(self, text: str, k: int = 3) -> set[int]:
         """
         Convert text to k-shingles (k-grams)
         
@@ -151,7 +152,7 @@ class LSHIndex:
             bucket_id = (band_idx, band_hash)
             self.buckets[bucket_id].append(doc_id)
             
-    def find_similar(self, signature: np.ndarray, threshold: float = 0.5) -> List[Tuple[str, float]]:
+    def find_similar(self, signature: np.ndarray, threshold: float = 0.5) -> list[tuple[str, float]]:
         """
         Find documents similar to given signature
         
@@ -211,7 +212,7 @@ class NearDuplicateDetector:
         )
         self.processed_docs = {}
         
-    def add_document(self, doc_id: str, content: str, metadata: Dict = None):
+    def add_document(self, doc_id: str, content: str, metadata: dict = None):
         """
         Add document to duplicate detection index
         
@@ -229,7 +230,7 @@ class NearDuplicateDetector:
         }
         logger.debug(f"Added document {doc_id} to duplicate index")
         
-    def check_duplicate(self, content: str) -> List[Dict]:
+    def check_duplicate(self, content: str) -> list[dict]:
         """
         Check if content is duplicate/near-duplicate of existing documents
         
@@ -256,7 +257,7 @@ class NearDuplicateDetector:
             
         return results
         
-    def find_all_duplicates(self) -> Dict[str, List[str]]:
+    def find_all_duplicates(self) -> dict[str, list[str]]:
         """
         Find all duplicate groups in the index
         
@@ -284,7 +285,7 @@ class NearDuplicateDetector:
                 
         return duplicate_groups
         
-    def batch_deduplicate(self, documents: List[Dict]) -> Dict:
+    def batch_deduplicate(self, documents: list[dict]) -> dict:
         """
         Process batch of documents and identify duplicates
         
@@ -360,7 +361,7 @@ class NearDuplicateDetector:
 
 
 # Singleton instance
-_detector: Optional[NearDuplicateDetector] = None
+_detector: NearDuplicateDetector | None = None
 
 def get_duplicate_detector(threshold: float = 0.8) -> NearDuplicateDetector:
     """Get or create singleton duplicate detector"""

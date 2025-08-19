@@ -12,7 +12,7 @@ class BaseExtractor(ABC):
     Abstract base class for entity extraction providers.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
         self.validation_result = {"success": True}
 

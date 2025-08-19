@@ -14,16 +14,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from tools.scripts.cli.service_locator import get_locator
 
 
-def search_emails(query, limit=5, hybrid=True, mode="hybrid"):
-    """AI-Powered Unified Search: Searches across emails, PDFs, and transcriptions
+def search_emails(query, limit=5, hybrid=True, mode="database"):
+    """AI-Powered Database Search: Searches across emails, PDFs, and transcriptions
     
     Args:
         query: Search query string
         limit: Maximum number of results
-        hybrid: Whether to use hybrid search (legacy parameter, kept for compatibility)
-        mode: Search mode - 'database', 'analog', or 'hybrid'
+        hybrid: Whether to use hybrid search (legacy parameter, ignored)
+        mode: Search mode - always 'database' (analog removed)
     """
-    print(f"🤖 AI-Powered Unified Search for: '{query}' (mode: {mode})")
+    print(f"🤖 AI-Powered Database Search for: '{query}'")
     locator = get_locator()
 
     if hybrid:

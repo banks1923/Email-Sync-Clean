@@ -22,7 +22,7 @@ except ImportError:
 class EnhancedPDFProcessor:
     """PDF processor with OCR and legal metadata capabilities"""
 
-    def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100):
+    def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100) -> None:
         """Initialize with OCR support"""
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap

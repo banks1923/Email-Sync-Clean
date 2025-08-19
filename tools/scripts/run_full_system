@@ -214,7 +214,7 @@ class SystemRunner:
                 try:
                     content = email.get("content", "")[:2000]  # Limit content size
                     if content:
-                        vector = embedding_service.encode(content)
+                        embedding_service.encode(content)
                         success_count += 1
                 except Exception as e:
                     logger.warning(f"Could not generate embedding: {e}")
@@ -294,8 +294,8 @@ class SystemRunner:
         logger.info("🗄️ Populating vector store...")
         
         try:
-            from utilities.vector_store import get_vector_store
             from utilities.embeddings import get_embedding_service
+            from utilities.vector_store import get_vector_store
             
             db = SimpleDB()
             vector_store = get_vector_store()
@@ -347,7 +347,6 @@ class SystemRunner:
             pipeline = DataPipelineOrchestrator()
             
             # Check for documents in raw directory
-            import os
             raw_path = Path("data/raw")
             staged_path = Path("data/staged")
             
@@ -388,7 +387,7 @@ class SystemRunner:
         
         try:
             from datetime import timedelta
-            
+
             # Clean old logs (older than 7 days)
             log_dir = Path("logs")
             if log_dir.exists():
@@ -527,7 +526,7 @@ class SystemRunner:
                 logger.warning("Continuing without vector search...")
 
             # Run email sync
-            sync_result = self.sync_emails()
+            self.sync_emails()
 
             # Generate embeddings and populate vector store if we have Qdrant
             if qdrant_running:

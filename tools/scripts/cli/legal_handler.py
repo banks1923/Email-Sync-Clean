@@ -62,7 +62,7 @@ def process_legal_case(case_id: str, output_format: str = "text") -> None:
 
             # Show timeline summary
             timeline = result.get("timeline", {})
-            events = utilities.timeline.get("events", [])
+            events = timeline.get("events", [])
             if events:
                 print(f"\n📅 Timeline: {len(events)} events found")
                 print(f"  Date Range: {timeline.get('date_range', 'Unknown')}")
@@ -89,7 +89,7 @@ def generate_legal_timeline(case_id: str, output_file: str | None = None) -> Non
         service = LegalIntelligenceService()
         timeline = service.generate_case_timeline(case_id)
 
-        if not timeline or not utilities.timeline.get("events"):
+        if not timeline or not timeline.get("events"):
             print("❌ No timeline events found for this case")
             return
 
@@ -98,7 +98,7 @@ def generate_legal_timeline(case_id: str, output_file: str | None = None) -> Non
         print(f"Date Range: {timeline.get('date_range', 'Unknown')}")
         print("=" * 60)
 
-        events = utilities.timeline.get("events", [])
+        events = timeline.get("events", [])
         for event in events[:20]:  # Show first 20 events
             date = event.get("date", "Unknown date")
             desc = event.get("description", "")

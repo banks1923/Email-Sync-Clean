@@ -7,13 +7,12 @@ import os
 from typing import Any
 
 
-
 class EntityConfig:
     """
     Configuration manager for entity service.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Logger is now imported globally from loguru
         self.config = self._load_config()
         self.validation_result = self._validate_config()

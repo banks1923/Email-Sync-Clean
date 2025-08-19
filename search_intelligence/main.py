@@ -8,7 +8,6 @@ document similarity analysis, entity extraction caching, and content clustering.
 import hashlib
 import json
 import re
-import uuid
 from datetime import datetime
 from typing import Any
 
@@ -24,24 +23,15 @@ from summarization import get_document_summarizer
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 
-# Import analog database search interface
-try:
-    from analog_db.search_interface import SearchInterface
-    ANALOG_DB_AVAILABLE = True
-except ImportError:
-    ANALOG_DB_AVAILABLE = False
-    logger.warning("Analog database search not available")
-
 
 class SearchIntelligenceService:
     """Unified search intelligence service"""
 
-    def __init__(self, db_path: str = "emails.db", enable_analog_db: bool = True):
+    def __init__(self, db_path: str = "emails.db"):
         """Initialize Search Intelligence Service
         
         Args:
             db_path: Path to the SQLite database
-            enable_analog_db: Whether to enable analog database (markdown) search
         """
         # Logger is now imported globally from loguru
         self.db = SimpleDB(db_path)
@@ -62,16 +52,6 @@ class SearchIntelligenceService:
             self.embedding_service = None
             
         self.summarizer = get_document_summarizer()
-        
-        # Initialize analog database search if available and enabled
-        self.analog_search = None
-        if enable_analog_db and ANALOG_DB_AVAILABLE:
-            try:
-                from pathlib import Path
-                self.analog_search = SearchInterface(base_path=Path.cwd())
-                logger.info("Analog database search initialized")
-            except Exception as e:
-                logger.warning(f"Failed to initialize analog database search: {e}")
 
         # Query expansion configuration
         self.query_synonyms = {
@@ -106,60 +86,29 @@ class SearchIntelligenceService:
     def unified_search(
         self,
         query: str,
-        mode: str = "hybrid",
         limit: int = 10,
         use_expansion: bool = True,
         filters: dict | None = None,
     ) -> list[dict[str, Any]]:
-        """Unified search supporting both database and analog (markdown) search
+        """Unified database search with query preprocessing
         
         Args:
             query: Search query string
-            mode: Search mode - 'database', 'analog', or 'hybrid' (default)
             limit: Maximum number of results
             use_expansion: Whether to expand query with synonyms
             filters: Additional filters for search
         
         Returns:
-            List of search results from the selected source(s)
+            List of search results from the database
         """
-        results = []
-        
         # Preprocess query if needed
         if use_expansion:
             query = self._preprocess_and_expand_query(query)
         
-        if mode == "database" or mode == "hybrid":
-            # Search SQLite database
-            db_results = self.smart_search_with_preprocessing(
-                query, limit, use_expansion=False, filters=filters
-            )
-            results.extend(self._add_source_tag(db_results, "database"))
-        
-        if (mode == "analog" or mode == "hybrid") and self.analog_search:
-            # Search analog database (markdown files)
-            try:
-                # Convert filters to analog format if needed
-                analog_filters = self._convert_filters_to_analog(filters) if filters else {}
-                
-                # Perform analog search
-                analog_results = self.analog_search.hybrid_search(
-                    query=query,
-                    metadata_filters=analog_filters,
-                    limit=limit,
-                    use_vector=bool(self.vector_store)
-                )
-                
-                # Convert analog results to standard format
-                standardized = self._standardize_analog_results(analog_results)
-                results.extend(self._add_source_tag(standardized, "analog"))
-                
-            except Exception as e:
-                logger.error(f"Analog search failed: {e}")
-        
-        # Remove duplicates and re-rank if hybrid mode
-        if mode == "hybrid" and len(results) > 0:
-            results = self._merge_and_rank_results(results, limit)
+        # Search SQLite database
+        results = self.smart_search_with_preprocessing(
+            query, limit, use_expansion=False, filters=filters
+        )
         
         return results[:limit]
     
@@ -171,77 +120,6 @@ class SearchIntelligenceService:
             processed = f"{processed} {' '.join(expanded_terms)}"
         return processed
     
-    def _add_source_tag(self, results: list[dict], source: str) -> list[dict]:
-        """Add source tag to results"""
-        for result in results:
-            result["search_source"] = source
-        return results
-    
-    def _convert_filters_to_analog(self, filters: dict) -> dict:
-        """Convert standard filters to analog database format"""
-        analog_filters = {}
-        
-        # Map common filter fields
-        if "content_type" in filters:
-            analog_filters["doc_type"] = filters["content_type"]
-        if "sender" in filters:
-            analog_filters["sender"] = filters["sender"]
-        if "created_after" in filters:
-            analog_filters["since"] = filters["created_after"]
-        if "created_before" in filters:
-            analog_filters["until"] = filters["created_before"]
-        if "tags" in filters:
-            analog_filters["tags"] = filters["tags"]
-            
-        return analog_filters
-    
-    def _standardize_analog_results(self, analog_results: list[dict]) -> list[dict]:
-        """Convert analog search results to standard format"""
-        standardized = []
-        
-        for result in analog_results:
-            metadata = result.get("metadata", {})
-            
-            # Build standardized result
-            std_result = {
-                "content_id": metadata.get("doc_id", str(uuid.uuid4())),
-                "title": metadata.get("title", "Untitled"),
-                "content": result.get("content_preview", ""),
-                "content_type": metadata.get("doc_type", "document"),
-                "created_time": metadata.get("date_created"),
-                "score": result.get("score", 0.0),
-                "file_path": result.get("file_path"),
-                "metadata": metadata
-            }
-            
-            # Add sender info if it's an email
-            if metadata.get("doc_type") == "email":
-                std_result["sender"] = metadata.get("sender", "")
-                std_result["recipient"] = metadata.get("recipient", "")
-            
-            standardized.append(std_result)
-        
-        return standardized
-    
-    def _merge_and_rank_results(self, results: list[dict], limit: int) -> list[dict]:
-        """Merge and re-rank results from multiple sources"""
-        # Remove exact duplicates based on content_id
-        seen_ids = set()
-        unique_results = []
-        
-        for result in results:
-            content_id = result.get("content_id")
-            if content_id and content_id not in seen_ids:
-                seen_ids.add(content_id)
-                unique_results.append(result)
-            elif not content_id:
-                # Keep results without IDs (shouldn't happen but be safe)
-                unique_results.append(result)
-        
-        # Re-rank by score
-        unique_results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
-        
-        return unique_results[:limit]
 
     def smart_search_with_preprocessing(
         self,
@@ -449,9 +327,9 @@ class SearchIntelligenceService:
         try:
             # Query relationship_cache
             query = """
-                SELECT cache_data, created_at
+                SELECT cached_data, created_at
                 FROM relationship_cache
-                WHERE source_id = ? AND cache_type = 'entities'
+                WHERE source_id = ? AND relationship_type = 'entities'
                 ORDER BY created_at DESC LIMIT 1
             """
             result = self.db.fetch(query, (doc_id,))
@@ -476,8 +354,8 @@ class SearchIntelligenceService:
             # Insert or update cache
             query = """
                 INSERT OR REPLACE INTO relationship_cache
-                (source_id, target_id, cache_type, cache_data, created_at, ttl_seconds)
-                VALUES (?, ?, 'entities', ?, datetime('now'), 604800)
+                (source_id, target_id, relationship_type, cached_data, created_at)
+                VALUES (?, ?, 'entities', ?, datetime('now'))
             """
             self.db.execute(query, (doc_id, doc_id, cache_data))
 

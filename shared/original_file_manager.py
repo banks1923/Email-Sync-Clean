@@ -11,12 +11,11 @@ import shutil
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
 
 from loguru import logger
 
-from .simple_db import SimpleDB
 from .date_utils import parse_date_from_filename
+from .simple_db import SimpleDB
 
 
 class OriginalFileManager:
@@ -108,7 +107,7 @@ class OriginalFileManager:
                 hasher.update(chunk)
         return hasher.hexdigest()
 
-    def check_duplicate(self, file_path: Path) -> Optional[str]:
+    def check_duplicate(self, file_path: Path) -> str | None:
         """
         Check if file is duplicate by content hash.
         
@@ -127,7 +126,7 @@ class OriginalFileManager:
         return None
 
     def organize_file(self, source_path: Path, file_type: str, 
-                     target_date: Optional[datetime] = None) -> Tuple[Path, bool]:
+                     target_date: datetime | None = None) -> tuple[Path, bool]:
         """
         Organize file into date-based structure.
         
@@ -322,7 +321,7 @@ class OriginalFileManager:
                 if not self.verify_link(link_path):
                     # Mark as invalid in database
                     self.db.execute(
-                        "UPDATE file_links SET is_valid = 0 WHERE id = ?",
+                        "UPDATE file_links SET is_valid = 0 WHERE content_id = ?",
                         (link_record['id'],)
                     )
                     
@@ -339,7 +338,7 @@ class OriginalFileManager:
             logger.error(f"Error during link cleanup: {e}")
             return cleaned_count
 
-    def create_link_or_copy(self, source_path: Path, target_path: Path) -> Tuple[bool, str]:
+    def create_link_or_copy(self, source_path: Path, target_path: Path) -> tuple[bool, str]:
         """
         Try to create link, fall back to copy if linking fails.
         
@@ -369,7 +368,7 @@ class OriginalFileManager:
             logger.error(f"File copy also failed: {e}")
             return False, "failed"
 
-    def _create_email_thread_directory(self, file_date: datetime, thread_id: Optional[str] = None) -> Path:
+    def _create_email_thread_directory(self, file_date: datetime, thread_id: str | None = None) -> Path:
         """
         Create thread-based directory structure for emails.
         

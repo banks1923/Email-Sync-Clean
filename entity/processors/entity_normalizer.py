@@ -15,11 +15,11 @@ class EntityNormalizer:
     Advanced entity deduplication and normalization.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Logger is now imported globally from loguru
         self._initialize_patterns()
 
-    def _initialize_patterns(self):
+    def _initialize_patterns(self) -> None:
         """
         Initialize normalization patterns.
         """
@@ -337,7 +337,7 @@ class EntityNormalizer:
             },
         }
 
-    def _merge_entities(self, consolidated: dict, new_entity: dict):
+    def _merge_entities(self, consolidated: dict, new_entity: dict) -> None:
         """
         Merge a new entity into an existing consolidated entity.
         """

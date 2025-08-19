@@ -3,10 +3,10 @@ Unified logging configuration for all services.
 Simple, consistent logging that actually helps debugging.
 """
 
+import logging
 import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-
 
 
 def setup_logging(

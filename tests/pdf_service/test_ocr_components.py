@@ -7,14 +7,14 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
+from pdf.ocr.ocr_coordinator import OCRCoordinator
+from pdf.ocr.page_processor import PageByPageProcessor
+from pdf.pdf_processor import PDFProcessor
+
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-from pdf.ocr.ocr_coordinator import OCRCoordinator
-from pdf.ocr.page_processor import PageByPageProcessor
-from pdf.pdf_processor import PDFProcessor
 
 
 class TestPageByPageProcessor:

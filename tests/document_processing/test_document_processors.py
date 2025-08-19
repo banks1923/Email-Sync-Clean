@@ -10,15 +10,15 @@ from unittest.mock import patch
 
 import pytest
 
-# Add project root to path
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 from infrastructure.documents.format_detector import FormatDetector
 from infrastructure.documents.lifecycle_manager import DocumentLifecycleManager
 from infrastructure.documents.naming_convention import NamingConvention
 from infrastructure.documents.processors import DocxProcessor, MarkdownProcessor, TextProcessor
+
+# Add project root to path
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 
 @pytest.mark.unit
@@ -74,7 +74,7 @@ class TestTextProcessor:
         assert "\x00" not in normalized
         assert "\n\n\n\n" not in normalized  # Excessive blanks (more than 2) removed
         lines = normalized.split("\n")
-        assert len([l for l in lines if l]) >= 3  # At least 3 non-empty lines
+        assert len([line for line in lines if line]) >= 3  # At least 3 non-empty lines
 
 
 @pytest.mark.unit

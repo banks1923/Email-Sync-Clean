@@ -3,9 +3,9 @@
 Direct OpenAI Whisper API test for the specified files.
 """
 
+import json
 import os
 import time
-import json
 from pathlib import Path
 
 try:

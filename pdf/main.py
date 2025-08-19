@@ -44,7 +44,7 @@ _upload_semaphore = threading.Semaphore(MAX_CONCURRENT_UPLOADS)
 class PDFService(IService):
     """Consolidated PDF service with integrated processing capabilities"""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "emails.db") -> None:
         self.db_path = db_path
         self.health_monitor = DatabaseHealthMonitor(db_path)
         self.error_recovery = DatabaseErrorRecovery(db_path)
@@ -193,7 +193,7 @@ class PDFService(IService):
 
         return results
 
-    def _update_results(self, results: dict[str, Any], pdf_file: str, result: dict[str, Any]):
+    def _update_results(self, results: dict[str, Any], pdf_file: str, result: dict[str, Any]) -> None:
         """Update results counters based on processing result"""
         if result.get("success"):
             if result.get("skipped"):
@@ -327,7 +327,7 @@ class PDFService(IService):
             logger.error(f"Internal processing failed for {pdf_path}: {str(e)}")
             return {"success": False, "error": f"Processing failed: {str(e)}"}
 
-    def _handle_database_alert(self, alert):
+    def _handle_database_alert(self, alert) -> None:
         """Handle database alerts from error recovery system"""
         logger.warning(
             f"Database Alert [{alert.severity.value}] {alert.error_type}: {alert.message}"

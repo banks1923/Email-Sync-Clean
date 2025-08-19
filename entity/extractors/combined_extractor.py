@@ -19,7 +19,7 @@ class CombinedExtractor(BaseExtractor):
     Combined extractor using both spaCy NLP and legal patterns.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("combined")
         # Logger is now imported globally from loguru
 
@@ -39,7 +39,7 @@ class CombinedExtractor(BaseExtractor):
         # Validate at least one extractor is available
         self._validate_extractors()
 
-    def _validate_extractors(self):
+    def _validate_extractors(self) -> None:
         """
         Validate that at least one extractor is available.
         """

@@ -17,9 +17,11 @@ Test Categories:
 
 import os
 import sqlite3
-import pytest
 from unittest.mock import patch
-from hypothesis import given, strategies as st, settings, Verbosity
+
+import pytest
+from hypothesis import Verbosity, given, settings
+from hypothesis import strategies as st
 
 from shared.simple_db import SimpleDB
 
@@ -615,7 +617,7 @@ class TestPerformance:
     def test_large_batch_performance(self, simple_db):
         """Test performance with large batch operations."""
         import time
-        
+
         # Generate large dataset
         content_list = [
             {"content_type": "email", "title": f"Email {i}", "content": f"Content {i}"}
@@ -634,7 +636,7 @@ class TestPerformance:
     def test_search_performance(self, simple_db):
         """Test search performance with large dataset."""
         import time
-        
+
         # Add test data
         for i in range(1000):
             simple_db.add_content(

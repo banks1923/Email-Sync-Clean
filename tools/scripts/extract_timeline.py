@@ -110,7 +110,7 @@ Examples:
 
     # Set logging level
     if args.verbose:
-        logging.getLogger().setLevel("DEBUG")
+        logger.level("DEBUG")
 
     # Find documents
     document_paths = find_exported_documents(args.export_dir)

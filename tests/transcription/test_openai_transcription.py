@@ -4,12 +4,14 @@ Test OpenAI transcription on specified files.
 """
 
 import json
-import time
-from pathlib import Path
-from loguru import logger
 
 # Add project root to path
 import sys
+import time
+from pathlib import Path
+
+from loguru import logger
+
 sys.path.append("/Users/jim/Projects/Email Sync")
 
 def test_openai_transcription():
@@ -25,9 +27,9 @@ def test_openai_transcription():
     print("=" * 50)
     
     try:
-        from transcription.main import TranscriptionService
         from transcription.config import TranscriptionMode
-        
+        from transcription.main import TranscriptionService
+
         # Initialize service
         service = TranscriptionService()
         
@@ -147,7 +149,7 @@ def test_openai_transcription():
                 print(f"   Average Quality Score: {avg_quality:.3f}")
             
             # Show engines used
-            engines = set(r["engine"] for r in successful)
+            engines = {r["engine"] for r in successful}
             print(f"   Engines Used: {', '.join(engines)}")
             
             # Show brief content of transcriptions

@@ -10,7 +10,6 @@ import re
 import unicodedata
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
 
 from loguru import logger
 
@@ -54,7 +53,7 @@ class MarkdownNamingUtils:
         """Initialize naming utilities."""
         self.logger = logger.bind(service="naming_utils")
 
-    def slugify(self, text: str, max_length: Optional[int] = None) -> str:
+    def slugify(self, text: str, max_length: int | None = None) -> str:
         """
         Convert text to URL-safe slug format for filenames.
 
@@ -134,7 +133,7 @@ class MarkdownNamingUtils:
 
         return filename
 
-    def truncate_filename(self, filename: str, max_length: Optional[int] = None) -> str:
+    def truncate_filename(self, filename: str, max_length: int | None = None) -> str:
         """
         Truncate filename while preserving extension.
 
@@ -174,7 +173,7 @@ class MarkdownNamingUtils:
         return f"{truncated_stem}{suffix}"
 
     def generate_document_filename(
-        self, title: str, doc_type: str = "document", date: Optional[datetime] = None
+        self, title: str, doc_type: str = "document", date: datetime | None = None
     ) -> str:
         """
         Generate filename for documents: YYYY-MM-DD_descriptive-name.md
@@ -254,7 +253,7 @@ class MarkdownNamingUtils:
         self.logger.debug(f"Generated email thread filename: {filename}")
         return filename
 
-    def extract_date_from_filename(self, filename: str) -> Optional[datetime]:
+    def extract_date_from_filename(self, filename: str) -> datetime | None:
         """
         Extract date from filename if it follows date-prefixed convention.
 
@@ -397,7 +396,7 @@ class MarkdownNamingUtils:
         return new_filename
 
     def resolve_thread_collision(
-        self, base_path: Path, subject: str, thread_id: str = "", participants: List[str] = None
+        self, base_path: Path, subject: str, thread_id: str = "", participants: list[str] = None
     ) -> str:
         """
         Special collision resolution for email threads with same subject.
@@ -440,7 +439,7 @@ class MarkdownNamingUtils:
 
     def find_similar_filenames(
         self, base_path: Path, filename: str, threshold: float = 0.8
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Find existing files with similar names (potential duplicates).
 
@@ -505,7 +504,7 @@ class MarkdownNamingUtils:
 class CollisionResolver:
     """Dedicated class for handling filename collisions and duplicates."""
 
-    def __init__(self, naming_utils: Optional[MarkdownNamingUtils] = None):
+    def __init__(self, naming_utils: MarkdownNamingUtils | None = None):
         """Initialize collision resolver."""
         self.naming_utils = naming_utils or MarkdownNamingUtils()
         self.logger = logger.bind(service="collision_resolver")
@@ -533,7 +532,7 @@ class CollisionResolver:
 
     def check_potential_duplicates(
         self, target_path: Path, similarity_threshold: float = 0.8
-    ) -> List[Path]:
+    ) -> list[Path]:
         """
         Check for potential duplicate files based on name similarity.
 
@@ -550,7 +549,7 @@ class CollisionResolver:
 
         return [target_path.parent / name for name in similar_names]
 
-    def suggest_resolution_strategies(self, collision_path: Path) -> List[str]:
+    def suggest_resolution_strategies(self, collision_path: Path) -> list[str]:
         """
         Suggest resolution strategies for a collision.
 
@@ -807,7 +806,7 @@ class FilenameValidator:
 
 
 # Convenience functions for common operations
-def slugify_text(text: str, max_length: Optional[int] = None) -> str:
+def slugify_text(text: str, max_length: int | None = None) -> str:
     """Convenience function to slugify text."""
     return MarkdownNamingUtils().slugify(text, max_length)
 
@@ -832,7 +831,7 @@ def resolve_collision(target_path: Path, strategy: str = "counter") -> Path:
     return CollisionResolver().resolve_collision(target_path, strategy)
 
 
-def check_for_duplicates(target_path: Path, similarity_threshold: float = 0.8) -> List[Path]:
+def check_for_duplicates(target_path: Path, similarity_threshold: float = 0.8) -> list[Path]:
     """Convenience function to check for potential duplicates."""
     return CollisionResolver().check_potential_duplicates(target_path, similarity_threshold)
 

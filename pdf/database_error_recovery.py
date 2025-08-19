@@ -51,7 +51,7 @@ class DatabaseErrorRecovery:
     - Circuit breaker pattern for connection failures
     """
 
-    def __init__(self, db_path: str, backup_dir: str = "backups"):
+    def __init__(self, db_path: str, backup_dir: str = "backups") -> None:
         """
         Initialize database error recovery system
 
@@ -314,7 +314,7 @@ class DatabaseErrorRecovery:
             ),
         }
 
-    def add_alert_callback(self, callback: Callable[[DatabaseAlert], None]):
+    def add_alert_callback(self, callback: Callable[[DatabaseAlert], None]) -> None:
         """Add callback function for alert notifications"""
         self.alert_callbacks.append(callback)
 
@@ -363,7 +363,7 @@ class DatabaseErrorRecovery:
 
         return True
 
-    def _record_failure(self):
+    def _record_failure(self) -> None:
         """Record a database operation failure"""
         with self._lock:
             self.failure_count += 1
@@ -386,7 +386,7 @@ class DatabaseErrorRecovery:
                     f"Database circuit breaker opened after {self.failure_count} consecutive failures",
                 )
 
-    def _reset_circuit_breaker(self):
+    def _reset_circuit_breaker(self) -> None:
         """Reset circuit breaker state after successful operation"""
         if self.failure_count > 0 or self.circuit_open:
             with self._lock:
@@ -412,7 +412,7 @@ class DatabaseErrorRecovery:
         remaining = max(0, self.circuit_recovery_timeout - elapsed)
         return int(remaining)
 
-    def _handle_database_locked_error(self, operation_name: str, attempt: int):
+    def _handle_database_locked_error(self, operation_name: str, attempt: int) -> None:
         """Handle database locked errors"""
         logger.warning(f"Database locked during {operation_name} (attempt {attempt + 1})")
 
@@ -423,7 +423,7 @@ class DatabaseErrorRecovery:
                 f"Database lock detected during {operation_name}",
             )
 
-    def _handle_missing_table_error(self, operation_name: str, error: Exception):
+    def _handle_missing_table_error(self, operation_name: str, error: Exception) -> None:
         """Handle missing table errors"""
         logger.error(f"Missing table error in {operation_name}: {str(error)}")
 
@@ -433,7 +433,7 @@ class DatabaseErrorRecovery:
             f"Database schema error in {operation_name}: {str(error)}",
         )
 
-    def _handle_disk_io_error(self, operation_name: str, error: Exception, critical: bool):
+    def _handle_disk_io_error(self, operation_name: str, error: Exception, critical: bool) -> None:
         """Handle disk I/O errors"""
         logger.error(f"Disk I/O error in {operation_name}: {str(error)}")
 
@@ -448,7 +448,7 @@ class DatabaseErrorRecovery:
         error_type: str,
         message: str,
         metadata: dict | None = None,
-    ):
+    ) -> None:
         """Send alert through configured callbacks"""
         alert = DatabaseAlert(
             timestamp=datetime.now(),
@@ -478,7 +478,7 @@ class DatabaseErrorRecovery:
             f"DATABASE ALERT [{severity.value}] {error_type}: {message}",
         )
 
-    def _cleanup_old_backups(self):
+    def _cleanup_old_backups(self) -> None:
         """Remove backups older than retention period"""
         try:
             cutoff_date = datetime.now() - timedelta(days=self.backup_retention_days)

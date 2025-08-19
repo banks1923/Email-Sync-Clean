@@ -179,7 +179,7 @@ def filter_repetitions(text):
         
         # Skip sentences that are just repeated words
         words = sentence.split()
-        if len(words) > 3 and len(set(word.lower() for word in words)) <= 2:
+        if len(words) > 3 and len({word.lower() for word in words}) <= 2:
             continue  # Too repetitive
             
         filtered_sentences.append(sentence)
@@ -202,7 +202,7 @@ def filter_segment_repetitions(segments):
         # Skip very repetitive segments
         words = text.split()
         if len(words) > 3:
-            unique_words = set(word.lower() for word in words)
+            unique_words = {word.lower() for word in words}
             if len(unique_words) <= 2:  # Too repetitive
                 continue
         

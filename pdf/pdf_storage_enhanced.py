@@ -14,7 +14,7 @@ from shared.simple_db import SimpleDB
 class EnhancedPDFStorage:
     """Enhanced PDF storage with metadata support"""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         self.db = SimpleDB(db_path)
 

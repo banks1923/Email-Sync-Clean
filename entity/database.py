@@ -10,7 +10,7 @@ from shared.simple_db import SimpleDB
 
 
 class EntityDatabase:
-    def __init__(self, db_path="emails.db"):
+    def __init__(self, db_path="emails.db") -> None:
         self.db = SimpleDB(db_path)
         self.db_path = db_path
         self.init_result = self._ensure_entities_table()
@@ -49,14 +49,21 @@ class EntityDatabase:
                 ("role_type", "TEXT"),
             ]
 
+            # Check which columns already exist
+            existing_columns = self.db.fetch(
+                "PRAGMA table_info(email_entities)"
+            )
+            existing_column_names = {col['name'] for col in existing_columns}
+            
             for column_name, column_def in new_columns:
-                try:
-                    self.db.execute(
-                        f"ALTER TABLE email_entities ADD COLUMN {column_name} {column_def}"
-                    )
-                except Exception:
-                    # Column already exists, that's fine
-                    pass
+                if column_name not in existing_column_names:
+                    try:
+                        self.db.execute(
+                            f"ALTER TABLE email_entities ADD COLUMN {column_name} {column_def}"
+                        )
+                    except Exception:
+                        # Column already exists or other error, skip silently
+                        pass
 
             # Create consolidated entities table for deduplicated entities
             self.db.execute(

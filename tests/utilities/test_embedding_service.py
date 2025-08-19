@@ -1,9 +1,10 @@
 """Comprehensive tests for EmbeddingService."""
 
-import pytest
-import numpy as np
-import torch
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
+import torch
 
 from utilities.embeddings.embedding_service import EmbeddingService, get_embedding_service
 
@@ -260,7 +261,7 @@ class TestEmbeddingService:
         
         mock_tokenizer_instance.side_effect = mock_tokenizer_side_effect
         
-        def mock_model_side_effect(input_ids=None, attention_mask=None, **kwargs):
+        def mock_model_side_effect(input_ids=None, **kwargs):
             batch_size = input_ids.shape[0] if input_ids is not None else 1
             mock_outputs = MagicMock()
             mock_outputs.last_hidden_state = torch.randn(batch_size, 3, 1024)

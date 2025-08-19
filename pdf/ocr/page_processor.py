@@ -15,7 +15,7 @@ from .rasterizer import PDFRasterizer
 class PageByPageProcessor:
     """Process large PDFs page by page to manage memory usage."""
 
-    def __init__(self, batch_size: int = 5, max_memory_mb: int = 500):
+    def __init__(self, batch_size: int = 5, max_memory_mb: int = 500) -> None:
         """
         Initialize processor with memory constraints.
 

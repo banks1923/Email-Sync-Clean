@@ -26,7 +26,7 @@ except ImportError:
 class OCREngine:
     """Performs OCR on images with enhancement capabilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.available = TESSERACT_AVAILABLE
         self.cv2_available = CV2_AVAILABLE
 

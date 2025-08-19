@@ -22,7 +22,7 @@ from utilities.vector_store import get_vector_store
 # Logger is now imported globally from loguru
 
 
-def get_orphaned_vectors(vector_store, db) -> dict:
+def get_orphaned_vectors(db) -> dict:
     """Find vectors that don't have corresponding content in database"""
     try:
         # Get all content IDs from database
@@ -32,15 +32,16 @@ def get_orphaned_vectors(vector_store, db) -> dict:
         logger.info(f"Database has {len(valid_content_ids)} content records")
 
         # Get vector count from Qdrant
-        vector_count = utilities.vector_store.count()
+        vector_store = get_vector_store()
+        vector_count = vector_store.count()
         logger.info(f"Vector store has {vector_count} vectors")
 
         # Get all vector IDs from Qdrant (using scroll to get all)
         try:
             # Note: This is a simplified approach. In a real production system,
             # you'd want to use scroll/pagination for very large collections
-            all_points = utilities.vector_store.client.scroll(
-                collection_name=utilities.vector_store.collection,
+            all_points = vector_store.client.scroll(
+                collection_name=vector_store.collection,
                 limit=10000,  # Adjust based on your collection size
                 with_payload=True,
                 with_vectors=False,
@@ -93,7 +94,7 @@ def remove_orphaned_vectors(vector_store, orphaned_vector_ids: list, dry_run: bo
             stats["removed"] += len(batch)
         else:
             try:
-                utilities.vector_store.delete_many(batch)
+                vector_store.delete_many(batch)
                 stats["removed"] += len(batch)
                 logger.debug(f"Deleted batch of {len(batch)} vectors")
 
@@ -107,7 +108,8 @@ def remove_orphaned_vectors(vector_store, orphaned_vector_ids: list, dry_run: bo
 def verify_synchronization(vector_store, db) -> dict:
     """Verify that vector store is now synchronized with database"""
     try:
-        vector_count = utilities.vector_store.count()
+        vector_store = get_vector_store()
+        vector_count = vector_store.count()
         content_count = db.fetch_one("SELECT COUNT(*) as count FROM content")["count"]
 
         # Check for remaining orphaned vectors

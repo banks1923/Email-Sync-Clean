@@ -12,13 +12,12 @@ Focuses on core graph operations, not edge cases.
 import os
 import sys
 
+from knowledge_graph import get_knowledge_graph_service, get_similarity_analyzer
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-from knowledge_graph import get_knowledge_graph_service, get_similarity_analyzer
 
 
 class TestKnowledgeGraphCore:

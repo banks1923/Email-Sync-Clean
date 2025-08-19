@@ -7,14 +7,14 @@ import os
 import sys
 import tempfile
 
+from pdf.main import PDFService
+from pdf.ocr import OCRCoordinator, PageByPageProcessor
+from pdf.ocr.validator import PDFValidator
+
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-from pdf.main import PDFService
-from pdf.ocr import OCRCoordinator, PageByPageProcessor
-from pdf.ocr.validator import PDFValidator
 
 
 class TestOCRPipelineIntegration:

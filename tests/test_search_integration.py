@@ -27,7 +27,7 @@ def test_search_intelligence():
         import os
         os.environ['DISABLE_VECTOR_STORE'] = 'true'
         
-        service = SearchIntelligenceService(enable_analog_db=True)
+        service = SearchIntelligenceService()
         print("✅ Service initialized")
     except Exception as e:
         print(f"⚠️ Service initialization warning: {e}")
@@ -37,12 +37,6 @@ def test_search_intelligence():
     if not service:
         print("❌ Could not initialize service")
         return False
-    
-    # Check analog search availability
-    if service.analog_search:
-        print("✅ Analog database search is available")
-    else:
-        print("⚠️ Analog database search not available")
     
     # Check unified search method
     if hasattr(service, 'unified_search'):
@@ -54,8 +48,6 @@ def test_search_intelligence():
     # Test helper methods
     test_methods = [
         '_preprocess_and_expand_query',
-        '_convert_filters_to_analog',
-        '_standardize_analog_results',
         '_merge_and_rank_results'
     ]
     

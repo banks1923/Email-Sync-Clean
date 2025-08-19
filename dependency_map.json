@@ -1,0 +1,2133 @@
+{
+  "modules": [
+    "reindex_content",
+    "dependency_mapper",
+    "knowledge_graph.similarity_integration",
+    "knowledge_graph",
+    "knowledge_graph.timeline_relationships",
+    "knowledge_graph.topic_clustering",
+    "knowledge_graph.main",
+    "knowledge_graph.similarity_analyzer",
+    "knowledge_graph.graph_queries",
+    "tools.cli.health_monitor",
+    "tools.cli.dedup_handler",
+    "tools.scripts.extract_timeline",
+    "tools.scripts.legal_timeline_export",
+    "tools.scripts.export_documents",
+    "tools.scripts.clean_exported_docs",
+    "tools.scripts.check_qdrant_documents",
+    "tools.scripts",
+    "tools.scripts.sync_vector_store",
+    "tools.scripts.clean_bad_transcripts",
+    "tools.scripts.migrate_to_loguru_bowler",
+    "tools.scripts.check_documents_in_vector",
+    "tools.scripts.process_embeddings",
+    "tools.scripts.cli.timeline_handler",
+    "tools.scripts.cli",
+    "tools.scripts.cli.process_handler",
+    "tools.scripts.cli.cli_main",
+    "tools.scripts.cli.search_handler",
+    "tools.scripts.cli.docs_handler",
+    "tools.scripts.cli.legal_handler",
+    "tools.scripts.cli.info_handler",
+    "tools.scripts.cli.transcription_handler",
+    "tools.scripts.cli.service_locator",
+    "tools.scripts.cli.upload_handler",
+    "tools.scripts.cli.notes_handler",
+    "tools.scripts.cli.intelligence_handler",
+    "transcription",
+    "transcription.main",
+    "transcription.providers.base_provider",
+    "transcription.providers",
+    "transcription.providers.whisper_provider",
+    "legal_intelligence",
+    "legal_intelligence.main",
+    "entity.config",
+    "entity.database",
+    "entity",
+    "entity.main",
+    "entity.processors.entity_normalizer",
+    "entity.processors",
+    "entity.extractors.legal_extractor",
+    "entity.extractors.extractor_factory",
+    "entity.extractors",
+    "entity.extractors.spacy_extractor",
+    "entity.extractors.base_extractor",
+    "entity.extractors.relationship_extractor",
+    "entity.extractors.combined_extractor",
+    "summarization",
+    "summarization.engine",
+    "tests.test_core_services_integration",
+    "tests.conftest",
+    "tests.test_search_integration",
+    "tests.test_intelligence_schema",
+    "tests",
+    "tests.test_pipeline_orchestrator",
+    "tests.test_timeline_extractor",
+    "tests.shared_test_fixtures",
+    "tests.smoke.conftest",
+    "tests.smoke.test_user_workflows",
+    "tests.smoke.test_system_health",
+    "tests.transcription.test_hybrid_transcription",
+    "tests.transcription.test_openai_transcription",
+    "tests.transcription.transcribe_openai_batch",
+    "tests.transcription.local_whisper_test",
+    "tests.transcription.transcribe_openai_quick",
+    "tests.transcription.direct_openai_test",
+    "tests.transcription.test_config",
+    "tests.transcription.simple_local_whisper",
+    "tests.transcription.fix_transcription_test",
+    "tests.transcription.transcribe_openai_archive",
+    "tests.transcription.test_config_quick",
+    "tests.pdf_service.conftest",
+    "tests.pdf_service",
+    "tests.pdf_service.test_ocr_components",
+    "tests.pdf_service.test_large_pdf_handling",
+    "tests.integration.test_pipeline_directory_flow",
+    "tests.integration.test_ocr_pipeline",
+    "tests.integration.test_intelligence_tables_population",
+    "tests.integration",
+    "tests.integration.test_pdf_to_summary_flow",
+    "tests.integration.test_email_to_summary_flow",
+    "tests.integration.test_helpers",
+    "tests.integration.legal",
+    "tests.shared.test_snippet_utils",
+    "tests.document_processing.test_document_processors",
+    "tests.utilities.test_near_duplicate_detector",
+    "tests.utilities.test_notes_service",
+    "tests.utilities.test_embedding_service",
+    "tests.utilities.test_archive_manager",
+    "tests.static.test_lockfiles",
+    "tests.transcription_service.test_transcription_service",
+    "tests.transcription_service.test_whisper_provider",
+    "tests.transcription_service.test_integration",
+    "tests.infrastructure.test_email_thread_processor_simple",
+    "tests.infrastructure.test_document_converter",
+    "tests.infrastructure.test_html_cleaning",
+    "tests.infrastructure.test_email_thread_processor",
+    "tests.infrastructure.database.test_simple_db_comprehensive",
+    "tests.infrastructure.mcp.test_mcp_integration",
+    "tests.infrastructure.cli.test_vsearch_cli_output",
+    "tests.timeline.conftest",
+    "tests.timeline.test_timeline_consolidated",
+    "tests.timeline",
+    "tests.services.knowledge_graph.test_knowledge_graph_consolidated",
+    "tests.services.summarization.test_summarization",
+    "tests.services.summarization.test_summarization_integration",
+    "tests.services.search.test_search_intelligence_mcp",
+    "tests.services.search.test_search_intelligence",
+    "tests.services.legal.test_legal_intelligence_mcp",
+    "tests.services.legal.test_legal_intelligence",
+    "tests.services.legal.test_legal_bert_integration",
+    "tests.services.gmail.test_gmail_service_core",
+    "pdf.database_error_recovery",
+    "pdf",
+    "pdf.pdf_storage",
+    "pdf.pdf_processor",
+    "pdf.main",
+    "pdf.pdf_validator",
+    "pdf.pdf_health",
+    "pdf.database_health_monitor",
+    "pdf.pdf_storage_enhanced",
+    "pdf.pdf_processor_enhanced",
+    "pdf.ocr.validator",
+    "pdf.ocr.ocr_engine",
+    "pdf.ocr.postprocessor",
+    "pdf.ocr.page_processor",
+    "pdf.ocr",
+    "pdf.ocr.ocr_coordinator",
+    "pdf.ocr.loader",
+    "pdf.ocr.rasterizer",
+    "shared.original_file_manager",
+    "shared.logging_config",
+    "shared.html_cleaner",
+    "shared.loguru_config",
+    "shared.date_utils",
+    "shared.service_interfaces",
+    "shared.naming_utils",
+    "shared",
+    "shared.retry_helper",
+    "shared.simple_db",
+    "shared.snippet_utils",
+    "shared.health_check",
+    "shared.error_handler",
+    "shared.file_operations",
+    "search_intelligence.similarity",
+    "search_intelligence",
+    "search_intelligence.duplicate_detector",
+    "search_intelligence.main",
+    "utilities.archive_manager",
+    "utilities",
+    "utilities.enhanced_archive_manager",
+    "utilities.embeddings",
+    "utilities.embeddings.embedding_service",
+    "utilities.deduplication.near_duplicate_detector",
+    "utilities.deduplication",
+    "utilities.vector_store",
+    "utilities.notes",
+    "utilities.notes.main",
+    "utilities.timeline.database",
+    "utilities.timeline",
+    "utilities.timeline.main",
+    "Archive0817.vector_debug_fix",
+    "Archive0817.id_mismatch_audit",
+    "Archive0817.bowler_id_fixes",
+    "Archive0817.bowler_codebase_alignment",
+    "Archive0817.examples.rich_cli_demo",
+    "Archive0817.examples.search_intelligence_demo",
+    "Archive0817.examples.rich_search_demo",
+    "infrastructure.pipelines.data_pipeline",
+    "infrastructure.pipelines.timeline_extractor",
+    "infrastructure.pipelines.document_exporter",
+    "infrastructure.pipelines",
+    "infrastructure.pipelines.intelligence",
+    "infrastructure.pipelines.orchestrator",
+    "infrastructure.pipelines.formats",
+    "infrastructure.pipelines.processors",
+    "infrastructure.mcp_servers.timeline_mcp_server",
+    "infrastructure.mcp_servers.legal_intelligence_mcp",
+    "infrastructure.mcp_servers.legal_mcp_server",
+    "infrastructure.mcp_servers.search_intelligence_mcp",
+    "infrastructure.mcp_servers",
+    "infrastructure.mcp_servers.docs_mcp_server",
+    "infrastructure.mcp_servers.entity_mcp_server",
+    "infrastructure.mcp_servers.search_mcp_server",
+    "infrastructure.documents.document_converter",
+    "infrastructure.documents.lifecycle_manager",
+    "infrastructure.documents",
+    "infrastructure.documents.format_detector",
+    "infrastructure.documents.document_pipeline",
+    "infrastructure.documents.naming_convention",
+    "infrastructure.documents.processors.email_thread_processor",
+    "infrastructure.documents.processors.text_processor",
+    "infrastructure.documents.processors",
+    "infrastructure.documents.processors.base_processor",
+    "infrastructure.documents.processors.markdown_processor",
+    "infrastructure.documents.processors.docx_processor",
+    "gmail.config",
+    "gmail.gmail_api",
+    "gmail.validators",
+    "gmail",
+    "gmail.storage",
+    "gmail.main",
+    "gmail.oauth"
+  ],
+  "dependencies": {
+    "reindex_content": [
+      "utilities.vector_store",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "knowledge_graph.similarity_integration": [
+      "knowledge_graph.similarity_analyzer",
+      "shared.simple_db",
+      "knowledge_graph.main"
+    ],
+    "knowledge_graph": [
+      "knowledge_graph.main",
+      "knowledge_graph.similarity_analyzer",
+      "knowledge_graph.similarity_integration",
+      "knowledge_graph.topic_clustering",
+      "knowledge_graph.timeline_relationships",
+      "knowledge_graph.graph_queries"
+    ],
+    "knowledge_graph.timeline_relationships": [
+      "shared.simple_db",
+      "knowledge_graph.main"
+    ],
+    "knowledge_graph.topic_clustering": [
+      "knowledge_graph.main",
+      "knowledge_graph.similarity_analyzer",
+      "utilities.embeddings",
+      "shared.simple_db",
+      "entity.main"
+    ],
+    "knowledge_graph.main": [
+      "shared.simple_db"
+    ],
+    "knowledge_graph.similarity_analyzer": [
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "knowledge_graph.graph_queries": [
+      "shared.simple_db"
+    ],
+    "tools.cli.health_monitor": [
+      "gmail.oauth",
+      "gmail.gmail_api",
+      "shared.simple_db"
+    ],
+    "tools.cli.dedup_handler": [
+      "shared.simple_db",
+      "utilities.deduplication"
+    ],
+    "tools.scripts.extract_timeline": [
+      "infrastructure.pipelines.timeline_extractor"
+    ],
+    "tools.scripts.export_documents": [
+      "infrastructure.pipelines.document_exporter",
+      "shared.simple_db"
+    ],
+    "tools.scripts.clean_exported_docs": [
+      "shared.html_cleaner"
+    ],
+    "tools.scripts.check_qdrant_documents": [
+      "utilities.vector_store"
+    ],
+    "tools.scripts.sync_vector_store": [
+      "utilities.vector_store",
+      "shared.simple_db"
+    ],
+    "tools.scripts.check_documents_in_vector": [
+      "search_intelligence"
+    ],
+    "tools.scripts.process_embeddings": [
+      "utilities.vector_store",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "tools.scripts.cli.timeline_handler": [
+      "utilities.timeline"
+    ],
+    "tools.scripts.cli.process_handler": [
+      "tools.scripts.cli.service_locator"
+    ],
+    "tools.scripts.cli.cli_main": [
+      "tools.scripts.cli.notes_handler",
+      "tools.scripts.cli.info_handler",
+      "tools.scripts.cli.upload_handler",
+      "tools.scripts.cli.timeline_handler",
+      "tools.scripts.cli.process_handler",
+      "tools.scripts.cli.docs_handler",
+      "tools.scripts.cli.transcription_handler",
+      "tools.scripts.cli.search_handler"
+    ],
+    "tools.scripts.cli.search_handler": [
+      "tools.scripts.cli.service_locator"
+    ],
+    "tools.scripts.cli.legal_handler": [
+      "legal_intelligence.main",
+      "shared.simple_db"
+    ],
+    "tools.scripts.cli.info_handler": [
+      "tools.scripts.cli.service_locator",
+      "search_intelligence",
+      "utilities.embeddings",
+      "utilities.vector_store",
+      "shared.simple_db"
+    ],
+    "tools.scripts.cli.transcription_handler": [
+      "transcription"
+    ],
+    "tools.scripts.cli.service_locator": [
+      "entity.main",
+      "pdf.main",
+      "utilities.notes.main",
+      "search_intelligence",
+      "transcription.main",
+      "utilities.vector_store",
+      "utilities.timeline.main",
+      "gmail.main"
+    ],
+    "tools.scripts.cli.upload_handler": [
+      "pdf",
+      "transcription",
+      "infrastructure.pipelines.data_pipeline"
+    ],
+    "tools.scripts.cli.notes_handler": [
+      "utilities.notes"
+    ],
+    "tools.scripts.cli.intelligence_handler": [
+      "search_intelligence"
+    ],
+    "transcription": [
+      "transcription.main"
+    ],
+    "transcription.main": [
+      "transcription.providers.whisper_provider",
+      "shared.simple_db"
+    ],
+    "transcription.providers": [
+      "transcription.whisper_provider"
+    ],
+    "transcription.providers.whisper_provider": [
+      "transcription.providers.base_provider"
+    ],
+    "legal_intelligence": [
+      "legal_intelligence.main"
+    ],
+    "legal_intelligence.main": [
+      "utilities.embeddings",
+      "utilities.timeline.main",
+      "knowledge_graph",
+      "shared.simple_db",
+      "entity.main"
+    ],
+    "entity.database": [
+      "shared.simple_db"
+    ],
+    "entity": [
+      "entity.main",
+      "entity.database"
+    ],
+    "entity.main": [
+      "entity.config",
+      "entity.processors.entity_normalizer",
+      "entity.database",
+      "entity.extractors.relationship_extractor",
+      "entity.extractors.extractor_factory"
+    ],
+    "entity.extractors.legal_extractor": [
+      "entity.extractors.base_extractor"
+    ],
+    "entity.extractors.extractor_factory": [
+      "entity.extractors.spacy_extractor",
+      "entity.extractors.legal_extractor",
+      "entity.extractors.combined_extractor",
+      "entity.extractors.base_extractor"
+    ],
+    "entity.extractors": [
+      "entity.spacy_extractor",
+      "entity.extractor_factory",
+      "entity.base_extractor"
+    ],
+    "entity.extractors.spacy_extractor": [
+      "entity.extractors.base_extractor"
+    ],
+    "entity.extractors.combined_extractor": [
+      "entity.extractors.spacy_extractor",
+      "entity.extractors.legal_extractor",
+      "entity.extractors.base_extractor"
+    ],
+    "summarization.engine": [
+      "utilities.embeddings"
+    ],
+    "tests.test_core_services_integration": [
+      "utilities.vector_store",
+      "entity",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "tests.conftest": [
+      "shared.simple_db"
+    ],
+    "tests.test_search_integration": [
+      "search_intelligence.main",
+      "tools.scripts.cli.search_handler"
+    ],
+    "tests.test_intelligence_schema": [
+      "shared.simple_db"
+    ],
+    "tests.test_pipeline_orchestrator": [
+      "infrastructure.pipelines.orchestrator",
+      "infrastructure.pipelines.processors",
+      "infrastructure.pipelines.formats",
+      "infrastructure.pipelines"
+    ],
+    "tests.test_timeline_extractor": [
+      "utilities.timeline.main",
+      "infrastructure.pipelines.timeline_extractor"
+    ],
+    "tests.smoke.test_system_health": [
+      "shared.database.database_service"
+    ],
+    "tests.transcription.test_hybrid_transcription": [
+      "transcription.main"
+    ],
+    "tests.transcription.test_openai_transcription": [
+      "transcription.main",
+      "transcription.config"
+    ],
+    "tests.transcription.test_config": [
+      "transcription.provider_factory",
+      "transcription.main",
+      "transcription.config"
+    ],
+    "tests.transcription.test_config_quick": [
+      "transcription.config"
+    ],
+    "tests.pdf_service.conftest": [
+      "shared.simple_db"
+    ],
+    "tests.pdf_service.test_ocr_components": [
+      "pdf.pdf_processor",
+      "pdf.ocr.ocr_coordinator",
+      "pdf.ocr.page_processor"
+    ],
+    "tests.pdf_service.test_large_pdf_handling": [
+      "pdf.main",
+      "pdf.ocr.page_processor"
+    ],
+    "tests.integration.test_pipeline_directory_flow": [
+      "tests.integration.test_helpers"
+    ],
+    "tests.integration.test_ocr_pipeline": [
+      "pdf.main",
+      "pdf.ocr.postprocessor",
+      "pdf.ocr",
+      "pdf.ocr.validator",
+      "pdf.ocr.ocr_engine"
+    ],
+    "tests.integration.test_intelligence_tables_population": [
+      "pdf.main",
+      "tests.integration.test_helpers"
+    ],
+    "tests.integration.test_pdf_to_summary_flow": [
+      "pdf.main",
+      "tests.integration.test_helpers"
+    ],
+    "tests.integration.test_email_to_summary_flow": [
+      "tests.integration.test_helpers",
+      "gmail.main"
+    ],
+    "tests.integration.test_helpers": [
+      "shared.simple_db"
+    ],
+    "tests.shared.test_snippet_utils": [
+      "shared.snippet_utils"
+    ],
+    "tests.document_processing.test_document_processors": [
+      "infrastructure.documents.processors",
+      "infrastructure.documents.format_detector",
+      "infrastructure.documents.naming_convention",
+      "infrastructure.documents.lifecycle_manager"
+    ],
+    "tests.utilities.test_near_duplicate_detector": [
+      "utilities.deduplication.near_duplicate_detector"
+    ],
+    "tests.utilities.test_notes_service": [
+      "utilities.notes.main"
+    ],
+    "tests.utilities.test_embedding_service": [
+      "utilities.embeddings.embedding_service"
+    ],
+    "tests.utilities.test_archive_manager": [
+      "utilities.archive_manager"
+    ],
+    "tests.transcription_service.test_transcription_service": [
+      "transcription.main"
+    ],
+    "tests.transcription_service.test_whisper_provider": [
+      "transcription.providers.whisper_provider"
+    ],
+    "tests.transcription_service.test_integration": [
+      "transcription.main",
+      "transcription.providers.whisper_provider",
+      "shared.simple_db"
+    ],
+    "tests.infrastructure.test_email_thread_processor_simple": [
+      "infrastructure.documents.processors.email_thread_processor"
+    ],
+    "tests.infrastructure.test_document_converter": [
+      "infrastructure.documents.document_converter"
+    ],
+    "tests.infrastructure.test_html_cleaning": [
+      "infrastructure.pipelines.document_exporter",
+      "shared.html_cleaner"
+    ],
+    "tests.infrastructure.test_email_thread_processor": [
+      "infrastructure.documents.processors.email_thread_processor"
+    ],
+    "tests.infrastructure.database.test_simple_db_comprehensive": [
+      "shared.simple_db"
+    ],
+    "tests.infrastructure.mcp.test_mcp_integration": [
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "tools.scripts.cli.intelligence_handler"
+    ],
+    "tests.timeline.test_timeline_consolidated": [
+      "utilities.timeline.database",
+      "utilities.timeline.main"
+    ],
+    "tests.services.knowledge_graph.test_knowledge_graph_consolidated": [
+      "knowledge_graph"
+    ],
+    "tests.services.summarization.test_summarization_integration": [
+      "pdf.main",
+      "shared.simple_db",
+      "gmail.main"
+    ],
+    "tests.services.search.test_search_intelligence_mcp": [
+      "infrastructure.mcp_servers.search_intelligence_mcp"
+    ],
+    "tests.services.search.test_search_intelligence": [
+      "search_intelligence.similarity",
+      "search_intelligence.main",
+      "search_intelligence",
+      "search_intelligence.duplicate_detector"
+    ],
+    "tests.services.legal.test_legal_intelligence_mcp": [
+      "infrastructure.mcp_servers.legal_intelligence_mcp"
+    ],
+    "tests.services.legal.test_legal_intelligence": [
+      "legal_intelligence"
+    ],
+    "tests.services.legal.test_legal_bert_integration": [
+      "knowledge_graph",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "tests.services.gmail.test_gmail_service_core": [
+      "gmail.main"
+    ],
+    "pdf": [
+      "pdf.main"
+    ],
+    "pdf.pdf_storage": [
+      "shared.simple_db"
+    ],
+    "pdf.main": [
+      "pdf.pdf_processor_enhanced",
+      "pdf.ocr.ocr_coordinator",
+      "pdf.pdf_validator",
+      "infrastructure.pipelines.data_pipeline",
+      "pdf.pdf_storage_enhanced",
+      "pdf.database_error_recovery",
+      "shared.simple_db",
+      "infrastructure.pipelines.document_exporter",
+      "pdf.pdf_health",
+      "pdf.database_health_monitor",
+      "shared.service_interfaces"
+    ],
+    "pdf.pdf_storage_enhanced": [
+      "shared.simple_db"
+    ],
+    "pdf.pdf_processor_enhanced": [
+      "pdf.pdf_processor",
+      "pdf.vector.legal_metadata_extractor",
+      "pdf.ocr"
+    ],
+    "pdf.ocr.validator": [
+      "pdf2image"
+    ],
+    "pdf.ocr.page_processor": [
+      "pdf.ocr.ocr_engine",
+      "pdf.ocr.rasterizer",
+      "pdf.ocr.postprocessor"
+    ],
+    "pdf.ocr": [
+      "pdf.loader",
+      "pdf.ocr_engine",
+      "pdf.ocr_coordinator",
+      "pdf.page_processor",
+      "pdf.postprocessor",
+      "pdf.rasterizer",
+      "pdf.validator"
+    ],
+    "pdf.ocr.ocr_coordinator": [
+      "pdf.ocr.loader",
+      "pdf.ocr.postprocessor",
+      "pdf.ocr.validator",
+      "pdf.ocr.ocr_engine",
+      "pdf.ocr.rasterizer"
+    ],
+    "pdf.ocr.rasterizer": [
+      "pdf2image"
+    ],
+    "shared.original_file_manager": [
+      "shared.date_utils",
+      "shared.simple_db"
+    ],
+    "shared": [
+      "shared.simple_db",
+      "shared.service_interfaces"
+    ],
+    "shared.simple_db": [
+      "shared.date_utils",
+      "shared.retry_helper"
+    ],
+    "shared.health_check": [
+      "utilities.vector_store",
+      "utilities.embeddings"
+    ],
+    "search_intelligence.similarity": [
+      "utilities.vector_store",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "search_intelligence": [
+      "search_intelligence.main"
+    ],
+    "search_intelligence.duplicate_detector": [
+      "utilities.vector_store",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "search_intelligence.main": [
+      "utilities.vector_store",
+      "entity",
+      "shared.simple_db",
+      "utilities.embeddings"
+    ],
+    "utilities": [
+      "utilities.archive_manager"
+    ],
+    "utilities.enhanced_archive_manager": [
+      "utilities.archive_manager",
+      "shared.simple_db",
+      "shared.original_file_manager"
+    ],
+    "utilities.embeddings": [
+      "utilities.embedding_service"
+    ],
+    "utilities.deduplication": [
+      "utilities.near_duplicate_detector"
+    ],
+    "utilities.notes": [
+      "utilities.main"
+    ],
+    "utilities.notes.main": [
+      "shared.simple_db"
+    ],
+    "utilities.timeline.database": [
+      "shared.simple_db"
+    ],
+    "utilities.timeline": [
+      "utilities.database",
+      "utilities.main"
+    ],
+    "utilities.timeline.main": [
+      "utilities.timeline.database",
+      "shared.simple_db"
+    ],
+    "Archive0817.bowler_codebase_alignment": [
+      "knowledge_graph"
+    ],
+    "Archive0817.examples.search_intelligence_demo": [
+      "search_intelligence"
+    ],
+    "Archive0817.examples.rich_search_demo": [
+      "shared.simple_db"
+    ],
+    "infrastructure.pipelines.timeline_extractor": [
+      "utilities.timeline.database"
+    ],
+    "infrastructure.pipelines.document_exporter": [
+      "shared.html_cleaner",
+      "shared.simple_db"
+    ],
+    "infrastructure.pipelines": [
+      "infrastructure.pipelines.orchestrator"
+    ],
+    "infrastructure.pipelines.intelligence": [
+      "shared.simple_db",
+      "entity.main"
+    ],
+    "infrastructure.pipelines.orchestrator": [
+      "infrastructure.pipelines.processors",
+      "infrastructure.pipelines.formats",
+      "infrastructure.pipelines.intelligence"
+    ],
+    "infrastructure.mcp_servers.timeline_mcp_server": [
+      "utilities.timeline.main",
+      "shared.simple_db"
+    ],
+    "infrastructure.mcp_servers.legal_intelligence_mcp": [
+      "shared.simple_db",
+      "legal_intelligence.main",
+      "entity.main"
+    ],
+    "infrastructure.mcp_servers.legal_mcp_server": [
+      "shared.simple_db",
+      "entity.main"
+    ],
+    "infrastructure.mcp_servers.search_intelligence_mcp": [
+      "search_intelligence",
+      "shared.simple_db",
+      "entity.main"
+    ],
+    "infrastructure.mcp_servers.entity_mcp_server": [
+      "entity.main"
+    ],
+    "infrastructure.mcp_servers.search_mcp_server": [
+      "shared.simple_db"
+    ],
+    "infrastructure.documents.document_converter": [
+      "pdf.pdf_processor_enhanced",
+      "pdf.ocr.ocr_coordinator",
+      "pdf.pdf_validator",
+      "pdf.pdf_storage_enhanced"
+    ],
+    "infrastructure.documents.lifecycle_manager": [
+      "utilities.archive_manager"
+    ],
+    "infrastructure.documents": [
+      "infrastructure.processors",
+      "infrastructure.format_detector",
+      "infrastructure.naming_convention",
+      "infrastructure.lifecycle_manager"
+    ],
+    "infrastructure.documents.document_pipeline": [
+      "pdf.main",
+      "infrastructure.documents.processors",
+      "infrastructure.documents.format_detector",
+      "infrastructure.documents.naming_convention",
+      "infrastructure.documents.lifecycle_manager",
+      "shared.simple_db"
+    ],
+    "infrastructure.documents.processors.email_thread_processor": [
+      "shared.html_cleaner"
+    ],
+    "infrastructure.documents.processors.text_processor": [
+      "infrastructure.documents.processors.base_processor"
+    ],
+    "infrastructure.documents.processors": [
+      "infrastructure.documents.docx_processor",
+      "infrastructure.documents.email_thread_processor",
+      "infrastructure.documents.base_processor",
+      "infrastructure.documents.text_processor",
+      "infrastructure.documents.markdown_processor"
+    ],
+    "infrastructure.documents.processors.markdown_processor": [
+      "infrastructure.documents.processors.base_processor"
+    ],
+    "infrastructure.documents.processors.docx_processor": [
+      "infrastructure.documents.processors.base_processor"
+    ],
+    "gmail.gmail_api": [
+      "gmail.oauth",
+      "shared.error_handler",
+      "shared.retry_helper"
+    ],
+    "gmail": [
+      "gmail.oauth",
+      "gmail.storage",
+      "gmail.gmail_api",
+      "gmail.config",
+      "gmail.main"
+    ],
+    "gmail.storage": [
+      "gmail.validators"
+    ],
+    "gmail.main": [
+      "infrastructure.pipelines.data_pipeline",
+      "infrastructure.pipelines.document_exporter",
+      "gmail.storage",
+      "gmail.gmail_api",
+      "infrastructure.documents.processors.email_thread_processor",
+      "gmail.config",
+      "shared.simple_db"
+    ]
+  },
+  "reverse_dependencies": {
+    "shared.simple_db": [
+      "tests.services.summarization.test_summarization_integration",
+      "tools.scripts.process_embeddings",
+      "infrastructure.documents.document_pipeline",
+      "tests.integration.test_helpers",
+      "knowledge_graph.main",
+      "tests.test_intelligence_schema",
+      "knowledge_graph.similarity_analyzer",
+      "knowledge_graph.topic_clustering",
+      "knowledge_graph.similarity_integration",
+      "infrastructure.pipelines.document_exporter",
+      "reindex_content",
+      "search_intelligence.main",
+      "tests.conftest",
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "tools.cli.dedup_handler",
+      "knowledge_graph.graph_queries",
+      "tools.scripts.export_documents",
+      "pdf.main",
+      "tools.scripts.cli.info_handler",
+      "utilities.notes.main",
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "utilities.timeline.main",
+      "entity.database",
+      "tools.cli.health_monitor",
+      "pdf.pdf_storage_enhanced",
+      "search_intelligence.similarity",
+      "tests.test_core_services_integration",
+      "infrastructure.mcp_servers.search_mcp_server",
+      "tools.scripts.cli.legal_handler",
+      "infrastructure.mcp_servers.legal_mcp_server",
+      "shared.original_file_manager",
+      "utilities.enhanced_archive_manager",
+      "tests.services.legal.test_legal_bert_integration",
+      "infrastructure.pipelines.intelligence",
+      "transcription.main",
+      "tests.infrastructure.database.test_simple_db_comprehensive",
+      "pdf.pdf_storage",
+      "knowledge_graph.timeline_relationships",
+      "infrastructure.mcp_servers.timeline_mcp_server",
+      "utilities.timeline.database",
+      "gmail.main",
+      "tools.scripts.sync_vector_store",
+      "tests.transcription_service.test_integration",
+      "legal_intelligence.main",
+      "tests.pdf_service.conftest",
+      "Archive0817.examples.rich_search_demo",
+      "shared",
+      "search_intelligence.duplicate_detector"
+    ],
+    "utilities.embeddings": [
+      "shared.health_check",
+      "tools.scripts.process_embeddings",
+      "tools.scripts.cli.info_handler",
+      "tests.services.legal.test_legal_bert_integration",
+      "knowledge_graph.similarity_analyzer",
+      "legal_intelligence.main",
+      "knowledge_graph.topic_clustering",
+      "reindex_content",
+      "search_intelligence.main",
+      "search_intelligence.similarity",
+      "tests.test_core_services_integration",
+      "summarization.engine",
+      "search_intelligence.duplicate_detector"
+    ],
+    "utilities.vector_store": [
+      "shared.health_check",
+      "tools.scripts.sync_vector_store",
+      "tools.scripts.process_embeddings",
+      "tools.scripts.cli.info_handler",
+      "tools.scripts.cli.service_locator",
+      "tools.scripts.check_qdrant_documents",
+      "reindex_content",
+      "search_intelligence.main",
+      "search_intelligence.similarity",
+      "tests.test_core_services_integration",
+      "search_intelligence.duplicate_detector"
+    ],
+    "knowledge_graph.main": [
+      "knowledge_graph",
+      "knowledge_graph.topic_clustering",
+      "knowledge_graph.similarity_integration",
+      "knowledge_graph.timeline_relationships"
+    ],
+    "knowledge_graph.similarity_analyzer": [
+      "knowledge_graph",
+      "knowledge_graph.topic_clustering",
+      "knowledge_graph.similarity_integration"
+    ],
+    "knowledge_graph.graph_queries": [
+      "knowledge_graph"
+    ],
+    "knowledge_graph.similarity_integration": [
+      "knowledge_graph"
+    ],
+    "knowledge_graph.timeline_relationships": [
+      "knowledge_graph"
+    ],
+    "knowledge_graph.topic_clustering": [
+      "knowledge_graph"
+    ],
+    "entity.main": [
+      "entity",
+      "infrastructure.mcp_servers.legal_mcp_server",
+      "tools.scripts.cli.service_locator",
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "legal_intelligence.main",
+      "knowledge_graph.topic_clustering",
+      "infrastructure.pipelines.intelligence",
+      "infrastructure.mcp_servers.entity_mcp_server",
+      "infrastructure.mcp_servers.legal_intelligence_mcp"
+    ],
+    "gmail.gmail_api": [
+      "gmail.main",
+      "gmail",
+      "tools.cli.health_monitor"
+    ],
+    "gmail.oauth": [
+      "gmail.gmail_api",
+      "gmail",
+      "tools.cli.health_monitor"
+    ],
+    "utilities.deduplication": [
+      "tools.cli.dedup_handler"
+    ],
+    "infrastructure.pipelines.timeline_extractor": [
+      "tools.scripts.extract_timeline",
+      "tests.test_timeline_extractor"
+    ],
+    "infrastructure.pipelines.document_exporter": [
+      "tests.infrastructure.test_html_cleaning",
+      "pdf.main",
+      "tools.scripts.export_documents",
+      "gmail.main"
+    ],
+    "shared.html_cleaner": [
+      "infrastructure.pipelines.document_exporter",
+      "tests.infrastructure.test_html_cleaning",
+      "infrastructure.documents.processors.email_thread_processor",
+      "tools.scripts.clean_exported_docs"
+    ],
+    "search_intelligence": [
+      "tools.scripts.cli.info_handler",
+      "tools.scripts.cli.service_locator",
+      "Archive0817.examples.search_intelligence_demo",
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "tools.scripts.cli.intelligence_handler",
+      "tools.scripts.check_documents_in_vector",
+      "tests.services.search.test_search_intelligence"
+    ],
+    "utilities.timeline": [
+      "tools.scripts.cli.timeline_handler"
+    ],
+    "tools.scripts.cli.service_locator": [
+      "tools.scripts.cli.process_handler",
+      "tools.scripts.cli.info_handler",
+      "tools.scripts.cli.search_handler"
+    ],
+    "tools.scripts.cli.docs_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.info_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.notes_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.process_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.search_handler": [
+      "tools.scripts.cli.cli_main",
+      "tests.test_search_integration"
+    ],
+    "tools.scripts.cli.timeline_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.transcription_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "tools.scripts.cli.upload_handler": [
+      "tools.scripts.cli.cli_main"
+    ],
+    "legal_intelligence.main": [
+      "legal_intelligence",
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "tools.scripts.cli.legal_handler"
+    ],
+    "transcription": [
+      "tools.scripts.cli.transcription_handler",
+      "tools.scripts.cli.upload_handler"
+    ],
+    "gmail.main": [
+      "tests.services.summarization.test_summarization_integration",
+      "tests.integration.test_email_to_summary_flow",
+      "gmail",
+      "tools.scripts.cli.service_locator",
+      "tests.services.gmail.test_gmail_service_core"
+    ],
+    "pdf.main": [
+      "tests.services.summarization.test_summarization_integration",
+      "pdf",
+      "tests.integration.test_intelligence_tables_population",
+      "tools.scripts.cli.service_locator",
+      "infrastructure.documents.document_pipeline",
+      "tests.integration.test_pdf_to_summary_flow",
+      "tests.integration.test_ocr_pipeline",
+      "tests.pdf_service.test_large_pdf_handling"
+    ],
+    "transcription.main": [
+      "tests.transcription_service.test_integration",
+      "tests.transcription.test_openai_transcription",
+      "tools.scripts.cli.service_locator",
+      "transcription",
+      "tests.transcription.test_hybrid_transcription",
+      "tests.transcription.test_config",
+      "tests.transcription_service.test_transcription_service"
+    ],
+    "utilities.timeline.main": [
+      "tools.scripts.cli.service_locator",
+      "legal_intelligence.main",
+      "tests.timeline.test_timeline_consolidated",
+      "infrastructure.mcp_servers.timeline_mcp_server",
+      "tests.test_timeline_extractor"
+    ],
+    "utilities.notes.main": [
+      "tools.scripts.cli.service_locator",
+      "tests.utilities.test_notes_service"
+    ],
+    "infrastructure.pipelines.data_pipeline": [
+      "gmail.main",
+      "pdf.main",
+      "tools.scripts.cli.upload_handler"
+    ],
+    "pdf": [
+      "tools.scripts.cli.upload_handler"
+    ],
+    "utilities.notes": [
+      "tools.scripts.cli.notes_handler"
+    ],
+    "transcription.providers.whisper_provider": [
+      "transcription.main",
+      "tests.transcription_service.test_whisper_provider",
+      "tests.transcription_service.test_integration"
+    ],
+    "transcription.whisper_provider": [
+      "transcription.providers"
+    ],
+    "transcription.providers.base_provider": [
+      "transcription.providers.whisper_provider"
+    ],
+    "knowledge_graph": [
+      "tests.services.legal.test_legal_bert_integration",
+      "tests.services.knowledge_graph.test_knowledge_graph_consolidated",
+      "legal_intelligence.main",
+      "Archive0817.bowler_codebase_alignment"
+    ],
+    "entity.database": [
+      "entity",
+      "entity.main"
+    ],
+    "entity.config": [
+      "entity.main"
+    ],
+    "entity.extractors.extractor_factory": [
+      "entity.main"
+    ],
+    "entity.extractors.relationship_extractor": [
+      "entity.main"
+    ],
+    "entity.processors.entity_normalizer": [
+      "entity.main"
+    ],
+    "entity.extractors.base_extractor": [
+      "entity.extractors.spacy_extractor",
+      "entity.extractors.legal_extractor",
+      "entity.extractors.combined_extractor",
+      "entity.extractors.extractor_factory"
+    ],
+    "entity.extractors.combined_extractor": [
+      "entity.extractors.extractor_factory"
+    ],
+    "entity.extractors.legal_extractor": [
+      "entity.extractors.combined_extractor",
+      "entity.extractors.extractor_factory"
+    ],
+    "entity.extractors.spacy_extractor": [
+      "entity.extractors.combined_extractor",
+      "entity.extractors.extractor_factory"
+    ],
+    "entity.base_extractor": [
+      "entity.extractors"
+    ],
+    "entity.extractor_factory": [
+      "entity.extractors"
+    ],
+    "entity.spacy_extractor": [
+      "entity.extractors"
+    ],
+    "entity": [
+      "search_intelligence.main",
+      "tests.test_core_services_integration"
+    ],
+    "search_intelligence.main": [
+      "search_intelligence",
+      "tests.services.search.test_search_intelligence",
+      "tests.test_search_integration"
+    ],
+    "infrastructure.pipelines": [
+      "tests.test_pipeline_orchestrator"
+    ],
+    "infrastructure.pipelines.formats": [
+      "infrastructure.pipelines.orchestrator",
+      "tests.test_pipeline_orchestrator"
+    ],
+    "infrastructure.pipelines.orchestrator": [
+      "infrastructure.pipelines",
+      "tests.test_pipeline_orchestrator"
+    ],
+    "infrastructure.pipelines.processors": [
+      "infrastructure.pipelines.orchestrator",
+      "tests.test_pipeline_orchestrator"
+    ],
+    "shared.database.database_service": [
+      "tests.smoke.test_system_health"
+    ],
+    "transcription.config": [
+      "tests.transcription.test_config_quick",
+      "tests.transcription.test_openai_transcription",
+      "tests.transcription.test_config"
+    ],
+    "transcription.provider_factory": [
+      "tests.transcription.test_config"
+    ],
+    "pdf.ocr.ocr_coordinator": [
+      "infrastructure.documents.document_converter",
+      "pdf.main",
+      "tests.pdf_service.test_ocr_components"
+    ],
+    "pdf.ocr.page_processor": [
+      "tests.pdf_service.test_large_pdf_handling",
+      "tests.pdf_service.test_ocr_components"
+    ],
+    "pdf.pdf_processor": [
+      "pdf.pdf_processor_enhanced",
+      "tests.pdf_service.test_ocr_components"
+    ],
+    "tests.integration.test_helpers": [
+      "tests.integration.test_email_to_summary_flow",
+      "tests.integration.test_intelligence_tables_population",
+      "tests.integration.test_pipeline_directory_flow",
+      "tests.integration.test_pdf_to_summary_flow"
+    ],
+    "pdf.ocr": [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.pdf_processor_enhanced"
+    ],
+    "pdf.ocr.validator": [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.ocr_coordinator"
+    ],
+    "pdf.ocr.ocr_engine": [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.ocr_coordinator",
+      "pdf.ocr.page_processor"
+    ],
+    "pdf.ocr.postprocessor": [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.ocr_coordinator",
+      "pdf.ocr.page_processor"
+    ],
+    "shared.snippet_utils": [
+      "tests.shared.test_snippet_utils"
+    ],
+    "infrastructure.documents.format_detector": [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.document_pipeline"
+    ],
+    "infrastructure.documents.lifecycle_manager": [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.document_pipeline"
+    ],
+    "infrastructure.documents.naming_convention": [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.document_pipeline"
+    ],
+    "infrastructure.documents.processors": [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.document_pipeline"
+    ],
+    "utilities.deduplication.near_duplicate_detector": [
+      "tests.utilities.test_near_duplicate_detector"
+    ],
+    "utilities.embeddings.embedding_service": [
+      "tests.utilities.test_embedding_service"
+    ],
+    "utilities.archive_manager": [
+      "utilities.enhanced_archive_manager",
+      "infrastructure.documents.lifecycle_manager",
+      "utilities",
+      "tests.utilities.test_archive_manager"
+    ],
+    "infrastructure.documents.processors.email_thread_processor": [
+      "gmail.main",
+      "tests.infrastructure.test_email_thread_processor_simple",
+      "tests.infrastructure.test_email_thread_processor"
+    ],
+    "infrastructure.documents.document_converter": [
+      "tests.infrastructure.test_document_converter"
+    ],
+    "infrastructure.mcp_servers.legal_intelligence_mcp": [
+      "tests.infrastructure.mcp.test_mcp_integration",
+      "tests.services.legal.test_legal_intelligence_mcp"
+    ],
+    "tools.scripts.cli.intelligence_handler": [
+      "tests.infrastructure.mcp.test_mcp_integration"
+    ],
+    "utilities.timeline.database": [
+      "utilities.timeline.main",
+      "tests.timeline.test_timeline_consolidated",
+      "infrastructure.pipelines.timeline_extractor"
+    ],
+    "infrastructure.mcp_servers.search_intelligence_mcp": [
+      "tests.services.search.test_search_intelligence_mcp"
+    ],
+    "search_intelligence.duplicate_detector": [
+      "tests.services.search.test_search_intelligence"
+    ],
+    "search_intelligence.similarity": [
+      "tests.services.search.test_search_intelligence"
+    ],
+    "legal_intelligence": [
+      "tests.services.legal.test_legal_intelligence"
+    ],
+    "pdf.database_error_recovery": [
+      "pdf.main"
+    ],
+    "pdf.database_health_monitor": [
+      "pdf.main"
+    ],
+    "pdf.pdf_health": [
+      "pdf.main"
+    ],
+    "pdf.pdf_processor_enhanced": [
+      "pdf.main",
+      "infrastructure.documents.document_converter"
+    ],
+    "pdf.pdf_storage_enhanced": [
+      "pdf.main",
+      "infrastructure.documents.document_converter"
+    ],
+    "pdf.pdf_validator": [
+      "pdf.main",
+      "infrastructure.documents.document_converter"
+    ],
+    "shared.service_interfaces": [
+      "pdf.main",
+      "shared"
+    ],
+    "pdf.vector.legal_metadata_extractor": [
+      "pdf.pdf_processor_enhanced"
+    ],
+    "pdf2image": [
+      "pdf.ocr.validator",
+      "pdf.ocr.rasterizer"
+    ],
+    "pdf.ocr.rasterizer": [
+      "pdf.ocr.ocr_coordinator",
+      "pdf.ocr.page_processor"
+    ],
+    "pdf.loader": [
+      "pdf.ocr"
+    ],
+    "pdf.ocr_coordinator": [
+      "pdf.ocr"
+    ],
+    "pdf.ocr_engine": [
+      "pdf.ocr"
+    ],
+    "pdf.page_processor": [
+      "pdf.ocr"
+    ],
+    "pdf.postprocessor": [
+      "pdf.ocr"
+    ],
+    "pdf.rasterizer": [
+      "pdf.ocr"
+    ],
+    "pdf.validator": [
+      "pdf.ocr"
+    ],
+    "pdf.ocr.loader": [
+      "pdf.ocr.ocr_coordinator"
+    ],
+    "shared.date_utils": [
+      "shared.simple_db",
+      "shared.original_file_manager"
+    ],
+    "shared.retry_helper": [
+      "gmail.gmail_api",
+      "shared.simple_db"
+    ],
+    "shared.original_file_manager": [
+      "utilities.enhanced_archive_manager"
+    ],
+    "utilities.embedding_service": [
+      "utilities.embeddings"
+    ],
+    "utilities.near_duplicate_detector": [
+      "utilities.deduplication"
+    ],
+    "utilities.main": [
+      "utilities.notes",
+      "utilities.timeline"
+    ],
+    "utilities.database": [
+      "utilities.timeline"
+    ],
+    "infrastructure.pipelines.intelligence": [
+      "infrastructure.pipelines.orchestrator"
+    ],
+    "infrastructure.format_detector": [
+      "infrastructure.documents"
+    ],
+    "infrastructure.lifecycle_manager": [
+      "infrastructure.documents"
+    ],
+    "infrastructure.naming_convention": [
+      "infrastructure.documents"
+    ],
+    "infrastructure.processors": [
+      "infrastructure.documents"
+    ],
+    "infrastructure.documents.processors.base_processor": [
+      "infrastructure.documents.processors.markdown_processor",
+      "infrastructure.documents.processors.docx_processor",
+      "infrastructure.documents.processors.text_processor"
+    ],
+    "infrastructure.documents.base_processor": [
+      "infrastructure.documents.processors"
+    ],
+    "infrastructure.documents.docx_processor": [
+      "infrastructure.documents.processors"
+    ],
+    "infrastructure.documents.email_thread_processor": [
+      "infrastructure.documents.processors"
+    ],
+    "infrastructure.documents.markdown_processor": [
+      "infrastructure.documents.processors"
+    ],
+    "infrastructure.documents.text_processor": [
+      "infrastructure.documents.processors"
+    ],
+    "shared.error_handler": [
+      "gmail.gmail_api"
+    ],
+    "gmail.config": [
+      "gmail",
+      "gmail.main"
+    ],
+    "gmail.storage": [
+      "gmail",
+      "gmail.main"
+    ],
+    "gmail.validators": [
+      "gmail.storage"
+    ]
+  },
+  "broken_imports": [
+    [
+      "reindex_content",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/reindex_content.py"
+    ],
+    [
+      "knowledge_graph.similarity_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/similarity_integration.py"
+    ],
+    [
+      "knowledge_graph.similarity_integration",
+      "knowledge_graph.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/similarity_integration.py"
+    ],
+    [
+      "knowledge_graph.similarity_integration",
+      "knowledge_graph.similarity_analyzer",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/similarity_integration.py"
+    ],
+    [
+      "knowledge_graph.timeline_relationships",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/timeline_relationships.py"
+    ],
+    [
+      "knowledge_graph.topic_clustering",
+      "entity.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/topic_clustering.py"
+    ],
+    [
+      "knowledge_graph.topic_clustering",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/topic_clustering.py"
+    ],
+    [
+      "knowledge_graph.main",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/main.py"
+    ],
+    [
+      "knowledge_graph.similarity_analyzer",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/similarity_analyzer.py"
+    ],
+    [
+      "knowledge_graph.graph_queries",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/knowledge_graph/graph_queries.py"
+    ],
+    [
+      "tools.cli.health_monitor",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/cli/health_monitor.py"
+    ],
+    [
+      "tools.cli.health_monitor",
+      "gmail.gmail_api",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/cli/health_monitor.py"
+    ],
+    [
+      "tools.cli.health_monitor",
+      "gmail.oauth",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/cli/health_monitor.py"
+    ],
+    [
+      "tools.cli.dedup_handler",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/cli/dedup_handler.py"
+    ],
+    [
+      "tools.scripts.extract_timeline",
+      "infrastructure.pipelines.timeline_extractor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/extract_timeline.py"
+    ],
+    [
+      "tools.scripts.export_documents",
+      "infrastructure.pipelines.document_exporter",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/export_documents.py"
+    ],
+    [
+      "tools.scripts.export_documents",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/export_documents.py"
+    ],
+    [
+      "tools.scripts.clean_exported_docs",
+      "shared.html_cleaner",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/clean_exported_docs.py"
+    ],
+    [
+      "tools.scripts.sync_vector_store",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/sync_vector_store.py"
+    ],
+    [
+      "tools.scripts.process_embeddings",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/process_embeddings.py"
+    ],
+    [
+      "tools.scripts.cli.legal_handler",
+      "legal_intelligence.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/legal_handler.py"
+    ],
+    [
+      "tools.scripts.cli.legal_handler",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/legal_handler.py"
+    ],
+    [
+      "tools.scripts.cli.legal_handler",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/legal_handler.py"
+    ],
+    [
+      "tools.scripts.cli.info_handler",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/info_handler.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "gmail.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "transcription.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "entity.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "utilities.timeline.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.service_locator",
+      "utilities.notes.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/service_locator.py"
+    ],
+    [
+      "tools.scripts.cli.upload_handler",
+      "infrastructure.pipelines.data_pipeline",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tools/scripts/cli/upload_handler.py"
+    ],
+    [
+      "transcription.main",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/transcription/main.py"
+    ],
+    [
+      "legal_intelligence.main",
+      "entity.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/legal_intelligence/main.py"
+    ],
+    [
+      "legal_intelligence.main",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/legal_intelligence/main.py"
+    ],
+    [
+      "legal_intelligence.main",
+      "utilities.timeline.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/legal_intelligence/main.py"
+    ],
+    [
+      "entity.database",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/entity/database.py"
+    ],
+    [
+      "tests.test_core_services_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_core_services_integration.py"
+    ],
+    [
+      "tests.test_core_services_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_core_services_integration.py"
+    ],
+    [
+      "tests.conftest",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/conftest.py"
+    ],
+    [
+      "tests.test_search_integration",
+      "search_intelligence.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_search_integration.py"
+    ],
+    [
+      "tests.test_intelligence_schema",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_intelligence_schema.py"
+    ],
+    [
+      "tests.test_pipeline_orchestrator",
+      "infrastructure.pipelines.formats",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_pipeline_orchestrator.py"
+    ],
+    [
+      "tests.test_pipeline_orchestrator",
+      "infrastructure.pipelines.orchestrator",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_pipeline_orchestrator.py"
+    ],
+    [
+      "tests.test_pipeline_orchestrator",
+      "infrastructure.pipelines.processors",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_pipeline_orchestrator.py"
+    ],
+    [
+      "tests.test_timeline_extractor",
+      "infrastructure.pipelines.timeline_extractor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_timeline_extractor.py"
+    ],
+    [
+      "tests.test_timeline_extractor",
+      "utilities.timeline.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/test_timeline_extractor.py"
+    ],
+    [
+      "tests.smoke.test_system_health",
+      "shared.database.database_service",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/smoke/test_system_health.py"
+    ],
+    [
+      "tests.smoke.test_system_health",
+      "shared.database.database_service",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/smoke/test_system_health.py"
+    ],
+    [
+      "tests.pdf_service.conftest",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/conftest.py"
+    ],
+    [
+      "tests.pdf_service.test_ocr_components",
+      "pdf.ocr.ocr_coordinator",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/test_ocr_components.py"
+    ],
+    [
+      "tests.pdf_service.test_ocr_components",
+      "pdf.ocr.page_processor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/test_ocr_components.py"
+    ],
+    [
+      "tests.pdf_service.test_ocr_components",
+      "pdf.pdf_processor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/test_ocr_components.py"
+    ],
+    [
+      "tests.pdf_service.test_large_pdf_handling",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/test_large_pdf_handling.py"
+    ],
+    [
+      "tests.pdf_service.test_large_pdf_handling",
+      "pdf.ocr.page_processor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/pdf_service/test_large_pdf_handling.py"
+    ],
+    [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_ocr_pipeline.py"
+    ],
+    [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.validator",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_ocr_pipeline.py"
+    ],
+    [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.ocr_engine",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_ocr_pipeline.py"
+    ],
+    [
+      "tests.integration.test_ocr_pipeline",
+      "pdf.ocr.postprocessor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_ocr_pipeline.py"
+    ],
+    [
+      "tests.integration.test_intelligence_tables_population",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_intelligence_tables_population.py"
+    ],
+    [
+      "tests.integration.test_pdf_to_summary_flow",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_pdf_to_summary_flow.py"
+    ],
+    [
+      "tests.integration.test_email_to_summary_flow",
+      "gmail.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_email_to_summary_flow.py"
+    ],
+    [
+      "tests.integration.test_helpers",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/integration/test_helpers.py"
+    ],
+    [
+      "tests.shared.test_snippet_utils",
+      "shared.snippet_utils",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/shared/test_snippet_utils.py"
+    ],
+    [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.format_detector",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/document_processing/test_document_processors.py"
+    ],
+    [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.lifecycle_manager",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/document_processing/test_document_processors.py"
+    ],
+    [
+      "tests.document_processing.test_document_processors",
+      "infrastructure.documents.naming_convention",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/document_processing/test_document_processors.py"
+    ],
+    [
+      "tests.utilities.test_near_duplicate_detector",
+      "utilities.deduplication.near_duplicate_detector",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_near_duplicate_detector.py"
+    ],
+    [
+      "tests.utilities.test_notes_service",
+      "utilities.notes.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_notes_service.py"
+    ],
+    [
+      "tests.utilities.test_embedding_service",
+      "utilities.embeddings.embedding_service",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_embedding_service.py"
+    ],
+    [
+      "tests.utilities.test_embedding_service",
+      "utilities.embeddings.embedding_service",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_embedding_service.py"
+    ],
+    [
+      "tests.utilities.test_embedding_service",
+      "utilities.embeddings.embedding_service",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_embedding_service.py"
+    ],
+    [
+      "tests.utilities.test_archive_manager",
+      "utilities.archive_manager",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/utilities/test_archive_manager.py"
+    ],
+    [
+      "tests.transcription_service.test_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/transcription_service/test_integration.py"
+    ],
+    [
+      "tests.infrastructure.test_email_thread_processor_simple",
+      "infrastructure.documents.processors.email_thread_processor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/test_email_thread_processor_simple.py"
+    ],
+    [
+      "tests.infrastructure.test_document_converter",
+      "infrastructure.documents.document_converter",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/test_document_converter.py"
+    ],
+    [
+      "tests.infrastructure.test_html_cleaning",
+      "infrastructure.pipelines.document_exporter",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/test_html_cleaning.py"
+    ],
+    [
+      "tests.infrastructure.test_html_cleaning",
+      "shared.html_cleaner",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/test_html_cleaning.py"
+    ],
+    [
+      "tests.infrastructure.test_email_thread_processor",
+      "infrastructure.documents.processors.email_thread_processor",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/test_email_thread_processor.py"
+    ],
+    [
+      "tests.infrastructure.database.test_simple_db_comprehensive",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/database/test_simple_db_comprehensive.py"
+    ],
+    [
+      "tests.infrastructure.mcp.test_mcp_integration",
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/infrastructure/mcp/test_mcp_integration.py"
+    ],
+    [
+      "tests.timeline.test_timeline_consolidated",
+      "utilities.timeline.database",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/timeline/test_timeline_consolidated.py"
+    ],
+    [
+      "tests.timeline.test_timeline_consolidated",
+      "utilities.timeline.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/timeline/test_timeline_consolidated.py"
+    ],
+    [
+      "tests.services.summarization.test_summarization_integration",
+      "gmail.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/summarization/test_summarization_integration.py"
+    ],
+    [
+      "tests.services.summarization.test_summarization_integration",
+      "pdf.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/summarization/test_summarization_integration.py"
+    ],
+    [
+      "tests.services.summarization.test_summarization_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/summarization/test_summarization_integration.py"
+    ],
+    [
+      "tests.services.search.test_search_intelligence_mcp",
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/search/test_search_intelligence_mcp.py"
+    ],
+    [
+      "tests.services.search.test_search_intelligence",
+      "search_intelligence.duplicate_detector",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/search/test_search_intelligence.py"
+    ],
+    [
+      "tests.services.search.test_search_intelligence",
+      "search_intelligence.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/search/test_search_intelligence.py"
+    ],
+    [
+      "tests.services.search.test_search_intelligence",
+      "search_intelligence.similarity",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/search/test_search_intelligence.py"
+    ],
+    [
+      "tests.services.legal.test_legal_intelligence_mcp",
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/legal/test_legal_intelligence_mcp.py"
+    ],
+    [
+      "tests.services.legal.test_legal_bert_integration",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/legal/test_legal_bert_integration.py"
+    ],
+    [
+      "tests.services.gmail.test_gmail_service_core",
+      "gmail.main",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/tests/services/gmail/test_gmail_service_core.py"
+    ],
+    [
+      "pdf.pdf_storage",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/pdf_storage.py"
+    ],
+    [
+      "pdf.main",
+      "infrastructure.pipelines.data_pipeline",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/main.py"
+    ],
+    [
+      "pdf.main",
+      "infrastructure.pipelines.document_exporter",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/main.py"
+    ],
+    [
+      "pdf.main",
+      "shared.service_interfaces",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/main.py"
+    ],
+    [
+      "pdf.main",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/main.py"
+    ],
+    [
+      "pdf.pdf_storage_enhanced",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/pdf_storage_enhanced.py"
+    ],
+    [
+      "pdf.ocr.validator",
+      "pdf2image",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/ocr/validator.py"
+    ],
+    [
+      "pdf.ocr.rasterizer",
+      "pdf2image",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/pdf/ocr/rasterizer.py"
+    ],
+    [
+      "shared.original_file_manager",
+      "shared.date_utils",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/shared/original_file_manager.py"
+    ],
+    [
+      "shared.original_file_manager",
+      "shared.simple_db",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/shared/original_file_manager.py"
+    ],
+    [
+      "infrastructure.documents",
+      "infrastructure.format_detector",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/infrastructure/documents/__init__.py"
+    ],
+    [
+      "infrastructure.documents",
+      "infrastructure.lifecycle_manager",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/infrastructure/documents/__init__.py"
+    ],
+    [
+      "infrastructure.documents",
+      "infrastructure.naming_convention",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/infrastructure/documents/__init__.py"
+    ],
+    [
+      "infrastructure.documents",
+      "infrastructure.processors",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/infrastructure/documents/__init__.py"
+    ],
+    [
+      "gmail.gmail_api",
+      "gmail.oauth",
+      "/Users/jim/Projects/Email-Sync-Clean-Backup/gmail/gmail_api.py"
+    ]
+  ],
+  "circular_dependencies": [],
+  "orphaned_modules": [
+    "reindex_content",
+    "dependency_mapper",
+    "tools.cli.health_monitor",
+    "tools.cli.dedup_handler",
+    "tools.scripts.extract_timeline",
+    "tools.scripts.legal_timeline_export",
+    "tools.scripts.export_documents",
+    "tools.scripts.clean_exported_docs",
+    "tools.scripts.check_qdrant_documents",
+    "tools.scripts",
+    "tools.scripts.sync_vector_store",
+    "tools.scripts.clean_bad_transcripts",
+    "tools.scripts.migrate_to_loguru_bowler",
+    "tools.scripts.check_documents_in_vector",
+    "tools.scripts.process_embeddings",
+    "tools.scripts.cli",
+    "tools.scripts.cli.legal_handler",
+    "transcription.providers",
+    "entity.processors",
+    "entity.extractors",
+    "summarization",
+    "summarization.engine",
+    "pdf.pdf_storage",
+    "shared.logging_config",
+    "shared.loguru_config",
+    "shared.naming_utils",
+    "shared",
+    "shared.health_check",
+    "shared.file_operations",
+    "utilities",
+    "utilities.enhanced_archive_manager",
+    "Archive0817.vector_debug_fix",
+    "Archive0817.id_mismatch_audit",
+    "Archive0817.bowler_id_fixes",
+    "Archive0817.bowler_codebase_alignment",
+    "Archive0817.examples.rich_cli_demo",
+    "Archive0817.examples.search_intelligence_demo",
+    "Archive0817.examples.rich_search_demo",
+    "infrastructure.mcp_servers.timeline_mcp_server",
+    "infrastructure.mcp_servers.legal_mcp_server",
+    "infrastructure.mcp_servers",
+    "infrastructure.mcp_servers.docs_mcp_server",
+    "infrastructure.mcp_servers.entity_mcp_server",
+    "infrastructure.mcp_servers.search_mcp_server",
+    "infrastructure.documents",
+    "infrastructure.documents.document_pipeline",
+    "infrastructure.documents.processors.text_processor",
+    "infrastructure.documents.processors.markdown_processor",
+    "infrastructure.documents.processors.docx_processor",
+    "gmail"
+  ],
+  "god_modules": [
+    [
+      "shared.simple_db",
+      48
+    ],
+    [
+      "utilities.embeddings",
+      13
+    ],
+    [
+      "utilities.vector_store",
+      11
+    ]
+  ],
+  "layer_violations": [
+    [
+      "shared.health_check",
+      "utilities.vector_store"
+    ],
+    [
+      "shared.health_check",
+      "utilities.embeddings"
+    ],
+    [
+      "infrastructure.pipelines.intelligence",
+      "entity.main"
+    ],
+    [
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "legal_intelligence.main"
+    ],
+    [
+      "infrastructure.mcp_servers.legal_intelligence_mcp",
+      "entity.main"
+    ],
+    [
+      "infrastructure.mcp_servers.legal_mcp_server",
+      "entity.main"
+    ],
+    [
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "search_intelligence"
+    ],
+    [
+      "infrastructure.mcp_servers.search_intelligence_mcp",
+      "entity.main"
+    ],
+    [
+      "infrastructure.mcp_servers.entity_mcp_server",
+      "entity.main"
+    ],
+    [
+      "infrastructure.documents.document_converter",
+      "pdf.pdf_processor_enhanced"
+    ],
+    [
+      "infrastructure.documents.document_converter",
+      "pdf.ocr.ocr_coordinator"
+    ],
+    [
+      "infrastructure.documents.document_converter",
+      "pdf.pdf_validator"
+    ],
+    [
+      "infrastructure.documents.document_converter",
+      "pdf.pdf_storage_enhanced"
+    ],
+    [
+      "infrastructure.documents.document_pipeline",
+      "pdf.main"
+    ]
+  ],
+  "external_dependencies": [
+    "uuid",
+    "summarization",
+    "shutil",
+    "concurrent.futures",
+    "enum",
+    "time",
+    "base64",
+    "sklearn.feature_extraction.text",
+    "bowler",
+    "rich.table",
+    "tqdm",
+    "mcp.types",
+    "summarization.engine",
+    "cv2",
+    "spacy",
+    "librosa",
+    "rich.console",
+    "search",
+    "random",
+    "scipy.cluster.hierarchy",
+    "gc",
+    "dateutil",
+    "rich",
+    "keyring",
+    "socket",
+    "PIL",
+    "pytesseract",
+    "scipy.spatial.distance",
+    "ast",
+    "sklearn.metrics.pairwise",
+    "questionary",
+    "pytest",
+    "traceback",
+    "logging",
+    "dataclasses",
+    "logging.handlers",
+    "html",
+    "numpy",
+    "loguru",
+    "difflib",
+    "chardet",
+    "googleapiclient.discovery",
+    "yaml",
+    "inspect",
+    "google.oauth2.credentials",
+    "torch",
+    "unittest",
+    "email.utils",
+    "zipfile",
+    "argparse",
+    "qdrant_client",
+    "vector_service.qdrant",
+    "threading",
+    "google.auth.transport.requests",
+    "hypothesis",
+    "networkx",
+    "subprocess",
+    "sklearn.cluster",
+    "vector_service.config",
+    "rich.progress",
+    "contextlib",
+    "rich.syntax",
+    "caching",
+    "tempfile",
+    "csv",
+    "transformers",
+    "sqlite3",
+    "rich.panel",
+    "urllib.error",
+    "docx",
+    "frontmatter",
+    "unittest.mock",
+    "whisper",
+    "mcp.server.stdio",
+    "hashlib",
+    "asyncio",
+    "unicodedata",
+    "mcp.server",
+    "vector_service.embeddings",
+    "functools",
+    "PyPDF2",
+    "abc",
+    "mcp.server.models",
+    "qdrant_client.models",
+    "openai",
+    "google_auth_oauthlib.flow",
+    "psutil",
+    "rich.tree"
+  ]
+}

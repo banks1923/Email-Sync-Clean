@@ -27,6 +27,7 @@ from mcp.types import TextContent, Tool
 # Import services
 try:
     from search import get_search_service
+
     from shared.simple_db import SimpleDB
 
     SERVICES_AVAILABLE = True

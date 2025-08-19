@@ -11,7 +11,10 @@ from unittest.mock import Mock, patch
 import pytest
 
 try:
-    from infrastructure.documents.document_converter import DocumentConverter, get_document_converter
+    from infrastructure.documents.document_converter import (
+        DocumentConverter,
+        get_document_converter,
+    )
     CONVERTER_AVAILABLE = True
 except ImportError:
     CONVERTER_AVAILABLE = False

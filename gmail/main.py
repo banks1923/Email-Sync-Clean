@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from typing import Any
 
 from loguru import logger
@@ -11,7 +10,9 @@ from summarization import get_document_summarizer
 
 # Import EmailThreadProcessor
 try:
-    from infrastructure.documents.processors.email_thread_processor import get_email_thread_processor
+    from infrastructure.documents.processors.email_thread_processor import (
+        get_email_thread_processor,
+    )
     THREAD_PROCESSOR_AVAILABLE = True
 except ImportError:
     THREAD_PROCESSOR_AVAILABLE = False
@@ -52,15 +53,8 @@ class GmailService:
         self._setup_logging()
 
     def _setup_logging(self) -> None:
-        """Set up file and console logging for Gmail service."""
+        """Set up log directory for Gmail service."""
         os.makedirs("logs", exist_ok=True)
-        f"logs/gmail_service_{datetime.now().strftime('%Y%m%d')}.log"
-        # logging.basicConfig(  # Now configured in shared/loguru_config.py
-        #     level="INFO",
-        #     format="%(asctime)s - %(levelname)s - %(message)s",
-        #     handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
-        # )
-        # Logger is now imported globally from loguru
 
     def sync_emails(
         self,
@@ -624,7 +618,7 @@ class GmailService:
             logger.warning(f"Could not generate email summaries: {e}")
 
 
-def main():
+def main() -> None:
     service = GmailService()
     result = service.sync_emails()  # Uses config by default
     print(result)

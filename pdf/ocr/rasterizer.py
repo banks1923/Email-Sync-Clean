@@ -17,7 +17,7 @@ except ImportError:
 class PDFRasterizer:
     """Converts PDF pages to images for OCR processing."""
 
-    def __init__(self, dpi: int = 300):
+    def __init__(self, dpi: int = 300) -> None:
         """
         Initialize rasterizer with DPI setting.
 

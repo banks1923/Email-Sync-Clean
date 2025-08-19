@@ -8,7 +8,7 @@ raw → staged → processed → export (or quarantine on error)
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -57,8 +57,8 @@ class DocumentLifecycleManager:
         file_path: Path, 
         new_name: str | None = None,
         archive_original: bool = True,
-        case_name: Optional[str] = None,
-        metadata: Optional[dict] = None
+        case_name: str | None = None,
+        metadata: dict | None = None
     ) -> Path:
         """
         Move file from staged to processed with optional archiving.

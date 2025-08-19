@@ -1,0 +1,29 @@
+{
+  "include": [
+    "shared",
+    "gmail", 
+    "pdf",
+    "transcription",
+    "entity",
+    "summarization",
+    "utilities",
+    "infrastructure"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    "tests",
+    "data",
+    "tools/scripts"
+  ],
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "warning", 
+  "reportOptionalMemberAccess": "warning",
+  "reportGeneralTypeIssues": "warning",
+  "reportArgumentType": "warning",
+  "reportCallIssue": "warning",
+  "reportPossiblyUnboundVariable": "warning",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}

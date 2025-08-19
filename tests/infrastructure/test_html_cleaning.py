@@ -2,8 +2,8 @@
 Test HTML cleaning functionality for document export.
 """
 
-from shared.html_cleaner import clean_html_content, extract_email_content
 from infrastructure.pipelines.document_exporter import DocumentExporter
+from shared.html_cleaner import clean_html_content, extract_email_content
 
 
 class TestHTMLCleaning:

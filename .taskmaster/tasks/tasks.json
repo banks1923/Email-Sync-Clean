@@ -123,5 +123,38 @@
       "updated": "2025-08-19T00:20:26.506Z",
       "description": "Tasks for master context"
     }
+  },
+  "import-cleanup": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Repair Broken Import Paths for shared.simple_db and Other Modules",
+        "description": "Identify and correct 107 failing import statements across the codebase, starting with the 48 modules that incorrectly reference shared.simple_db.",
+        "details": "1. Inventory & Prioritisation:\n   • Generate a list of all ImportError stack traces from the CI logs and group by module path.\n   • Tag the 48 files referencing shared.simple_db as P1; the remaining 59 files as P2.\n\n2. Root-Cause Analysis:\n   • Confirm the canonical location of simple_db (e.g. src/shared/simple_db or src/core/db/simple_db).\n   • Check whether the package has been renamed, relocated, or improperly initialised in __init__.py files.\n\n3. Automated Refactor:\n   • Write a one-off Python script that walks the repository (Pathlib + ast) and rewrites from … import … and import … lines that reference the old path.\n   • Keep a mapping dictionary such as {\n       \"shared.simple_db\": \"shared.db.simple_db\",\n       \"utils.helpers\": \"shared.utils.helpers\",\n       …\n     } so the same script can fix remaining import errors.\n   • Ensure the script preserves relative/absolute imports and formatting via lib2to3 or astor.\n\n4. Manual Edge-Cases:\n   • Review any files the script skips (dynamic imports, __all__ overrides, try/except ImportError blocks) and patch by hand.\n   • Add or update __init__.py where implicit namespace packages are causing look-ups to fail.\n\n5. Lint & Build:\n   • Run mypy/flake8 to ensure no unresolved references remain.\n   • Re-run the entire test suite and CI build; iterate until green.\n\n6. Regression Protection:\n   • Add import sanity check to pre-commit (python -m pip checkimports) so new PRs cannot introduce broken imports again.\n   • Document path conventions in CONTRIBUTING.md.\n\nConsiderations:\n• Maintain backward compatibility by leaving deprecated re-export stubs (e.g. in shared/__init__.py) that raise deprecation warnings but do not break existing callers.\n• If simple_db uses relative imports internally, verify those still resolve after relocation.\n• Keep the refactor in its own PR for ease of review and rollback.",
+        "testStrategy": "1. Unit & Integration Tests\n   • Execute pytest ‑m \"not slow\" locally; expect zero ImportErrors.\n   • Run the full CI pipeline; build must pass.\n\n2. Static Analysis\n   • Run python -m pip install .[dev] && python -m pylint $(git ls-files '*.py') to ensure no unresolved-import warnings.\n   • mypy --strict should report 0 \"Cannot find module\" errors.\n\n3. Runtime Smoke Test\n   • Start the application (docker-compose up or python main.py) and hit /health endpoint; expect HTTP 200.\n   • Trigger a code path that uses shared.simple_db (e.g. create/read/delete test record) to verify the module works post-import.\n\n4. Regression Gate\n   • Ensure the new pre-commit hook fails if a developer re-introduces an invalid import during a dummy commit.\n\nAll tests above must pass without manual intervention.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Purge 50 Orphaned Modules With No Incoming References",
+        "description": "Identify, validate, and physically remove 50 modules that are not referenced anywhere in the code-base to reduce bloat and build time.",
+        "details": "1. Discovery\n   • Start from the latest dependency graph produced by our CI (build-dependency-graph step).\n   • Cross-check the list of 50 candidates supplied by Product/Architecture with a fresh run of `python -m pip install .[dev] && python -m depgraph --format=json > dep.json` to ensure they still have zero incoming edges.\n   • Run `pytest --cov` to collect runtime coverage; any candidate touched at runtime must be excluded or first migrated.\n\n2. Safety Validation\n   • Grep code-base for dynamic import usage: `grep -R \"__import__(\\|importlib\" src/ | grep <module_name>`.\n   • Scan docs and tooling scripts for hard-coded paths to each module.\n   • For any false-positive (e.g., used via entry-points), document and drop from the list.\n\n3. Staged Removal\n   • Branch: `feature/remove-orphaned-mods`.\n   • Delete module files and associated tests, fixtures, and data.\n   • Update `__all__` exports, `pyproject.toml`, `setup.cfg`, and `MANIFEST.in` to remove package declarations.\n   • Run `autoflake --remove-all-unused-imports -r src/` to clean now-unused imports in remaining code.\n\n4. Refactor & Clean-up\n   • Execute `pre-commit run -a` to apply formatting/linters.\n   • Run `scripts/build_size_check.sh` to capture size reduction metrics (goal: ≥ 8% src LOC reduction).\n\n5. Documentation & Changelog\n   • Add a section to `CHANGELOG.md` under “Breaking Changes – 2.x” noting removed modules.\n   • Update internal architecture diagram and wiki page \"Module Inventory\".\n\n6. PR Review Checklist\n   • All CI checks green.\n   • No new import-errors in `pylint` or `mypy` outputs.\n   • Sign-off from Tech Lead and Docs owner.",
+        "testStrategy": "1. Static Analysis\n   • Re-generate dependency graph; assert all removed modules have zero nodes in the graph.\n   • Run `pylint` and `mypy` expecting no `E0401` or `error: Module not found`.\n\n2. Unit & Integration Tests\n   • `pytest -m \"not slow\"` locally, then full CI test matrix; all must pass.\n   • Ensure coverage % drop ≤ 1%; investigate if higher.\n\n3. Runtime Smoke Test\n   • Build and start the Docker image; run `python -m app.main --smoke` expecting exit code 0.\n\n4. Packaging Verification\n   • `pip install dist/*.whl` in a fresh venv; import top-level package without error.\n\n5. Build Size Assertion\n   • Compare `du -sh src/` before vs after; fail task if shrinkage < 5%.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-19T04:07:20.362Z",
+      "updated": "2025-08-19T04:08:18.686Z",
+      "description": "Fix broken imports and clean up orphaned modules from dependency analysis"
+    }
   }
 }

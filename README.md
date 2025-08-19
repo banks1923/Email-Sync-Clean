@@ -43,16 +43,16 @@ tools/scripts/vsearch note "Meeting Notes" "Discussion points" --tags legal
 
 ## ✨ Key Features
 
-### 🔍 Hybrid AI Search
+### 🔍 AI-Powered Database Search
 - **Semantic Search**: Legal BERT 1024D embeddings for context understanding
-- **Keyword Fallback**: Automatic fallback when vector service unavailable
-- **Unified Search**: Search emails, PDFs, transcripts, and notes together
-- **Advanced Filters**: Date ranges, content types, and tag-based filtering (NEW: Task 6)
+- **Database Storage**: SQLite with 52+ documents (emails, PDFs, transcripts)
+- **Unified Search**: Search all content types in one database
+- **Advanced Filters**: Date ranges, content types, and tag-based filtering
 - **Flexible Dates**: Natural language dates ("last week", "3 days ago", "this month")
 - **OCR Support**: Automatic text extraction from scanned PDFs
 - **Batch Processing**: High-performance bulk document operations (2000+ records/sec)
 - **Gmail Sync**: Incremental sync with History API and content deduplication
-- **Clean Services**: Simple, maintainable architecture (~550 lines total)
+- **Clean Architecture**: Simplified database-only system (analog removed)
 
 ### 🧠 Search Intelligence (✅ COMPLETE: Task 5)
 - **Smart Search**: Query preprocessing with abbreviation expansion and synonyms

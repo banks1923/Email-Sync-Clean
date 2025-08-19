@@ -6,7 +6,6 @@ No complex hierarchies - just practical error handling that works.
 from typing import Any
 
 
-
 class ErrorHandler:
     """Simple error handler - no enterprise patterns, just what works."""
 

@@ -14,13 +14,13 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from transcription.config import (
-    TranscriptionMode, 
-    TranscriptionConfig,
+    HybridConfig,
     LocalWhisperConfig,
     OpenAIConfig,
-    HybridConfig,
     QualityConfig,
-    get_config_manager
+    TranscriptionConfig,
+    TranscriptionMode,
+    get_config_manager,
 )
 
 
@@ -98,7 +98,7 @@ def test_config_manager():
         # Cleanup
         try:
             os.unlink(temp_config)
-        except:
+        except (FileNotFoundError, OSError):
             pass
         
         return True

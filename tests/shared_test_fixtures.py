@@ -36,7 +36,7 @@ class TestEmbedder:
         for text in texts:
             result = self.embed_text(text)
             if result["success"]:
-                utilities.embeddings.append(result["embedding"])
+                embeddings.append(result["embedding"])
             else:
                 return {"success": False, "error": "Embedding failed"}
 

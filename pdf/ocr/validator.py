@@ -15,7 +15,7 @@ except ImportError:
 class PDFValidator:
     """Validates PDFs and determines processing requirements."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.dependencies_valid = self._check_dependencies()
 
     def _check_dependencies(self) -> bool:

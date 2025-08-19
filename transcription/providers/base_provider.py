@@ -6,7 +6,7 @@ following the project's clean architecture principles and established patterns.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 
@@ -18,7 +18,7 @@ class BaseTranscriptionProvider(ABC):
     must implement. Follows project patterns from WhisperProvider and other services.
     """
 
-    def __init__(self, provider_name: str):
+    def __init__(self, provider_name: str) -> None:
         """Initialize base provider with common configuration.
         
         Args:
@@ -43,10 +43,9 @@ class BaseTranscriptionProvider(ABC):
         Returns:
             bool: True if provider can be used, False otherwise
         """
-        pass
 
     @abstractmethod
-    def transcribe_file(self, file_path: str, context_type: str = "legal_general") -> Dict[str, Any]:
+    def transcribe_file(self, file_path: str, context_type: str = "legal_general") -> dict[str, Any]:
         """Transcribe audio/video file with legal domain context.
         
         Args:
@@ -68,10 +67,9 @@ class BaseTranscriptionProvider(ABC):
                 "error": str               # Error message if success=False
             }
         """
-        pass
 
     @abstractmethod
-    def validate_audio(self, file_path: str) -> Dict[str, Any]:
+    def validate_audio(self, file_path: str) -> dict[str, Any]:
         """Validate audio file for transcription requirements.
         
         Args:
@@ -85,7 +83,6 @@ class BaseTranscriptionProvider(ABC):
                 "error": str            # Error message if validation fails
             }
         """
-        pass
 
     def get_legal_prompt(self, context_type: str) -> str:
         """Get legal domain prompt for the specified context type.
@@ -102,7 +99,7 @@ class BaseTranscriptionProvider(ABC):
             
         return self.legal_prompts.get(context_type, self.legal_prompts["legal_general"])
 
-    def validate_file_path(self, file_path: str) -> Dict[str, Any]:
+    def validate_file_path(self, file_path: str) -> dict[str, Any]:
         """Common file path validation for all providers.
         
         Args:
@@ -129,9 +126,9 @@ class BaseTranscriptionProvider(ABC):
     def create_standard_response(
         self, 
         success: bool,
-        data: Dict[str, Any] = None,
+        data: dict[str, Any] = None,
         error: str = ""
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create standardized response format for all providers.
         
         Args:
@@ -151,7 +148,7 @@ class BaseTranscriptionProvider(ABC):
             
         return response
 
-    def calculate_basic_stats(self, segments: list, full_text: str) -> Dict[str, Any]:
+    def calculate_basic_stats(self, segments: list, full_text: str) -> dict[str, Any]:
         """Calculate basic transcription statistics common to all providers.
         
         Args:
@@ -180,7 +177,7 @@ class BaseTranscriptionProvider(ABC):
             "speech_rate": speech_rate
         }
 
-    def export_to_csv(self, transcription_data: Dict[str, Any], output_path: Path) -> Dict[str, Any]:
+    def export_to_csv(self, transcription_data: dict[str, Any], output_path: Path) -> dict[str, Any]:
         """Export transcription data to CSV format.
         
         Common CSV export functionality that all providers can use.

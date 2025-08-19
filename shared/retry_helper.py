@@ -9,7 +9,6 @@ from functools import wraps
 from typing import Any
 
 
-
 def retry_on_failure(
     max_attempts: int = 3,
     exceptions: tuple[type[Exception], ...] = (Exception,),

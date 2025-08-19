@@ -11,6 +11,7 @@ from typing import Any
 from loguru import logger
 
 from shared.simple_db import SimpleDB
+
 from .providers.whisper_provider import WhisperProvider
 
 
@@ -20,7 +21,7 @@ class TranscriptionService:
     Direct interface for converting audio/video to text with database storage.
     """
 
-    def __init__(self, db_path: str = "data/emails.db", model_name: str = "large-v3"):
+    def __init__(self, db_path: str = "emails.db", model_name: str = "large-v3") -> None:
         """Initialize transcription service.
         
         Args:

@@ -6,11 +6,11 @@ Process specific files first with auto-proceed
 
 import csv
 import json
-import time
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any
 import subprocess
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any
 
 try:
     import openai
@@ -66,7 +66,7 @@ class OpenAIBatchTranscriber:
         else:
             return "landlord_tenant"
     
-    def transcribe_file(self, file_path: Path) -> Dict[str, Any]:
+    def transcribe_file(self, file_path: Path) -> dict[str, Any]:
         """Transcribe a single file using OpenAI Whisper API."""
         context_type = self.determine_context_type(file_path)
         prompt = self.legal_prompts.get(context_type, self.legal_prompts["landlord_tenant"])
@@ -126,7 +126,7 @@ class OpenAIBatchTranscriber:
                 "cost": 0.0
             }
     
-    def process_files(self, file_paths: List[Path]) -> None:
+    def process_files(self, file_paths: list[Path]) -> None:
         """Process multiple files with parallel execution."""
         print("\n🚀 Starting OpenAI Whisper API batch transcription")
         print(f"📁 Files to process: {len(file_paths)}")

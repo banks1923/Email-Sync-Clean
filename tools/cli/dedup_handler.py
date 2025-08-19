@@ -3,11 +3,11 @@ CLI handlers for deduplication commands
 """
 
 import json
-from typing import Optional
-from rich.console import Console
-from rich.table import Table
-from rich.progress import track
+
 from loguru import logger
+from rich.console import Console
+from rich.progress import track
+from rich.table import Table
 
 from shared.simple_db import SimpleDB
 from utilities.deduplication import get_duplicate_detector
@@ -16,7 +16,7 @@ console = Console()
 
 
 def find_duplicates_command(
-    content_type: Optional[str] = None,
+    content_type: str | None = None,
     threshold: float = 0.8,
     show_groups: bool = False,
     output_json: bool = False
@@ -181,7 +181,7 @@ def compare_documents_command(
 def deduplicate_database_command(
     threshold: float = 0.95,
     dry_run: bool = True,
-    content_type: Optional[str] = None
+    content_type: str | None = None
 ):
     """
     Remove duplicate content from database

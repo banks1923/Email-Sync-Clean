@@ -6,11 +6,11 @@ Process smaller files that are under 25MB API limit
 
 import csv
 import json
-import time
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any
 import subprocess
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any
 
 try:
     import openai
@@ -72,10 +72,10 @@ class OpenAIBatchTranscriber:
         try:
             size = file_path.stat().st_size
             return size < self.max_file_size and size > 1000  # At least 1KB
-        except:
+        except (FileNotFoundError, OSError, PermissionError):
             return False
     
-    def transcribe_file(self, file_path: Path) -> Dict[str, Any]:
+    def transcribe_file(self, file_path: Path) -> dict[str, Any]:
         """Transcribe a single file using OpenAI Whisper API."""
         # Check file size first
         if not self.check_file_size(file_path):
@@ -146,7 +146,7 @@ class OpenAIBatchTranscriber:
                 "cost": 0.0
             }
     
-    def process_files(self, file_paths: List[Path]) -> None:
+    def process_files(self, file_paths: list[Path]) -> None:
         """Process multiple files with parallel execution."""
         print("\n🚀 OpenAI Whisper API Batch Transcription")
         print(f"📁 Files to process: {len(file_paths)}")

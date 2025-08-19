@@ -1,13 +1,14 @@
 """Comprehensive tests for snippet utilities."""
 
 import pytest
+
 from shared.snippet_utils import (
+    _calculate_snippet_score,
     extract_snippet,
+    format_search_result,
+    get_cached_snippet,
     highlight_keywords,
     rank_snippets,
-    _calculate_snippet_score,
-    get_cached_snippet,
-    format_search_result
 )
 
 

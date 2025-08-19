@@ -3,15 +3,14 @@ System health monitoring and diagnostic tools
 """
 
 import os
-import psutil
 import subprocess
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict
+from pathlib import Path
 
+import psutil
 from rich.console import Console
-from rich.table import Table
 from rich.progress import track
+from rich.table import Table
 
 console = Console()
 
@@ -23,7 +22,7 @@ class HealthMonitor:
         self.issues = []
         self.warnings = []
         
-    def check_system_resources(self) -> Dict:
+    def check_system_resources(self) -> dict:
         """Check system resource usage"""
         try:
             # Memory usage
@@ -70,7 +69,7 @@ class HealthMonitor:
             self.issues.append(f"Resource check failed: {e}")
             return {"healthy": False, "error": str(e)}
             
-    def check_database_health(self) -> Dict:
+    def check_database_health(self) -> dict:
         """Check database integrity and performance"""
         try:
             from shared.simple_db import SimpleDB
@@ -129,7 +128,7 @@ class HealthMonitor:
             self.issues.append(f"Database health check failed: {e}")
             return {"healthy": False, "error": str(e)}
             
-    def check_dependencies(self) -> Dict:
+    def check_dependencies(self) -> dict:
         """Check Python dependencies"""
         try:
             required_packages = [
@@ -187,12 +186,12 @@ class HealthMonitor:
             self.issues.append(f"Dependency check failed: {e}")
             return {"healthy": False, "error": str(e)}
             
-    def check_gmail_connection(self) -> Dict:
+    def check_gmail_connection(self) -> dict:
         """Test Gmail API connection"""
         try:
-            from gmail.oauth import GmailAuth
             from gmail.gmail_api import GmailAPI
-            
+            from gmail.oauth import GmailAuth
+
             # Check credentials
             creds_path = Path("gmail/credentials.json")
             token_path = Path("gmail/token.json")
@@ -244,7 +243,7 @@ class HealthMonitor:
             self.issues.append(f"Gmail check failed: {e}")
             return {"healthy": False, "error": str(e)}
             
-    def check_qdrant_status(self) -> Dict:
+    def check_qdrant_status(self) -> dict:
         """Check Qdrant vector database status"""
         try:
             import requests
@@ -295,7 +294,7 @@ class HealthMonitor:
             self.warnings.append(f"Qdrant status check failed: {e}")
             return {"healthy": True, "error": str(e)}  # Still healthy since optional
             
-    def check_log_files(self) -> Dict:
+    def check_log_files(self) -> dict:
         """Check log file status and recent errors"""
         try:
             logs_dir = Path("logs")
@@ -349,7 +348,7 @@ class HealthMonitor:
             self.warnings.append(f"Log check failed: {e}")
             return {"healthy": True, "error": str(e)}
             
-    def check_file_permissions(self) -> Dict:
+    def check_file_permissions(self) -> dict:
         """Check critical file permissions"""
         try:
             critical_paths = [
@@ -392,7 +391,7 @@ class HealthMonitor:
             self.issues.append(f"Permission check failed: {e}")
             return {"healthy": False, "error": str(e)}
             
-    def run_comprehensive_check(self, verbose: bool = False) -> Dict:
+    def run_comprehensive_check(self, verbose: bool = False) -> dict:
         """Run all health checks"""
         console.print("[bold cyan]🏥 Running System Health Check[/bold cyan]")
         
@@ -436,7 +435,7 @@ class HealthMonitor:
         
         return results
         
-    def _display_health_results(self, results: Dict, verbose: bool):
+    def _display_health_results(self, results: dict, verbose: bool):
         """Display health check results"""
         
         # Overall status
@@ -488,7 +487,7 @@ class HealthMonitor:
                 
             console.print(table)
             
-    def _get_check_details(self, check_name: str, result: Dict) -> str:
+    def _get_check_details(self, check_name: str, result: dict) -> str:
         """Get human-readable details for a check"""
         if check_name == "system_resources":
             return f"Memory: {result.get('memory_percent', 0):.1f}%, Disk: {result.get('disk_percent', 0):.1f}%"

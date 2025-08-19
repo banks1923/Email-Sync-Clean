@@ -3,9 +3,8 @@ Simple HTML cleaning utilities for email content.
 Uses only standard library to avoid external dependencies.
 """
 
-import re
 import html
-from typing import Optional
+import re
 
 
 def clean_html_content(html_content: str) -> str:
@@ -131,7 +130,7 @@ def remove_email_boilerplate(content: str) -> str:
     return '\n'.join(clean_lines)
 
 
-def format_as_clean_markdown(content: str, title: Optional[str] = None) -> str:
+def format_as_clean_markdown(content: str, title: str | None = None) -> str:
     """
     Format cleaned content as markdown.
     

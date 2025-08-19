@@ -16,8 +16,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from transcription.config import TranscriptionMode, get_config_manager
-from transcription.provider_factory import get_provider_factory
 from transcription.main import TranscriptionService
+from transcription.provider_factory import get_provider_factory
 
 
 def test_configuration_system():
@@ -141,7 +141,7 @@ def test_configuration_system():
         # Cleanup
         try:
             os.unlink(temp_config)
-        except:
+        except (FileNotFoundError, OSError):
             pass
             
     except Exception as e:

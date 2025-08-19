@@ -49,7 +49,7 @@ def test_requirements_consistency():
     assert req_file.exists(), "requirements.txt must exist"
 
     content = req_file.read_text()
-    lines = [l.strip() for l in content.splitlines() if l.strip() and not l.startswith("#")]
+    lines = [line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")]
 
     # Check for duplicates
     packages = {}

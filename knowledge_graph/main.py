@@ -197,7 +197,7 @@ class KnowledgeGraphService:
         # Create new node
         content = self.db.get_content(content_id)
         if content:
-            return self.add_node(content_id, content["content_type"], content.get("title"))
+            return self.add_node(content_id, content["type"], content.get("title"))
         else:
             logger.error(f"Cannot find content {content_id}")
             return None

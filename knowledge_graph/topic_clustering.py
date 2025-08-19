@@ -51,8 +51,8 @@ class TopicClusteringService:
             return {"error": "Need at least 2 documents for clustering"}
 
         # Convert to numpy array
-        embedding_matrix = np.array(list(utilities.embeddings.values()))
-        content_id_list = list(utilities.embeddings.keys())
+        embedding_matrix = np.array(list(embeddings.values()))
+        content_id_list = list(embeddings.keys())
 
         # Calculate distance matrix and perform clustering
         distances = pdist(embedding_matrix, metric="cosine")
@@ -89,7 +89,7 @@ class TopicClusteringService:
             if content:
                 text = f"{content['title'] or ''} {content['content'] or ''}"[:5000]
                 embedding = self.embedding_service.encode(text)
-                utilities.embeddings[content_id] = embedding
+                embeddings[content_id] = embedding
 
         return embeddings
 
@@ -372,7 +372,7 @@ class TopicClusteringService:
         if content_id not in embeddings:
             return None
 
-        new_embedding = utilities.embeddings[content_id]
+        new_embedding = embeddings[content_id]
 
         # Calculate average similarity to each cluster
         best_cluster = None
