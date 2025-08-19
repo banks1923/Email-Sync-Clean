@@ -79,7 +79,8 @@ make lint-all                 # Run both flake8 and ruff linters
 make check                    # Comprehensive quality checks
 make clean                    # Clean up caches and generated files
 
-# System Diagnostics
+# System Operations
+make full-run                 # Complete end-to-end system pipeline (Qdrant required)
 make diag-wiring              # Full system diagnostic - validate wiring & efficiency
 make vector-smoke             # Quick vector smoke test - upsert 50 points & run 2 searches
 

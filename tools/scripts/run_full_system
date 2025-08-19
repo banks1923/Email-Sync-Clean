@@ -99,7 +99,7 @@ class SystemRunner:
         elif os.getenv("ANTHROPIC_API_KEY"):
             logger.info("  ✅ Anthropic API key found")
         else:
-            logger.info("  ℹ️  No AI API keys found (optional)")
+            logger.info("  ℹ️  No AI API keys found (optional for this run)")
 
         logger.success("✅ All prerequisites checked")
         return True
@@ -442,6 +442,16 @@ class SystemRunner:
 
         runtime = datetime.now() - self.start_time
 
+        # Alignment check (embedding dim & L2 norm quick sanity)
+        try:
+            emb_service = get_embedding_service()
+            vec = emb_service.encode("alignment test")
+            dim = len(vec) if hasattr(vec, "__len__") else None
+            norm = float((vec**2).sum() ** 0.5) if dim else None
+            logger.info(f"🔧 Alignment: embed_dim={dim}, l2_norm≈{norm:.3f} (expected ~1.0)")
+        except Exception:
+            logger.info("🔧 Alignment: unavailable")
+
         # Database stats
         try:
             db = SimpleDB()
@@ -501,10 +511,9 @@ class SystemRunner:
             # Run email sync
             self.sync_emails()
 
-            # Generate embeddings and populate vector store if we have Qdrant
-            if qdrant_running:
-                self.generate_embeddings()
-                self.populate_vector_store()
+            # Generate embeddings and populate vector store (Qdrant required)
+            self.generate_embeddings()
+            self.populate_vector_store()
 
             # Generate summaries
             self.generate_summaries()

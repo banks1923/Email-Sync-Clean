@@ -1,4 +1,4 @@
-.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-fix complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke
+.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-fix complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke full-run
 
 # Default target
 .DEFAULT_GOAL := help
@@ -265,3 +265,7 @@ vector-smoke: ## Quick vector smoke test - upsert 50 points & run 2 searches
 	print('✓ Search 2: {} hits, top score: {:.3f}'.format(len(results2), results2[0]['score']) if results2 else '✗ No hits'); \
 	vs.delete_many(test_ids); \
 	print('✓ Cleaned up test data')"
+
+full-run: ## Complete end-to-end system pipeline (Qdrant required)
+	@echo "🚀 Starting full system pipeline..."
+	$(PYTHON) tools/scripts/run_full_system
