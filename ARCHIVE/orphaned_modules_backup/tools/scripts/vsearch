@@ -1,0 +1,692 @@
+#!/usr/bin/env python3
+"""
+AI-Powered Database Search CLI - Clean Version
+Uses new clean services architecture with database-only operation
+Usage: scripts/vsearch [command] [options]
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Import new clean services with error handling
+try:
+    from search_intelligence import get_search_intelligence_service as get_search_service
+    from shared.error_handler import ErrorHandler
+    from shared.health_check import run_health_check
+    from shared.simple_db import SimpleDB
+
+    SERVICES_AVAILABLE = True
+except ImportError as e:
+    SERVICES_AVAILABLE = False
+    print(f"⚠️  Some services not available: {e}")
+    print("💡 Tip: Run 'pip install -r requirements.txt' to install dependencies")
+
+
+def search_command(query, limit=5, verbose=False, filters=None):
+    """AI-Powered Database Search using clean services with better error handling and filters"""
+    # Display search info with filters
+    filter_info = ""
+    if filters:
+        filter_parts = []
+        if filters.get("since"):
+            filter_parts.append(f"since {filters['since']}")
+        if filters.get("until"):
+            filter_parts.append(f"until {filters['until']}")
+        if filters.get("content_types"):
+            types_str = ",".join(filters["content_types"])
+            filter_parts.append(f"types: {types_str}")
+        if filters.get("tags"):
+            tags_str = (
+                ",".join(filters["tags"]) if isinstance(filters["tags"], list) else filters["tags"]
+            )
+            logic = filters.get("tag_logic", "OR")
+            filter_parts.append(f"tags: {tags_str} ({logic})")
+        if filter_parts:
+            filter_info = f" (Filters: {', '.join(filter_parts)})"
+
+    print(f"🤖 AI-Powered Search for: '{query}'{filter_info}")
+
+    # Use unified search from SearchIntelligenceService if available
+    if SERVICES_AVAILABLE:
+        print(f"🔍 Running database search...")
+        try:
+            search_service = get_search_service()
+
+            # Check if unified_search method is available
+            if hasattr(search_service, "unified_search"):
+                # Database-only search (analog removed)
+                results = search_service.unified_search(
+                    query=query, limit=limit, use_expansion=True, filters=filters
+                )
+
+                if results:
+                    print(f"✅ Found {len(results)} matches")
+                    display_unified_search_results(results, f"🔍 Database Search")
+                    return True
+                else:
+                    print("❌ No results found")
+                    print("💡 Try different keywords or check if content has been indexed")
+                    return False
+            else:
+                # Fallback to legacy method if unified_search not available
+                print("⚠️  Using legacy search method...")
+                results = search_service.search(query, limit=limit, filters=filters)
+
+                if results:
+                    print(f"✅ Found {len(results)} legacy matches")
+                    display_results(results, "🧠 Legacy Search")
+                    return True
+                else:
+                    print("❌ No legacy results found")
+                    return False
+
+        except Exception as e:
+            if verbose:
+                print(f"⚠️  Unified search error: {e}")
+
+            # Provide helpful error message
+            error_response = {"error": str(e), "details": {"category": "service_error"}}
+            suggestion = ErrorHandler.get_recovery_suggestion(error_response)
+
+            if suggestion:
+                print(f"💡 {suggestion}")
+            else:
+                print("⚠️  Unified search unavailable, falling back to keyword search")
+
+    # Final fallback to keyword search using SimpleDB
+    print("🔍 Running fallback keyword search...")
+    try:
+        db = SimpleDB()
+        results = db.search_content(query, limit=limit, filters=filters)
+
+        if results:
+            print(f"✅ Found {len(results)} keyword matches")
+            display_keyword_results(results, "🔤 Keyword Search")
+            return True
+        else:
+            print("❌ No results found")
+            print("💡 Try different keywords or check if content has been indexed")
+            return False
+    except Exception as e:
+        if verbose:
+            import traceback
+            print(f"❌ Search error: {e}")
+            print(traceback.format_exc())
+        else:
+            user_msg = ErrorHandler.format_user_message(
+                {
+                    "error": str(e),
+                    "details": {"category": ErrorHandler.DATABASE_ERROR, "context": "searching"},
+                }
+            )
+            print(f"❌ {user_msg}")
+
+            suggestion = ErrorHandler.get_recovery_suggestion(
+                {"error": str(e), "details": {"category": ErrorHandler.DATABASE_ERROR}}
+            )
+            if suggestion:
+                print(f"💡 {suggestion}")
+        return False
+
+
+def display_results(results, search_type):
+    """Display semantic search results with enhanced snippets"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        score = result.get("score", 1.0)
+        metadata = result.get("metadata", {})
+        content = result.get("content", {})
+
+        # Determine content type from metadata
+        content_type = metadata.get("content_type", metadata.get("type", "unknown"))
+        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
+        icon = type_icons.get(content_type, "📄")
+
+        print(f"\n--- {icon} Result {i} (Score: {score:.3f}) ---")
+
+        # Display based on what's available
+        if isinstance(content, dict):
+            print(f"Title: {content.get('title', 'No title')}")
+
+            # Show metadata based on content type
+            if content.get("sender"):
+                print(f"From: {content['sender']}")
+            if content.get("date") or content.get("datetime_utc"):
+                date_str = content.get("date", content.get("datetime_utc", ""))
+                print(f"Date: {date_str}")
+
+            # Show enhanced snippet with highlighting if available
+            if content.get("highlighted_snippet"):
+                print(f"Content: {content['highlighted_snippet']}")
+            elif content.get("snippet"):
+                print(f"Content: {content['snippet']}")
+            else:
+                # Fallback to original logic
+                body = content.get("content", content.get("body", ""))
+                if body:
+                    snippet = body[:200].replace("\n", " ")
+                    print(f"Content: {snippet}...")
+        else:
+            # Fallback display
+            print(f"Content: {str(content)[:200]}...")
+
+
+def display_keyword_results(results, search_type):
+    """Display keyword search results from SimpleDB with enhanced snippets"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        # SimpleDB returns dict with id, type, title, content, metadata, etc.
+        content_type = result.get("content_type", result.get("type", "unknown"))
+        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
+        icon = type_icons.get(content_type, "📄")
+
+        print(f"\n--- {icon} Result {i} ---")
+        print(f"Title: {result.get('title', 'No title')}")
+        print(f"Type: {content_type}")
+
+        # Parse metadata if it's a string
+        metadata = result.get("metadata", {})
+        if isinstance(metadata, str):
+            try:
+                import json
+                metadata = json.loads(metadata)
+            except:
+                metadata = {}
+
+        # Show metadata based on type
+        if content_type == "email" and metadata:
+            print(f"From: {metadata.get('sender', 'Unknown')}")
+            print(f"Date: {metadata.get('date', 'Unknown')}")
+
+        # Show enhanced snippet with highlighting if available
+        if result.get("highlighted_snippet"):
+            print(f"Content: {result['highlighted_snippet']}")
+        elif result.get("snippet"):
+            print(f"Content: {result['snippet']}")
+        else:
+            # Fallback to original content display
+            content = result.get("content", "")
+            if content:
+                snippet = content[:200].replace("\n", " ")
+                print(f"Content: {snippet}...")
+
+
+def display_unified_search_results(results, search_type):
+    """Display unified search results from search intelligence service"""
+    print(f"\n=== {search_type} Results ===")
+
+    for i, result in enumerate(results, 1):
+        score = result.get("score", 0.0)
+
+        print(f"\n--- Result {i} (Score: {score:.3f}) ---")
+        print(f"Title: {result.get('title', 'Untitled')}")
+
+        # Show type-specific fields
+        content_type = result.get("content_type", "document")
+        if content_type == "email":
+            print(f"From: {result.get('sender', 'Unknown')}")
+            print(f"To: {result.get('recipient', 'Unknown')}")
+
+        print(f"Date: {result.get('created_time', 'Unknown')}")
+
+        # Show content preview
+        content = result.get("content", "")
+        if content:
+            print(f"Preview: {content[:150]}...")
+
+        if i >= 5:  # Limit display to top 5 results
+            remaining = len(results) - i
+            if remaining > 0:
+                print(f"\n... and {remaining} more results")
+            break
+
+
+def health_command(verbose=False):
+    """Run comprehensive health check on all services"""
+    print("🏥 Running System Health Check...")
+
+    try:
+        health_status = run_health_check()
+
+        # Overall status
+        if health_status["overall_health"]:
+            print(f"✅ System Status: HEALTHY ({health_status['summary']})")
+        else:
+            print(f"⚠️  System Status: DEGRADED ({health_status['summary']})")
+
+        # Individual service status
+        for service_name, status in health_status["services"].items():
+            if status["healthy"]:
+                icon = "✅"
+            else:
+                icon = "❌" if service_name != "qdrant" else "⚠️"
+
+            print(f"\n{icon} {service_name.title()} Service:")
+
+            if verbose or not status["healthy"]:
+                for key, value in status.items():
+                    if key != "healthy" and key != "service":
+                        print(f"  {key}: {value}")
+            elif status["healthy"]:
+                print("  Status: Operational")
+
+        # Provide recovery suggestions for unhealthy services
+        for service_name, status in health_status["services"].items():
+            if not status["healthy"] and "error" in status:
+                suggestion = ErrorHandler.get_recovery_suggestion(
+                    {"error": status["error"], "details": {"category": "service_error"}}
+                )
+                if suggestion:
+                    print(f"\n💡 {service_name.title()} fix: {suggestion}")
+
+    except Exception as e:
+        print(f"❌ Health check failed: {e}")
+        if verbose:
+            import traceback
+            print(traceback.format_exc())
+
+    print("\n✅ Health check complete")
+
+
+def info_command():
+    """Display system information using new services"""
+    print("📊 System Information")
+    print("=" * 50)
+
+    # Database stats
+    try:
+        db = SimpleDB()
+        stats = db.get_content_stats()
+        print("\n📁 Database Statistics:")
+        print(f"  Total emails: {stats.get('total_emails', 0)}")
+        print(f"  Total PDFs: {stats.get('total_pdfs', 0)}")
+        print(f"  Total transcripts: {stats.get('total_transcripts', 0)}")
+        print(f"  Total content: {stats.get('total_content', 0)}")
+    except Exception as e:
+        print(f"  ⚠️  Database unavailable: {e}")
+
+    # Vector service status
+    if SERVICES_AVAILABLE:
+        try:
+            from utilities.vector_store import get_vector_store
+
+            store = get_vector_store()
+            print("\n🧠 Vector Service:")
+            print("  Status: ✅ Connected")
+            print(f"  Collection: {store.collection}")
+            print(f"  Dimensions: {store.dimensions}")
+        except Exception as e:
+            print("\n🧠 Vector Service:")
+            print(f"  Status: ❌ Not available ({e})")
+
+    # Embeddings status
+    if SERVICES_AVAILABLE:
+        try:
+            from utilities.embeddings import get_embedding_service
+
+            emb = get_embedding_service()
+            print("\n🤖 Embedding Service:")
+            print(f"  Model: {emb.model_name}")
+            print(f"  Dimensions: {emb.dimensions}")
+            print(f"  Device: {emb.device}")
+        except Exception as e:
+            print("\n🤖 Embedding Service:")
+            print(f"  Status: ⚠️  Not configured ({e})")
+
+    print("\n✅ System check complete")
+
+
+def upload_command(file_path):
+    """Upload and process a document (PDF only)."""
+    from pathlib import Path
+
+    file_path = Path(file_path)
+    if not file_path.exists():
+        print(f"❌ File not found: {file_path}")
+        return False
+
+    print(f"📤 Uploading: {file_path.name}")
+
+    try:
+        # Handle based on file type
+        if file_path.suffix.lower() == ".pdf":
+            # Use the new upload_handler for PDF files
+            from tools.scripts.cli.upload_handler import upload_pdf
+
+            success = upload_pdf(str(file_path), source="vsearch")
+            return success
+        else:
+            # Other file types not supported after analog removal
+            print(f"❌ Unsupported file type: {file_path.suffix}")
+            print("💡 Supported types: PDF")
+            return False
+
+    except Exception as e:
+        print(f"❌ Upload failed: {e}")
+        return False
+
+
+def main():
+    """Main CLI entry point"""
+    parser = argparse.ArgumentParser(
+        description="""AI-Powered Database Search CLI
+
+Search across database content with Legal BERT embeddings.
+System operates on SQLite database with 52+ documents.
+
+Examples:
+  # Basic search
+  vsearch search "contract amendment"
+  
+  # Advanced search with filters
+  vsearch search "settlement" --since "last month" --type email --verbose
+  vsearch search "contract" --tag legal --tag draft --tag-logic AND
+  
+  # Legal Intelligence
+  vsearch legal timeline "24NNCV"        # Generate case timeline
+  vsearch legal search "discovery"       # Legal-specific search
+  
+  # Search Intelligence
+  vsearch intelligence smart-search "contract"   # Query expansion search
+  vsearch intelligence cluster --threshold 0.8   # Find document clusters
+  
+  # System information
+  vsearch info          # Show system status
+  vsearch health -v     # Detailed health check
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Search command
+    search_parser = subparsers.add_parser(
+        "search", help="Search content with AI-powered semantic search"
+    )
+    search_parser.add_argument(
+        "query", help="Natural language search query"
+    )
+    search_parser.add_argument("-n", "--limit", type=int, default=5, help="Number of results")
+    search_parser.add_argument(
+        "--keyword-only", action="store_true", help="Use keyword search only"
+    )
+    search_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed errors")
+    # Date filtering
+    search_parser.add_argument(
+        "--since", help="Start date (e.g., '2024-01-01', 'last week', '3 days ago')"
+    )
+    search_parser.add_argument(
+        "--until", help="End date (e.g., '2024-12-31', 'yesterday', 'this month')"
+    )
+    # Content type filtering
+    search_parser.add_argument(
+        "--type",
+        "--types",
+        dest="types",
+        action="append",
+        help="Content types to search (email, pdf, transcript, note). Can be used multiple times.",
+    )
+    # Tag filtering
+    search_parser.add_argument(
+        "--tag",
+        "--tags",
+        dest="tags",
+        action="append",
+        help="Tags to search for. Can be used multiple times.",
+    )
+    search_parser.add_argument(
+        "--tag-logic",
+        choices=["AND", "OR"],
+        default="OR",
+        help="Logic for combining multiple tags (default: OR)",
+    )
+
+    # Info command
+    subparsers.add_parser("info", help="Display system information")
+
+    # Health command
+    health_parser = subparsers.add_parser("health", help="Check system health")
+    health_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed status")
+
+    # Upload command
+    upload_parser = subparsers.add_parser("upload", help="Upload and process a document")
+    upload_parser.add_argument("file", help="Path to file to upload")
+
+    # Legal Intelligence commands
+    legal_parser = subparsers.add_parser("legal", help="Legal Intelligence analysis tools")
+    legal_subparsers = legal_parser.add_subparsers(dest="legal_command", help="Legal commands")
+
+    # Process command
+    process_parser = legal_subparsers.add_parser("process", help="Process a legal case")
+    process_parser.add_argument("case_id", help="Case identifier or search pattern")
+    process_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output format (default: text)"
+    )
+
+    # Timeline command
+    timeline_parser = legal_subparsers.add_parser("timeline", help="Generate case timeline")
+    timeline_parser.add_argument("case_id", help="Case identifier or search pattern")
+    timeline_parser.add_argument("-o", "--output", help="Output file path (optional)")
+
+    # Graph command
+    graph_parser = legal_subparsers.add_parser("graph", help="Build relationship graph")
+    graph_parser.add_argument("case_id", help="Case identifier or search pattern")
+    graph_parser.add_argument(
+        "--depth", type=int, default=3, help="Maximum relationship depth (default: 3)"
+    )
+
+    # Search command
+    legal_search_parser = legal_subparsers.add_parser("search", help="Legal-specific search")
+    legal_search_parser.add_argument("query", help="Search query")
+    legal_search_parser.add_argument("--case", help="Filter by case ID")
+    legal_search_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+
+    # Missing documents command
+    missing_parser = legal_subparsers.add_parser("missing", help="Predict missing documents")
+    missing_parser.add_argument("case_id", help="Case identifier or search pattern")
+    missing_parser.add_argument(
+        "--confidence", type=float, default=0.6, help="Confidence threshold (default: 0.6)"
+    )
+
+    # Summarize command
+    summarize_parser = legal_subparsers.add_parser("summarize", help="Summarize legal documents")
+    summarize_parser.add_argument("case_id", help="Case identifier or search pattern")
+    summarize_parser.add_argument(
+        "--max-docs", type=int, default=10, help="Maximum documents to summarize (default: 10)"
+    )
+
+    # Search Intelligence commands
+    intelligence_parser = subparsers.add_parser(
+        "intelligence", help="Search Intelligence analysis tools"
+    )
+    intel_subparsers = intelligence_parser.add_subparsers(
+        dest="intel_command", help="Intelligence commands"
+    )
+
+    # Smart search command
+    smart_search_parser = intel_subparsers.add_parser(
+        "smart-search", help="Intelligent search with preprocessing"
+    )
+    smart_search_parser.add_argument("query", help="Search query")
+    smart_search_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of results (default: 10)"
+    )
+    smart_search_parser.add_argument(
+        "--no-expansion", action="store_true", help="Disable query expansion"
+    )
+    smart_search_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Similarity command
+    similarity_parser = intel_subparsers.add_parser("similarity", help="Find similar documents")
+    similarity_parser.add_argument("doc_id", help="Document ID to find similarities for")
+    similarity_parser.add_argument(
+        "-n", "--limit", type=int, default=10, help="Number of similar documents (default: 10)"
+    )
+    similarity_parser.add_argument(
+        "--threshold", type=float, default=0.7, help="Similarity threshold (default: 0.7)"
+    )
+    similarity_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Cluster command
+    cluster_parser = intel_subparsers.add_parser("cluster", help="Cluster similar content")
+    cluster_parser.add_argument(
+        "--threshold", type=float, default=0.7, help="Similarity threshold (default: 0.7)"
+    )
+    cluster_parser.add_argument("--content-type", help="Filter by content type (email, pdf, etc.)")
+    cluster_parser.add_argument(
+        "-n", "--limit", type=int, default=100, help="Maximum documents to cluster (default: 100)"
+    )
+    cluster_parser.add_argument(
+        "--min-samples", type=int, default=2, help="Minimum samples for cluster (default: 2)"
+    )
+    cluster_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Duplicates command
+    duplicates_parser = intel_subparsers.add_parser("duplicates", help="Detect duplicate documents")
+    duplicates_parser.add_argument("--content-type", help="Filter by content type")
+    duplicates_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.95,
+        help="Similarity threshold for near-duplicates (default: 0.95)",
+    )
+    duplicates_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Entities command
+    entities_parser = intel_subparsers.add_parser("entities", help="Extract and cache entities")
+    entities_parser.add_argument("doc_id", help="Document ID to extract entities from")
+    entities_parser.add_argument(
+        "--force-refresh", action="store_true", help="Force re-extraction even if cached"
+    )
+    entities_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Summarize command (intelligence version)
+    intel_summarize_parser = intel_subparsers.add_parser(
+        "summarize", help="Auto-summarize document"
+    )
+    intel_summarize_parser.add_argument("doc_id", help="Document ID to summarize")
+    intel_summarize_parser.add_argument(
+        "--sentences", type=int, default=3, help="Maximum sentences (default: 3)"
+    )
+    intel_summarize_parser.add_argument(
+        "--keywords", type=int, default=10, help="Maximum keywords (default: 10)"
+    )
+    intel_summarize_parser.add_argument(
+        "--no-cache", action="store_true", help="Don't cache the summary"
+    )
+    intel_summarize_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    args = parser.parse_args()
+
+    # Default to search if no command but arguments provided
+    if not args.command and len(sys.argv) > 1:
+        # Treat first argument as search query
+        query = " ".join(sys.argv[1:])
+        search_command(query)
+    elif args.command == "search":
+        # Build filters dictionary
+        filters = {}
+        if args.since:
+            filters["since"] = args.since
+        if args.until:
+            filters["until"] = args.until
+        if args.types:
+            filters["content_types"] = args.types
+        if args.tags:
+            filters["tags"] = args.tags
+            filters["tag_logic"] = args.tag_logic
+
+        # Pass filters only if any are specified
+        filters_to_pass = filters if filters else None
+        
+        # Use keyword-only if specified, otherwise use AI search
+        if args.keyword_only:
+            # Direct keyword search
+            db = SimpleDB()
+            results = db.search_content(args.query, limit=args.limit, filters=filters_to_pass)
+            if results:
+                print(f"✅ Found {len(results)} keyword matches")
+                display_keyword_results(results, "🔤 Keyword Search")
+            else:
+                print("❌ No results found")
+        else:
+            search_command(
+                args.query,
+                args.limit,
+                verbose=args.verbose,
+                filters=filters_to_pass,
+            )
+    elif args.command == "info":
+        info_command()
+    elif args.command == "health":
+        health_command(verbose=args.verbose)
+    elif args.command == "upload":
+        upload_command(args.file)
+    elif args.command == "legal":
+        # Import legal handlers
+        from tools.scripts.cli.legal_handler import (
+            build_legal_graph,
+            generate_legal_timeline,
+            predict_missing_documents,
+            process_legal_case,
+            search_legal,
+            summarize_legal_docs,
+        )
+
+        if args.legal_command == "process":
+            process_legal_case(args.case_id, args.format)
+        elif args.legal_command == "timeline":
+            generate_legal_timeline(args.case_id, args.output)
+        elif args.legal_command == "graph":
+            build_legal_graph(args.case_id, args.depth)
+        elif args.legal_command == "search":
+            search_legal(args.query, args.case, args.limit)
+        elif args.legal_command == "missing":
+            predict_missing_documents(args.case_id, args.confidence)
+        elif args.legal_command == "summarize":
+            summarize_legal_docs(args.case_id, args.max_docs)
+        else:
+            legal_parser.print_help()
+    elif args.command == "intelligence":
+        # Import intelligence handlers
+        from tools.scripts.cli.intelligence_handler import (
+            cluster_command,
+            duplicates_command,
+            entities_command,
+            intel_summarize_command,
+            similarity_command,
+            smart_search_command,
+        )
+
+        if args.intel_command == "smart-search":
+            smart_search_command(args.query, args.limit, not args.no_expansion, args.json)
+        elif args.intel_command == "similarity":
+            similarity_command(args.doc_id, args.limit, args.threshold, args.json)
+        elif args.intel_command == "cluster":
+            cluster_command(
+                args.threshold, args.content_type, args.limit, args.min_samples, args.json
+            )
+        elif args.intel_command == "duplicates":
+            duplicates_command(args.content_type, args.threshold, args.json)
+        elif args.intel_command == "entities":
+            entities_command(args.doc_id, args.force_refresh, args.json)
+        elif args.intel_command == "summarize":
+            intel_summarize_command(
+                args.doc_id, args.sentences, args.keywords, not args.no_cache, args.json
+            )
+        else:
+            intelligence_parser.print_help()
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

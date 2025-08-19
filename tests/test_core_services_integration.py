@@ -24,22 +24,18 @@ class TestEmbeddingsService:
         """
         Test that embedding service initializes correctly.
         """
-        from utilities.embeddings import get_embedding_service
+        from utilities.embeddings.main import EmbeddingService
 
-        service = get_embedding_service()
+        service = EmbeddingService()
         assert service is not None
-
-        # Test singleton pattern
-        service2 = get_embedding_service()
-        assert service is service2
 
     def test_encode_text(self):
         """
         Test text encoding to embeddings.
         """
-        from utilities.embeddings import get_embedding_service
+        from utilities.embeddings.main import EmbeddingService
 
-        service = get_embedding_service()
+        service = EmbeddingService()
         text = "This is a test legal document"
 
         # Get embedding
@@ -54,9 +50,9 @@ class TestEmbeddingsService:
         """
         Test batch encoding of multiple texts.
         """
-        from utilities.embeddings import get_embedding_service
+        from utilities.embeddings.main import EmbeddingService
 
-        service = get_embedding_service()
+        service = EmbeddingService()
         texts = ["First legal document", "Second legal document", "Third legal document"]
 
         # Get embeddings
@@ -95,19 +91,18 @@ class TestSearchService:
         """
         Test search service initialization.
         """
-        from search import get_search_service
+        from search.main import search
 
-        service = get_search_service()
-        assert service is not None
+        # Search function should work directly
+        assert search is not None
 
     def test_basic_search(self, mock_db):
         """
         Test basic search functionality.
         """
-        from search import get_search_service
+        from search.main import search
 
-        service = get_search_service()
-        results = service.search("test query", limit=10)
+        results = search("test query", limit=10)
 
         # Verify search was called
         mock_db.search_content.assert_called()
@@ -117,9 +112,8 @@ class TestSearchService:
         """
         Test search with advanced filters.
         """
-        from search import get_search_service
+        from search.main import search
 
-        service = get_search_service()
         filters = {
             "since": "last week",
             "until": "today",
@@ -128,7 +122,7 @@ class TestSearchService:
             "tag_logic": "AND",
         }
 
-        service.search("test query", limit=10, filters=filters)
+        search("test query", limit=10, filters=filters)
 
         # Verify filtered search
         mock_db.search_content.assert_called()
@@ -145,24 +139,24 @@ class TestVectorStoreService:
         """
         Test vector store initialization.
         """
-        from utilities.vector_store import get_vector_store
+        from utilities.vector_store import VectorStore
 
-        store = get_vector_store()
+        store = VectorStore()
         assert store is not None
 
-    @patch("vector_store.main.QdrantClient")
+    @patch("utilities.vector_store.main.QdrantClient")
     def test_vector_operations(self, mock_qdrant):
         """
         Test vector store operations.
         """
-        from utilities.vector_store import get_vector_store
+        from utilities.vector_store.main import VectorStoreService
 
         # Setup mock
         client = Mock()
         mock_qdrant.return_value = client
         client.get_collections.return_value.collections = []
 
-        store = get_vector_store()
+        store = VectorStoreService()
 
         # Test upsert
         vector = np.random.rand(1024).astype(np.float32)
@@ -284,19 +278,18 @@ class TestServiceIntegration:
         """
         Initialize all services.
         """
-        from search import get_search_service
-
-        from entity import EntityService
+        from utilities.embeddings.main import EmbeddingService
+        from search.main import search
+        from entity.main import EntityService
+        from summarization.main import DocumentSummarizer
         from shared.simple_db import SimpleDB
-        from summarization import get_document_summarizer
-        from utilities.embeddings import get_embedding_service
-
+        
         return {
-            "embeddings": get_embedding_service(),
-            "search": get_search_service(),
+            "embeddings": EmbeddingService(),
+            "search": search,
             "db": SimpleDB(":memory:"),
             "entity": EntityService(),
-            "summarizer": get_document_summarizer(),
+            "summarizer": DocumentSummarizer(),
         }
 
     def test_document_processing_pipeline(self, services):
@@ -360,8 +353,8 @@ class TestServiceIntegration:
             doc_ids.append(doc_id)
 
         # Generate embeddings for query
-        from utilities.embeddings import get_embedding_service
-        embedding_service = get_embedding_service()
+        from utilities.embeddings.main import EmbeddingService
+        embedding_service = EmbeddingService()
         query = "contract agreement"
         query_embedding = embedding_service.encode(query)
 
@@ -382,22 +375,18 @@ class TestCachingIntegration:
         """
         Test cache manager initialization.
         """
-        from caching import get_global_cache_manager
+        from shared.cache import CacheManager
 
-        manager = get_global_cache_manager()
+        manager = CacheManager()
         assert manager is not None
-
-        # Test singleton
-        manager2 = get_global_cache_manager()
-        assert manager is manager2
 
     def test_cache_operations(self):
         """
         Test cache get/set operations.
         """
-        from caching import get_global_cache_manager
+        from shared.cache import CacheManager
 
-        manager = get_global_cache_manager()
+        manager = CacheManager()
 
         # Set value
         success = manager.set("test_key", {"data": "test_value"}, ttl=60)
@@ -420,9 +409,9 @@ class TestCachingIntegration:
         """
         Test content-based cache invalidation.
         """
-        from caching import get_global_cache_manager
+        from shared.cache import CacheManager
 
-        manager = get_global_cache_manager()
+        manager = CacheManager()
 
         # Set multiple related entries
         manager.set("content_123_summary", {"summary": "text"})

@@ -113,6 +113,12 @@ class EmbeddingService:
         Alias for encode() to maintain API compatibility.
         """
         return self.encode(text)
+    
+    def get_embeddings(self, texts: list[str]) -> list[np.ndarray]:
+        """
+        Alias for batch_encode() to maintain API compatibility.
+        """
+        return self.batch_encode(texts)
 
 
 # Singleton pattern - reuse the same model instance

@@ -19,6 +19,10 @@ class DocumentIntelligence:
         self._summarizer = None
         self._entity_extractor = None
         self._db = None
+    
+    def set_entity_extractor(self, extractor):
+        """Inject entity extractor from higher layer."""
+        self._entity_extractor = extractor
 
     @property
     def summarizer(self):
@@ -36,12 +40,9 @@ class DocumentIntelligence:
     def entity_extractor(self):
         """Lazy load entity extractor."""
         if self._entity_extractor is None:
-            try:
-                from entity.main import EntityService
-
-                self._entity_extractor = EntityService()
-            except ImportError:
-                logger.warning("Entity extraction module not available")
+            # Entity extraction should be provided from higher layers
+            # Infrastructure layer should not directly import business services
+            logger.info("Entity extraction not configured - would need to be injected from higher layer")
         return self._entity_extractor
 
     @property

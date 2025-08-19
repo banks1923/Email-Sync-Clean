@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from gmail.main import GmailService
 from pdf.main import PDFService
 from shared.simple_db import SimpleDB
-from summarization import get_document_summarizer
+from summarization.engine import DocumentSummarizer
 
 
 class TestPDFSummarizationIntegration(unittest.TestCase):

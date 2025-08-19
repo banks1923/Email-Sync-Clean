@@ -14,65 +14,122 @@ import threading
 from datetime import datetime
 from typing import Any
 
-from loguru import logger
-
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
-from infrastructure.pipelines.document_exporter import DocumentExporter
-from pdf.database_error_recovery import DatabaseErrorRecovery
-from pdf.database_health_monitor import DatabaseHealthMonitor
-from pdf.ocr.ocr_coordinator import OCRCoordinator
-from pdf.pdf_health import PDFHealthManager
-from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
-from pdf.pdf_storage_enhanced import EnhancedPDFStorage
-from pdf.pdf_validator import PDFValidator
+from typing import TYPE_CHECKING, Callable, Dict
 from shared.service_interfaces import IService
-from shared.simple_db import SimpleDB
-from summarization import get_document_summarizer
+
+# Type-only imports to avoid runtime coupling
+if TYPE_CHECKING:  # pragma: no cover
+    from shared.simple_db import SimpleDB
+    from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
+    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
 
 # Resource protection constants
 MAX_CONCURRENT_UPLOADS = 10  # Maximum concurrent upload operations
-DEFAULT_CHUNK_SIZE = 900
-DEFAULT_CHUNK_OVERLAP = 100
 
 # Global concurrency control
 _upload_semaphore = threading.Semaphore(MAX_CONCURRENT_UPLOADS)
 
 
 class PDFService(IService):
-    """Consolidated PDF service with integrated processing capabilities"""
+    """Thin Facade over core PDF components; optional features resolved via providers.
 
-    def __init__(self, db_path: str = "emails.db") -> None:
-        self.db_path = db_path
-        self.health_monitor = DatabaseHealthMonitor(db_path)
-        self.error_recovery = DatabaseErrorRecovery(db_path)
-        # Logger is now imported globally from loguru
+    Core deps (eager): db, processor, storage
+    Optional deps (lazy via providers): validator, ocr, summarizer, pipeline, exporter,
+    health_monitor, error_recovery, health_manager
+    """
 
-        # Initialize modular components with OCR support
-        self.processor = EnhancedPDFProcessor(DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP)
-        self.storage = EnhancedPDFStorage(db_path)
-        self.validator = PDFValidator()
-        self.ocr = OCRCoordinator()  # Add OCR coordinator
-        self.summarizer = get_document_summarizer()  # Add document summarizer
-        self.db = SimpleDB(db_path)  # Add database for summary storage
-        self.pipeline = DataPipelineOrchestrator()  # Add data pipeline orchestrator
-        self.exporter = DocumentExporter()  # Add document exporter
+    def __init__(
+        self,
+        db: "SimpleDB",
+        processor: "EnhancedPDFProcessor",
+        storage: "EnhancedPDFStorage",
+        providers: Dict[str, Callable[[], object]] | None = None,
+        logger: object | None = None,
+        db_path: str | None = None,
+    ) -> None:
+        self.db_path = db_path or getattr(storage, "db_path", "emails.db")
+        self.db = db
+        self.processor = processor
+        self.storage = storage
+        self.providers: Dict[str, Callable[[], object]] = providers or {}
+        self._provider_cache: Dict[str, object] = {}
 
-        # Set up logging first
-        log_file = f"logs/pdf_service_{datetime.now().strftime('%Y%m%d')}.log"
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        # Logger (optional dependency): prefer provided, else stdlib fallback
+        if logger is None:
+            try:
+                from loguru import logger as _loguru_logger  # type: ignore
+                self.logger = _loguru_logger
+            except Exception:  # pragma: no cover
+                import logging
+                self.logger = logging.getLogger("pdf.service")
+        else:
+            self.logger = logger
+
+        # Lazily created components will attach callbacks on first creation
+
+    @classmethod
+    def from_db_path(cls, db_path: str = "emails.db") -> "PDFService":
+        """Legacy compatibility constructor - creates PDFService with all dependencies.
         
-        # Use loguru logger (imported globally)
-        self.logger = logger  # Set instance logger to global loguru logger
+        Args:
+            db_path: Path to database file
+            
+        Returns:
+            Configured PDFService instance
+        """
+        from pdf.wiring import build_pdf_service
+        return build_pdf_service(db_path)
+    
+    # --- Provider resolution helpers ---
+    def _get(self, key: str) -> object:
+        if key in self._provider_cache:
+            return self._provider_cache[key]
+        if key not in self.providers:
+            raise KeyError(f"Provider '{key}' not wired")
+        inst = self.providers[key]()
+        # One-time hooks
+        if key == "error_recovery":
+            try:
+                inst.add_alert_callback(self._handle_database_alert)  # type: ignore[attr-defined]
+            except Exception:
+                pass
+        self._provider_cache[key] = inst
+        return inst
 
-        self.health_manager = PDFHealthManager(
-            self.processor, self.storage, self.validator, self.health_monitor, self.logger
-        )
+    @property
+    def validator(self):
+        return self._get("validator")
 
-        # Set up error recovery alerting
-        self.error_recovery.add_alert_callback(self._handle_database_alert)
+    @property
+    def ocr(self):
+        return self._get("ocr")
+
+    @property
+    def summarizer(self):
+        return self._get("summarizer")
+
+    @property
+    def pipeline(self):
+        return self._get("pipeline")
+
+    @property
+    def exporter(self):
+        return self._get("exporter")
+
+    @property
+    def health_monitor(self):
+        return self._get("health_monitor")
+
+    @property
+    def error_recovery(self):
+        return self._get("error_recovery")
+
+    @property
+    def health_manager(self):
+        return self._get("health_manager")
 
     def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check for PDF service"""

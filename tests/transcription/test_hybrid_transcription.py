@@ -27,7 +27,7 @@ def test_hybrid_transcription():
     print("=" * 50)
     
     try:
-        from transcription.main import TranscriptionService
+        from transcription.main import get_transcription_service
 
         # Initialize service
         service = TranscriptionService()

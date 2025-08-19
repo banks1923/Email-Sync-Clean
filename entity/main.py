@@ -361,3 +361,15 @@ class EntityService:
             error_msg = f"Batch processing failed: {str(e)}"
             logger.error(error_msg)
             return {"success": False, "error": error_msg}
+
+
+def get_entity_service(db_path: str = "emails.db") -> EntityService:
+    """Factory function to create EntityService instance.
+    
+    Args:
+        db_path: Path to the database file
+        
+    Returns:
+        EntityService instance
+    """
+    return EntityService(db_path)

@@ -31,7 +31,7 @@ class TestDatabaseHealth:
         Verify core database service can be imported.
         """
         try:
-            from shared.database.database_service import DatabaseService
+            from shared.simple_db import SimpleDB
 
             assert DatabaseService is not None
         except ImportError as e:
@@ -112,7 +112,7 @@ class TestBasicServices:
         Test that DatabaseService can be created.
         """
         try:
-            from shared.database.database_service import DatabaseService
+            from shared.simple_db import SimpleDB
 
             # Test with in-memory database
             service = DatabaseService(":memory:")

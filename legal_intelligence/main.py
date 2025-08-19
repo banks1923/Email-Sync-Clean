@@ -11,11 +11,11 @@ from typing import Any
 from loguru import logger
 
 # Service imports based on investigation
-from entity.main import EntityService
+from entity.main import get_entity_service
 from knowledge_graph import get_knowledge_graph_service, get_similarity_analyzer
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
-from utilities.timeline.main import TimelineService
+from utilities.timeline.main import get_timeline_service
 
 # Logger is now imported globally from loguru
 
@@ -804,3 +804,15 @@ class LegalIntelligenceService:
             summary += f", {len(anomalies)} anomalies detected"
 
         return summary
+
+
+def get_legal_intelligence_service(db_path: str = "emails.db") -> LegalIntelligenceService:
+    """Factory function to create LegalIntelligenceService instance.
+    
+    Args:
+        db_path: Path to the database file
+        
+    Returns:
+        LegalIntelligenceService instance
+    """
+    return LegalIntelligenceService(db_path)

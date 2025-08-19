@@ -16,7 +16,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from transcription.config import TranscriptionMode, get_config_manager
-from transcription.main import TranscriptionService
+from transcription.main import get_transcription_service
 from transcription.provider_factory import get_provider_factory
 
 

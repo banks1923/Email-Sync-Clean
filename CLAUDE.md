@@ -303,6 +303,11 @@ make fix-all        # Auto-fix all issues + advanced formatting
 make check          # Quality checks + tests (no modifications)
 ```
 
+### Code Transformation Tools
+- **LibCST**: Recommended for large-scale Python refactoring (import fixes, renaming)
+  - Preserves formatting and comments perfectly
+  - See **[docs/CODE_TRANSFORMATION_TOOLS.md](docs/CODE_TRANSFORMATION_TOOLS.md)** for usage
+
 For complete cleanup documentation: **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)**
 
 ## 📋 Development Guidelines

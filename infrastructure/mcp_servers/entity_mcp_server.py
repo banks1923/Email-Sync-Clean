@@ -24,23 +24,26 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-# Import Task #8 entity service
-try:
-    from entity.main import EntityService
+# Entity service factory - to be injected from higher layers
+_entity_service_factory = None
+ENTITY_SERVICE_AVAILABLE = True
 
-    ENTITY_SERVICE_AVAILABLE = True
-except ImportError as e:
-    print(f"Entity service not available: {e}")
-    ENTITY_SERVICE_AVAILABLE = False
+def set_entity_service_factory(factory):
+    """Inject entity service factory from higher layer."""
+    global _entity_service_factory
+    _entity_service_factory = factory
 
 
 def extract_entities(text: str, message_id: str = None) -> str:
     """Extract entities from text using Task #8 system"""
     if not ENTITY_SERVICE_AVAILABLE:
         return "Entity service not available"
+    
+    if not _entity_service_factory:
+        return "Entity service not configured - must be injected from higher layer"
 
     try:
-        service = EntityService()
+        service = _entity_service_factory()
         msg_id = message_id or f"mcp_{len(text)}"
         result = service.extract_email_entities(msg_id, text)
 

@@ -12,105 +12,45 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Import new clean services with error handling
-try:
-    from search_intelligence import get_search_intelligence_service as get_search_service
-    from shared.error_handler import ErrorHandler
-    from shared.health_check import run_health_check
-    from shared.simple_db import SimpleDB
-
-    SERVICES_AVAILABLE = True
-except ImportError as e:
-    SERVICES_AVAILABLE = False
-    print(f"⚠️  Some services not available: {e}")
-    print("💡 Tip: Run 'pip install -r requirements.txt' to install dependencies")
+# Direct imports following CLAUDE.md "Direct > Indirect" principle
+from search import search, semantic_search, vector_store_available
+from shared.error_handler import ErrorHandler
+from shared.health_check import run_health_check
+from shared.simple_db import SimpleDB
 
 
-def search_command(query, limit=5, verbose=False, filters=None):
-    """AI-Powered Database Search using clean services with better error handling and filters"""
+def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid"):
+    """Simplified search using direct search coordination module"""
     # Display search info with filters
-    filter_info = ""
-    if filters:
-        filter_parts = []
-        if filters.get("since"):
-            filter_parts.append(f"since {filters['since']}")
-        if filters.get("until"):
-            filter_parts.append(f"until {filters['until']}")
-        if filters.get("content_types"):
-            types_str = ",".join(filters["content_types"])
-            filter_parts.append(f"types: {types_str}")
-        if filters.get("tags"):
-            tags_str = (
-                ",".join(filters["tags"]) if isinstance(filters["tags"], list) else filters["tags"]
-            )
-            logic = filters.get("tag_logic", "OR")
-            filter_parts.append(f"tags: {tags_str} ({logic})")
-        if filter_parts:
-            filter_info = f" (Filters: {', '.join(filter_parts)})"
-
+    filter_info = _format_filter_info(filters)
+    
     print(f"🤖 AI-Powered Search for: '{query}'{filter_info}")
-
-    # Use unified search from SearchIntelligenceService if available
-    if SERVICES_AVAILABLE:
-        print(f"🔍 Running database search...")
-        try:
-            search_service = get_search_service()
-
-            # Check if unified_search method is available
-            if hasattr(search_service, "unified_search"):
-                # Database-only search (analog removed)
-                results = search_service.unified_search(
-                    query=query, limit=limit, use_expansion=True, filters=filters
-                )
-
-                if results:
-                    print(f"✅ Found {len(results)} matches")
-                    display_unified_search_results(results, f"🔍 Database Search")
-                    return True
-                else:
-                    print("❌ No results found")
-                    print("💡 Try different keywords or check if content has been indexed")
-                    return False
-            else:
-                # Fallback to legacy method if unified_search not available
-                print("⚠️  Using legacy search method...")
-                results = search_service.search(query, limit=limit, filters=filters)
-
-                if results:
-                    print(f"✅ Found {len(results)} legacy matches")
-                    display_results(results, "🧠 Legacy Search")
-                    return True
-                else:
-                    print("❌ No legacy results found")
-                    return False
-
-        except Exception as e:
-            if verbose:
-                print(f"⚠️  Unified search error: {e}")
-
-            # Provide helpful error message
-            error_response = {"error": str(e), "details": {"category": "service_error"}}
-            suggestion = ErrorHandler.get_recovery_suggestion(error_response)
-
-            if suggestion:
-                print(f"💡 {suggestion}")
-            else:
-                print("⚠️  Unified search unavailable, falling back to keyword search")
-
-    # Final fallback to keyword search using SimpleDB
-    print("🔍 Running fallback keyword search...")
+    
     try:
-        db = SimpleDB()
-        results = db.search_content(query, limit=limit, filters=filters)
-
+        # Direct search using coordination module - Simple > Complex
+        if search_mode == "semantic":
+            print("🧠 Running semantic search...")
+            results = semantic_search(query, limit=limit, filters=filters)
+            search_type = "🧠 Semantic Search"
+        elif search_mode == "keyword":
+            print("🔤 Running keyword search...")
+            db = SimpleDB()
+            results = db.search_content(query, limit=limit, filters=filters)
+            search_type = "🔤 Keyword Search"
+        else:  # hybrid
+            print("🔍 Running hybrid search...")
+            results = search(query, limit=limit, filters=filters)
+            search_type = "🔍 Hybrid Search"
+        
         if results:
-            print(f"✅ Found {len(results)} keyword matches")
-            display_keyword_results(results, "🔤 Keyword Search")
+            print(f"✅ Found {len(results)} matches")
+            display_search_results(results, search_type, search_mode)
             return True
         else:
             print("❌ No results found")
             print("💡 Try different keywords or check if content has been indexed")
             return False
+            
     except Exception as e:
         if verbose:
             import traceback
@@ -133,118 +73,103 @@ def search_command(query, limit=5, verbose=False, filters=None):
         return False
 
 
-def display_results(results, search_type):
-    """Display semantic search results with enhanced snippets"""
+def _format_filter_info(filters):
+    """Format filter information for display"""
+    if not filters:
+        return ""
+    
+    filter_parts = []
+    if filters.get("since"):
+        filter_parts.append(f"since {filters['since']}")
+    if filters.get("until"):
+        filter_parts.append(f"until {filters['until']}")
+    if filters.get("content_types"):
+        types_str = ",".join(filters["content_types"])
+        filter_parts.append(f"types: {types_str}")
+    if filters.get("tags"):
+        tags_str = (
+            ",".join(filters["tags"]) if isinstance(filters["tags"], list) else filters["tags"]
+        )
+        logic = filters.get("tag_logic", "OR")
+        filter_parts.append(f"tags: {tags_str} ({logic})")
+    
+    return f" (Filters: {', '.join(filter_parts)})" if filter_parts else ""
+
+
+def display_search_results(results, search_type, search_mode="hybrid"):
+    """Unified display function for all search result types"""
     print(f"\n=== {search_type} Results ===")
+    
+    # Show vector store status for hybrid/semantic searches
+    if search_mode in ["hybrid", "semantic"]:
+        vector_available = vector_store_available()
+        print(f"Vector Service: {'✅ Connected' if vector_available else '❌ Unavailable (keyword fallback)'}")
 
     for i, result in enumerate(results, 1):
-        score = result.get("score", 1.0)
-        metadata = result.get("metadata", {})
-        content = result.get("content", {})
-
-        # Determine content type from metadata
-        content_type = metadata.get("content_type", metadata.get("type", "unknown"))
-        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
-        icon = type_icons.get(content_type, "📄")
-
-        print(f"\n--- {icon} Result {i} (Score: {score:.3f}) ---")
-
-        # Display based on what's available
-        if isinstance(content, dict):
-            print(f"Title: {content.get('title', 'No title')}")
-
-            # Show metadata based on content type
-            if content.get("sender"):
-                print(f"From: {content['sender']}")
-            if content.get("date") or content.get("datetime_utc"):
-                date_str = content.get("date", content.get("datetime_utc", ""))
-                print(f"Date: {date_str}")
-
-            # Show enhanced snippet with highlighting if available
-            if content.get("highlighted_snippet"):
-                print(f"Content: {content['highlighted_snippet']}")
-            elif content.get("snippet"):
-                print(f"Content: {content['snippet']}")
-            else:
-                # Fallback to original logic
-                body = content.get("content", content.get("body", ""))
-                if body:
-                    snippet = body[:200].replace("\n", " ")
-                    print(f"Content: {snippet}...")
-        else:
-            # Fallback display
-            print(f"Content: {str(content)[:200]}...")
-
-
-def display_keyword_results(results, search_type):
-    """Display keyword search results from SimpleDB with enhanced snippets"""
-    print(f"\n=== {search_type} Results ===")
-
-    for i, result in enumerate(results, 1):
-        # SimpleDB returns dict with id, type, title, content, metadata, etc.
+        # Get content type and icon
         content_type = result.get("content_type", result.get("type", "unknown"))
         type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
         icon = type_icons.get(content_type, "📄")
 
-        print(f"\n--- {icon} Result {i} ---")
+        # Format score information
+        score_info = _format_score_info(result, search_mode)
+        
+        print(f"\n--- {icon} Result {i}{score_info} ---")
         print(f"Title: {result.get('title', 'No title')}")
-        print(f"Type: {content_type}")
 
-        # Parse metadata if it's a string
-        metadata = result.get("metadata", {})
-        if isinstance(metadata, str):
-            try:
-                import json
-                metadata = json.loads(metadata)
-            except:
-                metadata = {}
-
-        # Show metadata based on type
-        if content_type == "email" and metadata:
-            print(f"From: {metadata.get('sender', 'Unknown')}")
-            print(f"Date: {metadata.get('date', 'Unknown')}")
-
-        # Show enhanced snippet with highlighting if available
-        if result.get("highlighted_snippet"):
-            print(f"Content: {result['highlighted_snippet']}")
-        elif result.get("snippet"):
-            print(f"Content: {result['snippet']}")
-        else:
-            # Fallback to original content display
-            content = result.get("content", "")
-            if content:
-                snippet = content[:200].replace("\n", " ")
-                print(f"Content: {snippet}...")
-
-
-def display_unified_search_results(results, search_type):
-    """Display unified search results from search intelligence service"""
-    print(f"\n=== {search_type} Results ===")
-
-    for i, result in enumerate(results, 1):
-        score = result.get("score", 0.0)
-
-        print(f"\n--- Result {i} (Score: {score:.3f}) ---")
-        print(f"Title: {result.get('title', 'Untitled')}")
-
-        # Show type-specific fields
-        content_type = result.get("content_type", "document")
+        # Show metadata based on content type
         if content_type == "email":
-            print(f"From: {result.get('sender', 'Unknown')}")
-            print(f"To: {result.get('recipient', 'Unknown')}")
-
-        print(f"Date: {result.get('created_time', 'Unknown')}")
+            if result.get("sender"):
+                print(f"From: {result['sender']}")
+            if result.get("date") or result.get("datetime_utc"):
+                date_str = result.get("date", result.get("datetime_utc", ""))
+                print(f"Date: {date_str}")
 
         # Show content preview
-        content = result.get("content", "")
-        if content:
-            print(f"Preview: {content[:150]}...")
+        content_preview = _get_content_preview(result)
+        if content_preview:
+            print(f"Content: {content_preview}")
 
-        if i >= 5:  # Limit display to top 5 results
-            remaining = len(results) - i
-            if remaining > 0:
-                print(f"\n... and {remaining} more results")
-            break
+
+def _format_score_info(result, search_mode):
+    """Format search score information based on search mode"""
+    if search_mode == "hybrid":
+        # Show hybrid search ranking information
+        rrf_score = result.get("rrf_score")
+        keyword_rank = result.get("keyword_rank")
+        semantic_rank = result.get("semantic_rank")
+        
+        if rrf_score is not None:
+            score_parts = [f"RRF: {rrf_score:.3f}"]
+            if keyword_rank:
+                score_parts.append(f"KW: #{keyword_rank}")
+            if semantic_rank:
+                score_parts.append(f"SEM: #{semantic_rank}")
+            return f" ({', '.join(score_parts)})"
+    elif search_mode == "semantic":
+        semantic_score = result.get("semantic_score", result.get("score"))
+        if semantic_score is not None:
+            return f" (Score: {semantic_score:.3f})"
+    
+    return ""
+
+
+def _get_content_preview(result):
+    """Extract content preview from result"""
+    # Try different content fields
+    for field in ["highlighted_snippet", "snippet", "content", "body"]:
+        content = result.get(field)
+        if content:
+            if field == "highlighted_snippet":
+                return content  # Already formatted
+            else:
+                # Clean and truncate
+                preview = str(content)[:200].replace("\n", " ").strip()
+                return f"{preview}..." if len(str(content)) > 200 else preview
+    
+    return "No content preview available"
+
+
 
 
 def health_command(verbose=False):
@@ -311,33 +236,31 @@ def info_command():
     except Exception as e:
         print(f"  ⚠️  Database unavailable: {e}")
 
-    # Vector service status
-    if SERVICES_AVAILABLE:
-        try:
-            from utilities.vector_store import get_vector_store
+    # Vector service status - Direct > Indirect
+    try:
+        from utilities.vector_store import get_vector_store
 
-            store = get_vector_store()
-            print("\n🧠 Vector Service:")
-            print("  Status: ✅ Connected")
-            print(f"  Collection: {store.collection}")
-            print(f"  Dimensions: {store.dimensions}")
-        except Exception as e:
-            print("\n🧠 Vector Service:")
-            print(f"  Status: ❌ Not available ({e})")
+        store = get_vector_store()
+        print("\n🧠 Vector Service:")
+        print("  Status: ✅ Connected")
+        print(f"  Collection: {store.collection}")
+        print(f"  Dimensions: {store.dimensions}")
+    except Exception as e:
+        print("\n🧠 Vector Service:")
+        print(f"  Status: ❌ Not available ({e})")
 
-    # Embeddings status
-    if SERVICES_AVAILABLE:
-        try:
-            from utilities.embeddings import get_embedding_service
+    # Embeddings status - Direct > Indirect
+    try:
+        from utilities.embeddings import get_embedding_service
 
-            emb = get_embedding_service()
-            print("\n🤖 Embedding Service:")
-            print(f"  Model: {emb.model_name}")
-            print(f"  Dimensions: {emb.dimensions}")
-            print(f"  Device: {emb.device}")
-        except Exception as e:
-            print("\n🤖 Embedding Service:")
-            print(f"  Status: ⚠️  Not configured ({e})")
+        emb = get_embedding_service()
+        print("\n🤖 Embedding Service:")
+        print(f"  Model: {emb.model_name}")
+        print(f"  Dimensions: {emb.dimensions}")
+        print(f"  Device: {emb.device}")
+    except Exception as e:
+        print("\n🤖 Embedding Service:")
+        print(f"  Status: ⚠️  Not configured ({e})")
 
     print("\n✅ System check complete")
 
@@ -415,6 +338,9 @@ Examples:
     search_parser.add_argument("-n", "--limit", type=int, default=5, help="Number of results")
     search_parser.add_argument(
         "--keyword-only", action="store_true", help="Use keyword search only"
+    )
+    search_parser.add_argument(
+        "--semantic-only", action="store_true", help="Use semantic search only"
     )
     search_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed errors")
     # Date filtering
@@ -607,23 +533,23 @@ Examples:
         # Pass filters only if any are specified
         filters_to_pass = filters if filters else None
         
-        # Use keyword-only if specified, otherwise use AI search
-        if args.keyword_only:
-            # Direct keyword search
-            db = SimpleDB()
-            results = db.search_content(args.query, limit=args.limit, filters=filters_to_pass)
-            if results:
-                print(f"✅ Found {len(results)} keyword matches")
-                display_keyword_results(results, "🔤 Keyword Search")
-            else:
-                print("❌ No results found")
-        else:
-            search_command(
-                args.query,
-                args.limit,
-                verbose=args.verbose,
-                filters=filters_to_pass,
-            )
+        # Determine search mode based on flags
+        search_mode = "hybrid"  # default
+        if args.keyword_only and args.semantic_only:
+            print("❌ Cannot use both --keyword-only and --semantic-only flags")
+            return
+        elif args.keyword_only:
+            search_mode = "keyword"
+        elif args.semantic_only:
+            search_mode = "semantic"
+        
+        search_command(
+            args.query,
+            args.limit,
+            verbose=args.verbose,
+            filters=filters_to_pass,
+            search_mode=search_mode,
+        )
     elif args.command == "info":
         info_command()
     elif args.command == "health":

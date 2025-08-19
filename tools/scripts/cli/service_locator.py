@@ -41,37 +41,37 @@ class ServiceLocator:
 
     def get_gmail_service(self, **kwargs):
         """Get gmail service instance"""
-        from gmail.main import GmailService
+        from gmail.main import get_gmail_service
 
         return GmailService()
 
     def get_pdf_service(self, **kwargs):
         """Get PDF service instance"""
-        from pdf.main import PDFService
+        from pdf.wiring import build_pdf_service
 
-        return PDFService()
+        return build_pdf_service()
 
     def get_transcription_service(self, **kwargs):
         """Get transcription service instance"""
-        from transcription.main import TranscriptionService
+        from transcription.main import get_transcription_service
 
         return TranscriptionService()
 
     def get_entity_service(self, **kwargs):
         """Get entity service instance"""
-        from entity.main import EntityService
+        from entity.main import get_entity_service
 
         return EntityService()
 
     def get_timeline_service(self, **kwargs):
         """Get timeline service instance"""
-        from utilities.timeline.main import TimelineService
+        from utilities.timeline.main import get_timeline_service
 
         return TimelineService()
 
     def get_notes_service(self, **kwargs):
         """Get notes service instance"""
-        from utilities.notes.main import NotesService
+        from utilities.notes.main import get_notes_service
 
         return NotesService()
 

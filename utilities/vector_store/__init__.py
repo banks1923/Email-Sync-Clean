@@ -139,6 +139,19 @@ class VectorStore:
         """Delete all vectors in collection."""
         self.client.delete_collection(self.collection)
         self._ensure_collection()
+    
+    def get_collection_stats(self) -> dict:
+        """Get collection statistics (normalized).
+        
+        Returns dict with points_count and compatibility aliases.
+        """
+        info = self.client.get_collection(self.collection)
+        points = getattr(info, "points_count", 0)
+        return {
+            "points_count": points,
+            "vectors_count": points,       # alias for compatibility
+            "indexed_vectors": points,     # alias for dashboards
+        }
 
 
 # Singleton pattern - reuse connection

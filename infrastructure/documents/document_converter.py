@@ -13,16 +13,19 @@ from typing import Any
 import frontmatter
 from loguru import logger
 
-# Import existing PDF infrastructure
-try:
-    from pdf.ocr.ocr_coordinator import OCRCoordinator
-    from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
-    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
-    from pdf.pdf_validator import PDFValidator
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-    logger.warning("PDF infrastructure not available - DocumentConverter disabled")
+# PDF service factories - to be injected from higher layers
+_pdf_service_factories = None
+PDF_AVAILABLE = True
+
+def set_pdf_service_factories(factories):
+    """Inject PDF service factories from higher layers.
+    
+    Args:
+        factories: Dict with keys: 'validator', 'storage', 'ocr_coordinator', 'processor'
+    """
+    global _pdf_service_factories
+    _pdf_service_factories = factories
+    logger.info("PDF service factories configured")
 
 
 class DocumentConverter:
@@ -33,11 +36,15 @@ class DocumentConverter:
         if not PDF_AVAILABLE:
             raise ImportError("PDF infrastructure required for DocumentConverter")
         
-        self.validator = PDFValidator()
-        self.storage = EnhancedPDFStorage(db_path)
-        self.ocr_coordinator = OCRCoordinator()
-        self.processor = EnhancedPDFProcessor()
-        logger.info("DocumentConverter initialized")
+        if not _pdf_service_factories:
+            raise ImportError("PDF service factories not configured - must be injected from higher layer")
+        
+        # Use injected factories to create service instances
+        self.validator = _pdf_service_factories['validator']()
+        self.storage = _pdf_service_factories['storage'](db_path)
+        self.ocr_coordinator = _pdf_service_factories['ocr_coordinator']()
+        self.processor = _pdf_service_factories['processor']()
+        logger.info("DocumentConverter initialized with injected PDF services")
 
     def convert_pdf_to_markdown(
         self, 

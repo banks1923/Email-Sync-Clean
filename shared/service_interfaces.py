@@ -1,5 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Protocol
+
+
+class FeatureUnavailable(Exception):
+    """Raised when an optional feature is not wired"""
+    pass
 
 
 class IEmbedder(ABC):
@@ -51,3 +56,49 @@ class IService(ABC):
         Returns:
             Dict with success status and health information
         """
+
+
+# Protocol interfaces for PDF service providers (duck-typed, no ABC needed)
+
+class OCRPort(Protocol):
+    """Protocol for OCR processing providers"""
+    def process_pdf_with_ocr(self, pdf_path: str) -> dict[str, Any]: ...
+
+
+class PDFValidatorPort(Protocol):
+    """Protocol for PDF validation providers"""
+    def validate_pdf_path(self, pdf_path: str) -> dict[str, Any]: ...
+
+
+class HealthMonitorPort(Protocol):
+    """Protocol for health monitoring providers"""
+    def get_health_metrics(self) -> dict[str, Any]: ...
+
+
+class ErrorRecoveryPort(Protocol):
+    """Protocol for error recovery providers"""
+    def create_backup(self, backup_name: str | None = None) -> dict[str, Any]: ...
+    def get_recovery_status(self) -> dict[str, Any]: ...
+    def add_alert_callback(self, callback: Any) -> None: ...
+
+
+class SummarizerPort(Protocol):
+    """Protocol for document summarization providers"""
+    def extract_summary(self, text: str, **kwargs: Any) -> dict[str, Any]: ...
+
+
+class ExporterPort(Protocol):
+    """Protocol for document export providers"""
+    def save_to_export(self, content_id: int, filename: str) -> dict[str, Any]: ...
+
+
+class PipelinePort(Protocol):
+    """Protocol for document pipeline providers"""
+    def add_to_raw(self, path: str, copy: bool = True) -> dict[str, Any]: ...
+    def move_to_staged(self, filename: str) -> dict[str, Any]: ...
+    def move_to_processed(self, filename: str) -> dict[str, Any]: ...
+
+
+class PDFHealthManagerPort(Protocol):
+    """Protocol for PDF health management providers"""
+    def perform_health_check(self) -> dict[str, Any]: ...

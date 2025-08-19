@@ -13,7 +13,7 @@ from loguru import logger
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
-from entity.main import EntityService
+from entity.main import get_entity_service
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 

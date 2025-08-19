@@ -48,14 +48,20 @@ class HealthCheck:
             return {"healthy": False, "service": "database", "error": str(e)}
 
     def check_qdrant(self) -> dict[str, Any]:
-        """Check if Qdrant vector service is available."""
+        """Check if Qdrant vector service is available by testing basic connectivity."""
         try:
-            from utilities.vector_store import get_vector_store
-
-            store = get_vector_store()
-            # Just check if we can get count
-            count = store.count()
-            return {"healthy": True, "service": "qdrant", "vector_count": count}
+            # Basic connectivity test without importing higher-layer modules
+            import requests
+            response = requests.get("http://localhost:6333/collections", timeout=2)
+            if response.status_code == 200:
+                return {"healthy": True, "service": "qdrant", "status": "connected"}
+            else:
+                return {
+                    "healthy": True,  # Still healthy, just degraded
+                    "service": "qdrant", 
+                    "status": "unavailable (using keyword search)",
+                    "error": f"HTTP {response.status_code}"
+                }
         except Exception as e:
             # Qdrant is optional, so not being available is okay
             logger.info(f"Qdrant not available (optional): {e}")
@@ -88,27 +94,29 @@ class HealthCheck:
             return {"healthy": False, "service": "gmail", "error": str(e)}
 
     def check_models(self) -> dict[str, Any]:
-        """Check if AI models are available."""
+        """Check if AI models are available at a basic level."""
         try:
-            # Check embeddings
-            from utilities.embeddings import get_embedding_service
-
-            emb = get_embedding_service()
+            # Check for basic model dependencies without importing higher-layer modules
+            models_status = {}
+            
+            # Check if sentence-transformers is available (for embeddings)
+            try:
+                import sentence_transformers
+                models_status["sentence_transformers"] = "available"
+            except ImportError:
+                models_status["sentence_transformers"] = "not installed"
 
             # Check Whisper
-            whisper_available = False
             try:
-                pass
-
-                whisper_available = True
+                import whisper
+                models_status["whisper"] = "available"
             except ImportError:
-                pass
+                models_status["whisper"] = "not installed"
 
             return {
                 "healthy": True,
                 "service": "models",
-                "embeddings": emb.model_name,
-                "whisper": "available" if whisper_available else "not installed",
+                "models": models_status,
             }
 
         except Exception as e:

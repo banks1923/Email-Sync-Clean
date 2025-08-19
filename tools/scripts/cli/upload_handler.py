@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
 
 # Import service modules
-from pdf import PDFService
+from pdf.wiring import build_pdf_service
 from transcription import TranscriptionService
 
 
@@ -46,7 +46,7 @@ def upload_directory(dir_path, limit=None):
     print("📋 Using pipeline storage")
 
     try:
-        service = PDFService()
+        service = build_pdf_service()
         result = service.upload_directory(dir_path, limit)
 
         if result["success"]:
@@ -91,7 +91,7 @@ def process_uploads():
     print("⚙️  Processing upload queue...")
 
     try:
-        service = PDFService()
+        service = build_pdf_service()
         # Process all pending uploads
         result = service.process_upload_queue()
 

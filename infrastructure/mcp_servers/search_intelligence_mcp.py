@@ -20,16 +20,25 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-# Import services
+# Import only infrastructure layer dependencies
 try:
-    from search_intelligence import get_search_intelligence_service
     from shared.simple_db import SimpleDB
-    from summarization import get_document_summarizer
-
     SERVICES_AVAILABLE = True
 except ImportError as e:
-    print(f"Services not available: {e}", file=sys.stderr)
+    print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
+
+# Service factories - to be injected from higher layers
+_search_intelligence_factory = None
+_summarizer_factory = None
+_entity_service_factory = None
+
+def set_service_factories(search_factory=None, summarizer_factory=None, entity_factory=None):
+    """Inject service factories from higher layers."""
+    global _search_intelligence_factory, _summarizer_factory, _entity_service_factory
+    _search_intelligence_factory = search_factory
+    _summarizer_factory = summarizer_factory
+    _entity_service_factory = entity_factory
 
 
 def search_smart(
@@ -40,7 +49,9 @@ def search_smart(
         return "Search intelligence services not available"
 
     try:
-        service = get_search_intelligence_service()
+        if not _search_intelligence_factory:
+            return "Search intelligence service not configured - must be injected from higher layer"
+        service = _search_intelligence_factory()
 
         # Add content type filter if specified
         filters = {}
@@ -94,7 +105,9 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
         return "Search intelligence services not available"
 
     try:
-        service = get_search_intelligence_service()
+        if not _search_intelligence_factory:
+            return "Search intelligence service not configured - must be injected from higher layer"
+        service = _search_intelligence_factory()
 
         # Find similar documents
         similar_docs = service.analyze_document_similarity(
@@ -141,7 +154,9 @@ def search_entities(
         return "Search intelligence services not available"
 
     try:
-        service = get_search_intelligence_service()
+        if not _search_intelligence_factory:
+            return "Search intelligence service not configured - must be injected from higher layer"
+        service = _search_intelligence_factory()
 
         if document_id:
             # Extract from existing document
@@ -151,9 +166,10 @@ def search_entities(
             source = f"document '{document_id}'"
         elif text:
             # Extract from provided text
-            from entity.main import EntityService
+            if not _entity_service_factory:
+                return "Entity service not configured - must be injected from higher layer"
 
-            entity_service = EntityService()
+            entity_service = _entity_service_factory()
 
             result = entity_service.extract_email_entities("temp_doc", text)
             entities = result.get("entities", [])
@@ -242,7 +258,9 @@ def search_summarize(
             return f"📭 No content to summarize in {source}"
 
         # Get summarizer and extract summary
-        summarizer = get_document_summarizer()
+        if not _summarizer_factory:
+            return "Summarizer service not configured - must be injected from higher layer"
+        summarizer = _summarizer_factory()
         summary = summarizer.extract_summary(
             text=text,
             max_sentences=max_sentences,
@@ -283,7 +301,9 @@ def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: i
         return "Search intelligence services not available"
 
     try:
-        service = get_search_intelligence_service()
+        if not _search_intelligence_factory:
+            return "Search intelligence service not configured - must be injected from higher layer"
+        service = _search_intelligence_factory()
 
         # Perform clustering
         clusters = service.cluster_similar_content(threshold=threshold, limit=limit)
@@ -344,7 +364,9 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
         return "Search intelligence services not available"
 
     try:
-        service = get_search_intelligence_service()
+        if not _search_intelligence_factory:
+            return "Search intelligence service not configured - must be injected from higher layer"
+        service = _search_intelligence_factory()
         db = SimpleDB()
 
         # Get documents to process
@@ -375,7 +397,9 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
 
         elif operation == "generate_summaries":
             output += f"📝 Generating summaries for {len(documents)} documents...\n\n"
-            summarizer = get_document_summarizer()
+            if not _summarizer_factory:
+                return "Summarizer service not configured - must be injected from higher layer"
+            summarizer = _summarizer_factory()
 
             for doc in documents:
                 try:

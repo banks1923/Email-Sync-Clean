@@ -15,7 +15,7 @@ def test_search_intelligence():
     
     # Import with error handling
     try:
-        from search_intelligence.main import SearchIntelligenceService
+        from search.main import search
         print("✅ SearchIntelligenceService imported")
     except ImportError as e:
         print(f"❌ Failed to import SearchIntelligenceService: {e}")

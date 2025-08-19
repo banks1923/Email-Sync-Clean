@@ -25,15 +25,21 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-# Import services
+# Import only infrastructure layer dependencies
 try:
-    from entity.main import EntityService
     from shared.simple_db import SimpleDB
-
     SERVICES_AVAILABLE = True
 except ImportError as e:
-    print(f"Services not available: {e}")
+    print(f"Infrastructure services not available: {e}")
     SERVICES_AVAILABLE = False
+
+# Service factory - to be injected from higher layers
+_entity_service_factory = None
+
+def set_entity_service_factory(factory):
+    """Inject entity service factory from higher layer."""
+    global _entity_service_factory
+    _entity_service_factory = factory
 
 
 def tag_evidence(text: str, doc_id: str = None) -> str:
@@ -51,7 +57,9 @@ This tool is deprecated. Please use the unified Legal Intelligence MCP Server:
 
     try:
         # Extract entities
-        entity_service = EntityService()
+        if not _entity_service_factory:
+            return "Entity service not configured - must be injected from higher layer"
+        entity_service = _entity_service_factory()
         doc_id = doc_id or f"legal_{len(text)}"
         result = entity_service.extract_email_entities(doc_id, text)
 
@@ -318,7 +326,9 @@ def analyze_case_relationships(case_number: str) -> str:
 
     try:
         db = SimpleDB()
-        entity_service = EntityService()
+        if not _entity_service_factory:
+            return "Entity service not configured - must be injected from higher layer"
+        entity_service = _entity_service_factory()
 
         # Get case documents
         case_docs = db.search_content(case_number, limit=50)

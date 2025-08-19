@@ -19,7 +19,7 @@ from .processors import DocxProcessor, MarkdownProcessor, TextProcessor
 
 # Import PDF processor if available
 try:
-    from pdf.main import PDFService
+    from pdf.main import get_pdf_service
 
     PDF_AVAILABLE = True
 except ImportError:
@@ -62,7 +62,8 @@ class DocumentPipeline:
 
         # Add PDF processor if available
         if PDF_AVAILABLE:
-            self.processors["pdf"] = PDFService(db_path)
+            from pdf.wiring import build_pdf_service
+            self.processors["pdf"] = build_pdf_service(db_path)
 
         # Initialize database if available
         self.db = SimpleDB(db_path) if DB_AVAILABLE else None

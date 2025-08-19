@@ -38,7 +38,6 @@
 |--------|-----------|----------------|
 | `dependency_mapper` | `/dependency_mapper.py` | Keep - Analysis tool |
 | `tools.cli.health_monitor` | `/tools/cli/health_monitor.py` | Review - May be CLI endpoint |
-| `tools.cli.dedup_handler` | `/tools/cli/dedup_handler.py` | Review - May be CLI endpoint |
 | `tools.scripts.extract_timeline` | `/tools/scripts/extract_timeline.py` | **DELETE** - Unused script |
 | `tools.scripts.legal_timeline_export` | `/tools/scripts/legal_timeline_export.py` | **DELETE** - Unused script |
 | `tools.scripts.check_qdrant_documents` | `/tools/scripts/check_qdrant_documents.py` | Keep - Debug tool |
