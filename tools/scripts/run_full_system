@@ -112,8 +112,8 @@ class SystemRunner:
         try:
             import requests
 
-            response = requests.get("http://localhost:6333/readiness", timeout=2)
-            if response.status_code == 200:
+            response = requests.get("http://localhost:6333/", timeout=2)
+            if response.status_code == 200 and "qdrant" in response.text.lower():
                 logger.info("✅ Qdrant already running")
                 return True
         except:
@@ -152,8 +152,8 @@ class SystemRunner:
                 try:
                     import requests
 
-                    response = requests.get("http://localhost:6333/readiness", timeout=1)
-                    if response.status_code == 200:
+                    response = requests.get("http://localhost:6333/", timeout=1)
+                    if response.status_code == 200 and "qdrant" in response.text.lower():
                         logger.success("✅ Qdrant started successfully")
                         return True
                 except:
