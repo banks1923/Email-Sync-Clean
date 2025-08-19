@@ -1,0 +1,288 @@
+# Email Sync - Single-User Document Search System
+
+## 1. What This Actually Is
+
+### Reality Check
+This is a **single-user hobby project** for searching emails, PDFs, and transcripts. Not enterprise software. Not a legal platform. Just a practical tool that works reliably on standard hardware.
+
+### What It Does
+- Syncs Gmail emails and makes them searchable
+- Processes PDFs (with OCR for scanned docs) 
+- Transcribes audio/video files
+- Provides semantic search when you want it
+- Keeps things organized and findable
+- Works offline with local storage
+
+### Design Philosophy
+- **Working > Perfect**: Solutions that work today
+- **Simple > Complex**: Direct implementation, no abstractions
+- **Local > Cloud**: SQLite and local files work great
+- **Flat > Nested**: Services at root level, minimal nesting
+- **YAGNI**: Don't build what you don't need
+
+## 2. Current Working System
+
+### Architecture That Works
+```
+Email Sync/ (Clean flat structure - 16 items, down from 34)
+├── gmail/              # Email sync (works great)
+├── pdf/                # PDF processing with smart OCR
+├── transcription/      # Audio transcription
+├── search_intelligence/# Smart search + clustering
+├── legal_intelligence/ # Case timeline tools
+├── entity/             # Extract names, dates, cases
+├── summarization/      # TF-IDF + TextRank
+├── knowledge_graph/    # Document relationships
+├── utilities/          # embeddings/, vector_store/, notes/, timeline/
+├── infrastructure/     # pipelines/, documents/, mcp_servers/
+├── tools/              # cli/, scripts/ (the actual user interface)
+├── shared/             # SimpleDB + utilities
+├── data/               # 5-stage pipeline: raw → staged → processed → quarantine → export
+└── tests/              # Real tests, not mocks
+```
+
+### What Actually Works Now
+- **Gmail Sync**: 500+ emails/batch, reliable incremental sync
+- **PDF Processing**: Auto-detects if OCR needed, batch processing
+- **Search**: Fast keyword + optional semantic with Legal BERT
+- **MCP Integration**: 40+ tools for Claude Desktop
+- **CLI**: `tools/scripts/vsearch` - one command does everything
+
+## 3. Architecture Principles (ENFORCED)
+
+### File Size Limits
+- **New files**: <450 lines (prevents AI bloat)
+- **Functions**: <30 lines each
+- **Complexity**: <10 cyclomatic complexity per function
+- **Existing code**: Don't refactor if it works
+
+### Anti-Patterns (NEVER DO)
+- Abstract base classes for 2-3 implementations
+- Factory patterns when if/else works
+- Deep inheritance hierarchies
+- Dependency injection frameworks
+- Microservices or event buses
+- Enterprise patterns for hobby project
+
+### Good Patterns (ALWAYS DO)
+- Direct imports and usage
+- SQLite for data storage
+- Local file storage
+- Simple error handling: `{"success": bool, "error": str}`
+- One clear way to do things
+
+## 4. Services That Work
+
+### 4.1 Gmail Service - ✅ WORKING
+**Current reality**: Syncs 500+ emails reliably, streaming batches of 50
+- Uses Gmail History API for incremental sync
+- Auto-summarization with TF-IDF keywords
+- Content deduplication with SHA-256
+- Memory efficient (<50MB usage)
+- ~50 emails/minute processing
+
+**Tasks needed**:
+- Improve error handling for API rate limits
+- Add more sender filters for relevant emails
+- Optimize batch processing for very large mailboxes
+
+### 4.2 PDF Service - ✅ WORKING  
+**Current reality**: Smart OCR detection, batch processing
+- Auto-detects scanned vs text PDFs
+- Tesseract OCR with OpenCV preprocessing
+- Legal metadata extraction (case numbers, dates)
+- Unified content storage
+- Batch directory processing
+
+**Tasks needed**:
+- Improve OCR accuracy with better image preprocessing
+- Add more legal document format detection
+- Optimize memory usage for large PDFs
+
+### 4.3 Search Intelligence - ✅ WORKING
+**Current reality**: Smart search with query expansion and clustering
+- Legal BERT embeddings (1024D) for semantic search
+- Query preprocessing and expansion
+- DBSCAN clustering (threshold 0.7)
+- Entity-aware ranking
+- Duplicate detection
+
+**Tasks needed**:
+- Tune clustering parameters for better grouping
+- Add more query expansion rules
+- Improve similarity threshold auto-tuning
+
+### 4.4 CLI Interface - ✅ WORKING
+**Current reality**: `tools/scripts/vsearch` handles everything
+- Search with filters (date, type, tags)
+- Document upload and processing
+- Legal case analysis commands
+- System health monitoring
+- Export capabilities
+
+**Tasks needed**:
+- Add more output formats
+- Improve progress indicators for long operations
+- Better error messages for common issues
+
+## 5. MCP Integration (40+ Tools)
+
+### What Works Now
+- **Legal Intelligence**: 6 tools for case analysis
+- **Search Intelligence**: 6 tools for document operations  
+- **Sequential Thinking**: Structured reasoning framework
+- **Memory Server**: Persistent context across sessions
+- **Qdrant Server**: Vector search and storage
+
+### Tasks needed**:
+- Document tool usage patterns
+- Add more specialized legal tools
+- Improve tool error handling
+- Create tool usage examples
+
+## 6. Maintenance Tasks
+
+### Code Quality (Automated)
+- **Current**: `make cleanup` does full automated cleanup
+- **Current**: Black, isort, mypy, ruff all configured
+- **Current**: Test coverage tracking with pytest
+
+**Tasks needed**:
+- Increase test coverage in low-coverage areas
+- Add more integration tests for real workflows
+- Document the cleanup pipeline better
+
+### Performance (Good Enough)
+- **Current**: Processes 484 documents successfully
+- **Current**: <50MB memory usage per operation
+- **Current**: SQLite handles 10,000+ documents fine
+
+**Tasks needed**:
+- Profile memory usage with larger datasets
+- Optimize slow queries as data grows
+- Add performance benchmarks
+
+### Documentation (Pragmatic)
+- **Current**: CLAUDE.md has development guide
+- **Current**: docs/SERVICES_API.md has complete API reference
+- **Current**: Each service has practical examples
+
+**Tasks needed**:
+- Add more real-world usage examples
+- Document common troubleshooting steps
+- Create simple getting-started guide
+
+## 7. External Dependencies (26 packages)
+
+### Core Stack (Don't Change)
+- `transformers + torch` - Legal BERT embeddings
+- `qdrant-client` - Vector storage (optional)
+- `google-api-python-client` - Gmail API
+- `spacy` - Entity extraction
+- `openai` - Whisper transcription
+- `loguru` - Superior logging
+
+### Document Processing
+- `PyPDF2 + pdfplumber` - PDF text extraction
+- `pytesseract + opencv-python` - OCR capabilities
+- `pdf2image + Pillow` - Image processing
+
+**Tasks needed**:
+- Update dependencies when security patches available
+- Consider removing unused dependencies
+- Document which dependencies are optional
+
+## 8. Simple Improvements (Not Over-Engineering)
+
+### User Experience Fixes
+- Better error messages when Qdrant not running
+- Clearer progress indicators for batch operations
+- Simple health check command
+- Export formats that actually work everywhere
+
+### Performance Tweaks
+- Smarter batch sizes based on available memory
+- Parallel processing for independent operations
+- Better caching for repeated queries
+- Index optimization for large document sets
+
+### Functionality Gaps
+- Audio format support beyond basic MP3/MP4
+- More document types (DOCX, TXT, Markdown)
+- Simple tag management for organization
+- Basic document versioning for updates
+
+### Development Experience
+- Better test fixtures with real sample data
+- Clearer logging for debugging issues
+- Simple profiling tools for performance investigation
+- Documentation with actual command examples
+
+## 9. What NOT To Build
+
+### Enterprise Features (YAGNI)
+- Multi-user access control
+- Complex workflow engines  
+- Advanced security frameworks
+- Kubernetes deployment
+- Microservices architecture
+
+### Over-Engineering (Keep It Simple)
+- Abstract base classes everywhere
+- Complex caching layers
+- Custom ORM systems
+- Event-driven architectures
+- Plugin systems
+
+### Premature Optimization
+- Connection pooling for SQLite
+- Complex async patterns
+- Memory optimization before measuring
+- Distributed processing for single-user system
+
+## 10. Success Criteria (Realistic)
+
+### It Works When
+- Can sync 500+ emails without errors
+- PDF processing succeeds 95% of the time
+- Search returns relevant results in <2 seconds
+- Claude Desktop MCP tools work reliably
+- Can find documents from 6 months ago quickly
+
+### It's Maintainable When
+- Can add new features without breaking existing ones
+- Error messages actually help solve problems
+- Code is readable after not looking at it for months
+- Tests catch real problems, not implementation details
+
+### It's Good Enough When
+- Does what it needs to do reliably
+- Doesn't crash with reasonable inputs
+- Performance is acceptable on standard hardware
+- Documentation explains how to actually use it
+
+## 11. Implementation Philosophy
+
+### Start With Working Code
+- Fix bugs in existing working features first
+- Add features only when actually needed
+- Test with real data, not contrived examples
+- Document what actually works
+
+### Keep It Simple
+- Direct solutions over clever abstractions
+- Standard library over external dependencies
+- Simple patterns that everyone understands
+- Working code over perfect architecture
+
+### Make It Maintainable
+- Code that's readable in 6 months
+- Clear separation between different concerns  
+- Good error messages and logging
+- Tests that verify real functionality
+
+---
+
+**Remember**: This is a single-user tool for searching documents. It should work reliably, be easy to maintain, and solve the actual problem without unnecessary complexity.
+
+The best code is no code. The second best is simple code that works.

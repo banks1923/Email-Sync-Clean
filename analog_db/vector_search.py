@@ -66,20 +66,20 @@ class VectorSearcher:
             
             embedding_service = get_embedding_service()
             query_embedding = embedding_service.get_embedding(query)
-            if not query_embedding:
+            if query_embedding is None or len(query_embedding) == 0:
                 return []
             
             markdown_files = self._get_markdown_files()
             semantic_results = []
             
-            # Process files (limit for performance)
-            for file_path in markdown_files[:50]:
+            # Process files (limit for performance - increased from 50 to 100)
+            for file_path in markdown_files[:100]:
                 try:
                     similarity_score = self._calculate_similarity(
                         file_path, query_embedding, embedding_service
                     )
                     
-                    if similarity_score and similarity_score > 0.7:
+                    if similarity_score is not None and float(similarity_score) > 0.4:
                         result = self._create_semantic_result(file_path, similarity_score)
                         semantic_results.append(result)
                         
@@ -124,18 +124,38 @@ class VectorSearcher:
             content_sample = post.content[:1000]  # First 1000 chars
             combined_text = f"{title} {content_sample}"
             
-            # Get embedding for file content
-            content_embedding = embedding_service.get_embedding(combined_text)
-            if not content_embedding:
+            # Skip empty content
+            if not combined_text.strip():
                 return None
             
-            # Calculate cosine similarity
-            from sklearn.metrics.pairwise import cosine_similarity
+            # Get embedding for file content
+            content_embedding = embedding_service.get_embedding(combined_text)
+            if content_embedding is None or len(content_embedding) == 0:
+                return None
             
-            similarity = cosine_similarity([query_embedding], [content_embedding])[0][0]
+            # Ensure embeddings are numpy arrays with proper shape
+            import numpy as np
+            
+            query_emb = np.array(query_embedding).flatten()
+            content_emb = np.array(content_embedding).flatten()
+            
+            # Check dimensions match
+            if len(query_emb) != len(content_emb):
+                return None
+            
+            # Calculate cosine similarity manually to avoid array truth value error
+            dot_product = np.dot(query_emb, content_emb)
+            query_norm = np.linalg.norm(query_emb)
+            content_norm = np.linalg.norm(content_emb)
+            
+            if query_norm == 0 or content_norm == 0:
+                return 0.0
+            
+            similarity = dot_product / (query_norm * content_norm)
             return float(similarity)
             
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Error calculating similarity for {file_path}: {e}")
             return None
     
     def _create_semantic_result(self, file_path: Path, similarity_score: float) -> Dict[str, Any]:

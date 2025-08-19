@@ -134,10 +134,6 @@ node_modules/
 *.sw?
 # OS specific
 
-# Task files
-# tasks.json
-# tasks/
-
 # BFG cleanup artifacts (temporary)
 ..bfg-report/
 .git-backup/
@@ -145,3 +141,7 @@ bfg.jar
 
 # Large/sensitive document files
 "S520 Standard for Professional Mold Remediation"
+
+# Task files
+# tasks.json
+# tasks/ 

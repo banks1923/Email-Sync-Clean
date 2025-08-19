@@ -3,10 +3,10 @@
     "email-sync": {
       "command": "python3",
       "args": [
-        "/Users/jim/Projects/Email Sync/mcp_server/email_sync_mcp.py"
+        "/Users/jim/Projects/Email-Sync-Clean-Backup/infrastructure/mcp_servers/legal_intelligence_mcp.py"
       ],
       "env": {
-        "PYTHONPATH": "/Users/jim/Projects/Email Sync"
+        "PYTHONPATH": "/Users/jim/Projects/Email-Sync-Clean-Backup"
       }
     },
     "sequential-thinking": {
@@ -16,7 +16,7 @@
       ],
       "env": {
         "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
-        "MCP_STORAGE_DIR": "/Users/jim/Projects/Email Sync/data/sequential_thinking"
+        "MCP_STORAGE_DIR": "/Users/jim/Projects/Email-Sync-Clean-Backup/data/sequential_thinking"
       }
     },
     "filesystem": {
@@ -24,7 +24,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/jim/Projects/Email Sync"
+        "/Users/jim/Projects/Email-Sync-Clean-Backup"
       ]
     },
     "puppeteer": {

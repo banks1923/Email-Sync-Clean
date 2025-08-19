@@ -108,6 +108,12 @@ class EmbeddingService:
         """
         return self.dimensions
 
+    def get_embedding(self, text: str) -> np.ndarray:
+        """
+        Alias for encode() to maintain API compatibility.
+        """
+        return self.encode(text)
+
 
 # Singleton pattern - reuse the same model instance
 _embedding_service: EmbeddingService | None = None
