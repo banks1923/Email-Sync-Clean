@@ -15,7 +15,6 @@ from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
 
 # Import service modules
 from pdf.wiring import build_pdf_service
-from transcription import TranscriptionService
 
 
 def upload_pdf(pdf_path, source="upload"):

@@ -101,6 +101,7 @@ markers = [
 [tool.coverage.run]
 branch = true
 context = "${COVERAGE_CONTEXT:pytest}"
+config_file = ".config/.coveragerc"
 source = [
     "shared",
     "gmail", 

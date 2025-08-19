@@ -156,6 +156,27 @@ Email Sync/
 └── .taskmaster/      # Task management system
 ```
 
+### Configuration Management (Centralized)
+
+**All tool configurations are centralized in `.config/` directory:**
+
+```
+.config/
+├── .coveragerc              # Coverage.py configuration
+├── .flake8                  # Flake8 linting rules
+├── .mcpignore              # MCP server ignore patterns
+├── .pre-commit-config.yaml # Pre-commit hooks configuration
+├── mypy.ini                # MyPy type checking settings
+├── pyrightconfig.json      # Pyright (VS Code) type checking
+├── pytest.ini             # Pytest configuration
+└── settings.py             # Centralized application settings (Pydantic)
+```
+
+**Tool Configuration Updates:**
+- **Make commands**: All use `--config .config/[file]` syntax
+- **PyProject.toml**: Contains consolidated tool settings where supported
+- **External secrets**: Use `~/Secrets/.env` with direnv auto-loading via `.envrc`
+
 **Major Update (2025-08-17)**: Directory reorganization completed:
 - **53% reduction**: Root directory items reduced from 34 to 16
 - **One-level nesting**: utilities/, infrastructure/, tools/ organize smaller services

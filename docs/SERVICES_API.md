@@ -9,7 +9,6 @@ Complete API reference for all Email Sync services with usage examples and integ
 # Core Business Services (Root Level)
 gmail/                # Email processing and sync
 pdf/                  # PDF processing with OCR  
-transcription/        # Audio/video transcription
 entity/               # Named entity recognition
 summarization/        # Document summarization
 search_intelligence/  # Unified search and intelligence
@@ -113,44 +112,6 @@ is_scanned = service.needs_ocr("path/to/document.pdf")
 ocr_text = service.perform_ocr("path/to/scanned.pdf")
 ```
 
-## 🎤 Transcription Service (`transcription/`)
-
-### Quick Start
-```python
-from transcription.main import TranscriptionService
-
-service = TranscriptionService()
-result = service.transcribe_file("audio.mp4")
-# Returns confidence metrics and segment timestamps
-```
-
-### Key Features
-- **Audio Validation**: Pre-flight checks using librosa
-- **Quality Metrics**: avg_logprob confidence scoring
-- **Segment Timestamps**: Precise start/end times for timeline
-- **Batch Processing**: Process multiple files efficiently
-- **Enhanced Whisper**: Improved model management and accuracy
-
-### API Methods
-```python
-# Basic transcription
-result = service.transcribe_file("audio.mp4")
-result = service.transcribe_audio_bytes(audio_bytes, filename)
-
-# Batch operations
-results = service.batch_transcribe(file_paths_list)
-
-# Audio validation
-is_valid = service.validate_audio_file("audio.mp4")
-duration = service.get_audio_duration("audio.mp4")
-
-# Advanced options
-result = service.transcribe_with_options(
-    file_path="audio.mp4",
-    language="en",
-    model_size="medium"
-)
-```
 
 ## 🏷️ Entity Extraction (`entity/`)
 

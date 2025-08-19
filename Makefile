@@ -21,7 +21,7 @@ install: ## Install production dependencies
 
 install-dev: install ## Install development dependencies
 	$(PIP) install -r requirements-dev.txt
-	pre-commit install
+	pre-commit install --config .config/.pre-commit-config.yaml
 
 setup: install-dev ## Complete development setup
 	@echo "✅ Development environment setup complete!"
@@ -43,7 +43,7 @@ format-advanced: ## Advanced formatting with all cleanup tools
 
 lint-all: ## Run all linting tools (flake8 + ruff)
 	@echo "🔍 Running flake8..."
-	flake8 . || true
+	flake8 --config .config/.flake8 . || true
 	@echo ""
 	@echo "🦀 Running ruff..."
 	ruff check . --statistics
@@ -56,12 +56,12 @@ lint-fix: ## Auto-fix linting issues where possible
 
 type-check: ## Run type checking with mypy
 	@echo "🔍 Running type checking with mypy..."
-	mypy gmail/ shared/ utilities/ infrastructure/ --ignore-missing-imports || true
+	mypy --config-file .config/mypy.ini gmail/ shared/ utilities/ infrastructure/ --ignore-missing-imports || true
 
 # Testing
 test: ## Run all tests (full suite)
 	@echo "🧪 Running full test suite (405 tests)..."
-	pytest -v
+	pytest -c .config/pytest.ini -v
 
 test-fast: ## Run fast categorized tests (CI/CD optimized)
 	@echo "🚀 Running fast categorized tests for CI/CD..."
@@ -75,23 +75,23 @@ test-fast: ## Run fast categorized tests (CI/CD optimized)
 
 test-unit: ## Run unit tests only (fast, isolated - ~77 tests)
 	@echo "⚡ Running unit tests (fast, isolated)..."
-	pytest -m "unit" --tb=short -v
+	pytest -c .config/pytest.ini -m "unit" --tb=short -v
 
 test-integration: ## Run integration tests only (cross-service)
 	@echo "🔗 Running integration tests (cross-service)..."
-	pytest -m "integration" --tb=short -v
+	pytest -c .config/pytest.ini -m "integration" --tb=short -v
 
 test-slow: ## Run slow tests only (performance, AI models)
 	@echo "🐌 Running slow tests (performance, AI models)..."
-	pytest -m "slow" --tb=short -v
+	pytest -c .config/pytest.ini -m "slow" --tb=short -v
 
 test-smoke: ## Run smoke tests only (system health checks)
 	@echo "💨 Running smoke tests (system health)..."
-	pytest tests/smoke/ --tb=short -v
+	pytest -c .config/pytest.ini tests/smoke/ --tb=short -v
 
 test-coverage: ## Run tests with coverage report
 	@echo "📊 Running tests with coverage analysis..."
-	pytest --cov=. --cov-report=html --cov-report=term-missing -v
+	pytest -c .config/pytest.ini --cov=. --cov-config=.config/.coveragerc --cov-report=html --cov-report=term-missing -v
 
 # Security
 security-check: ## Run security checks with bandit

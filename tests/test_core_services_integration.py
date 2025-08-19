@@ -91,7 +91,7 @@ class TestSearchService:
         """
         Test search service initialization.
         """
-        from search.main import search
+        from search_intelligence.basic_search from search_intelligence import basic_search as search
 
         # Search function should work directly
         assert search is not None
@@ -100,7 +100,7 @@ class TestSearchService:
         """
         Test basic search functionality.
         """
-        from search.main import search
+        from search_intelligence.basic_search from search_intelligence import basic_search as search
 
         results = search("test query", limit=10)
 
@@ -112,7 +112,7 @@ class TestSearchService:
         """
         Test search with advanced filters.
         """
-        from search.main import search
+        from search_intelligence.basic_search from search_intelligence import basic_search as search
 
         filters = {
             "since": "last week",
@@ -279,7 +279,7 @@ class TestServiceIntegration:
         Initialize all services.
         """
         from utilities.embeddings.embedding_service import EmbeddingService
-        from search.main import search
+        from search_intelligence.basic_search from search_intelligence import basic_search as search
         from entity.main import EntityService
         from summarization.main import DocumentSummarizer
         from shared.simple_db import SimpleDB

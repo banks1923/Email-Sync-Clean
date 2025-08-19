@@ -4,25 +4,26 @@ This replaces scattered config.py files across services with type-safe,
 validated configuration management.
 """
 
-import os
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 class DatabaseSettings(BaseSettings):
     """Database configuration."""
-    
+
     # Main database path
     emails_db_path: str = Field(default="data/emails.db", env="EMAILS_DB_PATH")
     content_db_path: str = Field(default="shared/content.db", env="CONTENT_DB_PATH")
-    
+
     # Connection settings
     max_connections: int = Field(default=5, env="DB_MAX_CONNECTIONS")
     busy_timeout: int = Field(default=5000, env="DB_BUSY_TIMEOUT")  # milliseconds
-    
-    @validator("emails_db_path", "content_db_path")
+
+    @field_validator("emails_db_path", "content_db_path")
+    @classmethod
     def validate_db_paths(cls, v):
         """Ensure database directories exist."""
         path = Path(v)
@@ -32,45 +33,65 @@ class DatabaseSettings(BaseSettings):
 
 class GmailSettings(BaseSettings):
     """Gmail API configuration."""
-    
+
     credentials_path: str = Field(default=".config/credentials.json", env="GMAIL_CREDENTIALS_PATH")
     token_path: str = Field(default=".config/token.json", env="GMAIL_TOKEN_PATH")
-    
+
     # Sender filters
-    preferred_senders: List[str] = Field(default=[
-        "jenbarreda@yahoo.com",
-        "518stoneman@gmail.com", 
-        "brad_martinez@att.net",
-        "vicki_martinez@att.net",
-        "dteshale@teshalelaw.com",
-        "info@dignitylawgroup.com",
-        "joe@kellenerlaw.com",
-        "sally@lotuspropertyservices.net",
-        "grace@lotuspropertyservices.net",
-        "gaildcalhoun@gmail.com"
-    ])
-    
+    preferred_senders: List[str] = Field(
+        default=[
+            "jenbarreda@yahoo.com",
+            "518stoneman@gmail.com",
+            "brad_martinez@att.net",
+            "vicki_martinez@att.net",
+            "dteshale@teshalelaw.com",
+            "info@dignitylawgroup.com",
+            "joe@kellenerlaw.com",
+            "sally@lotuspropertyservices.net",
+            "grace@lotuspropertyservices.net",
+            "gaildcalhoun@gmail.com",
+        ]
+    )
+
     max_results: int = Field(default=500, env="GMAIL_MAX_RESULTS")
     batch_size: int = Field(default=50, env="GMAIL_BATCH_SIZE")
 
 
 class EntitySettings(BaseSettings):
     """Entity extraction configuration."""
-    
+
     spacy_model: str = Field(default="en_core_web_sm", env="ENTITY_SPACY_MODEL")
     batch_size: int = Field(default=100, env="ENTITY_BATCH_SIZE")
     confidence_threshold: float = Field(default=0.5, env="ENTITY_CONFIDENCE_THRESHOLD")
-    
-    entity_types: List[str] = Field(default=[
-        "PERSON", "ORG", "GPE", "MONEY", "DATE", "TIME", "PERCENT",
-        "PRODUCT", "EVENT", "FAC", "LOC", "NORP", "WORK_OF_ART", 
-        "LAW", "LANGUAGE", "QUANTITY", "ORDINAL", "CARDINAL"
-    ])
-    
+
+    entity_types: List[str] = Field(
+        default=[
+            "PERSON",
+            "ORG",
+            "GPE",
+            "MONEY",
+            "DATE",
+            "TIME",
+            "PERCENT",
+            "PRODUCT",
+            "EVENT",
+            "FAC",
+            "LOC",
+            "NORP",
+            "WORK_OF_ART",
+            "LAW",
+            "LANGUAGE",
+            "QUANTITY",
+            "ORDINAL",
+            "CARDINAL",
+        ]
+    )
+
     max_text_length: int = Field(default=10000, env="ENTITY_MAX_TEXT_LENGTH")
     enable_normalization: bool = Field(default=True, env="ENTITY_NORMALIZE")
-    
-    @validator("confidence_threshold")
+
+    @field_validator("confidence_threshold")
+    @classmethod
     def validate_confidence(cls, v):
         if not 0 <= v <= 1:
             raise ValueError("Confidence threshold must be between 0 and 1")
@@ -79,17 +100,17 @@ class EntitySettings(BaseSettings):
 
 class VectorSettings(BaseSettings):
     """Vector store and embeddings configuration."""
-    
+
     # Qdrant connection
     qdrant_host: str = Field(default="localhost", env="QDRANT_HOST")
     qdrant_port: int = Field(default=6333, env="QDRANT_PORT")
     qdrant_timeout: float = Field(default=60.0, env="QDRANT_TIMEOUT")
-    
+
     # Embedding model
     embedding_model: str = Field(default="nlpaueb/legal-bert-base-uncased", env="EMBEDDING_MODEL")
     embedding_dimension: int = Field(default=768, env="EMBEDDING_DIMENSION")
     batch_size: int = Field(default=32, env="VECTOR_BATCH_SIZE")
-    
+
     # Collection names
     email_collection: str = Field(default="emails", env="QDRANT_EMAIL_COLLECTION")
     pdf_collection: str = Field(default="pdf_documents", env="QDRANT_PDF_COLLECTION")
@@ -97,11 +118,11 @@ class VectorSettings(BaseSettings):
 
 class APISettings(BaseSettings):
     """External API configuration."""
-    
+
     # OpenAI (for transcription)
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     openai_model: str = Field(default="whisper-1", env="OPENAI_WHISPER_MODEL")
-    
+
     # Legal BERT API (if external)
     legal_bert_api_url: Optional[str] = Field(default=None, env="LEGAL_BERT_API_URL")
     legal_bert_api_key: Optional[str] = Field(default=None, env="LEGAL_BERT_API_KEY")
@@ -109,21 +130,30 @@ class APISettings(BaseSettings):
 
 class PathSettings(BaseSettings):
     """File and directory paths."""
-    
+
     # Data directories
     data_root: str = Field(default="data", env="DATA_ROOT")
     raw_documents: str = Field(default="data/raw", env="RAW_DOCUMENTS_PATH")
     processed_documents: str = Field(default="data/processed", env="PROCESSED_DOCUMENTS_PATH")
     quarantine: str = Field(default="data/quarantine", env="QUARANTINE_PATH")
     export_path: str = Field(default="data/export", env="EXPORT_PATH")
-    
+
     # Log directories
     logs_path: str = Field(default="logs", env="LOGS_PATH")
-    
+
     # Config directory
     config_dir: str = Field(default=".config", env="CONFIG_DIR")
-    
-    @validator("data_root", "raw_documents", "processed_documents", "quarantine", "export_path", "logs_path", "config_dir")
+
+    @field_validator(
+        "data_root",
+        "raw_documents",
+        "processed_documents",
+        "quarantine",
+        "export_path",
+        "logs_path",
+        "config_dir",
+    )
+    @classmethod
     def ensure_directories_exist(cls, v):
         """Create directories if they don't exist."""
         Path(v).mkdir(parents=True, exist_ok=True)
@@ -132,11 +162,11 @@ class PathSettings(BaseSettings):
 
 class LoggingSettings(BaseSettings):
     """Logging configuration."""
-    
+
     level: str = Field(default="INFO", env="LOG_LEVEL")
     format_string: str = Field(
         default="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        env="LOG_FORMAT"
+        env="LOG_FORMAT",
     )
     rotation: str = Field(default="500 MB", env="LOG_ROTATION")
     compression: str = Field(default="zip", env="LOG_COMPRESSION")
@@ -145,11 +175,11 @@ class LoggingSettings(BaseSettings):
 
 class Settings(BaseSettings):
     """Main application settings combining all subsystems."""
-    
+
     # Environment
     environment: str = Field(default="development", env="ENVIRONMENT")
     debug: bool = Field(default=False, env="DEBUG")
-    
+
     # Subsystem settings
     database: DatabaseSettings = DatabaseSettings()
     gmail: GmailSettings = GmailSettings()
@@ -158,11 +188,12 @@ class Settings(BaseSettings):
     api: APISettings = APISettings()
     paths: PathSettings = PathSettings()
     logging: LoggingSettings = LoggingSettings()
-    
+
     class Config:
-        env_file = ".env"
+        env_file = [".env", "~/Secrets/.env"]  # Check local first, then secrets
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables
 
 
 # Global settings instance

@@ -31,7 +31,6 @@ class TestDatabaseHealth:
         Verify core database service can be imported.
         """
         try:
-            from shared.simple_db import SimpleDB
 
             assert DatabaseService is not None
         except ImportError as e:

@@ -12,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 # Direct service imports - service registry was removed as unused
 # Services are now imported directly when needed
 from gmail.main import GmailService
-from transcription.main import TranscriptionService
 from entity.main import EntityService
 from utilities.timeline.main import TimelineService
 from utilities.notes.main import NotesService
@@ -55,10 +54,6 @@ class ServiceLocator:
 
         return build_pdf_service()
 
-    def get_transcription_service(self, **kwargs):
-        """Get transcription service instance"""
-
-        return TranscriptionService()
 
     def get_entity_service(self, **kwargs):
         """Get entity service instance"""

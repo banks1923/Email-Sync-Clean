@@ -23,3 +23,5 @@ python-dateutil>=2.8.2
 python-frontmatter>=1.0.0  # YAML frontmatter for markdown documents
 transformers>=4.30.0
 torch>=2.0.0
+
+pydantic[dotenv]>=1.10.0

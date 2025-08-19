@@ -15,7 +15,7 @@ from loguru import logger
 class HealthCheck:
     """Simple health checker - is it working or not?"""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = settings.database.emails_db_path):
         self.db_path = db_path
 
     def check_database(self) -> dict[str, Any]:
@@ -76,8 +76,8 @@ class HealthCheck:
         """Check if Gmail API credentials exist."""
         try:
             # Just check if credentials file exists
-            creds_path = "gmail/credentials.json"
-            token_path = "gmail/token.json"
+            creds_path = settings.gmail.credentials_path
+            token_path = settings.gmail.token_path
 
             if not os.path.exists(creds_path):
                 return {"healthy": False, "service": "gmail", "error": "Credentials file not found"}
@@ -109,6 +109,7 @@ class HealthCheck:
             # Check Whisper
             try:
                 import whisper
+from config.settings import settings
                 models_status["whisper"] = "available"
             except ImportError:
                 models_status["whisper"] = "not installed"
