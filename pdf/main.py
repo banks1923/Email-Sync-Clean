@@ -71,6 +71,9 @@ class PDFService(IService):
             self.logger = logger
 
         # Lazily created components will attach callbacks on first creation
+        
+        # Enable idempotent writes with SHA256 deduplication
+        self._enable_idempotent_writes()
 
     @classmethod
     def from_db_path(cls, db_path: str = "emails.db") -> "PDFService":
@@ -385,6 +388,17 @@ class PDFService(IService):
         except Exception as e:
             logger.error(f"Internal processing failed for {pdf_path}: {str(e)}")
             return {"success": False, "error": f"Processing failed: {str(e)}"}
+
+    def _enable_idempotent_writes(self) -> None:
+        """Enable idempotent writes with SHA256 deduplication"""
+        try:
+            from pdf.pdf_idempotent_writer import make_pdf_write_idempotent
+            make_pdf_write_idempotent(self)
+            logger.info("✅ Idempotent writes enabled with SHA256 deduplication")
+        except ImportError as e:
+            logger.warning(f"Idempotent writer not available: {e}")
+        except Exception as e:
+            logger.error(f"Failed to enable idempotent writes: {e}")
 
     def _handle_database_alert(self, alert) -> None:
         """Handle database alerts from error recovery system"""

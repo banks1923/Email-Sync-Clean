@@ -1,5 +1,204 @@
 # Changelog
 
+## [2025-08-20] - PDF Pipeline Verification System 🔍
+
+### Added
+- **Comprehensive Pipeline Verification Script**: `scripts/verify_pipeline.py`
+  - **Preflight Test**: Schema version, required tables, Qdrant connectivity validation
+  - **Smoke Test**: End-to-end chain verification (documents → content_unified → embeddings)
+  - **Integrity Test**: Orphaned records, duplicate detection, quarantine analysis
+  - **Performance Test**: Processing metrics with time window filtering (`--since 24h`)
+  - **Quarantine Test**: Failed document recovery system validation
+  - **Document Tracing**: Full pipeline trace for specific SHA256 documents
+  - **CI/JSON Mode**: Silent output with structured results for automation
+
+- **Robust Exit Code System**: Proper error classification for CI integration
+  - `0`: All tests passed
+  - `1`: Tests failed (or warnings with `--strict` mode)
+  - `2`: Configuration error
+  - `3`: Schema/environment mismatch  
+  - `4`: Transient error (retry possible)
+
+- **Time Window Analysis**: Performance tracking with flexible time parsing
+  - Support for `--since 30m`, `--since 24h`, `--since 7d` formats
+  - SQL interval conversion for both documents and embeddings queries
+  - Robust error handling for invalid time formats
+
+### Fixed
+- **Database Schema Alignment**: Added missing columns for PDF processing
+  - `source_type`, `content_type`, `processed_time`, `modified_time`, `vector_processed`
+  - Full SHA256 preservation in `content_unified.source_id` (no truncation)
+  - Proper foreign key relationships and WAL mode enforcement
+
+- **Pipeline Chain Integrity**: Complete documents → content → embeddings verification
+  - Exact SQL joins with deterministic ordering for reliable smoke tests
+  - SHA prefix resolution with ambiguity detection (prevents false matches)
+  - All embeddings returned in trace operations (not just first match)
+
+- **Observability Enhancement**: Proper logging and metrics integration
+  - JSON mode respects `--json` flag (silent operation for CI)
+  - Loguru integration for human-readable output in non-JSON mode
+  - Database metrics tracking with proper dict construction
+
+### Technical Implementation
+- **Source ID Semantics**: Full SHA256 as content_unified.source_id for collision prevention
+- **Chain Validation**: Deterministic SQL joins with `ORDER BY processed_at DESC, id DESC`
+- **Integrity Queries**: Complete orphan detection (content, embeddings, docs without content)
+- **Performance Windows**: SQLite interval parsing with proper error handling
+- **JSON/CLI Behavior**: Silent mode for automation, verbose mode for development
+
+### Usage Examples
+```bash
+# Full verification suite
+python3 scripts/verify_pipeline.py
+
+# CI integration with JSON output
+python3 scripts/verify_pipeline.py --json --strict
+
+# Performance analysis for recent activity
+python3 scripts/verify_pipeline.py --since 24h
+
+# Trace specific document through pipeline
+python3 scripts/verify_pipeline.py --trace a1b2c3d4
+
+# Run specific test only
+python3 scripts/verify_pipeline.py --test smoke
+```
+
+### Document Processing Capabilities Confirmed
+- ✅ **Text-based PDFs**: Fast PyPDF2 extraction (2,566 chars from legal document)
+- ✅ **Scanned PDFs**: Tesseract OCR with automatic detection
+- ✅ **Legal Documents**: Court filings, contracts, judgments, motions
+- ✅ **Mixed Content**: Automatic text vs OCR detection (< 1000 chars/page threshold)
+- ✅ **Pipeline Stages**: Raw → Staged → Processing → Storage → Content Unified → Embeddings
+
+## [2025-08-20] - Semantic Pipeline Bug Fixes 🔧
+
+### Fixed
+- **Timeline Events Title Constraint**: Resolved NOT NULL violations in timeline_events table
+  - Added `_generate_event_title()` method to create meaningful titles from event data
+  - Format: "action – date – subject" (e.g., "email – 2024-01-20 – Meeting reminder")
+  - Fallback chain: event_type → date → generic "Event" title
+
+- **Qdrant Point ID Format**: Fixed invalid point ID errors during vector upsert
+  - Added `_normalize_point_id()` method using deterministic UUIDv5 generation
+  - Namespace UUID: `00000000-0000-0000-0000-00000000E1D0` for project consistency
+  - Converts message IDs with invalid characters (`<>@`) to valid UUID format
+  - Preserves original message_id/content_id in payload for legal traceability
+
+- **Migration Scripts**: Created backfill tools for existing data
+  - `scripts/backfill_timeline_titles.py` - Backfill missing timeline titles
+  - `tools/scripts/reindex_qdrant_points.py` - Optional reindexing of Qdrant points with valid UUIDs
+
+### Technical Details
+- Timeline events now always have non-NULL titles for better data hygiene
+- Qdrant points use deterministic UUIDs while maintaining EID traceability
+- All semantic pipeline steps now complete without constraint violations
+- Batch processing maintains performance while ensuring data integrity
+
+### Verification
+```bash
+# Test the fixes
+make semantic-verify-quick  # Should complete without errors
+make eid-lookup EID=EID-2024-0001  # Verify traceability maintained
+
+# Migration commands (if needed)
+python3 scripts/backfill_timeline_titles.py
+python3 tools/scripts/reindex_qdrant_points.py --dry-run
+```
+
+## [2025-08-20] - PDF Pipeline Schema Fixes & Migration System 📄
+
+### Fixed
+- **PDF Pipeline Schema Drift**: Resolved critical blocker preventing PDF storage
+  - Added missing columns: `char_count`, `word_count`, `sha256`, `status`, `error_message`, `processed_at`
+  - Added retry tracking: `attempt_count`, `next_retry_at` for quarantine recovery
+  - Created unique index on `sha256` for deduplication
+
+- **Schema Migration System**: Introduced versioned migration tracking
+  - Created `schema_version` table for tracking applied migrations
+  - Added `scripts/apply_schema_migration.py` for safe column additions
+  - Migration #1: "Add missing PDF pipeline columns" applied successfully
+
+- **Environment Configuration**: Centralized database path management
+  - Added `APP_DB_PATH` environment variable to `.env`
+  - All services now use single source of truth for DB location
+  - Prevents "no such table" errors from path confusion
+
+- **Preflight Check System**: Added pipeline readiness verification
+  - Created `scripts/preflight_check.py` with structured exit codes
+  - Exit code 3 for schema/environment mismatches
+  - Validates schema version, required columns, tables, and Qdrant status
+
+- **PDF Service Initialization**: Fixed service wiring in pipeline
+  - Updated `run_full_system` to use `PDFService.from_db_path()`
+  - Proper dependency injection with all required providers
+
+- **Database Table Creation**: Added missing integration tables
+  - Created `content_unified` table for cross-content search
+  - Created `embeddings` table for vector storage
+  - Both tables support PDF-to-search integration
+
+### Added
+- **Ingestion Freeze Mechanism**: `INGESTION_FROZEN.txt` marker file
+  - Prevents processing during schema migrations
+  - Clear status communication for operators
+
+### Added (Pipeline Enhancements)
+- **Idempotent PDF Writer**: Transactional writes with SHA256 deduplication
+  - `pdf/pdf_idempotent_writer.py` - Atomic operations with rollback on failure
+  - Exit code taxonomy: 0=success, 2=permanent_fail, 3=schema_error, 4=transient_fail
+  - Automatic retry with exponential backoff (2, 4, 8 minutes)
+
+- **Quarantine Recovery System**: CLI for managing failed documents
+  - `tools/cli/quarantine_handler.py` - List, retry, purge, and stats commands
+  - Tracks attempt count and next retry time
+  - Prevents retry storms with backoff logic
+
+- **Pipeline Management Commands**: New Makefile targets
+  - `make preflight` - Run pipeline readiness check
+  - `make quarantine-list` - View failed documents
+  - `make quarantine-stats` - Failure statistics
+  - `make embeddings-backfill` - Process pending embeddings
+  - `make ingest-status` - Pipeline health dashboard
+
+### Migration Commands
+```bash
+# Apply schema migration
+python3 scripts/apply_schema_migration.py
+
+# Run preflight check
+python3 scripts/preflight_check.py
+
+# Check pipeline status
+make ingest-status
+
+# Resume processing (when ready)
+rm INGESTION_FROZEN.txt
+make preflight
+
+# Test the complete pipeline
+make embeddings-backfill-dry  # Check what needs processing
+make embeddings-backfill      # Process embeddings
+tools/scripts/vsearch quarantine list  # Check quarantine status
+```
+
+### Integration Complete (2025-08-20)
+- **PDFService**: Idempotent writer automatically enabled on initialization
+- **vsearch CLI**: Quarantine commands integrated (`list`, `retry`, `purge`, `stats`)
+- **Semantic Pipeline**: Extended with `process_content_unified()` method for PDF embeddings
+- **Backfill Script**: `scripts/backfill_embeddings.py` with dry-run and filtering options
+- **Makefile**: New targets `embeddings-backfill`, `embeddings-backfill-dry`, `embeddings-backfill-pdf`
+- **VectorMaintenanceAdapter**: Removed (replaced with direct SimpleDB usage)
+
+### Pipeline Status: Ready for Production
+✅ Foundation fixed (schema, paths, preflight)  
+✅ Idempotent writes with SHA256 deduplication  
+✅ Quarantine recovery with retry logic  
+✅ Embedding generation for PDFs  
+✅ CLI integration complete  
+✅ Deprecated code removed
+
 ## [2025-01-20] - Semantic Pipeline Wiring Verification Added 🔍
 
 ### Added

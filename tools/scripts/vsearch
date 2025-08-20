@@ -13,10 +13,57 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Direct imports following CLAUDE.md "Direct > Indirect" principle
-from search_intelligence.basic_search import search, semantic_search, vector_store_available
+# Lazy import for search functions to avoid model loading timeout
 from shared.error_handler import ErrorHandler
 from shared.health_check import run_health_check
 from shared.simple_db import SimpleDB
+from tools.cli.quarantine_handler import add_quarantine_commands, handle_quarantine_command
+
+# Global cache for expensive imports
+_search_functions = None
+
+
+def _get_search_functions():
+    """Lazy load search functions to avoid timeout on CLI startup."""
+    global _search_functions
+    if _search_functions is None:
+        from search_intelligence.basic_search import search, semantic_search, vector_store_available
+        _search_functions = {
+            'search': search,
+            'semantic_search': semantic_search,
+            'vector_store_available': vector_store_available
+        }
+    return _search_functions
+
+
+def warmup_command():
+    """Preload models and services for faster subsequent commands."""
+    print("⏳ Warming up models and services...")
+    
+    try:
+        import time
+        start_time = time.time()
+        
+        # Load search functions (which loads Legal BERT model)
+        print("  Loading search functions...")
+        search_funcs = _get_search_functions()
+        
+        # Test basic functionality
+        print("  Testing vector store connection...")
+        if search_funcs['vector_store_available']():
+            print("  ✅ Vector store ready")
+        else:
+            print("  ⚠️  Vector store not available")
+        
+        elapsed = time.time() - start_time
+        print(f"✅ Warmup completed in {elapsed:.1f}s")
+        print("   Subsequent commands will run faster!")
+        
+    except Exception as e:
+        print(f"❌ Warmup failed: {e}")
+        return False
+    
+    return True
 
 
 def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid"):
@@ -27,10 +74,13 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
     print(f"🤖 AI-Powered Search for: '{query}'{filter_info}")
     
     try:
+        # Lazy load search functions
+        search_funcs = _get_search_functions()
+        
         # Direct search using coordination module - Simple > Complex
         if search_mode == "semantic":
             print("🧠 Running semantic search...")
-            results = semantic_search(query, limit=limit, filters=filters)
+            results = search_funcs['semantic_search'](query, limit=limit, filters=filters)
             search_type = "🧠 Semantic Search"
         elif search_mode == "keyword":
             print("🔤 Running keyword search...")
@@ -39,7 +89,7 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
             search_type = "🔤 Keyword Search"
         else:  # hybrid
             print("🔍 Running hybrid search...")
-            results = search(query, limit=limit, filters=filters)
+            results = search_funcs['search'](query, limit=limit, filters=filters)
             search_type = "🔍 Hybrid Search"
         
         if results:
@@ -331,8 +381,19 @@ Examples:
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    
+    # Global warmup flag
+    parser.add_argument(
+        "--warmup", action="store_true", 
+        help="Preload models and services before executing command"
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    
+    # Warmup command
+    warmup_parser = subparsers.add_parser(
+        "warmup", help="Preload models and services for faster subsequent commands"
+    )
 
     # Search command
     search_parser = subparsers.add_parser(
@@ -577,7 +638,16 @@ Examples:
     lookup_parser = semantic_subparsers.add_parser("lookup", help="EID-first evidence lookup")
     lookup_parser.add_argument("--eid", required=True, help="Evidence ID to lookup")
 
+    # Add quarantine commands
+    add_quarantine_commands(subparsers)
+
     args = parser.parse_args()
+    
+    # Handle global warmup flag
+    if hasattr(args, 'warmup') and args.warmup:
+        print("🚀 Global warmup requested...")
+        warmup_command()
+        print()  # Add spacing before main command
 
     # Default to search if no command but arguments provided
     if not args.command and len(sys.argv) > 1:
@@ -617,6 +687,8 @@ Examples:
             filters=filters_to_pass,
             search_mode=search_mode,
         )
+    elif args.command == "warmup":
+        warmup_command()
     elif args.command == "info":
         info_command()
     elif args.command == "health":
@@ -767,6 +839,8 @@ Examples:
                 print("Error: --eid required for lookup command")
         else:
             semantic_parser.print_help()
+    elif args.command == "quarantine":
+        handle_quarantine_command(args)
     else:
         parser.print_help()
 

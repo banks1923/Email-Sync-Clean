@@ -8,11 +8,11 @@ REMOVAL TARGET: 2025-09-01
 """
 
 from .email_thread_adapter import EmailThreadAdapter
-from .vector_maintenance_adapter import VectorMaintenanceAdapter
 from .schema_adapter import SchemaAdapter
+
+# VectorMaintenanceAdapter removed 2025-08-20 - functionality moved to vector_maintenance.py
 
 __all__ = [
     "EmailThreadAdapter",
-    "VectorMaintenanceAdapter", 
     "SchemaAdapter"
 ]

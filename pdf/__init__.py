@@ -12,5 +12,12 @@ Follows Email Sync System architecture principles:
 """
 
 from .main import PDFService
+from .wiring import build_pdf_service
 
-__all__ = ["PDFService"]
+
+def get_pdf_service():
+    """Factory function for PDFService with proper dependency wiring."""
+    return build_pdf_service()
+
+
+__all__ = ["PDFService", "get_pdf_service"]

@@ -401,3 +401,32 @@ diag-semantic: ensure-qdrant ## Test semantic enrichment pipeline with 10 emails
 	    print('✅ Semantic enrichment pipeline working!'); \
 	else: \
 	    print('⚠️  No semantic enrichment detected - check pipeline configuration');"
+# PDF Pipeline Management
+preflight:
+	@python3 scripts/preflight_check.py
+
+quarantine-list:
+	@python3 -c "from tools.cli.quarantine_handler import QuarantineHandler; h = QuarantineHandler(); results = h.list_quarantined(); print('\n'.join([str(r) for r in results]) if results else 'No quarantined documents')"
+
+quarantine-stats:
+	@python3 -c "from tools.cli.quarantine_handler import QuarantineHandler; h = QuarantineHandler(); import json; print(json.dumps(h.get_stats(), indent=2))"
+
+embeddings-backfill:
+	@python3 scripts/backfill_embeddings.py
+
+embeddings-backfill-dry:
+	@python3 scripts/backfill_embeddings.py --dry-run
+
+embeddings-backfill-pdf:
+	@python3 scripts/backfill_embeddings.py --type pdf
+
+ingest-status:
+	@echo "=== Ingestion Pipeline Status ==="
+	@echo -n "Ingestion: "; if [ -f INGESTION_FROZEN.txt ]; then echo "❄️  FROZEN"; else echo "✅ Active"; fi
+	@echo -n "Schema Version: "; sqlite3 data/emails.db "SELECT MAX(version) FROM schema_version" 2>/dev/null || echo "Not tracked"
+	@echo -n "Documents Total: "; sqlite3 data/emails.db "SELECT COUNT(DISTINCT sha256) FROM documents" 2>/dev/null || echo "0"
+	@echo -n "Documents Processed: "; sqlite3 data/emails.db "SELECT COUNT(DISTINCT sha256) FROM documents WHERE status='processed'" 2>/dev/null || echo "0"
+	@echo -n "Documents Failed: "; sqlite3 data/emails.db "SELECT COUNT(DISTINCT sha256) FROM documents WHERE status='failed'" 2>/dev/null || echo "0"
+	@echo -n "Ready for Embedding: "; sqlite3 data/emails.db "SELECT COUNT(*) FROM content_unified WHERE ready_for_embedding=1" 2>/dev/null || echo "0"
+
+.PHONY: preflight quarantine-list quarantine-stats embeddings-backfill ingest-status

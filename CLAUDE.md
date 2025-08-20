@@ -101,6 +101,12 @@ tools/scripts/vsearch legal graph "24NNCV"
 tools/scripts/vsearch intelligence smart-search "contract attorney"
 tools/scripts/vsearch intelligence similarity doc_123 --threshold 0.7
 tools/scripts/vsearch intelligence cluster --threshold 0.8 -n 100
+
+# Pipeline Verification & Diagnostics
+python3 scripts/verify_pipeline.py              # Complete pipeline verification
+python3 scripts/verify_pipeline.py --json       # CI-friendly JSON output
+python3 scripts/verify_pipeline.py --since 24h  # Check recent processing activity
+python3 scripts/verify_pipeline.py --trace a1b2c3d4  # Trace specific document
 ```
 
 ### Enable Vector Search (Required)
@@ -328,12 +334,95 @@ logger.info("Message")
 ### Production Safety
 - **Security**: Not a focus — private hobby project in private git. Do not spend effort on redaction or enterprise security here.
 
+## 🔍 Pipeline Verification System
+
+### Comprehensive Verification Suite
+
+The Email Sync system includes a comprehensive verification system for end-to-end pipeline validation:
+
+```bash
+# Complete pipeline health check
+python3 scripts/verify_pipeline.py
+
+# CI integration (returns proper exit codes)
+python3 scripts/verify_pipeline.py --json --strict
+
+# Performance analysis with time windows
+python3 scripts/verify_pipeline.py --since 24h
+
+# Trace specific document through pipeline
+python3 scripts/verify_pipeline.py --trace ec69f22c4c6c00b1
+```
+
+### Test Suite Components
+
+**1. Preflight Test** - Environment & Schema Validation
+- ✅ Database schema version and required tables
+- ✅ Required columns in documents table (`sha256`, `char_count`, etc.)
+- ✅ Qdrant vector database connectivity
+- ✅ Missing dependency detection
+
+**2. Smoke Test** - End-to-End Chain Verification
+- ✅ Complete chain: documents → content_unified → embeddings
+- ✅ Exact SQL joins with deterministic ordering
+- ✅ Real document processing verification
+
+**3. Integrity Test** - Data Consistency Validation
+- ✅ Orphaned content detection (content without documents)
+- ✅ Orphaned embeddings detection (embeddings without content)
+- ✅ Processed documents without content normalization
+- ✅ Duplicate content detection per source
+- ✅ Quarantine statistics and retry analysis
+
+**4. Performance Test** - Processing Metrics Analysis
+- ✅ Document processing rates and character counts
+- ✅ Embedding generation statistics
+- ✅ Time window filtering (`--since 30m`, `--since 24h`, `--since 7d`)
+
+**5. Quarantine Test** - Recovery System Validation
+- ✅ Failed document analysis and retry logic
+- ✅ Permanent failure detection (3+ attempts)
+- ✅ Recovery handler availability
+
+**6. Document Tracing** - Full Pipeline Inspection
+- ✅ SHA256 prefix resolution with ambiguity detection
+- ✅ Complete document lifecycle tracing
+- ✅ All embeddings returned (not just first match)
+
+### Exit Codes for CI Integration
+
+- `0`: All tests passed
+- `1`: Tests failed (or warnings with `--strict`)
+- `2`: Configuration error
+- `3`: Schema/environment mismatch
+- `4`: Transient error (retry possible)
+
+### JSON Mode for Automation
+
+```bash
+# Silent operation for CI pipelines
+python3 scripts/verify_pipeline.py --json
+
+# Example output:
+{"status":"WARN","chain":false,"orphans":1,"dup_content":0,"docs_24h":12,"emb_24h":12}
+```
+
+### Document Processing Verification
+
+The verification system confirms support for:
+- ✅ **Text-based PDFs**: Fast PyPDF2 extraction
+- ✅ **Scanned PDFs**: Tesseract OCR with automatic detection  
+- ✅ **Legal Documents**: Court filings, contracts, judgments
+- ✅ **Mixed Content**: Automatic text vs OCR detection
+- ✅ **Pipeline Stages**: Raw → Staged → Processing → Storage → Embeddings
+
 ## 🧪 Testing Philosophy
 
 ### Approach
 - **Test Real Functionality**: Avoid mocks when possible
 - **Simple Assertions**: Direct checks, not complex matchers
 - **Integration > Unit**: Test workflows, not implementation
+- **Comprehensive Verification**: Use `verify_pipeline.py` for full system validation
 
 ### Quick Test
 ```python
@@ -348,6 +437,15 @@ emb = get_embedding_service()
 db = SimpleDB()
 search = get_search_intelligence_service()
 # Vector/Search will fail if Qdrant is not running (by design)
+```
+
+### Pipeline Verification
+```bash
+# Comprehensive system validation
+python3 scripts/verify_pipeline.py
+
+# Expected output: 6 tests (preflight, observability, smoke, integrity, performance, quarantine)
+# Status: PASS (green), WARN (yellow), FAIL (red)
 ```
 
 ## 🛠️ Development Tools

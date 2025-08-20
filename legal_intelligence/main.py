@@ -26,7 +26,7 @@ class LegalIntelligenceService:
     relationship mapping, and missing document prediction.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "data/emails.db"):
         """
         Initialize Legal Intelligence Service with integrated services.
         """

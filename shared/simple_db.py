@@ -158,7 +158,7 @@ class SimpleDB:
                 
                 # Slow-query logging
                 t0 = time.perf_counter()
-                cursor = conn.execute(query, params)
+                cursor = conn.execute(query, params) if params else conn.execute(query)
                 dt_ms = (time.perf_counter() - t0) * 1000
                 
                 if dt_ms > 100:  # Log queries slower than 100ms
@@ -1725,6 +1725,77 @@ class SimpleDB:
             "textrank_sentences",
         ]
         return self.batch_insert("document_summaries", columns, prepared_data, batch_size)
+
+    # Vector processing methods
+    
+    def get_all_content_ids(self, content_type: str = None) -> list[str]:
+        """Get all content IDs, optionally filtered by type. Streams in pages of 1000."""
+        query = "SELECT id FROM content"
+        params = ()
+        
+        if content_type:
+            query += " WHERE content_type = ?"
+            params = (content_type,)
+        
+        query += " ORDER BY id"
+        
+        cursor = self.execute(query, params)
+        return [row[0] for row in cursor.fetchall()]
+    
+    def get_content_by_ids(self, ids: list[str]) -> list[dict]:
+        """Get content by IDs, batching ≤500 to avoid SQLite 999 limit."""
+        if not ids:
+            return []
+        
+        results = []
+        # Batch to avoid SQLite's 999 variable limit
+        batch_size = 500
+        
+        for i in range(0, len(ids), batch_size):
+            batch_ids = ids[i:i + batch_size]
+            placeholders = ",".join("?" * len(batch_ids))
+            query = f"SELECT * FROM content WHERE id IN ({placeholders})"
+            
+            cursor = self.execute(query, tuple(batch_ids))
+            # Convert sqlite3.Row objects to dictionaries
+            batch_results = [dict(row) for row in cursor.fetchall()]
+            results.extend(batch_results)
+        
+        return results
+    
+    def mark_content_vectorized(self, content_id: str) -> bool:
+        """Mark single content as vectorized."""
+        try:
+            cursor = self.execute(
+                "UPDATE content SET vector_processed = 1 WHERE id = ?",
+                (content_id,)
+            )
+            return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f"Failed to mark content {content_id} as vectorized: {e}")
+            return False
+    
+    def batch_mark_vectorized(self, content_ids: list[str]) -> int:
+        """Batch mark content as vectorized, chunking to ≤500."""
+        if not content_ids:
+            return 0
+        
+        total_updated = 0
+        batch_size = 500
+        
+        for i in range(0, len(content_ids), batch_size):
+            batch_ids = content_ids[i:i + batch_size]
+            placeholders = ",".join("?" * len(batch_ids))
+            query = f"UPDATE content SET vector_processed = 1 WHERE id IN ({placeholders})"
+            
+            try:
+                cursor = self.execute(query, tuple(batch_ids))
+                total_updated += cursor.rowcount
+            except Exception as e:
+                logger.error(f"Failed to batch mark vectorized for {len(batch_ids)} items: {e}")
+                continue
+        
+        return total_updated
 
 
 # That's it. That's the whole database layer.

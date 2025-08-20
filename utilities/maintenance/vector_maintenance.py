@@ -34,36 +34,75 @@ class VectorMaintenance:
     """Unified vector store maintenance operations."""
     
     def __init__(self):
-        # TODO: Remove adapter by 2025-09-01 - add missing methods to SimpleDB
-        from adapters import VectorMaintenanceAdapter
-        self.db = VectorMaintenanceAdapter(SimpleDB())
+        # Direct SimpleDB usage (VectorMaintenanceAdapter removed 2025-08-20)
+        self.db = SimpleDB()
         self.embedding_service = get_embedding_service()
         self.vector_store = get_vector_store()
         self.gmail_service = GmailService()
         
+    # --- Direct SimpleDB methods (replaced adapter) --------------------------
+    def get_all_content_ids(self, content_type: str = None) -> list[str]:
+        """Get all content IDs, optionally filtered by type."""
+        try:
+            if content_type:
+                # Map collection names to content types
+                type_mapping = {
+                    'emails': 'email',
+                    'pdfs': 'pdf', 
+                    'transcriptions': 'transcription',
+                    'notes': 'note',
+                    'documents': 'document'
+                }
+                db_type = type_mapping.get(content_type, content_type)
+                
+                query = "SELECT id FROM content WHERE content_type = ?"
+                result = self.db.execute(query, (db_type,))
+            else:
+                query = "SELECT id FROM content"
+                result = self.db.execute(query)
+            
+            return [row['id'] for row in result.fetchall()]
+        except Exception as e:
+            logger.error(f"Failed to get content IDs for type {content_type}: {e}")
+            return []
+
+    def get_emails_without_vectors(self) -> list[dict]:
+        """Get emails that don't have vectors yet."""
+        try:
+            query = """
+                SELECT id, message_id, subject, content 
+                FROM content 
+                WHERE content_type = 'email' 
+                AND id NOT IN (
+                    SELECT DISTINCT content_id 
+                    FROM embeddings 
+                    WHERE content_id IS NOT NULL
+                )
+            """
+            result = self.db.execute(query)
+            return [dict(row) for row in result.fetchall()]
+        except Exception as e:
+            logger.error(f"Failed to get emails without vectors: {e}")
+            return []
+
     # --- Compatibility helpers -------------------------------------------------
     def _db_get_all_content_ids(self, content_type: str):
-        candidates = (
-            ("get_all_content_ids", {"content_type": content_type}),
-            ("list_content_ids", {"content_type": content_type}),
-            ("get_ids_for_type", {"content_type": content_type}),
-            ("list_all_ids", {}),
-            ("list_ids", {}),
-        )
-        for name, kwargs in candidates:
-            fn = getattr(self.db, name, None)
-            if fn:
-                try:
-                    ids = fn(**kwargs) if kwargs else fn()
-                    return set(ids)
-                except TypeError:
-                    # Retry without kwargs if signature differs
-                    try:
-                        return set(fn())
-                    except Exception:
-                        pass
-        logger.warning(f"DB compat: no supported ID lister found for content_type='{content_type}'")
-        return set()
+        """Get content IDs with fallback compatibility."""
+        # Use our new direct method first
+        try:
+            return self.get_all_content_ids(content_type)
+        except Exception as e:
+            logger.error(f"Direct content ID lookup failed: {e}")
+            return []
+    
+    def _db_get_emails_without_vectors(self):
+        """Get emails without vectors with fallback compatibility."""
+        # Use our new direct method first
+        try:
+            return self.get_emails_without_vectors()
+        except Exception as e:
+            logger.error(f"DB compat: get_emails_without_vectors() not found: {e}")
+            return []
 
     def _db_get_content_by_id(self, content_id: str):
         candidates = ("get_content_by_id", "get_email_by_id", "get_document_by_id")

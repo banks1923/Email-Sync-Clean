@@ -15,4 +15,10 @@ from .main import GmailService
 from .oauth import GmailAuth
 from .storage import EmailStorage
 
-__all__ = ["GmailService", "EmailStorage", "GmailAuth", "GmailAPI", "GmailConfig"]
+
+def get_gmail_service():
+    """Factory function for GmailService."""
+    return GmailService()
+
+
+__all__ = ["GmailService", "EmailStorage", "GmailAuth", "GmailAPI", "GmailConfig", "get_gmail_service"]

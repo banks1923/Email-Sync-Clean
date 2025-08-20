@@ -21,7 +21,7 @@ class KnowledgeGraphService:
     Knowledge graph for content relationships using SQLite JSON storage.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "data/emails.db"):
         self.db = SimpleDB(db_path)
         self.db_path = db_path
         self._ensure_schema()

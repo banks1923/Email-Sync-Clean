@@ -7,6 +7,7 @@ Each step is idempotent and can be safely rerun.
 import time
 import hashlib
 import json
+import uuid
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from loguru import logger
@@ -289,8 +290,11 @@ class SemanticPipeline:
                 for j, embedding in enumerate(embeddings):
                     email = batch[j]
                     
-                    # Use content_id as vector ID if available, else message_id
-                    vector_id = str(email.get('content_id') or email['message_id'])
+                    # Generate valid Qdrant point ID using UUID
+                    vector_id = self._normalize_point_id(
+                        content_id=email.get('content_id'), 
+                        message_id=email['message_id']
+                    )
                     
                     point = {
                         'id': vector_id,
@@ -359,16 +363,20 @@ class SemanticPipeline:
                     event_str = f"{email['message_id']}:{event['date']}:{event['description']}"
                     event_hash = hashlib.md5(event_str.encode()).hexdigest()
                     
+                    # Generate meaningful title
+                    title = self._generate_event_title(event, email)
+                    
                     # Store event with EID reference
                     try:
                         self.db.execute("""
                             INSERT INTO timeline_events 
-                            (content_id, event_date, event_type, description, metadata)
-                            VALUES (?, ?, ?, ?, ?)
+                            (content_id, event_date, event_type, title, description, metadata)
+                            VALUES (?, ?, ?, ?, ?, ?)
                         """, (
                             email.get('content_id'),
                             event['date'],
                             event.get('type', 'email'),
+                            title,
                             event['description'],
                             json.dumps({
                                 'message_id': email['message_id'],
@@ -388,6 +396,42 @@ class SemanticPipeline:
                 result['errors'] += 1
                 
         return result
+    
+    def _normalize_point_id(self, content_id: str = None, message_id: str = None) -> str:
+        """Generate a deterministic UUID for Qdrant point ID from email identifiers."""
+        # Fixed namespace UUID for this project
+        NAMESPACE = uuid.UUID("00000000-0000-0000-0000-00000000E1D0")
+        
+        # Use message_id if available, otherwise content_id
+        key = (message_id or content_id or '').strip()
+        if not key:
+            # Fallback - generate random UUID (shouldn't happen in practice)
+            return str(uuid.uuid4())
+            
+        # Generate deterministic UUIDv5 from the key
+        return str(uuid.uuid5(NAMESPACE, key))
+    
+    def _generate_event_title(self, event: Dict, email: Dict) -> str:
+        """Generate a meaningful title for timeline event."""
+        action = event.get('type', 'Event')
+        
+        # Extract date part (first 10 chars for YYYY-MM-DD)
+        date_str = event.get('date', '')[:10] if event.get('date') else ''
+        
+        # Get subject, clean and truncate
+        subject = (email.get('subject') or '').strip()
+        if len(subject) > 40:
+            subject = subject[:37] + '...'
+            
+        # Build title
+        if date_str and subject:
+            return f"{action} – {date_str} – {subject}"
+        elif date_str:
+            return f"{action} – {date_str}"
+        elif subject:
+            return f"{action} – {subject}"
+        else:
+            return action
     
     def _extract_temporal_events(self, email: Dict) -> List[Dict]:
         """Extract temporal events from email content."""
@@ -436,6 +480,140 @@ class SemanticPipeline:
                         })
                         
         return events
+    
+    def process_content_unified(self, content_type: str = 'all', limit: int = 100) -> Dict[str, Any]:
+        """Process content from content_unified table for embedding generation.
+        
+        Simple extension of existing pipeline to handle PDFs and other content types.
+        Following CLAUDE.md principles: extend existing systems, don't duplicate.
+        
+        Args:
+            content_type: 'all', 'pdf', 'email', or specific type
+            limit: Maximum documents to process
+            
+        Returns:
+            Dict with processing results
+        """
+        result = {
+            'processed': 0,
+            'skipped': 0,
+            'errors': 0,
+            'vectors_stored': 0
+        }
+        
+        # Build query for content ready for embedding
+        where_clause = "WHERE ready_for_embedding = 1"
+        params = []
+        
+        if content_type != 'all':
+            where_clause += " AND source_type = ?"
+            params.append(content_type)
+        
+        # Get content needing embeddings
+        query = f"""
+            SELECT id, source_type, source_id, title, body, created_at
+            FROM content_unified 
+            {where_clause}
+            ORDER BY created_at DESC
+            LIMIT ?
+        """
+        params.append(limit)
+        
+        cursor = self.db.execute(query, tuple(params))
+        content_items = cursor.fetchall()
+        
+        if not content_items:
+            logger.info(f"No content ready for embedding (type={content_type})")
+            return result
+            
+        logger.info(f"Processing {len(content_items)} {content_type} documents for embeddings")
+        
+        # Initialize services if needed
+        if not self.embedding_service:
+            self.embedding_service = get_embedding_service()
+        if not self.vector_store:
+            self.vector_store = get_vector_store('emails')
+        
+        for item in content_items:
+            try:
+                content_id = item['id']
+                source_type = item['source_type']
+                text_content = item['body'] or item['title'] or ''
+                
+                if len(text_content.strip()) < 10:  # Skip very short content
+                    result['skipped'] += 1
+                    continue
+                
+                # Check if embedding already exists
+                cursor = self.db.execute("""
+                    SELECT id FROM embeddings 
+                    WHERE content_id = ? AND model = 'legal-bert'
+                """, (content_id,))
+                
+                if cursor.fetchone():
+                    result['skipped'] += 1
+                    # Mark as not ready since it's already processed
+                    self.db.execute("""
+                        UPDATE content_unified 
+                        SET ready_for_embedding = 0 
+                        WHERE id = ?
+                    """, (content_id,))
+                    continue
+                
+                # Generate embedding
+                embedding = self.embedding_service.embed_text(text_content)
+                if not embedding or len(embedding) != 1024:
+                    logger.warning(f"Invalid embedding for content {content_id}")
+                    result['errors'] += 1
+                    continue
+                
+                # Store in embeddings table
+                self.db.execute("""
+                    INSERT INTO embeddings (content_id, vector, dim, model, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    content_id,
+                    str(embedding),  # Store as string for now
+                    1024,
+                    'legal-bert',
+                    datetime.now().isoformat()
+                ))
+                
+                # Store in Qdrant vector store
+                vector_id = self._normalize_point_id(content_id=str(content_id))
+                payload = {
+                    'content_id': content_id,
+                    'source_type': source_type,
+                    'source_id': item['source_id'],
+                    'title': item['title'],
+                    'created_at': item['created_at']
+                }
+                
+                self.vector_store.upsert(
+                    vector=embedding,
+                    payload=payload,
+                    id=vector_id
+                )
+                
+                # Mark as processed
+                self.db.execute("""
+                    UPDATE content_unified 
+                    SET ready_for_embedding = 0 
+                    WHERE id = ?
+                """, (content_id,))
+                
+                result['processed'] += 1
+                result['vectors_stored'] += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to process content {item.get('id', 'unknown')}: {e}")
+                result['errors'] += 1
+        
+        # Commit all changes
+        self.db.conn.commit()
+        
+        logger.info(f"Content processing complete: {result['processed']} processed, {result['skipped']} skipped, {result['errors']} errors")
+        return result
 
 
 # Simple factory function
