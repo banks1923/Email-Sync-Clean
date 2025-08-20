@@ -143,8 +143,16 @@ class EntityService:
                             cons_entity.get("additional_info"),
                         )
 
-            # Store raw entities in database
+            # Store raw entities in database with EID and content_id references
             if raw_entities:
+                # Add EID and content_id to each entity if provided
+                if email_data:
+                    for entity in raw_entities:
+                        if email_data.get('eid'):
+                            entity['eid_ref'] = email_data['eid']
+                        if email_data.get('content_id'):
+                            entity['content_id'] = email_data['content_id']
+                            
                 store_result = self.db.store_entities(raw_entities)
                 if not store_result["success"]:
                     logger.warning(f"Failed to store entities: {store_result.get('error')}")

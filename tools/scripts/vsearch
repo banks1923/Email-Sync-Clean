@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Direct imports following CLAUDE.md "Direct > Indirect" principle
-from search import search, semantic_search, vector_store_available
+from search_intelligence.basic_search import search, semantic_search, vector_store_available
 from shared.error_handler import ErrorHandler
 from shared.health_check import run_health_check
 from shared.simple_db import SimpleDB
@@ -319,6 +319,12 @@ Examples:
   vsearch intelligence smart-search "contract"   # Query expansion search
   vsearch intelligence cluster --threshold 0.8   # Find document clusters
   
+  # Legal Evidence Tracking
+  vsearch evidence status                     # Check evidence tracking status
+  vsearch evidence assign-eids                # Assign Evidence IDs to emails
+  vsearch evidence assign-threads             # Group emails into threads
+  vsearch evidence report --keywords "entry"  # Generate evidence reports
+  
   # System information
   vsearch info          # Show system status
   vsearch health -v     # Detailed health check
@@ -510,6 +516,67 @@ Examples:
     )
     intel_summarize_parser.add_argument("--json", action="store_true", help="Output as JSON")
 
+    # Evidence commands
+    evidence_parser = subparsers.add_parser("evidence", help="Legal evidence tracking and reports")
+    evidence_subparsers = evidence_parser.add_subparsers(dest="evidence_command", help="Evidence commands")
+    
+    # Assign EIDs command
+    assign_eids_parser = evidence_subparsers.add_parser("assign-eids", help="Assign Evidence IDs to emails")
+    assign_eids_parser.add_argument("--limit", type=int, help="Maximum emails to process")
+    
+    # Assign threads command
+    evidence_subparsers.add_parser("assign-threads", help="Group emails into conversation threads")
+    
+    # Lookup command
+    lookup_parser = evidence_subparsers.add_parser("lookup", help="Look up specific evidence")
+    lookup_parser.add_argument("--eid", help="Evidence ID to look up")
+    lookup_parser.add_argument("--thread", help="Thread ID to look up")
+    
+    # Report command
+    report_parser = evidence_subparsers.add_parser("report", help="Generate legal evidence reports")
+    report_parser.add_argument("-o", "--output", default="legal_evidence_export", help="Output directory")
+    report_parser.add_argument("--keywords", nargs="+", help="Keywords to search for (comma-separated or multiple)")
+    report_parser.add_argument("--threads", nargs="+", help="Specific thread IDs to include")
+    report_parser.add_argument("--mode", choices=["lookup", "narrative", "both", "export"], 
+                              default="both", help="Report mode (default: both)")
+    
+    # Search pattern command
+    pattern_parser = evidence_subparsers.add_parser("search", help="Search for patterns in emails")
+    pattern_parser.add_argument("pattern", help="Pattern to search for")
+    pattern_parser.add_argument("-n", "--limit", type=int, default=100, help="Maximum results")
+    
+    # Analyze thread command
+    analyze_parser = evidence_subparsers.add_parser("analyze", help="Analyze a thread for patterns")
+    analyze_parser.add_argument("thread_id", help="Thread ID to analyze")
+    analyze_parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    
+    # Status command
+    evidence_subparsers.add_parser("status", help="Show evidence tracking status")
+
+    # Semantic backfill command
+    semantic_parser = subparsers.add_parser("semantic", help="Semantic enrichment operations")
+    semantic_subparsers = semantic_parser.add_subparsers(dest="semantic_command", help="Semantic commands")
+    
+    # Backfill command
+    backfill_parser = semantic_subparsers.add_parser("backfill", help="Backfill semantic enrichment for old emails")
+    backfill_parser.add_argument("--steps", nargs="+", choices=["entities", "embeddings", "timeline"],
+                                help="Specific steps to run (default: all)")
+    backfill_parser.add_argument("--batch-size", type=int, default=50, help="Batch size (default: 50)")
+    backfill_parser.add_argument("--limit", type=int, help="Maximum emails to process")
+    backfill_parser.add_argument("--force", action="store_true", help="Force reprocessing")
+    backfill_parser.add_argument("--since-days", type=int, help="Only process emails from last N days")
+    
+    # Status command
+    semantic_subparsers.add_parser("status", help="Show semantic enrichment status")
+    
+    # Verify command
+    verify_parser = semantic_subparsers.add_parser("verify", help="Verify semantic pipeline wiring")
+    verify_parser.add_argument("--quick", action="store_true", help="Quick check only")
+    
+    # Lookup command
+    lookup_parser = semantic_subparsers.add_parser("lookup", help="EID-first evidence lookup")
+    lookup_parser.add_argument("--eid", required=True, help="Evidence ID to lookup")
+
     args = parser.parse_args()
 
     # Default to search if no command but arguments provided
@@ -610,6 +677,96 @@ Examples:
             )
         else:
             intelligence_parser.print_help()
+    elif args.command == "evidence":
+        # Import evidence handlers
+        from tools.cli.evidence_handler import (
+            assign_eids_command,
+            assign_threads_command,
+            lookup_command,
+            report_command,
+            search_pattern_command,
+            analyze_thread_command,
+            status_command
+        )
+        
+        if args.evidence_command == "assign-eids":
+            assign_eids_command(args.limit)
+        elif args.evidence_command == "assign-threads":
+            assign_threads_command()
+        elif args.evidence_command == "lookup":
+            lookup_command(args.eid, args.thread)
+        elif args.evidence_command == "report":
+            report_command(args.output, args.keywords, args.threads, args.mode)
+        elif args.evidence_command == "search":
+            search_pattern_command(args.pattern, args.limit)
+        elif args.evidence_command == "analyze":
+            analyze_thread_command(args.thread_id, args.format)
+        elif args.evidence_command == "status":
+            status_command()
+        else:
+            evidence_parser.print_help()
+    elif args.command == "semantic":
+        # Import semantic handlers
+        from scripts.backfill_semantic import backfill_semantic
+        from scripts.verify_semantic_wiring import SemanticWiringVerifier, eid_lookup
+        from shared.simple_db import SimpleDB
+        
+        if args.semantic_command == "backfill":
+            backfill_semantic(
+                steps=args.steps,
+                batch_size=args.batch_size,
+                limit=args.limit,
+                force=args.force,
+                since_days=args.since_days
+            )
+        elif args.semantic_command == "status":
+            # Show semantic enrichment status
+            db = SimpleDB()
+            print("=" * 60)
+            print("Semantic Enrichment Status")
+            print("=" * 60)
+            
+            cursor = db.execute("SELECT COUNT(*) FROM emails")
+            total_emails = cursor.fetchone()[0]
+            print(f"\nTotal emails: {total_emails}")
+            
+            cursor = db.execute("SELECT COUNT(*) FROM entity_content_mapping")
+            entity_count = cursor.fetchone()[0]
+            print(f"Entities extracted: {entity_count}")
+            
+            cursor = db.execute("SELECT COUNT(*) FROM content WHERE metadata LIKE '%vectorized%'")
+            vector_count = cursor.fetchone()[0]
+            print(f"Vectorized content: {vector_count}")
+            
+            cursor = db.execute("SELECT COUNT(*) FROM timeline_events")
+            timeline_count = cursor.fetchone()[0]
+            print(f"Timeline events: {timeline_count}")
+            
+            # Check EID integration
+            cursor = db.execute("SELECT COUNT(*) FROM entity_content_mapping WHERE metadata LIKE '%eid_ref%'")
+            eid_entities = cursor.fetchone()[0]
+            
+            cursor = db.execute("SELECT COUNT(*) FROM timeline_events WHERE metadata LIKE '%eid_ref%'")
+            eid_timeline = cursor.fetchone()[0]
+            
+            print(f"\nEID Integration:")
+            print(f"  Entities with EID refs: {eid_entities}")
+            print(f"  Timeline events with EID refs: {eid_timeline}")
+        elif args.semantic_command == "verify":
+            # Run comprehensive wiring verification
+            verifier = SemanticWiringVerifier()
+            if args.quick:
+                verifier.verify_end_to_end()
+            else:
+                verifier.run_all_checks()
+        elif args.semantic_command == "lookup":
+            # EID-first lookup
+            if args.eid:
+                eid_lookup(args.eid)
+            else:
+                print("Error: --eid required for lookup command")
+        else:
+            semantic_parser.print_help()
     else:
         parser.print_help()
 

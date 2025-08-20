@@ -289,9 +289,65 @@ maintenance-all: ## Run all maintenance checks
 	@make vector-status
 	@echo "✅ Maintenance checks complete!"
 
+# Semantic Pipeline Targets
+semantic-preflight: ensure-qdrant ## Run preflight checks for semantic pipeline
+	@echo "🔍 Running semantic pipeline preflight checks..."
+	@$(PYTHON) scripts/preflight_check.py
+
+semantic-status: ## Show semantic enrichment status
+	@echo "📊 Semantic enrichment status..."
+	@tools/scripts/vsearch semantic status
+
+semantic-verify: ensure-qdrant ## Verify semantic pipeline wiring (comprehensive)
+	@echo "🔍 Verifying semantic pipeline wiring..."
+	@$(PYTHON) scripts/verify_semantic_wiring.py
+
+semantic-verify-quick: ensure-qdrant ## Quick semantic pipeline verification
+	@echo "⚡ Quick semantic pipeline check..."
+	@$(PYTHON) scripts/verify_semantic_wiring.py --quick
+
+eid-lookup: ## Lookup evidence by EID with all semantic data
+	@if [ -z "$(EID)" ]; then \
+		echo "❌ Usage: make eid-lookup EID=EID-2024-0001"; \
+		exit 1; \
+	fi
+	@$(PYTHON) tools/scripts/vsearch semantic lookup --eid $(EID)
+
+backfill-entities: ensure-qdrant ## Backfill entity extraction for old emails
+	@echo "🏷️  Backfilling entity extraction..."
+	@$(PYTHON) scripts/backfill_semantic.py --steps entities
+
+backfill-embeddings: ensure-qdrant ## Backfill embeddings for old emails
+	@echo "🔢 Backfilling embeddings..."
+	@$(PYTHON) scripts/backfill_semantic.py --steps embeddings
+
+backfill-timeline: ensure-qdrant ## Backfill timeline events for old emails
+	@echo "📅 Backfilling timeline events..."
+	@$(PYTHON) scripts/backfill_semantic.py --steps timeline
+
+backfill-all: ensure-qdrant ## Backfill all semantic enrichment for old emails
+	@echo "🚀 Backfilling all semantic enrichment..."
+	@$(PYTHON) scripts/backfill_semantic.py
+
+backfill-recent: ensure-qdrant ## Backfill semantic enrichment for last 7 days
+	@echo "📅 Backfilling recent emails (last 7 days)..."
+	@$(PYTHON) scripts/backfill_semantic.py --since-days 7
+
+test-semantic-pipeline: ensure-qdrant ## Test semantic pipeline with 5 recent emails
+	@echo "🧪 Testing semantic pipeline..."
+	@$(PYTHON) scripts/test_semantic_pipeline.py
+
 diag-wiring: ensure-qdrant ## Full system diagnostic - validate wiring & efficiency
 	@echo "🔍 Running system diagnostic..."
 	$(PYTHON) tools/diag_wiring.py
+
+diag-tools: ensure-qdrant ## Quick service smoke tests - verify all tools are working
+	@echo "🔧 Running service diagnostics (smoke test)..."
+	$(PYTHON) tools/scripts/run_service_test.py --mode smoke
+
+diag-tools-deep: ensure-qdrant ## Thorough service tests with operations
+	@echo "🔬 Running deep service diagnostics..."
+	$(PYTHON) tools/scripts/run_service_test.py --mode deep
 
 vector-smoke: ensure-qdrant ## Quick vector smoke test - upsert 50 points & run 2 searches  
 	@echo "💨 Running vector smoke test..."
@@ -315,3 +371,33 @@ vector-smoke: ensure-qdrant ## Quick vector smoke test - upsert 50 points & run 
 full-run: ensure-qdrant ## Complete end-to-end system pipeline (Qdrant required)
 	@echo "🚀 Starting full system pipeline..."
 	$(PYTHON) tools/scripts/run_full_system
+
+diag-semantic: ensure-qdrant ## Test semantic enrichment pipeline with 10 emails
+	@echo "🧪 Testing semantic enrichment pipeline..."
+	@$(PYTHON) -c "import sys; sys.path.insert(0, '.'); \
+	from gmail.main import GmailService; \
+	from config.settings import semantic_settings; \
+	from shared.simple_db import SimpleDB; \
+	import os; \
+	os.environ['SEMANTICS_ON_INGEST'] = 'true'; \
+	print('📧 Syncing 10 emails with semantic enrichment...'); \
+	service = GmailService(); \
+	result = service.sync_emails(max_results=10, batch_mode=True); \
+	print(f'✓ Sync result: {result}'); \
+	print(''); \
+	print('📊 Checking semantic enrichment results:'); \
+	db = SimpleDB(); \
+	cursor = db.execute('SELECT COUNT(*) FROM entity_content_mapping WHERE created_at > datetime(\"now\", \"-5 minutes\")'); \
+	entity_count = cursor.fetchone()[0]; \
+	print(f'  Entities extracted: {entity_count}'); \
+	cursor = db.execute('SELECT COUNT(*) FROM content WHERE metadata LIKE \"%vectorized%\" AND updated_at > datetime(\"now\", \"-5 minutes\")'); \
+	vector_count = cursor.fetchone()[0]; \
+	print(f'  Vectors created: {vector_count}'); \
+	cursor = db.execute('SELECT COUNT(*) FROM timeline_events WHERE created_at > datetime(\"now\", \"-5 minutes\")'); \
+	timeline_count = cursor.fetchone()[0]; \
+	print(f'  Timeline events: {timeline_count}'); \
+	print(''); \
+	if entity_count > 0 or vector_count > 0 or timeline_count > 0: \
+	    print('✅ Semantic enrichment pipeline working!'); \
+	else: \
+	    print('⚠️  No semantic enrichment detected - check pipeline configuration');"

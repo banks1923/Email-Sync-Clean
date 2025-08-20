@@ -1,5 +1,141 @@
 # Changelog
 
+## [2025-01-20] - Semantic Pipeline Wiring Verification Added 🔍
+
+### Added
+- **Comprehensive Semantic Pipeline Verification**
+  - `scripts/verify_semantic_wiring.py` - Full wiring verification tool
+  - End-to-end verification (Qdrant, schema, embeddings, search)
+  - Linkage traceability check (EID ↔ message_id ↔ content_id)
+  - Idempotency and batch processing validation
+  - Performance benchmarks (throughput and latency)
+  - Failure signal detection
+
+- **EID-First Evidence Lookup**
+  - Complete evidence lookup by EID showing all linked semantic data
+  - Displays subject, sender, date, Message-ID, key quote
+  - Shows linked entities and timeline events
+  - Provides Gmail direct link when available
+
+- **New CLI Commands**
+  - `vsearch semantic verify` - Run comprehensive wiring verification
+  - `vsearch semantic verify --quick` - Quick verification check
+  - `vsearch semantic lookup --eid EID-XXXX-XXXX` - EID-first evidence lookup
+
+- **New Make Targets**
+  - `make semantic-verify` - Full semantic pipeline verification
+  - `make semantic-verify-quick` - Quick verification (60s)
+  - `make eid-lookup EID=EID-XXXX-XXXX` - Evidence lookup by EID
+
+### Fixed
+- Default database path in legal evidence modules (now uses `data/emails.db`)
+- Search method name in verification script (uses `.search()` not `.smart_search()`)
+
+## [2025-01-20] - Semantic Pipeline Integration Complete 🚀
+
+### Added
+- **Legal Evidence Tracking System**
+  - Evidence ID (EID) generation in format EID-YYYY-NNNN for court-ready references
+  - Thread grouping for conversation analysis (137 threads from 499 emails)
+  - Legal report generation (lookup and narrative modes)
+  - `legal_evidence/` module with evidence_tracker, thread_analyzer, and report_generator
+
+- **Semantic Enrichment Pipeline**
+  - `utilities/semantic_pipeline.py` - Orchestrates entity extraction, embeddings, and timeline during ingestion
+  - Automatic semantic processing during email sync (configurable via SEMANTICS_ON_INGEST)
+  - Integration with Legal BERT embeddings (1024 dimensions, L2 normalized)
+  - EID references throughout semantic enrichment for legal traceability
+
+- **Backfill Capabilities**
+  - `scripts/backfill_semantic.py` - Process old emails through semantic pipeline
+  - Support for selective step processing (entities, embeddings, timeline)
+  - Batch processing with progress tracking
+  - Date filtering and force reprocessing options
+
+- **CLI Commands**
+  - `vsearch evidence` - Legal evidence tracking commands (assign-eids, assign-threads, lookup, report, search, analyze, status)
+  - `vsearch semantic backfill` - Backfill semantic enrichment for old emails
+  - `vsearch semantic status` - Check enrichment status
+
+- **Make Targets**
+  - `make semantic-preflight` - Run preflight checks for semantic pipeline
+  - `make semantic-status` - Show enrichment status
+  - `make backfill-entities` - Backfill entity extraction
+  - `make backfill-embeddings` - Backfill embeddings  
+  - `make backfill-timeline` - Backfill timeline events
+  - `make backfill-all` - Complete semantic backfill
+  - `make backfill-recent` - Backfill last 7 days
+  - `make test-semantic-pipeline` - Test pipeline with 5 emails
+
+- **Testing & Validation**
+  - `scripts/preflight_check.py` - Verify Qdrant, schema, dimensions, and L2 normalization
+  - `scripts/test_semantic_pipeline.py` - Integration test for semantic pipeline
+  - `tests/test_semantic_pipeline_comprehensive.py` - Full test suite with mocking
+
+### Modified
+- **Gmail Service** - Added semantic pipeline hook after email storage
+- **Config Settings** - Added SemanticSettings class with pipeline configuration
+- **Database Schema** - Added eid and thread_id columns to emails table
+- **vsearch CLI** - Added semantic and evidence subcommands
+
+### Technical Details
+- Pipeline processes emails in batches (default: 200)
+- Timeout per step: 20 seconds
+- Entity cache TTL: 30 days
+- All operations are idempotent (safe to rerun)
+- 499 emails assigned EIDs, grouped into 137 threads
+
+## [2025-08-20] - Legal Evidence Tracking System ⚖️
+
+### 📋 New Legal Evidence Management Features
+- **Evidence ID System (EID)**: Every email gets unique legal reference ID
+  - Format: `EID-YYYY-NNNN` (e.g., EID-2025-0342)
+  - Stable, court-ready identifiers for all emails
+  - Preserves original Message-ID for authentication
+  
+- **Thread Grouping**: Automatic conversation tracking
+  - Groups related emails by normalized subject
+  - Chronological ordering within threads
+  - 137 threads identified from 499 emails
+  
+- **Evidence Reports**: Two modes for legal proceedings
+  - **Lookup Mode**: Structured references with EIDs for quick retrieval
+  - **Narrative Mode**: Pattern analysis with legal significance
+  - **Export Package**: Complete documentation with thread chronologies
+  
+- **CLI Commands**: New `vsearch evidence` subcommands
+  - `vsearch evidence status` - Check tracking status
+  - `vsearch evidence assign-eids` - Assign Evidence IDs
+  - `vsearch evidence assign-threads` - Group into conversations
+  - `vsearch evidence lookup --eid EID-2025-0001` - Look up specific evidence
+  - `vsearch evidence report --keywords "entry,access"` - Generate reports
+  - `vsearch evidence search "pattern"` - Search for legal patterns
+  
+### 🔧 Implementation Details
+- **New Module**: `legal_evidence/` with three components:
+  - `evidence_tracker.py` - EID management and assignment
+  - `thread_analyzer.py` - Conversation grouping and analysis
+  - `report_generator.py` - Legal report generation
+- **Database Schema**: Added `eid` and `thread_id` columns to emails table
+- **Simple Design**: Direct database access, no abstractions (following CLAUDE.md)
+
+### 📊 Results
+- **Legal Traceability**: Every fact can be traced to original email
+- **Court-Ready Format**: Structured for legal proceedings
+- **Pattern Detection**: Identifies disputes and contradictions
+- **499 Emails Tracked**: All emails now have legal evidence IDs
+
+## [2025-08-19] - Database Path Configuration Fix 🗄️
+
+### 🔧 Fixed Database Location Issue
+- **Problem**: SimpleDB was using `emails.db` in project root while config specified `data/emails.db`
+- **Solution**: Updated SimpleDB default path to match configured location
+  - Changed hardcoded path from `"emails.db"` to `"data/emails.db"`
+  - Moved active database (403 emails) from root to `data/` directory
+  - Removed empty placeholder database files
+- **Impact**: System now consistently uses `data/emails.db` as intended
+- **Verification**: All database operations working correctly after migration
+
 ## [2025-08-19] - Archive Consolidation and Import Cleanup 📦
 
 ### 🗂️ Archive Management Consolidation

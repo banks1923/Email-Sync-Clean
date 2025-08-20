@@ -169,13 +169,53 @@ def _enrich_vector_results(vector_results: list[dict]) -> list[dict[str, Any]]:
         enriched = []
         
         for i, result in enumerate(vector_results):
-            # Get content_id from payload
-            content_id = result.get("payload", {}).get("content_id")
-            if not content_id:
-                continue
+            payload = result.get("payload", {})
+            content_id = payload.get("content_id")
+            content = None
             
-            # Fetch full content from database
-            content = db.get_content(content_id=content_id)
+            if content_id:
+                # First try to get from content table (for PDFs, transcripts, etc.)
+                content = db.get_content(content_id=content_id)
+                
+                # If not found in content table and content_id is numeric, 
+                # it's likely an email ID from the emails table
+                if not content and str(content_id).isdigit():
+                    # Get email directly from emails table
+                    import sqlite3
+                    from config.settings import settings
+                    
+                    conn = sqlite3.connect(settings.database.emails_db_path)
+                    cursor = conn.execute(
+                        "SELECT id, subject, sender, recipient_to, content, datetime_utc "
+                        "FROM emails WHERE id = ?",
+                        (int(content_id),)
+                    )
+                    row = cursor.fetchone()
+                    conn.close()
+                    
+                    if row:
+                        # Construct content dict from email row
+                        content = {
+                            "content_id": str(row[0]),
+                            "content_type": "email",
+                            "title": row[1] or "No subject",
+                            "sender": row[2],
+                            "recipient": row[3],
+                            "content": row[4],
+                            "datetime_utc": row[5],
+                        }
+            
+            # Fallback: construct from payload if no content found
+            if not content and payload:
+                content = {
+                    "content_id": content_id or result.get("id"),
+                    "content_type": payload.get("content_type", "email"),
+                    "title": payload.get("subject", "No title"),
+                    "sender": payload.get("sender"),
+                    "datetime_utc": payload.get("datetime_utc"),
+                    "content": f"Email from {payload.get('sender', 'unknown')}",
+                }
+            
             if content:
                 # Add vector search metadata
                 content["semantic_rank"] = i + 1
@@ -208,9 +248,9 @@ def _merge_results_rrf(
     Returns:
         Merged and ranked results
     """
-    # Create lookup maps
-    keyword_map = {r["content_id"]: (i + 1, r) for i, r in enumerate(keyword_results)}
-    semantic_map = {r["content_id"]: (i + 1, r) for i, r in enumerate(semantic_results)}
+    # Create lookup maps - use 'id' or 'content_id' as the key
+    keyword_map = {r.get("content_id", r.get("id")): (i + 1, r) for i, r in enumerate(keyword_results)}
+    semantic_map = {r.get("content_id", r.get("id")): (i + 1, r) for i, r in enumerate(semantic_results)}
     
     # Get all unique content IDs
     all_ids = set(keyword_map.keys()) | set(semantic_map.keys())

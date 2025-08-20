@@ -45,7 +45,8 @@ class GmailService:
         
         # Initialize EmailThreadProcessor if available
         if THREAD_PROCESSOR_AVAILABLE:
-            self.thread_processor = get_email_thread_processor()
+            # Pass self as gmail_service to EmailThreadProcessor
+            self.thread_processor = get_email_thread_processor(gmail_service=self)
             logger.info("EmailThreadProcessor initialized for thread-based processing")
         else:
             self.thread_processor = None
@@ -368,6 +369,32 @@ class GmailService:
             # Process and store summaries for new emails
             if save_result["inserted"] > 0:
                 self._process_email_summaries(email_list)
+                
+                # Run semantic enrichment pipeline if enabled
+                from config.settings import semantic_settings
+                if semantic_settings.semantics_on_ingest:
+                    from utilities.semantic_pipeline import get_semantic_pipeline
+                    
+                    # Extract message IDs from saved emails
+                    message_ids = [email.get("message_id") for email in email_list 
+                                 if email.get("message_id")]
+                    
+                    if message_ids:
+                        logger.info(f"Running semantic enrichment for {len(message_ids)} new emails")
+                        
+                        pipeline = get_semantic_pipeline(
+                            db=self.db,
+                            embedding_service=None,  # Will be created as needed
+                            vector_store=None,  # Will be created as needed
+                            entity_service=None  # Will be created as needed
+                        )
+                        
+                        pipeline_result = pipeline.run_for_messages(
+                            message_ids=message_ids,
+                            steps=semantic_settings.semantics_steps
+                        )
+                        
+                        logger.info(f"Semantic enrichment complete: {pipeline_result.get('step_results', {})}")
         else:
             logger.error(f"Email storage failed: {save_result.get('error')}")
             errors += len(email_list)

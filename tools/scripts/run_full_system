@@ -333,15 +333,23 @@ class SystemRunner:
             if pdf_files:
                 try:
                     from pdf.main import PDFService
-                    pdf_service = PDFService()
+                    
+                    # Initialize PDFService with all dependencies
+                    pdf_service = PDFService.from_db_path("data/emails.db")
                     
                     for pdf_file in pdf_files[:5]:  # Process max 5 PDFs
                         try:
                             logger.info(f"  Processing PDF: {pdf_file.name}")
-                            result = pdf_service.process_pdf(str(pdf_file))
+                            # Move to staged first
+                            pipeline.move_to_staged(pdf_file.name)
+                            staged_file = staged_path / pdf_file.name
+                            
+                            # Process the PDF
+                            result = pdf_service.upload_single_pdf(str(staged_file))
                             if result.get("success"):
                                 # Move to processed
-                                pipeline.move_to_processed(pdf_file.name, {"type": "pdf"})
+                                chunks = result.get("chunks_processed", 0)
+                                pipeline.move_to_processed(pdf_file.name, {"type": "pdf", "chunks_processed": chunks})
                         except Exception as e:
                             logger.warning(f"  Could not process {pdf_file.name}: {e}")
                 except ImportError as e:

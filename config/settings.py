@@ -197,4 +197,28 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
+class SemanticSettings(BaseSettings):
+    """Semantic enrichment pipeline configuration."""
+    
+    # Master switch for semantic processing on ingestion
+    semantics_on_ingest: bool = Field(default=True, env="SEMANTICS_ON_INGEST")
+    
+    # Steps to run in order
+    semantics_steps: List[str] = Field(
+        default=["summary", "entities", "embeddings", "timeline"],
+        env="SEMANTICS_STEPS"
+    )
+    
+    # Batch processing settings
+    semantics_max_batch: int = Field(default=200, env="SEMANTICS_MAX_BATCH")
+    semantics_timeout_s: int = Field(default=20, env="SEMANTICS_TIMEOUT_S")  # per step
+    
+    # Cache settings
+    entity_cache_days: int = Field(default=7, env="ENTITY_CACHE_DAYS")
+    
+    class Config:
+        env_prefix = "SEMANTIC_"
+
+
 settings = Settings()
+semantic_settings = SemanticSettings()

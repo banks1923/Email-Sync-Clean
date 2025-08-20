@@ -37,19 +37,21 @@ class SearchIntelligenceService:
         self.db = SimpleDB(db_path)
 
         # Initialize dependent services with error handling
+        # Fail-fast: Vector store is required for hybrid search
         try:
             self.vector_store = get_vector_store()
         except Exception as e:
-            logger.warning(f"Vector store initialization failed: {e}")
-            self.vector_store = None
+            logger.error(f"Vector store initialization failed: {e}")
+            raise RuntimeError(f"Cannot initialize SearchIntelligenceService without vector store: {e}")
             
         self.entity_service = EntityService()
         
+        # Fail-fast: Embedding service is required for semantic search
         try:
             self.embedding_service = get_embedding_service()
         except Exception as e:
-            logger.warning(f"Embedding service initialization failed: {e}")
-            self.embedding_service = None
+            logger.error(f"Embedding service initialization failed: {e}")
+            raise RuntimeError(f"Cannot initialize SearchIntelligenceService without embedding service: {e}")
             
         self.summarizer = get_document_summarizer()
 
@@ -84,17 +86,69 @@ class SearchIntelligenceService:
         logger.info("SearchIntelligenceService initialized")
     
     def search(self, query: str, limit: int = 10, **kwargs) -> list[dict[str, Any]]:
-        """Main search method for compatibility.
+        """Main search method - uses hybrid search (keyword + semantic).
         
         Args:
             query: Search query string
             limit: Maximum number of results
-            **kwargs: Additional parameters passed to unified_search
+            **kwargs: Additional parameters (filters, etc.)
         
         Returns:
-            List of search results
+            List of search results from hybrid search
         """
-        return self.unified_search(query, limit, **kwargs)
+        # Use the hybrid search from basic_search module
+        from .basic_search import search as hybrid_search
+        
+        # Extract filters if present
+        filters = kwargs.get('filters', None)
+        
+        # Log hybrid search invocation for visibility
+        logger.info(f"Hybrid search invoked: query='{query}', limit={limit}, filters_present={filters is not None}")
+        
+        # Perform hybrid search (keyword + semantic with RRF merging)
+        return hybrid_search(query, limit=limit, filters=filters)
+    
+    def health(self) -> dict:
+        """Health probe for SearchIntelligenceService.
+        
+        Returns:
+            Dictionary with health status including:
+            - embed_dim: Embedding dimensions
+            - embed_l2: L2 norm of test embedding (should be ≈1.0)
+            - qdrant_points: Number of points in Qdrant collection
+            - status: Overall health status
+        """
+        health_status = {}
+        
+        try:
+            # Check embedding service
+            test_text = "health check"
+            test_embedding = self.embedding_service.encode(test_text)
+            
+            # Calculate L2 norm
+            import numpy as np
+            l2_norm = float(np.linalg.norm(test_embedding))
+            
+            health_status['embed_dim'] = len(test_embedding)
+            health_status['embed_l2'] = round(l2_norm, 3)
+            
+            # Check vector store
+            collection_stats = self.vector_store.get_collection_stats("emails")
+            health_status['qdrant_points'] = collection_stats.get('points_count', 0)
+            
+            # Overall status
+            health_status['status'] = 'healthy'
+            
+            logger.info(f"Health probe: embed_dim={health_status['embed_dim']}, "
+                       f"embed_l2≈{health_status['embed_l2']}, "
+                       f"qdrant_points={health_status['qdrant_points']}")
+            
+        except Exception as e:
+            health_status['status'] = 'unhealthy'
+            health_status['error'] = str(e)
+            logger.error(f"Health probe failed: {e}")
+        
+        return health_status
 
     def unified_search(
         self,

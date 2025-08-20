@@ -8,6 +8,7 @@ import sqlite3
 from typing import Any
 
 from loguru import logger
+from config.settings import settings
 
 # Logger is now imported globally from loguru
 

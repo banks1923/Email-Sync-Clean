@@ -8,7 +8,7 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 <!-- REQUIRES 3X CONFIRMATION TO CHANGE THIS SECTION -->
 <!-- PROTECTED WORKFLOW INSTRUCTIONS BELOW -->
 
-- **CORE**: PLAN, Break task into atomic steps, Always use todo list, web search for best practices, 1orchestrationagent1 check work when done. Test and document changes.
+- **CORE**: PLAN,  Atomic steps, Always use todo list, web search best practices, 1orchestrationagent1.
 
 ## Core Development Principles
 
@@ -16,21 +16,23 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 - **No Complex Hierarchies**: Simple agent classes
 - **No Abstract Patterns**: Direct implementation
 - **No Meta-Programming**: Keep it simple
-- **No Long Context**: Break tasks into tiny chunks — Goal: Conserve context, don’t waste it. Use a subagent for just reading a pile of code and reporting back.
+- **No Long Context**: Break tasks into atomic steps
 
 ### Good Patterns (ALWAYS DO)
-- **Read CLAUDE.md First**: Every agent starts by reading project principles
+- **Read CLAUDE.md First**:  read project principles
 - **Use TodoWrite**: Track all tasks with todo lists
 - **Small Tasks**: Maximum context per task to prevent confusion
-- **Changelog.md**: Log all changes to change log
-- **Organized Repo**: Create files only when needed and do it in the correct location
+- **Changelog.md**: Log all changes to changelog
+- **No breaking Repo**: ASK before Going off the rails
+- **Remember**: The best code is no code. The second best is simple code that works.*
+- **PLAN**
+- **CLARIFY**
+
 
 ### Agent Workflow
 1. **Read CLAUDE.md** - Understand project principles
 2. **Create Todo List** - Break work into tiny tasks
 3. **Execute Tasks** - One small task at a time
-4. **Write Logs** - Document all actions and decisions in logs folder
-5. **QC Review (Deprecated)** - Previously required, no longer part of the active workflow.
 
 <!-- END PROTECTED SECTION - DO NOT MODIFY WITHOUT 3X CONFIRMATION -->
 

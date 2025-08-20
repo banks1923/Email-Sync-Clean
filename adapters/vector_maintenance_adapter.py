@@ -27,12 +27,22 @@ class VectorMaintenanceAdapter:
         """
         try:
             if content_type:
+                # Map collection names to content types (plural -> singular)
+                type_mapping = {
+                    'emails': 'email',
+                    'pdfs': 'pdf',
+                    'transcriptions': 'transcription',
+                    'notes': 'note',
+                    'documents': 'document'
+                }
+                db_type = type_mapping.get(content_type, content_type)
+                
                 # Use search with type filter
                 query = f"""
                     SELECT id FROM content 
                     WHERE content_type = ?
                 """
-                result = self.db.execute(query, (content_type,))
+                result = self.db.execute(query, (db_type,))
             else:
                 # Get all IDs
                 query = "SELECT id FROM content"
@@ -79,6 +89,45 @@ class VectorMaintenanceAdapter:
         except Exception as e:
             logger.error(f"Failed to update vector status: {e}")
             return False
+    
+    def get_content_by_id(self, content_id: str) -> dict | None:
+        """
+        Get a single content item by ID.
+        
+        Returns content with id, text, and metadata fields.
+        """
+        try:
+            query = """
+                SELECT id, content_type, content, metadata 
+                FROM content 
+                WHERE id = ?
+            """
+            result = self.db.execute(query, (content_id,))
+            row = result.fetchone()
+            
+            if row:
+                # Parse metadata if it's a JSON string
+                import json
+                metadata = {}
+                metadata_str = row["metadata"] if row["metadata"] else None
+                if metadata_str:
+                    try:
+                        metadata = json.loads(metadata_str)
+                    except:
+                        metadata = {}
+                
+                return {
+                    "id": row["id"],
+                    "text": row["content"],  # Map 'content' column to 'text' field
+                    "metadata": {
+                        "content_type": row["content_type"],
+                        **metadata
+                    }
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get content by ID {content_id}: {e}")
+            return None
     
     def get_content_count(self, content_type: str = None) -> int:
         """
