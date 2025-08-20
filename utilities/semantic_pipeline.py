@@ -561,8 +561,8 @@ class SemanticPipeline:
                     continue
                 
                 # Generate embedding
-                embedding = self.embedding_service.embed_text(text_content)
-                if not embedding or len(embedding) != 1024:
+                embedding = self.embedding_service.get_embedding(text_content)
+                if embedding is None or len(embedding) != 1024:
                     logger.warning(f"Invalid embedding for content {content_id}")
                     result['errors'] += 1
                     continue
@@ -606,11 +606,14 @@ class SemanticPipeline:
                 result['vectors_stored'] += 1
                 
             except Exception as e:
-                logger.error(f"Failed to process content {item.get('id', 'unknown')}: {e}")
+                try:
+                    content_id = item['id']
+                except (KeyError, TypeError):
+                    content_id = 'unknown'
+                logger.error(f"Failed to process content {content_id}: {e}")
                 result['errors'] += 1
         
-        # Commit all changes
-        self.db.conn.commit()
+        # Changes are committed automatically by SimpleDB
         
         logger.info(f"Content processing complete: {result['processed']} processed, {result['skipped']} skipped, {result['errors']} errors")
         return result

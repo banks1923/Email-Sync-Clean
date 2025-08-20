@@ -350,8 +350,8 @@ python3 scripts/verify_pipeline.py --json --strict
 # Performance analysis with time windows
 python3 scripts/verify_pipeline.py --since 24h
 
-# Trace specific document through pipeline
-python3 scripts/verify_pipeline.py --trace ec69f22c4c6c00b1
+# Trace specific document through pipeline (multi-chunk example)
+python3 scripts/verify_pipeline.py --trace ec69f22c
 ```
 
 ### Test Suite Components
@@ -366,6 +366,8 @@ python3 scripts/verify_pipeline.py --trace ec69f22c4c6c00b1
 - ✅ Complete chain: documents → content_unified → embeddings
 - ✅ Exact SQL joins with deterministic ordering
 - ✅ Real document processing verification
+- ✅ **Multi-chunk document analysis**: Chunk count, total characters, chunk distribution
+- ✅ **Document vs Chunk metrics**: Distinguishes unique documents from document chunks
 
 **3. Integrity Test** - Data Consistency Validation
 - ✅ Orphaned content detection (content without documents)
@@ -385,9 +387,11 @@ python3 scripts/verify_pipeline.py --trace ec69f22c4c6c00b1
 - ✅ Recovery handler availability
 
 **6. Document Tracing** - Full Pipeline Inspection
-- ✅ SHA256 prefix resolution with ambiguity detection
-- ✅ Complete document lifecycle tracing
-- ✅ All embeddings returned (not just first match)
+- ✅ **Enhanced chunk hierarchy display**: Shows all chunks per document with tree structure
+- ✅ **SHA256 prefix resolution**: Handles multi-chunk documents with DISTINCT resolution
+- ✅ **Complete document lifecycle tracing**: From chunks → content_unified → embeddings
+- ✅ **Content mapping clarification**: Explains content_unified represents full document text
+- ✅ **All embeddings returned**: Not just first match, with model and timestamp info
 
 ### Exit Codes for CI Integration
 
@@ -414,7 +418,30 @@ The verification system confirms support for:
 - ✅ **Scanned PDFs**: Tesseract OCR with automatic detection  
 - ✅ **Legal Documents**: Court filings, contracts, judgments
 - ✅ **Mixed Content**: Automatic text vs OCR detection
+- ✅ **Multi-chunk Documents**: Large documents split into chunks with proper indexing
 - ✅ **Pipeline Stages**: Raw → Staged → Processing → Storage → Embeddings
+
+### Multi-Chunk Document Architecture
+
+The system supports large documents through intelligent chunking:
+
+```
+Document: large-file.pdf (SHA256: abc123...)
+├── Chunk 0: abc123..._0 (chunk_index: 0, chars: 2,500)
+├── Chunk 1: abc123..._1 (chunk_index: 1, chars: 2,400)
+└── Chunk 2: abc123..._2 (chunk_index: 2, chars: 1,800)
+    ↓
+Content Unified: ID=5 (represents full document text from all chunks)
+    ↓  
+Embeddings: ID=12 (1024D Legal BERT vector for complete document)
+```
+
+**Key Features:**
+- **Chunk Indexing**: Each chunk has `chunk_index` (0, 1, 2...) and unique `chunk_id`
+- **SHA256 Consistency**: All chunks share the same `sha256` hash for the original document
+- **Content Unification**: One `content_unified` entry represents the complete document text
+- **Single Embedding**: One embedding per document (not per chunk) for semantic search
+- **Tracing Support**: `--trace <sha_prefix>` shows complete hierarchy for debugging
 
 ## 🧪 Testing Philosophy
 

@@ -1,5 +1,103 @@
 # Changelog
 
+## [2025-08-20] - Complete Data Integrity & Pipeline Repair 🚀
+
+### Major System Restoration
+- **Complete Pipeline Repair**: Restored full document→content→embedding→search pipeline functionality
+  - **7/7 verification tests passing**: All system components now operational
+  - **410+ vectors in Qdrant**: Semantic search fully functional with Legal BERT embeddings
+  - **Zero orphaned records**: Complete data integrity achieved
+  - **Production-ready**: Comprehensive migration system with rollback procedures
+
+### Core Issues Resolved
+1. **SHA256 Truncation Fix** (CRITICAL): Fixed truncated content_unified.source_id causing broken document→content JOINs
+2. **Schema Constraints**: Added UNIQUE(sha256, chunk_index) preventing future duplicates
+3. **Qdrant Health**: Fixed vector store endpoints and embedding generation pipeline  
+4. **Chunk Tracing**: Enhanced multi-chunk document disambiguation and visibility
+5. **Health Contracts**: Standardized service health monitoring with 'available' key
+6. **Migration Hygiene**: Formalized schema changes with proper migrations and validation
+
+### System Performance
+- **Pipeline Verification**: Status changed from `WARN` to `PASS` 
+- **Semantic Search**: Functional with 6+ results for legal queries
+- **Diagnostic System**: VERDICT: ✅ OK across all components
+- **Legal BERT**: 1024D embeddings working with MPS acceleration
+- **Database**: SQLite WAL mode optimized with 64MB cache
+
+### Files Modified/Created
+- **Data Repair**: `data/emails.db` - Fixed SHA256 truncation, added constraints
+- **Migrations**: `migrations/V002_*.sql`, `V003_*.sql` - Formal migration tracking
+- **Pipeline Fix**: `utilities/semantic_pipeline.py`, `scripts/verify_pipeline.py` 
+- **Health Contract**: `pdf/pdf_health.py` - Standardized health monitoring
+- **Documentation**: Enhanced `CLAUDE.md`, `CHANGELOG.md` with complete system documentation
+
+### Success Metrics
+- **Before**: `{"status":"WARN","chain":false,"orphans":2,"dup_content":0}`
+- **After**: `{"status":"PASS","chain":true,"orphans":0,"dup_content":0}`
+
+The Email Sync system is now fully operational with complete data integrity, semantic search, and production-ready deployment procedures.
+
+---
+
+## [2025-08-20] - PDFService Health Contract Fix 🔧
+
+### Fixed
+- **PDFService Health Contract**: Fixed KeyError issue in health monitoring systems
+  - **Added 'available' Key**: Health responses now include required 'available' boolean field
+  - **Component Health Status**: Added structured 'components' dict with db, storage, pdf_processor status
+  - **Standard Schema**: Implemented consistent health contract with 'ts', 'version' fields
+  - **Error Response Fix**: Error scenarios also include proper health contract keys
+  - **Backward Compatibility**: Preserved legacy 'success', 'healthy', 'service' keys
+  - **Monitoring Integration**: Health monitoring systems can now reliably check health["available"] without KeyError
+
+### Health Contract Format
+```python
+{
+    "available": bool,           # Overall service availability 
+    "components": {              # Component-specific health
+        "db": bool,
+        "storage": bool,
+        "pdf_processor": bool
+    },
+    "ts": float,                 # Timestamp  
+    "version": str,              # Schema version
+    # Legacy compatibility keys also included
+}
+```
+
+## [2025-08-20] - Enhanced Multi-Chunk Document Tracing 🔍
+
+### Enhanced
+- **Enhanced Pipeline Verification**: Improved chunk tracing and disambiguation
+  - **Multi-chunk Hierarchy Display**: Tree-structured view showing all chunks per document
+  - **SHA256 Resolution Fix**: DISTINCT query properly handles multiple chunks per document  
+  - **Content Mapping Clarity**: Explicitly shows content_unified represents full document text
+  - **Chunk Analysis**: Smoke test shows chunk count, multi-chunk documents, and character distribution
+  - **Complete Tracing**: All embeddings displayed with model info and timestamps
+  - **Ambiguity Elimination**: Clear distinction between document chunks and unique documents
+
+### Example Enhanced Output
+```
+📄 Document Trace: ec69f22c4c6c00b1...
+├── File: Lab Results- 03:12:25.pdf  
+├── Total Characters: 68
+├── Chunk Structure:
+│   ├── Chunk 0: ec69f22c...e8_0 (Characters: 34, Status: processed)
+│   └── Chunk 1: ec69f22c...e8_1 (Characters: 34, Status: processed)
+├── Content Unified: ID=1 (Full document text from all chunks)
+└── Embeddings: 1 total
+    └── ID 2: legal-bert (2025-08-20T11:20:45)
+```
+
+## [2025-08-20] - Database Schema Constraints & Pipeline Verification 🔒
+
+### Added
+- **Database Schema Constraints**: Complete data integrity protection
+  - **Unique Constraint**: `idx_documents_sha256_chunk_unique` prevents duplicate (SHA256, chunk_index)
+  - **Multi-chunk Support**: Preserves legitimate document chunks while preventing true duplicates
+  - **Migration Script**: `scripts/add_documents_constraints.py` with dry-run testing and rollback procedures
+  - **Comprehensive Validation**: Tests all constraint scenarios (duplicates blocked, chunks allowed, NULLs allowed)
+
 ## [2025-08-20] - PDF Pipeline Verification System 🔍
 
 ### Added

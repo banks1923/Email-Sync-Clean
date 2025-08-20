@@ -137,7 +137,14 @@ class PDFService(IService):
         return self._get("health_manager")
 
     def health_check(self) -> dict[str, Any]:
-        """Perform comprehensive health check for PDF service"""
+        """Perform comprehensive health check for PDF service
+        
+        Returns health response with standard contract including:
+        - 'available': bool - Overall service availability
+        - 'components': dict - Component-specific health status  
+        - 'ts': float - Timestamp
+        - 'version': str - Health contract schema version
+        """
         return self.health_manager.perform_health_check()
 
     def upload_single_pdf(

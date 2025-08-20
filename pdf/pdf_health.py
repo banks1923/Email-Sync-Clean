@@ -63,12 +63,25 @@ class PDFHealthManager:
 
     def _build_health_response(self, metrics: dict[str, Any], healthy: bool) -> dict[str, Any]:
         """Build health check response"""
+        # Extract database health to determine component status
+        db_health = metrics["database"]
+        system_health = metrics["system"]
+        
         return {
+            "available": healthy,  # Overall service availability - FIXED: Added missing key
+            "components": {  # Component-specific health status
+                "db": db_health.get("success", False),
+                "storage": system_health.get("success", False),
+                "pdf_processor": True,  # Assume processor is available if service is running
+            },
+            "ts": datetime.now().timestamp(),  # Timestamp as float for consistency
+            "version": "1.0",  # Health contract schema version
+            # Legacy keys for backward compatibility
             "success": True,
-            "service": "pdf_service",
+            "service": "pdf_service", 
             "healthy": healthy,
             "timestamp": datetime.now().isoformat(),
-            "database_health": metrics["database"],
+            "database_health": db_health,
             "pdf_collection": metrics["pdf_stats"].get("stats", {}),
             "performance": metrics["performance"],
             "resources": {
@@ -82,6 +95,15 @@ class PDFHealthManager:
         """Build error response for health check"""
         self.logger.error(f"{message}: {str(error)}")
         return {
+            "available": False,  # FIXED: Added missing key for error response
+            "components": {  # All components considered unavailable on error
+                "db": False,
+                "storage": False, 
+                "pdf_processor": False,
+            },
+            "ts": datetime.now().timestamp(),  # Timestamp as float for consistency
+            "version": "1.0",  # Health contract schema version
+            # Legacy keys for backward compatibility
             "success": False,
             "error": f"{message}: {str(error)}",
             "service": "pdf_service",
