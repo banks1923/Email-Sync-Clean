@@ -4,7 +4,6 @@ from typing import Any, Protocol
 
 class FeatureUnavailable(Exception):
     """Raised when an optional feature is not wired"""
-    pass
 
 
 class IEmbedder(ABC):

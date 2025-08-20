@@ -23,7 +23,7 @@ class SchemaMaintenance:
     def __init__(self):
         self.db = SimpleDB()
         
-    def fix_content_schema(self, dry_run: bool = True) -> Dict[str, Any]:
+    def fix_content_schema(self, dry_run: bool = True) -> dict[str, Any]:
         """Fix content schema issues and inconsistencies."""
         logger.info(f"Fixing content schema (dry_run={dry_run})")
         
@@ -106,7 +106,7 @@ class SchemaMaintenance:
             "status": "completed"
         }
     
-    def migrate_emails_to_content(self, batch_size: int = 100) -> Dict[str, Any]:
+    def migrate_emails_to_content(self, batch_size: int = 100) -> dict[str, Any]:
         """Migrate emails from legacy table to unified_content."""
         logger.info(f"Migrating emails to unified_content (batch_size={batch_size})")
         
@@ -184,7 +184,7 @@ class SchemaMaintenance:
             "status": "completed" if migrated_count > 0 else "nothing_to_migrate"
         }
     
-    def update_schema_refs(self, table_mappings: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    def update_schema_refs(self, table_mappings: dict[str, str] | None = None) -> dict[str, Any]:
         """Update schema references after table changes."""
         logger.info("Updating schema references")
         
@@ -274,7 +274,7 @@ class SchemaMaintenance:
             "status": "completed"
         }
     
-    def validate_schema(self) -> Dict[str, Any]:
+    def validate_schema(self) -> dict[str, Any]:
         """Validate current schema integrity."""
         logger.info("Validating schema integrity")
         

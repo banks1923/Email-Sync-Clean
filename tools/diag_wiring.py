@@ -8,10 +8,9 @@ import os
 import sys
 import time
 import uuid
-from typing import List, Dict, Any
+from typing import Any
 
 import torch
-import torch.nn.functional as F
 
 
 # Configuration from template
@@ -111,7 +110,7 @@ def check_embeddings() -> tuple[bool, dict]:
                 # More lenient check - embeddings might not be perfectly normalized
                 l2_normalized = abs(norm - 1.0) < 0.1 or norm > 0.9  # Allow larger tolerance
                 actual_norm = norm
-            except Exception as e:
+            except Exception:
                 l2_normalized = False
                 actual_norm = 0.0
         else:

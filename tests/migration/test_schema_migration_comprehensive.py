@@ -253,13 +253,11 @@ class TestMigrationPerformance:
         """Test that migration handles large batches efficiently."""
         # This would test migration of thousands of emails
         # to ensure performance is acceptable
-        pass
     
     def test_memory_usage(self, temp_db_path):
         """Test that migration doesn't consume excessive memory."""
         # This would monitor memory usage during migration
         # to ensure it stays within reasonable bounds
-        pass
 
 
 if __name__ == "__main__":

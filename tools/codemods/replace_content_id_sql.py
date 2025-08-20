@@ -104,7 +104,7 @@ class SqlStringRewriter(cst.CSTTransformer):
     
     def leave_SimpleString(
         self, original_node: cst.SimpleString, updated_node: cst.SimpleString
-    ) -> Union[cst.SimpleString, RemovalSentinel]:
+    ) -> cst.SimpleString | RemovalSentinel:
         """Transform simple string literals containing SQL."""
         raw_value = updated_node.value
         
@@ -128,7 +128,7 @@ class SqlStringRewriter(cst.CSTTransformer):
     
     def leave_FormattedString(
         self, original_node: cst.FormattedString, updated_node: cst.FormattedString
-    ) -> Union[cst.FormattedString, RemovalSentinel]:
+    ) -> cst.FormattedString | RemovalSentinel:
         """Transform f-string literals containing SQL (only the literal parts)."""
         new_parts = []
         changed = False
@@ -201,7 +201,7 @@ def transform_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
         return False, f"Error processing {file_path}: {e}"
 
 
-def find_python_files(paths: List[Path]) -> List[Path]:
+def find_python_files(paths: list[Path]) -> list[Path]:
     """Find all Python files in the given paths."""
     python_files = []
     

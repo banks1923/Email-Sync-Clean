@@ -11,7 +11,7 @@ def update_imports_in_file(file_path: Path, old_import: str, new_import: str):
     """Update import statements in a file."""
 
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             content = f.read()
 
         if old_import not in content:
@@ -48,7 +48,7 @@ def consolidate_search():
     # Step 2: Update search_intelligence/__init__.py to export both
     init_file = Path("search_intelligence/__init__.py")
     if init_file.exists():
-        with open(init_file, "r") as f:
+        with open(init_file) as f:
             content = f.read()
 
         # Add basic_search import

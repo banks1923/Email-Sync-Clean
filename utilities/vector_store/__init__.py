@@ -5,7 +5,8 @@ No complexity. Just vector storage.
 
 import time
 import uuid
-from typing import Any, Generator, Optional
+from typing import Any, Optional
+from collections.abc import Generator
 
 from loguru import logger
 from qdrant_client import QdrantClient
@@ -110,8 +111,8 @@ class VectorStore:
         return ids
 
     def search(self, vector: list[float], limit: int = 10, filter: dict = None, 
-               score_threshold: Optional[float] = None, with_payload: bool = True, 
-               with_vectors: bool = False, vector_name: Optional[str] = None) -> list[dict]:
+               score_threshold: float | None = None, with_payload: bool = True, 
+               with_vectors: bool = False, vector_name: str | None = None) -> list[dict]:
         """Search for similar vectors with enhanced options."""
         search_params = {
             "collection_name": self.collection, 
@@ -209,6 +210,27 @@ class VectorStore:
     def delete(self, id: str):
         """Delete vector by ID."""
         self.client.delete(collection_name=self.collection, points_selector=PointIdsList(points=[id]))
+    
+    def delete_vector(self, id: str, collection: str | None = None):
+        """Delete vector by ID with optional collection override.
+        
+        Args:
+            id: Vector ID to delete
+            collection: Optional collection name (uses instance collection if not provided)
+        """
+        collection or self.collection
+        
+        if collection and collection != self.collection:
+            # Create new store instance for different collection
+            temp_store = VectorStore(
+                host=self.host, 
+                port=self.port, 
+                collection=collection, 
+                dimensions=self.dimensions
+            )
+            temp_store.delete(id)
+        else:
+            self.delete(id)
 
     def delete_many(self, ids: list[str]):
         """Delete multiple vectors."""
@@ -229,7 +251,7 @@ class VectorStore:
         """Add email vector - wrapper for upsert with email-specific naming."""
         return self.upsert(vector=embedding, payload=metadata, id=email_id)
     
-    def add_vector(self, id: str, embedding: list[float], metadata: dict[str, Any], collection: Optional[str] = None) -> str:
+    def add_vector(self, id: str, embedding: list[float], metadata: dict[str, Any], collection: str | None = None) -> str:
         """Add vector with optional collection override."""
         if collection and collection != self.collection:
             # Create new store instance for different collection
@@ -242,7 +264,7 @@ class VectorStore:
             return temp_store.upsert(vector=embedding, payload=metadata, id=id)
         return self.upsert(vector=embedding, payload=metadata, id=id)
     
-    def batch_upsert(self, collection: Optional[str], points: list[dict]) -> list[str]:
+    def batch_upsert(self, collection: str | None, points: list[dict]) -> list[str]:
         """Batch upsert with points format: [{'id', 'vector', 'metadata'}]."""
         
         if collection and collection != self.collection:
@@ -293,7 +315,7 @@ class VectorStore:
         self.client.upsert(collection_name=self.collection, points=points_list)
         return ids
     
-    def list_all_ids(self, collection: Optional[str] = None) -> list[str]:
+    def list_all_ids(self, collection: str | None = None) -> list[str]:
         """List all vector IDs in collection."""
         target_collection = collection or self.collection
         all_ids = []
@@ -301,7 +323,7 @@ class VectorStore:
             all_ids.extend(page_ids)
         return all_ids
     
-    def iter_ids(self, collection: Optional[str] = None, page_size: int = 1000) -> Generator[list[str], None, None]:
+    def iter_ids(self, collection: str | None = None, page_size: int = 1000) -> Generator[list[str], None, None]:
         """Iterate through vector IDs in pages to avoid loading all at once."""
         target_collection = collection or self.collection
         next_page = None
@@ -337,18 +359,46 @@ class VectorStore:
             logger.error(f"Qdrant health check failed: {e}")
             return False
     
-    def get_collection_stats(self) -> dict:
+    def get_collection_stats(self, collection: str | None = None) -> dict:
         """Get collection statistics (normalized).
+        
+        Args:
+            collection: Optional collection name (uses instance collection if not provided)
         
         Returns dict with points_count and compatibility aliases.
         """
-        info = self.client.get_collection(self.collection)
-        points = getattr(info, "points_count", None) or getattr(info, "vectors_count", 0)
-        return {
-            "points_count": points,
-            "vectors_count": points,       # alias for compatibility
-            "indexed_vectors": points,     # alias for dashboards
-        }
+        target_collection = collection or self.collection
+        
+        try:
+            if collection and collection != self.collection:
+                # Create new store instance for different collection
+                temp_store = VectorStore(
+                    host=self.host, 
+                    port=self.port, 
+                    collection=collection, 
+                    dimensions=self.dimensions
+                )
+                return temp_store.get_collection_stats()
+            
+            info = self.client.get_collection(self.collection)
+            points = getattr(info, "points_count", None)
+            if points is None:
+                points = getattr(info, "vectors_count", 0)
+            if points is None:
+                points = 0
+            return {
+                "points_count": points,
+                "vectors_count": points,       # alias for compatibility
+                "indexed_vectors": points,     # alias for dashboards
+            }
+        except Exception as e:
+            # Collection doesn't exist or other error
+            logger.debug(f"Collection {target_collection} stats unavailable: {e}")
+            return {
+                "points_count": 0,
+                "vectors_count": 0,
+                "indexed_vectors": 0,
+            }
 
 
 # Singleton pattern - reuse connection

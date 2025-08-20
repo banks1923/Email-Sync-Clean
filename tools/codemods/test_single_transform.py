@@ -11,7 +11,7 @@ def test_single_file(file_path: str):
     print(f"🧪 Testing transformation on {path}")
     
     # Read original
-    with open(path, 'r') as f:
+    with open(path) as f:
         original_content = f.read()
     
     print("📄 Original content preview:")

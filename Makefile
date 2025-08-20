@@ -6,6 +6,44 @@
 # Variables
 PYTHON := python3
 PIP := $(PYTHON) -m pip
+QDRANT_PID := $(shell pgrep -f "qdrant" 2>/dev/null)
+
+# Qdrant Management
+ensure-qdrant: ## Ensure Qdrant is running (auto-start if needed)
+	@if ! curl -s http://localhost:6333/readyz >/dev/null 2>&1; then \
+		echo "🚀 Starting Qdrant (vector database required for search)..."; \
+		if [ ! -f ~/bin/qdrant ]; then \
+			echo "⚠️  Qdrant not found. Installing..."; \
+			echo "   Download from: https://github.com/qdrant/qdrant/releases"; \
+			echo "   Or run: curl -L https://install.qdrant.io | bash"; \
+			exit 1; \
+		fi; \
+		QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant > qdrant.log 2>&1 & \
+		echo "   Waiting for Qdrant to start..."; \
+		for i in 1 2 3 4 5; do \
+			sleep 2; \
+			if curl -s http://localhost:6333/readyz >/dev/null 2>&1; then \
+				echo "✅ Qdrant started successfully!"; \
+				break; \
+			fi; \
+			if [ $$i -eq 5 ]; then \
+				echo "❌ Failed to start Qdrant. Check qdrant.log for details."; \
+				exit 1; \
+			fi; \
+		done; \
+	else \
+		echo "✅ Qdrant is already running"; \
+	fi
+
+stop-qdrant: ## Stop Qdrant if running
+	@if pgrep -f "qdrant" >/dev/null 2>&1; then \
+		echo "🛑 Stopping Qdrant..."; \
+		pkill -f "qdrant"; \
+		sleep 2; \
+		echo "✅ Qdrant stopped"; \
+	else \
+		echo "ℹ️  Qdrant is not running"; \
+	fi
 
 help: ## Show this help message
 	@echo "Email Sync Quality Control Makefile"
@@ -207,35 +245,43 @@ clean: ## Clean up generated files and linter caches
 # Database & Vector Maintenance
 db-validate: ## Validate database schema integrity
 	@echo "🔍 Validating database schema..."
-	@python utilities/maintenance/schema_maintenance.py validate
+	@$(PYTHON) utilities/maintenance/schema_maintenance.py validate
 
 db-fix: ## Fix database schema issues (dry run)
 	@echo "🔧 Checking for schema issues..."
-	@python utilities/maintenance/schema_maintenance.py fix-schema
+	@$(PYTHON) utilities/maintenance/schema_maintenance.py fix-schema
 
 db-fix-apply: ## Apply database schema fixes
 	@echo "⚠️  Applying schema fixes..."
-	@python utilities/maintenance/schema_maintenance.py fix-schema --execute
+	@$(PYTHON) utilities/maintenance/schema_maintenance.py fix-schema --execute
 
-vector-status: ## Check vector store sync status
+vector-status: ensure-qdrant ## Check vector store sync status
 	@echo "📊 Checking vector sync status..."
-	@python utilities/maintenance/vector_maintenance.py verify
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py verify
 
-vector-sync: ## Sync missing vectors with database
+vector-sync: ensure-qdrant ## Sync missing vectors with database
 	@echo "🔄 Syncing missing vectors..."
-	@python utilities/maintenance/vector_maintenance.py sync-missing
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py sync-missing
 
-vector-reconcile: ## Reconcile vectors with database (dry run)
+vector-reconcile: ensure-qdrant ## Reconcile vectors with database (dry run)
 	@echo "🔍 Reconciling vectors with database..."
-	@python utilities/maintenance/vector_maintenance.py reconcile
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py reconcile
 
-vector-reconcile-fix: ## Apply vector reconciliation fixes
+vector-reconcile-fix: ensure-qdrant ## Apply vector reconciliation fixes
 	@echo "⚠️  Applying reconciliation fixes..."
-	@python utilities/maintenance/vector_maintenance.py reconcile --fix
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py reconcile --fix
 
-vector-purge-test: ## Remove test vectors from production (dry run)
+vector-purge-test: ensure-qdrant ## Remove test vectors from production (dry run)
 	@echo "🧹 Identifying test vectors..."
-	@python utilities/maintenance/vector_maintenance.py purge-test
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py purge-test
+
+vector-renormalize: ensure-qdrant ## Re-normalize vectors to unit length (dry run)
+	@echo "📐 Checking vector normalization..."
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py renormalize
+
+vector-renormalize-fix: ensure-qdrant ## Apply vector renormalization
+	@echo "⚠️  Re-normalizing vectors to unit length..."
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py renormalize --execute
 
 maintenance-all: ## Run all maintenance checks
 	@echo "🛠️  Running all maintenance checks..."
@@ -243,11 +289,11 @@ maintenance-all: ## Run all maintenance checks
 	@make vector-status
 	@echo "✅ Maintenance checks complete!"
 
-diag-wiring: ## Full system diagnostic - validate wiring & efficiency
+diag-wiring: ensure-qdrant ## Full system diagnostic - validate wiring & efficiency
 	@echo "🔍 Running system diagnostic..."
 	$(PYTHON) tools/diag_wiring.py
 
-vector-smoke: ## Quick vector smoke test - upsert 50 points & run 2 searches  
+vector-smoke: ensure-qdrant ## Quick vector smoke test - upsert 50 points & run 2 searches  
 	@echo "💨 Running vector smoke test..."
 	$(PYTHON) -c "import sys, os, uuid; sys.path.insert(0, '.'); \
 	from utilities.vector_store import get_vector_store; \
@@ -266,6 +312,6 @@ vector-smoke: ## Quick vector smoke test - upsert 50 points & run 2 searches
 	vs.delete_many(test_ids); \
 	print('✓ Cleaned up test data')"
 
-full-run: ## Complete end-to-end system pipeline (Qdrant required)
+full-run: ensure-qdrant ## Complete end-to-end system pipeline (Qdrant required)
 	@echo "🚀 Starting full system pipeline..."
 	$(PYTHON) tools/scripts/run_full_system

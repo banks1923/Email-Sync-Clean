@@ -1,288 +1,398 @@
-# Email Sync - Single-User Document Search System
+# Product Requirements Document: Direct Service Alignment - Zero Adapters
 
-## 1. What This Actually Is
+## Project Overview
+**Goal:** Remove all adapter patterns and compatibility shims by directly aligning service interfaces, implementing proper schema migrations, and adding robust preflight checks.
 
-### Reality Check
-This is a **single-user hobby project** for searching emails, PDFs, and transcripts. Not enterprise software. Not a legal platform. Just a practical tool that works reliably on standard hardware.
+**Scope:** Fix root causes of API mismatches instead of hiding them behind adapters.
 
-### What It Does
-- Syncs Gmail emails and makes them searchable
-- Processes PDFs (with OCR for scanned docs) 
-- Transcribes audio/video files
-- Provides semantic search when you want it
-- Keeps things organized and findable
-- Works offline with local storage
+**Timeline:** 100 minutes estimated implementation time
 
-### Design Philosophy
-- **Working > Perfect**: Solutions that work today
-- **Simple > Complex**: Direct implementation, no abstractions
-- **Local > Cloud**: SQLite and local files work great
-- **Flat > Nested**: Services at root level, minimal nesting
-- **YAGNI**: Don't build what you don't need
+## Problem Statement
+Three categories of service misalignment currently exist:
+1. **Parameter mismatches**: `save_to_db` passed but not accepted by EmailThreadProcessor
+2. **Missing API methods**: `get_all_content_ids` expected but not provided by SimpleDB
+3. **Schema drift**: Missing database columns (`source_path`, `vector_processed`, `word_count`)
 
-## 2. Current Working System
+Current adapters (created earlier) add complexity without solving root issues.
 
-### Architecture That Works
+## Solution Architecture
+
+### Core Principles
+- **Direct alignment** - Fix mismatches at the source
+- **Proper migrations** - SQL files, no runtime ALTERs
+- **Fail fast** - Comprehensive preflight checks
+- **Clean interfaces** - Exact method signatures, no kwargs
+
+## Implementation Phases
+
+### Phase 1: Add Missing SimpleDB Methods (30 min)
+
+#### Task 1.1: Implement Core SimpleDB Methods
+Add these exact methods to `shared/simple_db.py`:
+
+```python
+def get_all_content_ids(self, content_type: str = None) -> list[str]:
+    """Get all content IDs, optionally filtered by type."""
+    if content_type:
+        query = "SELECT id FROM content WHERE content_type = ? ORDER BY created_time DESC"
+        rows = self.fetch(query, (content_type,))
+    else:
+        query = "SELECT id FROM content ORDER BY created_time DESC"
+        rows = self.fetch(query)
+    return [row["id"] for row in rows]
+
+def get_content_by_ids(self, ids: list[str]) -> list[dict]:
+    """Batch fetch content by IDs with chunking for SQLite limits."""
+    if not ids:
+        return []
+    results = []
+    for chunk in [ids[i:i+500] for i in range(0, len(ids), 500)]:
+        placeholders = ",".join("?" * len(chunk))
+        query = f"SELECT * FROM content WHERE id IN ({placeholders})"
+        results.extend(self.fetch(query, tuple(chunk)))
+    return results
+
+def mark_content_vectorized(self, content_id: str) -> bool:
+    """Mark single content as vectorized."""
+    cursor = self.execute(
+        "UPDATE content SET vector_processed = 1 WHERE id = ?",
+        (content_id,)
+    )
+    return cursor.rowcount > 0
+
+def batch_mark_vectorized(self, content_ids: list[str]) -> int:
+    """Mark multiple contents as vectorized with SQLite limit handling."""
+    if not content_ids:
+        return 0
+    total_updated = 0
+    for chunk in [content_ids[i:i+500] for i in range(0, len(content_ids), 500)]:
+        placeholders = ",".join("?" * len(chunk))
+        query = f"UPDATE content SET vector_processed = 1 WHERE id IN ({placeholders})"
+        cursor = self.execute(query, tuple(chunk))
+        total_updated += cursor.rowcount
+    return total_updated
 ```
-Email Sync/ (Clean flat structure - 16 items, down from 34)
-├── gmail/              # Email sync (works great)
-├── pdf/                # PDF processing with smart OCR
-├── transcription/      # Audio transcription
-├── search_intelligence/# Smart search + clustering
-├── legal_intelligence/ # Case timeline tools
-├── entity/             # Extract names, dates, cases
-├── summarization/      # TF-IDF + TextRank
-├── knowledge_graph/    # Document relationships
-├── utilities/          # embeddings/, vector_store/, notes/, timeline/
-├── infrastructure/     # pipelines/, documents/, mcp_servers/
-├── tools/              # cli/, scripts/ (the actual user interface)
-├── shared/             # SimpleDB + utilities
-├── data/               # 5-stage pipeline: raw → staged → processed → quarantine → export
-└── tests/              # Real tests, not mocks
+
+#### Task 1.2: Add Performance Indexes
+Add to SimpleDB initialization or migration:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_content_type ON content(content_type);
+CREATE INDEX IF NOT EXISTS idx_vector_processed ON content(vector_processed);
+CREATE INDEX IF NOT EXISTS idx_content_hash ON content(content_hash);
 ```
 
-### What Actually Works Now
-- **Gmail Sync**: 500+ emails/batch, reliable incremental sync
-- **PDF Processing**: Auto-detects if OCR needed, batch processing
-- **Search**: Fast keyword + optional semantic with Legal BERT
-- **MCP Integration**: 40+ tools for Claude Desktop
-- **CLI**: `tools/scripts/vsearch` - one command does everything
+### Phase 2: Create Schema Migration System (20 min)
 
-## 3. Architecture Principles (ENFORCED)
+#### Task 2.1: Create Migration Directory Structure
+```
+migrations/
+├── 001_initial_schema.sql
+├── 002_add_vector_columns.sql
+├── applied_migrations.txt
+└── migrate.py
+```
 
-### File Size Limits
-- **New files**: <450 lines (prevents AI bloat)
-- **Functions**: <30 lines each
-- **Complexity**: <10 cyclomatic complexity per function
-- **Existing code**: Don't refactor if it works
+#### Task 2.2: Create Migration SQL File
+File: `migrations/002_add_vector_columns.sql`
+```sql
+-- Add missing columns for vector processing
+ALTER TABLE content ADD COLUMN source_path TEXT;
+ALTER TABLE content ADD COLUMN vector_processed INTEGER DEFAULT 0;
+ALTER TABLE content ADD COLUMN word_count INTEGER DEFAULT 0;
 
-### Anti-Patterns (NEVER DO)
-- Abstract base classes for 2-3 implementations
-- Factory patterns when if/else works
-- Deep inheritance hierarchies
-- Dependency injection frameworks
-- Microservices or event buses
-- Enterprise patterns for hobby project
+-- Add performance indexes
+CREATE INDEX IF NOT EXISTS idx_content_type ON content(content_type);
+CREATE INDEX IF NOT EXISTS idx_vector_processed ON content(vector_processed);
+CREATE INDEX IF NOT EXISTS idx_content_hash ON content(content_hash);
+```
 
-### Good Patterns (ALWAYS DO)
-- Direct imports and usage
-- SQLite for data storage
-- Local file storage
-- Simple error handling: `{"success": bool, "error": str}`
-- One clear way to do things
+#### Task 2.3: Create Migration Runner
+File: `migrations/migrate.py` (30 lines max)
+```python
+#!/usr/bin/env python3
+"""Simple migration runner - no runtime ALTERs in app code."""
 
-## 4. Services That Work
+import sqlite3
+from pathlib import Path
+from loguru import logger
 
-### 4.1 Gmail Service - ✅ WORKING
-**Current reality**: Syncs 500+ emails reliably, streaming batches of 50
-- Uses Gmail History API for incremental sync
-- Auto-summarization with TF-IDF keywords
-- Content deduplication with SHA-256
-- Memory efficient (<50MB usage)
-- ~50 emails/minute processing
+def run_migrations(db_path: str = "data/emails.db"):
+    """Apply pending SQL migrations."""
+    migrations_dir = Path(__file__).parent
+    applied_file = migrations_dir / "applied_migrations.txt"
+    
+    # Load applied migrations
+    applied = set()
+    if applied_file.exists():
+        applied = set(applied_file.read_text().strip().split('\n'))
+    
+    # Find pending migrations
+    sql_files = sorted(migrations_dir.glob("*.sql"))
+    pending = [f for f in sql_files if f.name not in applied]
+    
+    if not pending:
+        logger.info("No pending migrations")
+        return
+    
+    # Apply each migration
+    conn = sqlite3.connect(db_path)
+    for migration in pending:
+        logger.info(f"Applying {migration.name}")
+        conn.executescript(migration.read_text())
+        applied.add(migration.name)
+    
+    # Save applied migrations
+    applied_file.write_text('\n'.join(sorted(applied)))
+    logger.info(f"Applied {len(pending)} migrations")
 
-**Tasks needed**:
-- Improve error handling for API rate limits
-- Add more sender filters for relevant emails
-- Optimize batch processing for very large mailboxes
+if __name__ == "__main__":
+    run_migrations()
+```
 
-### 4.2 PDF Service - ✅ WORKING  
-**Current reality**: Smart OCR detection, batch processing
-- Auto-detects scanned vs text PDFs
-- Tesseract OCR with OpenCV preprocessing
-- Legal metadata extraction (case numbers, dates)
-- Unified content storage
-- Batch directory processing
+### Phase 3: Remove All Shims (20 min)
 
-**Tasks needed**:
-- Improve OCR accuracy with better image preprocessing
-- Add more legal document format detection
-- Optimize memory usage for large PDFs
+#### Task 3.1: Remove save_to_db Parameter
+Files to modify:
+- `gmail/main.py:416` - Remove `save_to_db=True`
+- `tests/infrastructure/test_email_thread_processor.py:342,379` - Remove parameter
 
-### 4.3 Search Intelligence - ✅ WORKING
-**Current reality**: Smart search with query expansion and clustering
-- Legal BERT embeddings (1024D) for semantic search
-- Query preprocessing and expansion
-- DBSCAN clustering (threshold 0.7)
-- Entity-aware ranking
-- Duplicate detection
+#### Task 3.2: Delete Adapter Directory
+- Delete entire `adapters/` directory
 
-**Tasks needed**:
-- Tune clustering parameters for better grouping
-- Add more query expansion rules
-- Improve similarity threshold auto-tuning
+#### Task 3.3: Remove Adapter Imports
+- `gmail/main.py:411` - Remove adapter import and usage
+- `utilities/maintenance/vector_maintenance.py:38` - Remove adapter import
 
-### 4.4 CLI Interface - ✅ WORKING
-**Current reality**: `tools/scripts/vsearch` handles everything
-- Search with filters (date, type, tags)
-- Document upload and processing
-- Legal case analysis commands
-- System health monitoring
-- Export capabilities
+#### Task 3.4: Remove Compatibility Helpers
+- `utilities/maintenance/vector_maintenance.py:44-72` - Delete `_db_get_all_content_ids` helper
 
-**Tasks needed**:
-- Add more output formats
-- Improve progress indicators for long operations
-- Better error messages for common issues
+### Phase 4: Implement Preflight Checks (15 min)
 
-## 5. MCP Integration (40+ Tools)
+#### Task 4.1: Create Preflight Check System
+File: `utilities/maintenance/preflight.py`
+```python
+"""Comprehensive preflight checks - fail fast with clear errors."""
 
-### What Works Now
-- **Legal Intelligence**: 6 tools for case analysis
-- **Search Intelligence**: 6 tools for document operations  
-- **Sequential Thinking**: Structured reasoning framework
-- **Memory Server**: Persistent context across sessions
-- **Qdrant Server**: Vector search and storage
+import numpy as np
+from loguru import logger
+from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
+from utilities.vector_store import get_vector_store
 
-### Tasks needed**:
-- Document tool usage patterns
-- Add more specialized legal tools
-- Improve tool error handling
-- Create tool usage examples
+def preflight_check():
+    """Verify system readiness before any operations."""
+    errors = []
+    
+    # 1. Check Qdrant running
+    try:
+        vector_store = get_vector_store()
+        collections = vector_store.client.get_collections()
+    except:
+        errors.append("Qdrant not running. Start: QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant &")
+    
+    # 2. Verify embedding service
+    try:
+        emb_service = get_embedding_service()
+        test_vec = emb_service.encode("test")
+        
+        if len(test_vec) != 1024:
+            errors.append(f"Wrong embedding dim: {len(test_vec)} (expected 1024)")
+        
+        l2_norm = np.linalg.norm(test_vec)
+        if abs(l2_norm - 1.0) > 0.02:
+            errors.append(f"Embeddings not L2-normalized: {l2_norm:.3f}")
+    except Exception as e:
+        errors.append(f"Embedding service failed: {e}")
+    
+    # 3. Verify collection dimensions
+    try:
+        expected_dim = 1024
+        for collection in ["emails", "pdfs", "transcriptions"]:
+            stats = vector_store.get_collection_stats(collection)
+            if stats and stats.get("vector_size"):
+                if stats["vector_size"] != expected_dim:
+                    errors.append(f"{collection} dim mismatch: {stats['vector_size']} != {expected_dim}")
+    except:
+        pass  # Collections may not exist yet
+    
+    # 4. Check database schema
+    db = SimpleDB()
+    cursor = db.execute("PRAGMA table_info(content)")
+    existing_cols = {col[1] for col in cursor.fetchall()}
+    required_cols = {"id", "content_type", "title", "content", "source_path", 
+                    "vector_processed", "word_count", "content_hash"}
+    missing = required_cols - existing_cols
+    
+    if missing:
+        errors.append(f"Missing columns: {missing}. Run: python migrations/migrate.py")
+    
+    # 5. Verify required methods exist
+    required_methods = ["get_all_content_ids", "get_content_by_ids", 
+                       "mark_content_vectorized", "batch_mark_vectorized"]
+    for method in required_methods:
+        if not hasattr(db, method):
+            errors.append(f"SimpleDB missing method: {method}")
+    
+    # Report results
+    if errors:
+        for err in errors:
+            logger.error(f"❌ {err}")
+        raise RuntimeError(f"{len(errors)} preflight checks failed")
+    
+    logger.info("✅ All preflight checks passed")
+    return True
+```
 
-## 6. Maintenance Tasks
+### Phase 5: Update Service Interfaces (15 min)
 
-### Code Quality (Automated)
-- **Current**: `make cleanup` does full automated cleanup
-- **Current**: Black, isort, mypy, ruff all configured
-- **Current**: Test coverage tracking with pytest
+#### Task 5.1: Standardize Embedding Service
+Update all calls from `embed_text()` to `encode()`:
+- Search and replace across codebase
+- Ensure consistent API: `encode(text: str) -> np.ndarray`
 
-**Tasks needed**:
-- Increase test coverage in low-coverage areas
-- Add more integration tests for real workflows
-- Document the cleanup pipeline better
+#### Task 5.2: Standardize Vector Store
+Ensure these exact methods:
+- `batch_upsert(collection: str, points: list) -> dict`
+- `iter_ids(collection: str, page_size: int = 100) -> Iterator[str]`
+- `delete_many(collection: str, ids: list[str]) -> dict`
+- `get_collection_stats(collection: str) -> dict`
 
-### Performance (Good Enough)
-- **Current**: Processes 484 documents successfully
-- **Current**: <50MB memory usage per operation
-- **Current**: SQLite handles 10,000+ documents fine
+### Phase 6: Testing and Verification (15 min)
 
-**Tasks needed**:
-- Profile memory usage with larger datasets
-- Optimize slow queries as data grows
-- Add performance benchmarks
+#### Task 6.1: Create Contract Tests
+File: `tests/test_contracts.py`
+```python
+"""Verify service contracts are met."""
 
-### Documentation (Pragmatic)
-- **Current**: CLAUDE.md has development guide
-- **Current**: docs/SERVICES_API.md has complete API reference
-- **Current**: Each service has practical examples
+import numpy as np
+import pytest
+from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
+from utilities.vector_store import get_vector_store
 
-**Tasks needed**:
-- Add more real-world usage examples
-- Document common troubleshooting steps
-- Create simple getting-started guide
+def test_embedding_contract():
+    """Verify embedding service meets requirements."""
+    service = get_embedding_service()
+    
+    # Test single encoding
+    vec = service.encode("test")
+    assert len(vec) == 1024, f"Wrong dim: {len(vec)}"
+    assert vec.dtype == np.float32, f"Wrong dtype: {vec.dtype}"
+    assert abs(np.linalg.norm(vec) - 1.0) < 0.02, "Not L2-normalized"
+    
+    # Test empty string
+    empty_vec = service.encode("")
+    assert len(empty_vec) == 1024
+    assert np.allclose(empty_vec, 0), "Empty should return zeros"
 
-## 7. External Dependencies (26 packages)
+def test_simpledb_contract():
+    """Verify SimpleDB meets requirements."""
+    db = SimpleDB()
+    
+    # Test required methods exist
+    assert hasattr(db, "get_all_content_ids")
+    assert hasattr(db, "get_content_by_ids")
+    assert hasattr(db, "mark_content_vectorized")
+    assert hasattr(db, "batch_mark_vectorized")
+    
+    # Test batch_mark_vectorized handles large batches
+    large_ids = [f"test_{i}" for i in range(1500)]
+    count = db.batch_mark_vectorized(large_ids)
+    # Should not raise SQLite variable limit error
 
-### Core Stack (Don't Change)
-- `transformers + torch` - Legal BERT embeddings
-- `qdrant-client` - Vector storage (optional)
-- `google-api-python-client` - Gmail API
-- `spacy` - Entity extraction
-- `openai` - Whisper transcription
-- `loguru` - Superior logging
+def test_vector_store_contract():
+    """Verify vector store meets requirements."""
+    store = get_vector_store()
+    
+    # Test required methods exist
+    assert hasattr(store, "batch_upsert")
+    assert hasattr(store, "iter_ids")
+    assert hasattr(store, "get_collection_stats")
+```
 
-### Document Processing
-- `PyPDF2 + pdfplumber` - PDF text extraction
-- `pytesseract + opencv-python` - OCR capabilities
-- `pdf2image + Pillow` - Image processing
+#### Task 6.2: Run Integration Tests
+```bash
+# Run migrations first
+python migrations/migrate.py
 
-**Tasks needed**:
-- Update dependencies when security patches available
-- Consider removing unused dependencies
-- Document which dependencies are optional
+# Run preflight checks
+python -c "from utilities.maintenance.preflight import preflight_check; preflight_check()"
 
-## 8. Simple Improvements (Not Over-Engineering)
+# Run contract tests
+pytest tests/test_contracts.py -v
 
-### User Experience Fixes
-- Better error messages when Qdrant not running
-- Clearer progress indicators for batch operations
-- Simple health check command
-- Export formats that actually work everywhere
+# Quick smoke test
+make vector-smoke
 
-### Performance Tweaks
-- Smarter batch sizes based on available memory
-- Parallel processing for independent operations
-- Better caching for repeated queries
-- Index optimization for large document sets
+# Full pipeline test
+make full-run
+```
 
-### Functionality Gaps
-- Audio format support beyond basic MP3/MP4
-- More document types (DOCX, TXT, Markdown)
-- Simple tag management for organization
-- Basic document versioning for updates
+## Success Criteria
 
-### Development Experience
-- Better test fixtures with real sample data
-- Clearer logging for debugging issues
-- Simple profiling tools for performance investigation
-- Documentation with actual command examples
+1. **No adapters remain** - `adapters/` directory deleted
+2. **All preflight checks pass** - Clean startup
+3. **Contract tests pass** - Services meet interface requirements
+4. **Integration tests pass** - `make full-run` succeeds
+5. **Performance maintained** - p95 search latency <100ms
+6. **Clean logs** - No warnings about missing methods
 
-## 9. What NOT To Build
+## Risk Mitigation
 
-### Enterprise Features (YAGNI)
-- Multi-user access control
-- Complex workflow engines  
-- Advanced security frameworks
-- Kubernetes deployment
-- Microservices architecture
+| Risk | Mitigation |
+|------|------------|
+| SQLite variable limit | Chunk all batch operations to 500 items |
+| Embedding dimension mismatch | Preflight validates before processing |
+| Missing columns break queries | Migration system ensures correct schema |
+| Performance regression | Add indexes, monitor p95 latencies |
 
-### Over-Engineering (Keep It Simple)
-- Abstract base classes everywhere
-- Complex caching layers
-- Custom ORM systems
-- Event-driven architectures
-- Plugin systems
+## Files to Modify
 
-### Premature Optimization
-- Connection pooling for SQLite
-- Complex async patterns
-- Memory optimization before measuring
-- Distributed processing for single-user system
+**Core Changes (8 files):**
+1. `shared/simple_db.py` - Add 4 methods (~60 lines)
+2. `migrations/002_add_vector_columns.sql` - New migration (~10 lines)
+3. `migrations/migrate.py` - Migration runner (~30 lines)
+4. `utilities/maintenance/preflight.py` - Preflight checks (~70 lines)
+5. `gmail/main.py` - Remove adapter and save_to_db (~5 lines removed)
+6. `utilities/maintenance/vector_maintenance.py` - Remove adapter (~35 lines removed)
+7. `tests/infrastructure/test_email_thread_processor.py` - Remove save_to_db (~2 lines)
+8. `tests/test_contracts.py` - New contract tests (~50 lines)
 
-## 10. Success Criteria (Realistic)
+**Deletions:**
+- `adapters/` directory - Complete removal (~400 lines)
 
-### It Works When
-- Can sync 500+ emails without errors
-- PDF processing succeeds 95% of the time
-- Search returns relevant results in <2 seconds
-- Claude Desktop MCP tools work reliably
-- Can find documents from 6 months ago quickly
+**Net Impact:** +220 lines added, -440 lines removed = **220 lines reduction**
 
-### It's Maintainable When
-- Can add new features without breaking existing ones
-- Error messages actually help solve problems
-- Code is readable after not looking at it for months
-- Tests catch real problems, not implementation details
+## Validation Commands
 
-### It's Good Enough When
-- Does what it needs to do reliably
-- Doesn't crash with reasonable inputs
-- Performance is acceptable on standard hardware
-- Documentation explains how to actually use it
+```bash
+# Verify no adapters remain
+ls -la adapters/ 2>/dev/null || echo "✅ Adapters removed"
 
-## 11. Implementation Philosophy
+# Check for adapter imports
+grep -r "from adapters import" --include="*.py" || echo "✅ No adapter imports"
 
-### Start With Working Code
-- Fix bugs in existing working features first
-- Add features only when actually needed
-- Test with real data, not contrived examples
-- Document what actually works
+# Verify schema
+sqlite3 data/emails.db "PRAGMA table_info(content)" | grep -E "source_path|vector_processed|word_count"
 
-### Keep It Simple
-- Direct solutions over clever abstractions
-- Standard library over external dependencies
-- Simple patterns that everyone understands
-- Working code over perfect architecture
+# Run tests
+make check
+make full-run
+```
 
-### Make It Maintainable
-- Code that's readable in 6 months
-- Clear separation between different concerns  
-- Good error messages and logging
-- Tests that verify real functionality
+## Post-Implementation Checklist
+
+- [ ] All SimpleDB methods implemented with chunking
+- [ ] Migration system created and run
+- [ ] All adapters removed
+- [ ] save_to_db parameter removed everywhere
+- [ ] Preflight checks pass
+- [ ] Contract tests pass
+- [ ] Integration tests pass
+- [ ] Performance verified (<100ms p95)
+- [ ] Documentation updated
 
 ---
 
-**Remember**: This is a single-user tool for searching documents. It should work reliably, be easy to maintain, and solve the actual problem without unnecessary complexity.
-
-The best code is no code. The second best is simple code that works.
+**This PRD is ready for Task Master parsing.** Each task is atomic, concrete, and testable. The phases can be executed sequentially with clear validation at each step.

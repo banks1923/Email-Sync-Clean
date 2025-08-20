@@ -38,7 +38,7 @@ class GmailSettings(BaseSettings):
     token_path: str = Field(default=".config/token.json", env="GMAIL_TOKEN_PATH")
 
     # Sender filters
-    preferred_senders: List[str] = Field(
+    preferred_senders: list[str] = Field(
         default=[
             "jenbarreda@yahoo.com",
             "518stoneman@gmail.com",
@@ -64,7 +64,7 @@ class EntitySettings(BaseSettings):
     batch_size: int = Field(default=100, env="ENTITY_BATCH_SIZE")
     confidence_threshold: float = Field(default=0.5, env="ENTITY_CONFIDENCE_THRESHOLD")
 
-    entity_types: List[str] = Field(
+    entity_types: list[str] = Field(
         default=[
             "PERSON",
             "ORG",
@@ -120,12 +120,12 @@ class APISettings(BaseSettings):
     """External API configuration."""
 
     # OpenAI (for transcription)
-    openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
+    openai_api_key: str | None = Field(default=None, env="OPENAI_API_KEY")
     openai_model: str = Field(default="whisper-1", env="OPENAI_WHISPER_MODEL")
 
     # Legal BERT API (if external)
-    legal_bert_api_url: Optional[str] = Field(default=None, env="LEGAL_BERT_API_URL")
-    legal_bert_api_key: Optional[str] = Field(default=None, env="LEGAL_BERT_API_KEY")
+    legal_bert_api_url: str | None = Field(default=None, env="LEGAL_BERT_API_URL")
+    legal_bert_api_key: str | None = Field(default=None, env="LEGAL_BERT_API_KEY")
 
 
 class PathSettings(BaseSettings):

@@ -13,7 +13,8 @@ import uuid
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
+from collections.abc import Generator
 
 # Import new error handling and retry utilities
 from loguru import logger
@@ -44,7 +45,7 @@ class DBMetrics:
 class SimpleDB:
     """The entire database layer in under 100 lines. No BS."""
 
-    def __init__(self, db_path: str = "emails.db") -> None:
+    def __init__(self, db_path: str = "data/emails.db") -> None:
         self.db_path = db_path
         self._ensure_data_directories()
         self.batch_stats = {

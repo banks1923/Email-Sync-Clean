@@ -82,6 +82,19 @@ class SearchIntelligenceService:
         }
 
         logger.info("SearchIntelligenceService initialized")
+    
+    def search(self, query: str, limit: int = 10, **kwargs) -> list[dict[str, Any]]:
+        """Main search method for compatibility.
+        
+        Args:
+            query: Search query string
+            limit: Maximum number of results
+            **kwargs: Additional parameters passed to unified_search
+        
+        Returns:
+            List of search results
+        """
+        return self.unified_search(query, limit, **kwargs)
 
     def unified_search(
         self,

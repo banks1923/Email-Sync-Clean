@@ -1,0 +1,352 @@
+Product Requirements Document: Direct Service Alignment
+
+  Executive Summary
+
+  Remove all adapter patterns and compatibility shims by directly aligning service interfaces,
+  implementing proper schema migrations, and adding robust preflight checks. This eliminates
+  technical debt at the source rather than hiding it behind adapters.
+
+  Problem Statement
+
+  The codebase currently has three categories of misalignment:
+  1. Parameter mismatches: save_to_db passed but not accepted
+  2. Missing API methods: get_all_content_ids expected but not provided
+  3. Schema drift: Missing columns (source_path, vector_processed, word_count)
+
+  Current adapters hide these issues but add complexity and maintenance burden.
+
+  Solution Overview
+
+  Direct alignment through:
+  - Standardized service interfaces with exact method signatures
+  - Proper SQL migrations (no runtime ALTERs)
+  - Comprehensive preflight checks that fail fast
+  - Removal of all compatibility layers
+
+  Detailed Requirements
+
+  1. Service Interface Standardization
+
+  1.1 SimpleDB API
+
+  # Required methods with exact signatures:
+  get_all_content_ids(content_type: str = None) -> list[str]
+  get_content_by_ids(ids: list[str]) -> list[dict]
+  mark_content_vectorized(content_id: str) -> bool
+  batch_mark_vectorized(content_ids: list[str]) -> int
+
+  Implementation Notes:
+  - batch_mark_vectorized must chunk IDs into groups of 500 (SQLite limit ~999)
+  - Add indexes for performance:
+  CREATE INDEX IF NOT EXISTS idx_content_type ON content(content_type);
+  CREATE INDEX IF NOT EXISTS idx_vector_processed ON content(vector_processed);
+
+  1.2 Embedding Service API
+
+  # Standardized method names:
+  encode(text: str) -> np.ndarray  # Returns 1024-dim float32, L2-normalized
+  batch_encode(texts: list[str]) -> list[np.ndarray]
+
+  1.3 Vector Store API
+
+  # Standardized methods:
+  batch_upsert(collection: str, points: list) -> dict
+  iter_ids(collection: str, page_size: int = 100) -> Iterator[str]
+  delete_many(collection: str, ids: list[str]) -> dict
+  get_collection_stats(collection: str) -> dict
+
+  1.4 EmailThreadProcessor API
+
+  # Final signature (NO save_to_db):
+  process_thread(thread_id: str, include_metadata: bool = True) -> dict
+  process_threads_by_query(query: str, max_threads: int, include_metadata: bool) -> dict
+
+  2. Schema Migration System
+
+  2.1 Migration Structure
+
+  migrations/
+  ├── 001_initial_schema.sql
+  ├── 002_add_vector_columns.sql  # NEW
+  ├── applied_migrations.txt      # Track applied migrations
+  └── migrate.py                  # 30-line runner
+
+  2.2 Migration File: 002_add_vector_columns.sql
+
+  -- Add missing columns for vector processing
+  ALTER TABLE content ADD COLUMN source_path TEXT;
+  ALTER TABLE content ADD COLUMN vector_processed INTEGER DEFAULT 0;
+  ALTER TABLE content ADD COLUMN word_count INTEGER DEFAULT 0;
+
+  -- Add performance indexes
+  CREATE INDEX IF NOT EXISTS idx_content_type ON content(content_type);
+  CREATE INDEX IF NOT EXISTS idx_vector_processed ON content(vector_processed);
+  CREATE INDEX IF NOT EXISTS idx_content_hash ON content(content_hash);
+
+  2.3 Migration Runner
+
+  def run_migrations(db_path: str):
+      """Apply pending migrations. No runtime ALTERs in app code."""
+      applied = load_applied_migrations()
+      pending = get_pending_migrations(applied)
+
+      for migration in pending:
+          logger.info(f"Applying migration: {migration}")
+          execute_sql_file(db_path, migration)
+          record_migration(migration)
+
+      if pending:
+          logger.info(f"Applied {len(pending)} migrations")
+
+  3. Preflight Check System
+
+  3.1 Complete Preflight Implementation
+
+  def preflight_check():
+      """Comprehensive system validation before run."""
+      errors = []
+
+      # 1. Check Qdrant running and collections
+      try:
+          vector_store = get_vector_store()
+          collections = vector_store.client.get_collections()
+      except:
+          errors.append("Qdrant not running. Start with: QDRANT__STORAGE__PATH=./qdrant_data 
+  ~/bin/qdrant &")
+
+      # 2. Verify embedding dimensions and normalization
+      try:
+          emb_service = get_embedding_service()
+          test_vec = emb_service.encode("test")
+
+          if len(test_vec) != 1024:
+              errors.append(f"Wrong embedding dim: {len(test_vec)} (expected 1024)")
+
+          # Check L2 normalization
+          l2_norm = np.linalg.norm(test_vec)
+          if abs(l2_norm - 1.0) > 0.02:
+              errors.append(f"Embeddings not L2-normalized: {l2_norm:.3f}")
+
+      except Exception as e:
+          errors.append(f"Embedding service failed: {e}")
+
+      # 3. Verify Qdrant collection dimensions match
+      try:
+          expected_dim = len(emb_service.encode("x"))
+          for collection in ["emails", "pdfs", "transcriptions"]:
+              stats = vector_store.get_collection_stats(collection)
+              if stats and stats.get("vector_size"):
+                  if stats["vector_size"] != expected_dim:
+                      errors.append(f"{collection} dim mismatch: {stats['vector_size']} != 
+  {expected_dim}")
+      except:
+          pass  # Collections may not exist yet
+
+      # 4. Check database schema
+      db = SimpleDB()
+      cursor = db.execute("PRAGMA table_info(content)")
+      existing_cols = {col[1] for col in cursor.fetchall()}
+      required_cols = {"id", "content_type", "title", "content", "source_path",
+                      "vector_processed", "word_count", "content_hash"}
+      missing = required_cols - existing_cols
+
+      if missing:
+          errors.append(f"Missing columns: {missing}. Run: python migrations/migrate.py")
+
+      # 5. Verify SimpleDB has required methods
+      required_methods = ["get_all_content_ids", "get_content_by_ids",
+                         "mark_content_vectorized", "batch_mark_vectorized"]
+      for method in required_methods:
+          if not hasattr(db, method):
+              errors.append(f"SimpleDB missing method: {method}")
+
+      # Report results
+      if errors:
+          for err in errors:
+              logger.error(f"❌ {err}")
+          raise RuntimeError(f"{len(errors)} preflight checks failed")
+
+      logger.info("✅ All preflight checks passed")
+      return True
+
+  4. Implementation Tasks
+
+  4.1 SimpleDB Methods Implementation
+
+  def get_all_content_ids(self, content_type: str = None) -> list[str]:
+      """Get all content IDs, optionally filtered by type."""
+      if content_type:
+          query = "SELECT id FROM content WHERE content_type = ? ORDER BY created_time DESC"
+          rows = self.fetch(query, (content_type,))
+      else:
+          query = "SELECT id FROM content ORDER BY created_time DESC"
+          rows = self.fetch(query)
+      return [row["id"] for row in rows]
+
+  def get_content_by_ids(self, ids: list[str]) -> list[dict]:
+      """Batch fetch content by IDs."""
+      if not ids:
+          return []
+
+      # Chunk to avoid SQLite variable limit
+      results = []
+      for chunk in [ids[i:i+500] for i in range(0, len(ids), 500)]:
+          placeholders = ",".join("?" * len(chunk))
+          query = f"SELECT * FROM content WHERE id IN ({placeholders})"
+          results.extend(self.fetch(query, tuple(chunk)))
+      return results
+
+  def mark_content_vectorized(self, content_id: str) -> bool:
+      """Mark single content as vectorized."""
+      cursor = self.execute(
+          "UPDATE content SET vector_processed = 1 WHERE id = ?",
+          (content_id,)
+      )
+      return cursor.rowcount > 0
+
+  def batch_mark_vectorized(self, content_ids: list[str]) -> int:
+      """Mark multiple contents as vectorized, handling SQLite limits."""
+      if not content_ids:
+          return 0
+
+      total_updated = 0
+      # Chunk to avoid SQLite variable limit (~999)
+      for chunk in [content_ids[i:i+500] for i in range(0, len(content_ids), 500)]:
+          placeholders = ",".join("?" * len(chunk))
+          query = f"UPDATE content SET vector_processed = 1 WHERE id IN ({placeholders})"
+          cursor = self.execute(query, tuple(chunk))
+          total_updated += cursor.rowcount
+
+      return total_updated
+
+  4.2 Code Changes Required
+
+  Remove from all files:
+  1. save_to_db parameter from:
+    - gmail/main.py:416
+    - tests/infrastructure/test_email_thread_processor.py:342,379
+  2. Entire adapters/ directory
+  3. Adapter imports from:
+    - gmail/main.py:411
+    - utilities/maintenance/vector_maintenance.py:38
+  4. Compatibility helper _db_get_all_content_ids from vector_maintenance.py:44-72
+
+  Update method calls:
+  1. Change emb.embed_text() to emb.encode() everywhere
+  2. Use standardized SimpleDB methods directly
+  3. Remove any **kwargs catch-alls
+
+  5. Testing Requirements
+
+  5.1 Contract Tests
+
+  def test_embedding_contract():
+      """Verify embedding service meets interface requirements."""
+      service = get_embedding_service()
+
+      # Test single encoding
+      vec = service.encode("test")
+      assert len(vec) == 1024, f"Wrong dim: {len(vec)}"
+      assert vec.dtype == np.float32, f"Wrong dtype: {vec.dtype}"
+      assert abs(np.linalg.norm(vec) - 1.0) < 0.02, "Not L2-normalized"
+
+      # Test empty string
+      empty_vec = service.encode("")
+      assert len(empty_vec) == 1024
+      assert np.allclose(empty_vec, 0), "Empty should return zeros"
+
+  def test_simpledb_contract():
+      """Verify SimpleDB meets interface requirements."""
+      db = SimpleDB()
+
+      # Test get_all_content_ids
+      ids = db.get_all_content_ids("email")
+      assert isinstance(ids, list)
+
+      # Test batch_mark_vectorized with >999 IDs
+      large_ids = [f"test_{i}" for i in range(1500)]
+      count = db.batch_mark_vectorized(large_ids)
+      # Should handle chunking internally
+
+  def test_vector_store_contract():
+      """Verify vector store meets interface requirements."""
+      store = get_vector_store()
+
+      # Test batch_upsert
+      points = [{"id": "test1", "vector": [0.1]*1024}]
+      result = store.batch_upsert("test_collection", points)
+      assert result.get("success")
+
+      # Test iter_ids
+      ids = list(store.iter_ids("test_collection", page_size=10))
+      assert "test1" in ids
+
+  5.2 Integration Tests
+
+  # Quick validation
+  make vector-smoke
+
+  # Full pipeline test
+  make full-run
+
+  # Check latencies
+  grep "search latency" logs/*.log | tail -5
+
+  6. Success Criteria
+
+  1. No adapters or compatibility layers - All removed
+  2. All preflight checks pass - Clean startup
+  3. Tests pass - Including new contract tests
+  4. Performance maintained - p95 search latency <100ms
+  5. Clean logs - No warnings about missing methods or parameters
+
+  7. Rollout Plan
+
+  1. Phase 1: Implement SimpleDB methods (30 min)
+    - Add 4 required methods with chunking
+    - Add indexes
+  2. Phase 2: Create and run migrations (20 min)
+    - Create SQL migration file
+    - Run migration script
+    - Verify schema
+  3. Phase 3: Remove all shims (20 min)
+    - Delete adapters directory
+    - Remove save_to_db parameters
+    - Remove compatibility helpers
+  4. Phase 4: Add preflight checks (15 min)
+    - Implement comprehensive checks
+    - Test all validations work
+  5. Phase 5: Test and verify (15 min)
+    - Run contract tests
+    - Run integration tests
+    - Verify performance
+
+  Total estimated time: 100 minutes
+
+  8. Risk Mitigation
+
+  - Risk: SQLite variable limit exceeded
+    - Mitigation: Chunk all batch operations to 500 items
+  - Risk: Embedding dimension mismatch
+    - Mitigation: Preflight check validates before any processing
+  - Risk: Missing columns break queries
+    - Mitigation: Migration system ensures schema is correct
+  - Risk: Performance regression
+    - Mitigation: Add indexes, monitor p95 latencies
+
+  Appendix: File Modifications Summary
+
+  Files to modify (~10 files):
+  1. shared/simple_db.py - Add 4 methods
+  2. migrations/002_add_vector_columns.sql - New migration
+  3. migrations/migrate.py - New migration runner
+  4. utilities/maintenance/preflight.py - New preflight checks
+  5. gmail/main.py - Remove adapter and save_to_db
+  6. utilities/maintenance/vector_maintenance.py - Remove adapter and helper
+  7. tests/infrastructure/test_email_thread_processor.py - Remove save_to_db
+  8. tests/test_contracts.py - New contract tests
+
+  Files/directories to delete:
+  1. adapters/ - Entire directory
+
+  Total LOC change: +150 lines, -400 lines (net reduction)

@@ -460,8 +460,22 @@ This is a **single-user hobby project**, not enterprise software. Every line of 
 ## 🚀 Next Steps
 
 ### For Users
-1. Run `tools/scripts/vsearch search "test"` - It works immediately
-2. Optionally start Qdrant for semantic search
+1. **Health Check**: `make diag-wiring` - Validates all system components (30 seconds)
+2. **Full Pipeline**: `make full-run` - Complete email sync with vector operations (2-3 minutes)  
+3. **Quick Test**: `make vector-smoke` - Fast validation of core functionality (10 seconds)
+
+### Production Workflow
+```bash
+# Morning routine
+make diag-wiring    # Validate system health before work
+
+# Development cycle  
+make check          # Code quality validation
+make full-run       # Integration testing
+
+# Maintenance
+make maintenance-all # Clean up and optimize system
+```
 
 ---
 

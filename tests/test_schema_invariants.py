@@ -44,7 +44,7 @@ class TestSchemaInvariants(unittest.TestCase):
                 continue
                 
             try:
-                with open(py_file, 'r', encoding='utf-8') as f:
+                with open(py_file, encoding='utf-8') as f:
                     content = f.read()
                 
                 lines = content.split('\n')
@@ -59,7 +59,7 @@ class TestSchemaInvariants(unittest.TestCase):
                             if re.search(pattern, line, re.IGNORECASE):
                                 violations.append(f"{py_file}:{line_num}: {line.strip()}")
             
-            except (UnicodeDecodeError, IOError):
+            except (UnicodeDecodeError, OSError):
                 continue
         
         self.assertEqual([], violations, 

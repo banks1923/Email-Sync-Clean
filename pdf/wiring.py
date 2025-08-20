@@ -69,8 +69,9 @@ def build_pdf_service(db_path: str = "emails.db") -> "PDFService":
         monitor = make_health_monitor()
         return PDFHealthManager(processor, storage, validator, monitor, logger)
 
-    from typing import Callable, Dict
-    providers: Dict[str, Callable[[], object]] = {
+    from typing import Dict
+    from collections.abc import Callable
+    providers: dict[str, Callable[[], object]] = {
         "ocr": make_ocr,
         "validator": make_validator,
         "health_monitor": make_health_monitor,

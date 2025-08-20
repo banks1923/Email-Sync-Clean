@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import List, Tuple
 import subprocess
 
-def check_content_id_usage() -> List[Tuple[str, int, str]]:
+def check_content_id_usage() -> list[tuple[str, int, str]]:
     """Check for prohibited content_id usage in SQL strings."""
     violations = []
     
@@ -34,7 +34,7 @@ def check_content_id_usage() -> List[Tuple[str, int, str]]:
             continue
             
         try:
-            with open(py_file, 'r', encoding='utf-8') as f:
+            with open(py_file, encoding='utf-8') as f:
                 lines = f.readlines()
             
             for line_num, line in enumerate(lines, 1):
@@ -57,12 +57,12 @@ def check_content_id_usage() -> List[Tuple[str, int, str]]:
                         if re.search(pattern, sql_part, re.IGNORECASE):
                             violations.append((str(py_file), line_num, line.strip()))
                         
-        except (UnicodeDecodeError, IOError):
+        except (UnicodeDecodeError, OSError):
             continue
     
     return violations
 
-def check_business_key_patterns() -> List[str]:
+def check_business_key_patterns() -> list[str]:
     """Check that business key patterns are maintained."""
     issues = []
     
@@ -72,7 +72,7 @@ def check_business_key_patterns() -> List[str]:
         issues.append("SimpleDB file not found")
         return issues
     
-    with open(simpledb_path, 'r') as f:
+    with open(simpledb_path) as f:
         content = f.read()
     
     if 'def upsert_content' not in content:
@@ -87,7 +87,7 @@ def check_business_key_patterns() -> List[str]:
     
     return issues
 
-def check_uuid_consistency() -> List[Tuple[str, str]]:
+def check_uuid_consistency() -> list[tuple[str, str]]:
     """Check for consistent deterministic UUID usage."""
     violations = []
     expected_namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
@@ -97,7 +97,7 @@ def check_uuid_consistency() -> List[Tuple[str, str]]:
             continue
             
         try:
-            with open(py_file, 'r', encoding='utf-8') as f:
+            with open(py_file, encoding='utf-8') as f:
                 content = f.read()
             
             # Look for uuid5 usage
@@ -106,12 +106,12 @@ def check_uuid_consistency() -> List[Tuple[str, str]]:
                 if expected_namespace not in content:
                     violations.append((str(py_file), "Uses uuid5 but not expected namespace"))
                     
-        except (UnicodeDecodeError, IOError):
+        except (UnicodeDecodeError, OSError):
             continue
     
     return violations
 
-def run_libcst_idempotency_check() -> Tuple[bool, str]:
+def run_libcst_idempotency_check() -> tuple[bool, str]:
     """Check if LibCST codemod is idempotent (makes no changes)."""
     codemod_path = Path('tools/codemods/replace_content_id_sql.py')
     

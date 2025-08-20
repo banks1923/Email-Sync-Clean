@@ -54,6 +54,7 @@ token.json
 .env
 .env.local
 .env.production
+.mcp.json
 
 # Database files
 *.db

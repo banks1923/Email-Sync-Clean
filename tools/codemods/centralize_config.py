@@ -98,7 +98,7 @@ def transform_file(file_path: Path) -> bool:
     """Transform a single Python file."""
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source_code = f.read()
 
         # Parse the source code
@@ -139,7 +139,7 @@ def transform_file(file_path: Path) -> bool:
         return False
 
 
-def find_python_files(root_dir: Path) -> List[Path]:
+def find_python_files(root_dir: Path) -> list[Path]:
     """Find all Python files that might need transformation."""
 
     exclude_patterns = [
@@ -221,7 +221,7 @@ def main():
     # Step 4: Update requirements.txt
     print("\n📦 Updating requirements...")
     try:
-        with open("requirements.txt", "r") as f:
+        with open("requirements.txt") as f:
             reqs = f.read()
 
         if "pydantic[dotenv]" not in reqs:

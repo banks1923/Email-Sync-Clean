@@ -75,7 +75,14 @@ class EmbeddingService:
 
             # Move to CPU and convert to numpy
             embeddings = outputs.last_hidden_state.mean(dim=1)
-            return embeddings.cpu().numpy().flatten()
+            embedding = embeddings.cpu().numpy().flatten()
+            
+            # Normalize to unit vector (L2 norm = 1.0)
+            norm = np.linalg.norm(embedding)
+            if norm > 0:
+                embedding = embedding / norm
+            
+            return embedding
 
     def batch_encode(self, texts: list[str], batch_size: int = 16) -> list[np.ndarray]:
         """
@@ -98,7 +105,12 @@ class EmbeddingService:
                 batch_embeddings = outputs.last_hidden_state.mean(dim=1)
 
                 for embedding in batch_embeddings:
-                    embeddings.append(embedding.cpu().numpy())
+                    emb_array = embedding.cpu().numpy()
+                    # Normalize to unit vector (L2 norm = 1.0)
+                    norm = np.linalg.norm(emb_array)
+                    if norm > 0:
+                        emb_array = emb_array / norm
+                    embeddings.append(emb_array)
 
         return embeddings
 

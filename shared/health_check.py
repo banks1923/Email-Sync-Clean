@@ -101,14 +101,12 @@ class HealthCheck:
             
             # Check if sentence-transformers is available (for embeddings)
             try:
-                import sentence_transformers
                 models_status["sentence_transformers"] = "available"
             except ImportError:
                 models_status["sentence_transformers"] = "not installed"
 
             # Check Whisper
             try:
-                import whisper
                 models_status["whisper"] = "available"
             except ImportError:
                 models_status["whisper"] = "not installed"

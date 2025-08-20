@@ -18,7 +18,8 @@ from typing import Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from loguru import logger
-from typing import TYPE_CHECKING, Callable, Dict
+from typing import TYPE_CHECKING, Dict
+from collections.abc import Callable
 from shared.service_interfaces import IService
 
 # Type-only imports to avoid runtime coupling
@@ -47,7 +48,7 @@ class PDFService(IService):
         db: "SimpleDB",
         processor: "EnhancedPDFProcessor",
         storage: "EnhancedPDFStorage",
-        providers: Dict[str, Callable[[], object]] | None = None,
+        providers: dict[str, Callable[[], object]] | None = None,
         logger: object | None = None,
         db_path: str | None = None,
     ) -> None:
@@ -55,8 +56,8 @@ class PDFService(IService):
         self.db = db
         self.processor = processor
         self.storage = storage
-        self.providers: Dict[str, Callable[[], object]] = providers or {}
-        self._provider_cache: Dict[str, object] = {}
+        self.providers: dict[str, Callable[[], object]] = providers or {}
+        self._provider_cache: dict[str, object] = {}
 
         # Logger (optional dependency): prefer provided, else stdlib fallback
         if logger is None:

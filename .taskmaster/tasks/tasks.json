@@ -2,125 +2,299 @@
   "master": {
     "tasks": [
       {
-        "id": 19,
-        "title": "Implement Gmail API Rate Limit Handling",
-        "description": "Add robust rate limit handling and retry logic for Gmail API operations to prevent failures during high-volume email sync operations",
-        "details": "Implement exponential backoff retry strategy with jitter for Gmail API rate limits. Add circuit breaker pattern to prevent cascading failures. Track API quota usage and implement adaptive throttling. Use the existing retry_helper.py utilities and extend with Gmail-specific rate limit detection (403/429 status codes). Store rate limit state in SimpleDB to persist across sessions. Include metrics for monitoring API usage patterns.",
-        "testStrategy": "Unit tests for retry logic with mocked API responses. Integration tests simulating rate limit scenarios. Performance tests verifying throttling behavior under load. Monitor actual Gmail API usage patterns in production.",
+        "id": 29,
+        "title": "Create migration system directory structure",
+        "description": "Set up the migrations directory with initial schema files and migration tracking",
+        "details": "Create migrations/ directory structure with: 001_initial_schema.sql for existing schema baseline, 002_add_vector_columns.sql for new columns (source_path, vector_processed, word_count), applied_migrations.txt for tracking, and migrate.py script. Use pathlib for path operations, ensure atomic file operations with context managers.",
+        "testStrategy": "Verify directory exists, check migration files are created with correct SQL syntax, test migrate.py can detect and apply pending migrations, ensure applied_migrations.txt tracks completed migrations",
         "priority": "high",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 20,
-        "title": "Enhance Gmail Sender Filtering",
-        "description": "Improve email relevancy by adding configurable sender filters and domain whitelisting/blacklisting capabilities",
-        "details": "Extend GmailConfig to support sender filters with regex patterns, domain lists, and importance scoring. Implement filter configuration in YAML format stored in .taskmaster/config/gmail_filters.yaml. Add ML-based sender importance detection using existing entity extraction. Create sender reputation scoring based on email frequency and user interaction patterns. Store sender metadata in SimpleDB for persistence.",
-        "testStrategy": "Unit tests for filter matching logic. Integration tests with sample email datasets. Validate filter performance with real email corpus. Test configuration loading and validation.",
-        "priority": "medium",
-        "dependencies": [
-          19
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 21,
-        "title": "Optimize PDF OCR Image Preprocessing",
-        "description": "Improve OCR accuracy by enhancing image preprocessing pipeline with advanced computer vision techniques",
-        "details": "Enhance pdf/ocr/page_processor.py with adaptive thresholding, deskewing, and noise reduction using OpenCV. Implement text region detection using EAST or CRAFT models. Add image quality assessment to determine optimal preprocessing parameters. Use parallel processing for multi-page PDFs. Cache preprocessed images to avoid redundant processing. Integrate with existing OCR coordinator for seamless operation.",
-        "testStrategy": "Benchmark OCR accuracy on test dataset of scanned legal documents. Compare accuracy before/after preprocessing improvements. Test with various document qualities (low DPI, skewed, noisy). Validate memory usage stays under 50MB per operation.",
+        "id": 30,
+        "title": "Implement core SimpleDB missing methods",
+        "description": "Add get_all_content_ids method to SimpleDB with SQLite chunking support",
+        "details": "Add get_all_content_ids(content_type=None) method to shared/simple_db.py. Implementation: Query 'SELECT id FROM content WHERE content_type = ?' if type provided, else 'SELECT id FROM content'. Return list of IDs. Use existing fetch() method for consistency. Handle empty results gracefully.",
+        "testStrategy": "Test with no filter returns all IDs, test with content_type filter returns only matching IDs, verify handles empty database, test with 1500+ records for chunking verification",
         "priority": "high",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 22,
-        "title": "Add Legal Document Format Detection",
-        "description": "Implement intelligent detection of legal document formats and structures for better metadata extraction",
-        "details": "Create legal document classifier using regex patterns and SpaCy NER for common formats (motions, pleadings, contracts, discovery). Extract structured metadata (case numbers, parties, filing dates) using pattern matching. Store document type taxonomy in SimpleDB. Integrate with existing legal_intelligence service for enhanced analysis. Add support for jurisdiction-specific formats.",
-        "testStrategy": "Test against corpus of known legal document types. Validate extraction accuracy for key metadata fields. Test with documents from multiple jurisdictions. Integration tests with legal_intelligence service.",
-        "priority": "medium",
+        "id": 31,
+        "title": "Implement batch content retrieval methods",
+        "description": "Add get_content_by_ids and batch operations to SimpleDB with 500-item chunking",
+        "details": "Implement get_content_by_ids(ids: list[str]) with SQLite 500-item chunking to avoid variable limit. Use list comprehension for chunks: [ids[i:i+500] for i in range(0, len(ids), 500)]. Build query with placeholders dynamically. Extend results list across chunks. Return combined results.",
+        "testStrategy": "Test with <500 IDs works correctly, test with 1500 IDs chunks properly, verify empty list returns empty results, test non-existent IDs return empty, benchmark performance with large batches",
+        "priority": "high",
         "dependencies": [
-          21
+          30
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 23,
-        "title": "Implement Search Query Expansion Rules",
-        "description": "Enhance search intelligence with domain-specific query expansion for legal and business contexts",
-        "details": "Extend search_intelligence/main.py with configurable query expansion rules. Add legal synonym dictionary (plaintiff/petitioner, defendant/respondent). Implement abbreviation expansion (LLC, Corp, Inc). Use WordNet for general synonym expansion. Store expansion rules in JSON configuration. Add context-aware expansion based on document type. Cache expanded queries for performance.",
-        "testStrategy": "Unit tests for expansion logic with legal terms. Integration tests measuring search recall improvements. A/B testing comparing search results with/without expansion. Validate performance impact stays under 2 second threshold.",
+        "id": 32,
+        "title": "Add vectorization marking methods",
+        "description": "Implement mark_content_vectorized and batch_mark_vectorized in SimpleDB",
+        "details": "Add mark_content_vectorized(content_id) for single updates and batch_mark_vectorized(content_ids) for bulk updates. Use UPDATE with vector_processed = 1. Implement 500-item chunking for batch operations. Return affected row count. Use execute() method with proper error handling.",
+        "testStrategy": "Test single ID marking works, verify batch marking with 1500+ IDs chunks correctly, check return values match actual updates, ensure idempotent operations, verify database state changes",
+        "priority": "high",
+        "dependencies": [
+          30
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Create SQL migration for missing columns",
+        "description": "Write migration SQL to add source_path, vector_processed, and word_count columns",
+        "details": "Create migrations/002_add_vector_columns.sql with ALTER TABLE statements. Add: source_path TEXT, vector_processed INTEGER DEFAULT 0, word_count INTEGER DEFAULT 0. Include CREATE INDEX statements for content_type, vector_processed, and content_hash for performance. Use IF NOT EXISTS for safety.",
+        "testStrategy": "Verify SQL syntax is valid, test migration applies cleanly to existing database, check columns are added with correct types and defaults, verify indexes are created, test rollback scenario",
+        "priority": "high",
+        "dependencies": [
+          29
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Implement migration runner script",
+        "description": "Create migrate.py to apply SQL migrations safely with tracking",
+        "details": "Implement migrations/migrate.py under 30 lines. Load applied migrations from applied_migrations.txt, find *.sql files in migrations/, determine pending migrations, apply using executescript(), update tracking file atomically. Use loguru for logging. Include dry-run mode for testing.",
+        "testStrategy": "Test detects pending migrations correctly, verify applies migrations in order, check tracking file updates, test idempotent runs, verify handles SQL errors gracefully",
+        "priority": "high",
+        "dependencies": [
+          29,
+          33
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "Remove save_to_db parameter from gmail service",
+        "description": "Clean up gmail/main.py to remove deprecated save_to_db parameter usage",
+        "details": "Remove save_to_db=True from line 416 in gmail/main.py where process_thread is called. This parameter is not accepted by EmailThreadProcessor. Simply remove the parameter from the method call. Keep all other parameters unchanged.",
+        "testStrategy": "Verify gmail/main.py compiles without errors, test email processing still works, check no save_to_db references remain in production code, run integration tests",
         "priority": "medium",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 24,
-        "title": "Auto-tune Similarity Thresholds",
-        "description": "Implement adaptive similarity threshold tuning based on document characteristics and user feedback",
-        "details": "Create feedback loop to track search result relevance. Implement threshold adjustment algorithm using DBSCAN clustering metrics. Store per-document-type optimal thresholds in SimpleDB. Add A/B testing framework for threshold experiments. Use statistical analysis to determine optimal thresholds per content type. Integrate with existing duplicate_detector.py for consistency.",
-        "testStrategy": "Test threshold adaptation with synthetic feedback data. Validate clustering quality metrics improve over time. Integration tests with real search queries. Monitor false positive/negative rates.",
+        "id": 36,
+        "title": "Remove adapter imports from gmail",
+        "description": "Remove EmailThreadAdapter usage from gmail/main.py",
+        "details": "Remove 'from adapters import EmailThreadAdapter' import around line 411. Remove EmailThreadAdapter wrapper instantiation. Call self.thread_processor.process_thread() directly without adapter. Maintain all other logic unchanged.",
+        "testStrategy": "Verify no adapter imports remain, test direct processor calls work, ensure thread processing completes successfully, check logs for adapter warnings are gone",
+        "priority": "medium",
+        "dependencies": [
+          35
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Remove VectorMaintenanceAdapter usage",
+        "description": "Remove adapter from utilities/maintenance/vector_maintenance.py",
+        "details": "Remove 'from adapters import VectorMaintenanceAdapter' at line 38. Change line 39 from self.db = VectorMaintenanceAdapter(SimpleDB()) to self.db = SimpleDB(). This requires SimpleDB to have the missing methods already implemented.",
+        "testStrategy": "Verify vector maintenance initializes correctly, test all maintenance operations work without adapter, check no adapter warnings in logs, run full vector sync test",
+        "priority": "medium",
+        "dependencies": [
+          30,
+          31,
+          32
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 38,
+        "title": "Delete compatibility helper methods",
+        "description": "Remove _db_get_all_content_ids helper from vector_maintenance.py",
+        "details": "Delete lines 44-72 in utilities/maintenance/vector_maintenance.py containing _db_get_all_content_ids compatibility helper. Update all references to use self.db.get_all_content_ids() directly. Similar for other compatibility helpers in the file.",
+        "testStrategy": "Verify all helper method calls are replaced with direct db calls, test vector operations still function, ensure no undefined method errors, check performance unchanged",
         "priority": "low",
         "dependencies": [
-          23
+          37
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 25,
-        "title": "Improve CLI Progress Indicators",
-        "description": "Add rich progress bars and status updates for long-running operations in vsearch CLI",
-        "details": "Integrate Rich library for beautiful terminal output (already used in docs/examples/rich_cli_demo.py). Add progress bars for batch operations (PDF processing, email sync, transcription). Implement live status updates using Rich's Live display. Add spinner animations for indeterminate operations. Create consistent progress reporting API across all services. Maintain fallback to simple output for non-TTY environments.",
-        "testStrategy": "Test progress display in various terminal environments. Validate output in CI/CD pipelines (non-TTY). Test with operations of varying durations. Ensure no performance impact from progress updates.",
+        "id": 39,
+        "title": "Remove save_to_db from test files",
+        "description": "Clean up test files to remove save_to_db parameter",
+        "details": "Remove save_to_db=True from tests/infrastructure/test_email_thread_processor.py at lines 342 and 379. These are in _process_single_thread and _process_large_thread test calls. Keep all other test logic unchanged.",
+        "testStrategy": "Run pytest on modified test files, verify all tests pass, check test coverage remains the same, ensure no deprecation warnings",
         "priority": "low",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 26,
-        "title": "Enhance Error Messages",
-        "description": "Improve user-facing error messages with actionable recovery suggestions and context",
-        "details": "Extend shared/error_handler.py with more specific error categories and recovery suggestions. Add error code system for common failures. Implement contextual help based on operation type. Create error message templates with placeholders for dynamic content. Add 'did you mean' suggestions for common mistakes. Log detailed errors while showing simplified messages to users.",
-        "testStrategy": "Test error messages for all common failure scenarios. Validate recovery suggestions actually resolve issues. User testing for message clarity. Test error logging captures sufficient debug information.",
+        "id": 40,
+        "title": "Delete adapters directory completely",
+        "description": "Remove the entire adapters/ directory and all adapter files",
+        "details": "Delete the entire adapters/ directory including all Python files and documentation. Use shutil.rmtree or manual deletion. Ensure no imports reference adapters/ after deletion. This is the final cleanup step.",
+        "testStrategy": "Verify adapters/ directory no longer exists, grep codebase for any remaining adapter imports, run full test suite, check application starts without import errors",
         "priority": "medium",
-        "dependencies": [],
+        "dependencies": [
+          36,
+          37
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 27,
-        "title": "Add DOCX Document Support",
-        "description": "Implement DOCX file processing using existing document processor framework",
-        "details": "Extend infrastructure/documents/processors/docx_processor.py (already exists but needs implementation). Use python-docx library for text extraction. Extract document metadata (author, creation date, revision history). Handle embedded images and tables. Convert formatting to markdown for storage. Integrate with existing pipeline orchestrator. Add DOCX to supported formats in vsearch upload command.",
-        "testStrategy": "Test with various DOCX formats (Office 365, older Office versions). Validate text extraction completeness. Test handling of complex documents (tables, images, styles). Integration tests with upload pipeline.",
-        "priority": "medium",
-        "dependencies": [],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 28,
-        "title": "Profile Memory Usage",
-        "description": "Implement memory profiling and optimization for large dataset operations",
-        "details": "Add memory profiling using memory_profiler and tracemalloc. Create memory usage benchmarks for key operations (PDF processing, embedding generation, batch email sync). Identify and fix memory leaks in long-running processes. Implement streaming/chunking for large file processing. Add memory usage monitoring to health check system. Set up alerts for memory threshold violations (>50MB per operation target).",
-        "testStrategy": "Run memory profiler on all major operations. Test with large datasets (1000+ documents). Validate memory stays under limits during batch operations. Stress test with concurrent operations.",
+        "id": 41,
+        "title": "Create comprehensive preflight check system",
+        "description": "Implement preflight.py for system validation before operations",
+        "details": "Create utilities/maintenance/preflight.py with preflight_check() function. Check: Qdrant connection, embedding service (1024 dims, L2 normalized), collection dimensions, database schema columns, required SimpleDB methods. Return clear error messages. Use try/except for each check. Fail fast with RuntimeError listing all issues.",
+        "testStrategy": "Test with Qdrant down shows clear error, verify catches wrong embedding dimensions, test schema validation works, ensure method existence checks function, verify error aggregation works",
         "priority": "high",
-        "dependencies": [],
+        "dependencies": [
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 42,
+        "title": "Verify Qdrant connection in preflight",
+        "description": "Add Qdrant health check to preflight system",
+        "details": "In preflight_check(), attempt get_vector_store() and call client.get_collections(). Catch exceptions and add error: 'Qdrant not running. Start: QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant &'. This ensures vector operations won't fail later.",
+        "testStrategy": "Test with Qdrant stopped shows startup command, verify with Qdrant running passes check, test connection timeout handling, ensure error message is actionable",
+        "priority": "high",
+        "dependencies": [
+          41
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 43,
+        "title": "Validate embedding dimensions in preflight",
+        "description": "Check embedding service produces correct 1024-dim L2-normalized vectors",
+        "details": "Get embedding service, encode test string, verify vector length is 1024, check L2 norm is within 0.98-1.02 (allowing small float errors). Add specific errors for wrong dimensions or non-normalized vectors. This prevents dimension mismatches in production.",
+        "testStrategy": "Test with mock service returning wrong dims, verify L2 norm validation works, test edge cases like empty strings, ensure clear error messages",
+        "priority": "high",
+        "dependencies": [
+          41
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "Check database schema completeness",
+        "description": "Verify all required columns exist in content table",
+        "details": "Use PRAGMA table_info(content) to get columns. Check for required: id, content_type, title, content, source_path, vector_processed, word_count, content_hash. Report missing columns with migration command: 'Missing columns: {missing}. Run: python migrations/migrate.py'",
+        "testStrategy": "Test with missing columns shows migration command, verify after migration all columns detected, test handles non-existent table, ensure PRAGMA query works",
+        "priority": "high",
+        "dependencies": [
+          41,
+          34
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 45,
+        "title": "Create contract tests for services",
+        "description": "Implement tests/test_contracts.py to verify service interfaces",
+        "details": "Create contract tests for EmbeddingService (encode returns 1024-dim float32 L2-normalized), SimpleDB (has required methods, handles large batches), VectorStore (has batch_upsert, iter_ids, get_collection_stats). Use pytest with clear assertions.",
+        "testStrategy": "Run pytest tests/test_contracts.py, verify all contracts pass after changes, test failure cases show clear messages, ensure covers edge cases",
+        "priority": "medium",
+        "dependencies": [
+          30,
+          31,
+          32
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Test embedding service normalization",
+        "description": "Verify embedding service produces L2-normalized vectors",
+        "details": "In test_embedding_contract(), encode test text, check vector.dtype == np.float32, verify len(vec) == 1024, assert abs(np.linalg.norm(vec) - 1.0) < 0.02. Test empty string returns zero vector. Test various text lengths for consistency.",
+        "testStrategy": "Test normal text produces normalized vectors, verify empty string handling, test long text truncation, check batch processing maintains normalization",
+        "priority": "medium",
+        "dependencies": [
+          45
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "Test SimpleDB batch operations",
+        "description": "Verify SimpleDB handles SQLite variable limits correctly",
+        "details": "Test batch_mark_vectorized with 1500+ IDs doesn't raise SQLite variable limit error. Test get_content_by_ids chunks correctly. Verify operations complete without exceptions. This ensures production won't fail on large batches.",
+        "testStrategy": "Create 1500 test IDs, call batch methods, verify no SQLite errors, check results are correct, test performance is acceptable",
+        "priority": "medium",
+        "dependencies": [
+          31,
+          32,
+          45
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Run full integration test",
+        "description": "Execute make full-run to verify complete system functionality",
+        "details": "Run 'make full-run' command to test full pipeline. This runs email sync, PDF processing, vector operations, and export. Monitor for any errors or warnings about missing methods or adapters. Should complete in 2-3 minutes with clean logs.",
+        "testStrategy": "Execute make full-run, verify exit code 0, check no adapter warnings in logs, verify vector operations complete, ensure export pipeline works",
+        "priority": "high",
+        "dependencies": [
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "Document migration process",
+        "description": "Update documentation for new migration system",
+        "details": "Add migration instructions to README.md or CLAUDE.md. Document: How to run migrations (python migrations/migrate.py), how to add new migrations (create numbered .sql file), tracking file format. Keep documentation concise and practical.",
+        "testStrategy": "Review documentation for clarity, test a new developer can follow instructions, verify commands in docs work, ensure examples are accurate",
+        "priority": "low",
+        "dependencies": [
+          34
+        ],
         "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-14T20:57:32.199Z",
-      "updated": "2025-08-19T00:20:26.506Z",
+      "updated": "2025-08-20T03:01:11.725Z",
       "description": "Tasks for master context"
     }
   }

@@ -406,8 +406,11 @@ class GmailService:
                                 }
                                 thread_data["messages"].append(message_data)
                             
-                            # Process thread and save to analog DB
-                            result = self.thread_processor.process_thread(
+                            # Process thread with adapter handling save_to_db mismatch
+                            # TODO: Remove adapter by 2025-09-01 - fix process_thread signature
+                            from adapters import EmailThreadAdapter
+                            adapted_processor = EmailThreadAdapter(self.thread_processor)
+                            result = adapted_processor.process_thread(
                                 thread_id=thread_id,
                                 include_metadata=True,
                                 save_to_db=True
