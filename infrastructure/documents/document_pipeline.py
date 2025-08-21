@@ -78,12 +78,12 @@ class DocumentPipeline:
         self, file_path: Path, case_name: str | None = None, doc_type: str | None = None
     ) -> dict[str, Any]:
         """
-        Process a single document through the pipeline.
+        Process a document in place and save clean version.
 
         Args:
-            file_path: Path to document
-            case_name: Case identifier for naming
-            doc_type: Document type for naming
+            file_path: Path to document (left unchanged)
+            case_name: Case identifier for metadata
+            doc_type: Document type for metadata
 
         Returns:
             Processing result
@@ -111,54 +111,45 @@ class DocumentPipeline:
                     "file": str(file_path),
                 }
 
-            # Move to staged with naming convention
-            staged_name = self.naming.staged_name(file_path, case_name, doc_type)
-            staged_path = self.lifecycle.move_to_staged(file_path, staged_name)
-
-            # Process document
+            # Process document in place
             if format_type == "pdf" and PDF_AVAILABLE:
                 # Use PDF service for PDF files
-                result = processor.upload_single_pdf(str(staged_path))
+                result = processor.upload_single_pdf(str(file_path))
             else:
-                result = processor.process(staged_path)
+                result = processor.process(file_path)
 
             if not result.get("success"):
-                # Move to quarantine on failure
-                self.lifecycle.quarantine_file(
-                    staged_path, result.get("error", "Processing failed")
+                # Quarantine on failure (copy, don't move)
+                quarantine_path = self.lifecycle.quarantine_file(
+                    file_path, result.get("error", "Processing failed")
                 )
                 self.stats["quarantined"] += 1
+                result["quarantine_path"] = str(quarantine_path)
                 return result
 
-            # Save processed content
-            processed_name = self.naming.processed_name(staged_path, format="md")
-            processed_path = self.lifecycle.folders["processed"] / processed_name
-
-            # Write processed content as markdown
-            self._save_processed_content(processed_path, result)
-
-            # Move staged file to processed
-            self.lifecycle.move_to_processed(staged_path, f"{processed_name}.original")
-
-            # Store in database if available
-            if self.db and result.get("content"):
-                db_result = self._store_in_database(result, processed_name, format_type)
-                result["database_id"] = db_result.get("content_id")
-
-            # Move to export
-            export_name = self.naming.export_name(processed_name, case_name, doc_type)
-            export_path = self.lifecycle.move_to_export(processed_path, export_name)
+            # Use simple processor to save clean version
+            content = result.get("content", "")
+            metadata = {
+                "case_name": case_name,
+                "doc_type": doc_type,
+                "format_type": format_type,
+                "processed_at": datetime.now().isoformat()
+            }
+            
+            process_result = self.lifecycle.process_file(
+                file_path, content, format_type, metadata
+            )
 
             self.stats["processed"] += 1
 
             return {
                 "success": True,
                 "format": format_type,
-                "processed_file": str(export_path),
+                "processed_file": process_result.get("processed_path"),
                 "original_file": str(file_path),
-                "metadata": result.get("metadata", {}),
+                "content_id": process_result.get("content_id"),
+                "metadata": metadata,
                 "metrics": result.get("metrics", {}),
-                "database_id": result.get("database_id"),
             }
 
         except Exception as e:
@@ -174,76 +165,6 @@ class DocumentPipeline:
 
             return {"success": False, "error": str(e), "file": str(file_path)}
 
-    def _save_processed_content(self, output_path: Path, result: dict[str, Any]):
-        """
-        Save processed content as markdown with metadata.
-
-        Args:
-            output_path: Path to save processed content
-            result: Processing result
-        """
-        try:
-            # Create markdown with frontmatter
-            lines = ["---"]
-
-            # Add metadata as YAML frontmatter
-            metadata = result.get("metadata", {})
-            metadata["processed_at"] = result.get("processed_at", datetime.now().isoformat())
-            metadata["format"] = result.get("format", "unknown")
-
-            for key, value in metadata.items():
-                if isinstance(value, (str, int, float, bool)):
-                    lines.append(f"{key}: {value}")
-                elif isinstance(value, (list, dict)):
-                    lines.append(f"{key}: {json.dumps(value)}")
-
-            lines.append("---")
-            lines.append("")
-
-            # Add content
-            content = result.get("content", "")
-            lines.append(content)
-
-            # Write file
-            output_path.write_text("\n".join(lines), encoding="utf-8")
-            logger.info(f"Saved processed content to {output_path}")
-
-        except Exception as e:
-            logger.error(f"Failed to save processed content: {e}")
-            raise
-
-    def _store_in_database(
-        self, result: dict[str, Any], doc_id: str, format_type: str
-    ) -> dict[str, Any]:
-        """
-        Store document in database.
-
-        Args:
-            result: Processing result
-            doc_id: Document ID
-            format_type: Document format
-
-        Returns:
-            Database storage result
-        """
-        try:
-            metadata = result.get("metadata", {})
-            metadata["format"] = format_type
-            metadata["doc_id"] = doc_id
-            metadata["metrics"] = result.get("metrics", {})
-
-            content_id = self.db.add_content(
-                content_type="document",
-                title=metadata.get("title", metadata.get("filename", doc_id)),
-                content=result.get("content", ""),
-                metadata=metadata,
-            )
-
-            return {"success": True, "content_id": content_id}
-
-        except Exception as e:
-            logger.error(f"Database storage failed: {e}")
-            return {"success": False, "error": str(e)}
 
     def process_directory(
         self,

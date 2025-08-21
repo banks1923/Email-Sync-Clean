@@ -283,6 +283,76 @@ class PreflightChecker:
             self._print_check("vsearch CLI test", False, f"Error: {e}")
             return False
     
+    def check_vector_parity(self):
+        """Verify vector store is in sync with database."""
+        print("\n=== Vector Parity Checks ===")
+        
+        try:
+            import subprocess
+            import json
+            import os
+            
+            # Set environment variables for the check
+            env = os.environ.copy()
+            env.update({
+                'APP_DB_PATH': 'data/emails.db',
+                'VSTORE_COLLECTION': 'emails',
+                'ALLOW_EMPTY_COLLECTION': 'false',
+                'EXPECTED_DIM': '1024'
+            })
+            
+            # Run the vector parity check
+            result = subprocess.run(['python3', 'tools/preflight/vector_parity_check.py'], 
+                                  capture_output=True, text=True, timeout=30, env=env)
+            
+            if result.returncode in [0, 1]:  # 0 = OK, 1 = Warning
+                # Parse the JSON output to get details
+                try:
+                    data = json.loads(result.stdout)
+                    qdrant_info = data.get('qdrant', {})
+                    db_info = data.get('db', {})
+                    reconciliation = data.get('reconciliation', {})
+                    
+                    health = qdrant_info.get('health', 'unknown')
+                    point_count = qdrant_info.get('point_count', 0)
+                    eligible_content = db_info.get('eligible_content', 0)
+                    delta = reconciliation.get('delta', 0)
+                    
+                    self._print_check("Qdrant health", health == "green", f"Status: {health}")
+                    self._print_check("Collection exists", qdrant_info.get('collection_exists', False))
+                    self._print_check("Vector dimensions", qdrant_info.get('dimension') == 1024, 
+                                    f"Expected 1024, got {qdrant_info.get('dimension')}")
+                    
+                    # Handle delta warnings vs errors
+                    if result.returncode == 1 and "warning" in data:
+                        self._print_check("Vector count sync", True, data["warning"], warning=True)
+                    else:
+                        self._print_check("Vector count sync", delta == 0, 
+                                        f"DB: {eligible_content}, Qdrant: {point_count}, Delta: {delta}")
+                    
+                    # Return True for warnings (exit code 1) and success (exit code 0)
+                    return health == "green" and qdrant_info.get('collection_exists', False)
+                except json.JSONDecodeError:
+                    self._print_check("Vector parity parsing", False, "Invalid JSON output")
+                    return False
+            else:
+                # Parse error output if available
+                try:
+                    error_data = json.loads(result.stdout)
+                    error_msg = error_data.get('error', 'Unknown error')
+                except:
+                    error_msg = result.stderr.strip() or "Check failed"
+                
+                self._print_check("Vector parity check", False, error_msg)
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self._print_check("Vector parity timeout", False, "Check took longer than 30 seconds")
+            return False
+        except Exception as e:
+            self._print_check("Vector parity check", False, f"Error: {e}")
+            return False
+    
     def run_all_checks(self):
         """Run comprehensive preflight checks."""
         print("=" * 60)
@@ -296,6 +366,7 @@ class PreflightChecker:
             self.check_qdrant_connection,
             self.check_embedding_service,
             self.check_cli_tools,
+            self.check_vector_parity,
         ]
         
         results = []

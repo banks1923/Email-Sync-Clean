@@ -9,17 +9,14 @@ Verifies:
 """
 
 import sys
-import os
 import time
 import json
 import hashlib
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from loguru import logger
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
@@ -268,7 +265,7 @@ class SemanticWiringVerifier:
         test_texts = [f"Test document {i} for performance benchmarking" for i in range(16)]
         
         start = time.time()
-        embeddings = emb_service.encode_batch(test_texts)
+        emb_service.encode_batch(test_texts)
         emb_time = time.time() - start
         emb_throughput = len(test_texts) / emb_time * 60  # per minute
         
@@ -281,7 +278,7 @@ class SemanticWiringVerifier:
             vector_store = get_vector_store('emails')
             # Just test connection speed, don't actually upsert
             start = time.time()
-            info = vector_store.client.get_collection('emails')
+            vector_store.client.get_collection('emails')
             query_time = time.time() - start
             
             # Estimate based on typical batch sizes

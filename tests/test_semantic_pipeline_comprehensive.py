@@ -7,9 +7,8 @@ Tests all aspects of semantic enrichment during email ingestion.
 import unittest
 import json
 import os
-import tempfile
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime
+from unittest.mock import Mock, patch
 import numpy as np
 
 # Set up test environment

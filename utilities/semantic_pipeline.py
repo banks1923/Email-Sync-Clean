@@ -24,7 +24,7 @@ class SemanticPipeline:
     """Orchestrates semantic enrichment during ingestion."""
     
     def __init__(self, 
-                 db: Optional[SimpleDB] = None,
+                 db: SimpleDB | None = None,
                  embedding_service=None,
                  vector_store=None,
                  entity_service=None,
@@ -38,8 +38,8 @@ class SemanticPipeline:
         self.timeout_s = semantic_settings.semantics_timeout_s
         
     def run_for_messages(self, 
-                        message_ids: List[str], 
-                        steps: Optional[List[str]] = None) -> Dict[str, Any]:
+                        message_ids: list[str], 
+                        steps: list[str] | None = None) -> dict[str, Any]:
         """Run semantic enrichment for a batch of message IDs.
         
         Args:
@@ -114,7 +114,7 @@ class SemanticPipeline:
                 
         return results
     
-    def _get_email_data(self, message_ids: List[str]) -> List[Dict[str, Any]]:
+    def _get_email_data(self, message_ids: list[str]) -> list[dict[str, Any]]:
         """Get email data including EIDs and content IDs."""
         if not message_ids:
             return []
@@ -155,7 +155,7 @@ class SemanticPipeline:
         
         return emails
     
-    def _run_entity_extraction(self, emails_data: List[Dict]) -> Dict[str, Any]:
+    def _run_entity_extraction(self, emails_data: list[dict]) -> dict[str, Any]:
         """Extract entities from emails."""
         result = {
             'processed': 0,
@@ -213,7 +213,7 @@ class SemanticPipeline:
                 
         return result
     
-    def _run_embeddings(self, emails_data: List[Dict]) -> Dict[str, Any]:
+    def _run_embeddings(self, emails_data: list[dict]) -> dict[str, Any]:
         """Generate and store embeddings for emails."""
         result = {
             'processed': 0,
@@ -334,7 +334,7 @@ class SemanticPipeline:
                 
         return result
     
-    def _run_timeline(self, emails_data: List[Dict]) -> Dict[str, Any]:
+    def _run_timeline(self, emails_data: list[dict]) -> dict[str, Any]:
         """Extract and store timeline events from emails."""
         result = {
             'processed': 0,
@@ -411,7 +411,7 @@ class SemanticPipeline:
         # Generate deterministic UUIDv5 from the key
         return str(uuid.uuid5(NAMESPACE, key))
     
-    def _generate_event_title(self, event: Dict, email: Dict) -> str:
+    def _generate_event_title(self, event: dict, email: dict) -> str:
         """Generate a meaningful title for timeline event."""
         action = event.get('type', 'Event')
         
@@ -433,7 +433,7 @@ class SemanticPipeline:
         else:
             return action
     
-    def _extract_temporal_events(self, email: Dict) -> List[Dict]:
+    def _extract_temporal_events(self, email: dict) -> list[dict]:
         """Extract temporal events from email content."""
         events = []
         
@@ -481,7 +481,7 @@ class SemanticPipeline:
                         
         return events
     
-    def process_content_unified(self, content_type: str = 'all', limit: int = 100) -> Dict[str, Any]:
+    def process_content_unified(self, content_type: str = 'all', limit: int = 100) -> dict[str, Any]:
         """Process content from content_unified table for embedding generation.
         
         Simple extension of existing pipeline to handle PDFs and other content types.

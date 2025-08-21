@@ -14,7 +14,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Enable semantic processing
 os.environ['SEMANTICS_ON_INGEST'] = 'true'
 
-from loguru import logger
 from config.settings import semantic_settings
 from shared.simple_db import SimpleDB
 

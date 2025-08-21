@@ -6,7 +6,6 @@ Direct implementation following CLAUDE.md principles:
 - Flat structure
 """
 
-import hashlib
 import re
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -79,7 +78,7 @@ class EvidenceTracker:
             
         return f"EID-{year}-{next_num:04d}"
     
-    def assign_eids(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    def assign_eids(self, limit: int | None = None) -> dict[str, Any]:
         """Assign EIDs to all emails that don't have them yet."""
         # Get emails without EIDs
         query = """
@@ -113,7 +112,7 @@ class EvidenceTracker:
             "total_without_eid": len(emails)
         }
     
-    def assign_thread_ids(self) -> Dict[str, Any]:
+    def assign_thread_ids(self) -> dict[str, Any]:
         """Group emails by thread based on subject similarity."""
         # Get all emails
         cursor = self.db.execute("""
@@ -154,7 +153,7 @@ class EvidenceTracker:
             "emails_processed": len(emails)
         }
     
-    def get_email_evidence(self, eid: str) -> Optional[Dict[str, Any]]:
+    def get_email_evidence(self, eid: str) -> dict[str, Any] | None:
         """Get email evidence by EID."""
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, recipient_to,
@@ -168,7 +167,7 @@ class EvidenceTracker:
             return dict(result)
         return None
     
-    def get_thread_emails(self, thread_id: str) -> List[Dict[str, Any]]:
+    def get_thread_emails(self, thread_id: str) -> list[dict[str, Any]]:
         """Get all emails in a thread, ordered chronologically."""
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, recipient_to,
@@ -180,7 +179,7 @@ class EvidenceTracker:
         
         return [dict(row) for row in cursor.fetchall()]
     
-    def search_by_pattern(self, pattern: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def search_by_pattern(self, pattern: str, limit: int = 100) -> list[dict[str, Any]]:
         """Search emails for specific patterns (for legal discovery)."""
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, datetime_utc,
@@ -193,7 +192,7 @@ class EvidenceTracker:
         
         return [dict(row) for row in cursor.fetchall()]
     
-    def get_evidence_summary(self) -> Dict[str, Any]:
+    def get_evidence_summary(self) -> dict[str, Any]:
         """Get summary statistics for evidence tracking."""
         stats = {}
         

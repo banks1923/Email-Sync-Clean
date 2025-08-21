@@ -7,7 +7,6 @@ import re
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
 from datetime import datetime
-from loguru import logger
 
 from shared.simple_db import SimpleDB
 
@@ -19,7 +18,7 @@ class ThreadAnalyzer:
         """Initialize with database connection."""
         self.db = SimpleDB(db_path)
         
-    def get_thread_summary(self, thread_id: str) -> Dict[str, Any]:
+    def get_thread_summary(self, thread_id: str) -> dict[str, Any]:
         """Get comprehensive summary of a thread."""
         # Get all emails in thread
         cursor = self.db.execute("""
@@ -62,7 +61,7 @@ class ThreadAnalyzer:
             'emails': emails
         }
     
-    def find_disputed_topics(self, keywords: List[str]) -> Dict[str, List[Dict]]:
+    def find_disputed_topics(self, keywords: list[str]) -> dict[str, list[dict]]:
         """Find threads containing disputed topics based on keywords."""
         disputed_threads = defaultdict(list)
         
@@ -96,7 +95,7 @@ class ThreadAnalyzer:
                 
         return dict(disputed_threads)
     
-    def analyze_communication_patterns(self, sender: Optional[str] = None) -> Dict[str, Any]:
+    def analyze_communication_patterns(self, sender: str | None = None) -> dict[str, Any]:
         """Analyze communication patterns for specific sender or all."""
         query = """
             SELECT sender, recipient_to, datetime_utc, thread_id, subject
@@ -193,7 +192,7 @@ class ThreadAnalyzer:
             
         return "\n".join(narrative)
     
-    def find_contradictions(self, thread_id: str, topics: List[str]) -> List[Dict[str, Any]]:
+    def find_contradictions(self, thread_id: str, topics: list[str]) -> list[dict[str, Any]]:
         """Find potential contradictions in a thread about specific topics."""
         cursor = self.db.execute("""
             SELECT eid, sender, datetime_utc, content

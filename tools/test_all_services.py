@@ -105,7 +105,7 @@ def test_vector_store():
     try:
         from utilities.vector_store import get_vector_store
         
-        vs = get_vector_store('emails')
+        get_vector_store('emails')
         print(f"✓ Vector store connected to collection: emails")
         
         # Check if Qdrant is running

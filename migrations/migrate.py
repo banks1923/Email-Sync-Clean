@@ -7,11 +7,9 @@ Usage: python3 migrations/migrate.py [--dry-run]
 """
 
 import argparse
-import os
 import sqlite3
 import sys
 from pathlib import Path
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -79,7 +77,7 @@ class MigrationRunner:
             for migration_file in pending:
                 logger.info(f"Applying migration: {migration_file.name}")
                 
-                with open(migration_file, 'r') as f:
+                with open(migration_file) as f:
                     sql_content = f.read()
                 
                 if dry_run:

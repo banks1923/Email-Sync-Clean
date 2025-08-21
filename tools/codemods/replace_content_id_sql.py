@@ -17,7 +17,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Union
 
 import libcst as cst
 from libcst import RemovalSentinel

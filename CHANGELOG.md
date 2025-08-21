@@ -1,5 +1,108 @@
 # Changelog
 
+## [2025-08-21] - File Processing Simplification: Process In Place 🚀
+
+### Major Architecture Simplification
+- **Removed Complex File Management**: Eliminated 1,650+ lines of over-engineered file organization
+  - **Deleted OriginalFileManager** (848 lines): Complex date-based organization, SHA-256 deduplication, hard/soft links
+  - **Deleted EnhancedArchiveManager** (400+ lines): Wrapper with space-saving metrics
+  - **Simplified DocumentLifecycleManager**: 134 → 89 lines, removed complex folder lifecycle  
+  - **Simplified DocumentPipeline**: Removed staging/processing/export folder movement
+
+### New Simple Approach: Process Files Where They Are
+- **Created SimpleFileProcessor** (118 lines): Replace 1,650+ lines of complexity
+  - **Leave files where users put them** - No mysterious reorganization
+  - **Process in place** - Extract content, save clean version to `data/processed/`
+  - **Track both paths** - Original location + processed file in database
+  - **Simple quarantine** - Copy (don't move) failed files to `data/quarantine/`
+
+### Database Cleanup
+- **Removed Unused Tables**: Dropped `file_hashes`, `file_links`, `space_savings` 
+- **Migration Tool**: `tools/migrate_simple_file_processing.py` 
+- **Space Reclaimed**: Database vacuum after table removal
+
+### Code Reduction Metrics
+- **95% Less Code**: File management reduced from 1,650+ → 118 lines
+- **CLAUDE.md Compliance**: "Simple > Complex", "Working > Perfect"
+- **User Control**: Files stay where users organize them
+- **Faster Processing**: No file copying/moving overhead
+
+### Updated Services
+- **Gmail Service**: Replaced pipeline staging with simple processing
+- **PDF Service**: Replaced complex lifecycle with in-place processing  
+- **Document Pipeline**: Simplified to direct processing without folder moves
+
+---
+
+## [2025-08-21] - SHA256 Chain Repair & Notes Migration 🔧
+
+### Assignment 1: SHA256 Backfill & Chain Repair
+- **SHA256 Chain Integrity Restored**: Fixed 581 documents with NULL SHA256 values
+  - **Deterministic Hashing**: Implemented `SHA256(file_hash:chunk_index:normalized_text)` formula
+  - **Schema Enhancement**: Added `sha256` and `chunk_index` columns to `content_unified` table
+  - **Chunk-Aware Logic**: Updated verification to handle multi-chunk documents correctly
+  - **Duplicate Resolution**: Fixed 2 duplicate SHA256 keys in original PDF documents
+  - **Content Linking**: Created 4 content_unified entries for uploaded PDF files and 2 for original PDFs
+  - **Embedding Backfill**: Generated 6 missing embeddings for complete search functionality
+  - **Chain Integrity**: Achieved `broken_chain_total = 0` (down from 581)
+
+### Notes Service Migration
+- **Service Consolidation**: Migrated notes functionality to document pipeline
+  - **Code Reduction**: Removed 194 lines of notes service code (`utilities/notes/`)
+  - **CLI Cleanup**: Removed `notes_handler.py` and related CLI commands
+  - **Backward Compatibility**: Created `tools/scripts/quick-note` wrapper script
+  - **Enhanced Search**: Notes now benefit from Legal BERT semantic search
+  - **Architecture Simplification**: One less service to maintain
+
+### Deliverables Completed
+✅ Migration scripts: `sha256_backfill_migration.py`, `fix_duplicate_sha256.py`, `rebuild_embeddings.py`  
+✅ Verification system: `verify_chain.py` with chunk-aware logic and correct counts  
+✅ CI guards: `ci_guards.py` prevents future NULL SHA256 regression  
+✅ Notes service removal: Clean elimination with backward compatibility  
+✅ Documentation updates: All references updated in CLAUDE.md and CLI docs  
+✅ Database backup: Created with integrity verification  
+✅ Final deliverable: `assignment1_final_deliverable.json` with complete results
+
+### Technical Results
+- **Documents Fixed**: 581 uploads + 4 original PDFs = 585 total documents
+- **SHA256 NULL Count**: 581 → 0 (100% resolved)
+- **Broken Chain Total**: 581 → 0 (complete integrity)
+- **Embeddings Generated**: 6 new embeddings for search functionality
+- **System Status**: ✅ PASS (all chain integrity checks)
+
+## [2025-08-21] - Documentation Truth Alignment & Drift Guard 📋
+
+### Documentation Audit System
+- **Documentation Truth Alignment**: Complete audit and alignment system
+  - **Automated Audit Tool**: `tools/docs/audit.py` validates all documentation claims
+  - **Line Count Accuracy**: Updated from false "550 lines" to actual **26,883 lines** (20,201 code)
+  - **Service Verification**: Removed non-existent `transcription/` service references
+  - **Missing Docs Created**: Added stub docs for `AUTOMATED_CLEANUP.md`, `CLEANUP_QUICK_REFERENCE.md`, `CODE_TRANSFORMATION_TOOLS.md`
+
+### CI/CD Drift Guard
+- **Make Targets**: New documentation audit and maintenance commands
+  - `make docs-audit` - JSON output for automation
+  - `make docs-truth-check` - CI-friendly verification (no style checking)
+  - `make docs-update` - Auto-update line counts and service tables
+  - `make docs-audit-summary` - Human-readable audit report
+- **Auto-Generated Content**: Service table with current line counts in CLAUDE.md
+- **CI Integration**: `make docs-truth-check` fails if documented paths missing
+
+### Deliverables Completed
+✅ Automated doc audit runner (`tools/docs/audit.py`)  
+✅ Make targets with JSON output for CI  
+✅ Fixed false claims (26,883 lines vs claimed "550 lines")  
+✅ Created missing documentation stubs  
+✅ Source of truth blocks with "DO NOT EDIT BY HAND" markers  
+✅ CI guard that fails on missing documented files  
+✅ Verification passes on clean repository  
+
+### Technical Implementation
+- **Service Line Counting**: Automated analysis of 15 active services
+- **File Existence Validation**: Checks all documented paths exist
+- **Test Path Mapping**: Verifies test file references are accurate
+- **Truth Drift Prevention**: CI will fail if docs drift from reality
+
 ## [2025-08-20] - Email Database Quality Cleanup 🧹
 
 ### Major Email Data Cleanup

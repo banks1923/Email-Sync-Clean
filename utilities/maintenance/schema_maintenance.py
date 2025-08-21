@@ -10,7 +10,7 @@ Combines functionality from:
 
 import sys
 import argparse
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime
 from loguru import logger
 

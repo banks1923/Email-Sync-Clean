@@ -18,7 +18,7 @@ from typing import Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from loguru import logger
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 from collections.abc import Callable
 from shared.service_interfaces import IService
 
@@ -153,35 +153,20 @@ class PDFService(IService):
         """Upload single PDF with integrated processing and pipeline support"""
         with _upload_semaphore:
             try:
-                # Add to pipeline if enabled
-                if use_pipeline:
-                    pipeline_result = self.pipeline.add_to_raw(pdf_path, copy=True)
-                    if not pipeline_result["success"]:
-                        logger.warning(f"Pipeline add failed: {pipeline_result['error']}")
-                    else:
-                        # Use pipeline path for processing
-                        pdf_path = pipeline_result["path"]
-                        # Move to staged for processing
-                        staged_result = self.pipeline.move_to_staged(os.path.basename(pdf_path))
-                        if staged_result["success"]:
-                            pdf_path = staged_result["path"]
-
-                # Basic validation
+                # Basic validation (process file in place)
                 validation_result = self.validator.validate_pdf_file(pdf_path)
                 if not validation_result["success"]:
                     if use_pipeline:
-                        self.pipeline.move_to_quarantine(
-                            os.path.basename(pdf_path),
-                            validation_result.get("error", "Validation failed"),
-                        )
+                        from shared.simple_file_processor import quarantine_file
+                        quarantine_file(Path(pdf_path), validation_result.get("error", "Validation failed"))
                     return validation_result
 
                 # Check resource limits
                 resource_check = self.validator.check_resource_limits(pdf_path)
                 if not resource_check["success"]:
                     if use_pipeline:
-                        self.pipeline.move_to_quarantine(
-                            os.path.basename(pdf_path),
+                        from shared.simple_file_processor import quarantine_file
+                        quarantine_file(Path(pdf_path),
                             resource_check.get("error", "Resource limit exceeded"),
                         )
                     return resource_check
@@ -203,20 +188,22 @@ class PDFService(IService):
                 # Process PDF
                 result = self._process_pdf_internal(pdf_path, file_hash, source)
 
-                # Update pipeline based on result
+                # Process using simple approach
                 if use_pipeline:
                     if result.get("success"):
+                        # Use simple processor to save clean version
+                        from shared.simple_file_processor import process_file_simple
+                        content = result.get("content", "")
                         metadata = {
                             "processed_at": datetime.now().isoformat(),
                             "chunks": result.get("chunks_processed", 0),
                             "extraction_method": result.get("extraction_method", "unknown"),
                             "hash": file_hash,
                         }
-                        self.pipeline.move_to_processed(os.path.basename(pdf_path), metadata)
+                        process_file_simple(Path(pdf_path), content, "pdf", metadata)
                     else:
-                        self.pipeline.move_to_quarantine(
-                            os.path.basename(pdf_path), result.get("error", "Processing failed")
-                        )
+                        from shared.simple_file_processor import quarantine_file
+                        quarantine_file(Path(pdf_path), result.get("error", "Processing failed"))
 
                 return result
 

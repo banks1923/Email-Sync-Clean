@@ -7,7 +7,6 @@ REMOVAL DATE: 2025-09-01
 """
 
 import sqlite3
-from typing import Optional
 from loguru import logger
 
 

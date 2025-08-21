@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-08-21T09:24:31.649813",
+  "assignment": "Assignment 1 - SHA256 Backfill & Chain Repair",
+  "status": "COMPLETED",
+  "final_counts": {
+    "docs_total": 585,
+    "docs_fixed_sha256": 581,
+    "docs_null_sha256": 0,
+    "docs_without_content": 0,
+    "content_total": 8,
+    "content_upload_total": 4,
+    "embeddings_added_or_refreshed": 6,
+    "embeddings_total": 8,
+    "content_without_embedding": 0,
+    "files_processed": 4,
+    "qdrant_point_count_delta": 6,
+    "qdrant_points_total": "unknown"
+  },
+  "migration_summary": {
+    "assignment": "SHA256 Backfill & Chain Repair",
+    "objective": "Restore documents \u2192 content \u2192 embeddings \u2192 Qdrant integrity by fixing 581 NULL SHA256 records",
+    "scope": "4 uploaded PDFs with 581 chunks + 2 original PDF files",
+    "completed_steps": [
+      "Added sha256 and chunk_index columns to content_unified table",
+      "Generated deterministic SHA256 values for 581 NULL documents using formula: SHA256(file_hash:chunk_index:normalized_text)",
+      "Created content_unified entries for 4 uploaded PDF files",
+      "Fixed duplicate SHA256 values in 2 original PDF documents",
+      "Created content_unified entries for 2 original PDF files",
+      "Generated 6 missing embeddings for all content entries",
+      "Updated verification script with chunk-aware logic",
+      "Added CI guards to prevent future NULL SHA256 issues"
+    ],
+    "deliverables_created": [
+      "scripts/sha256_backfill_migration.py - Idempotent migration script",
+      "scripts/verify_chain.py - Chain integrity verification with correct counts",
+      "scripts/fix_duplicate_sha256.py - Duplicate SHA256 repair",
+      "scripts/rebuild_embeddings.py - Embedding backfill",
+      "scripts/ci_guards.py - CI validation guards",
+      "Database backup created with timestamp"
+    ],
+    "acceptance_criteria_met": [
+      "\u2705 documents.sha256 NULL count = 0",
+      "\u2705 All chunks link to content via SHA256 (chunk-aware)",
+      "\u2705 Verification script reports broken_chain_total = 0",
+      "\u2705 Embeddings generated for all content entries",
+      "\u2705 CI guards in place to prevent regression"
+    ]
+  }
+}

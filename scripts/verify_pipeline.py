@@ -9,8 +9,7 @@ import json
 import os
 import sys
 import sqlite3
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -44,12 +43,13 @@ class PipelineVerifier:
         }
     
     def _ensure_db_safety(self):
-        """Fix 2: Ensure proper SQLite configuration."""
+        """Fix 2: Ensure proper SQLite configuration for read-only verification."""
         try:
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA journal_mode=WAL")
+            # Note: This is read-only verification - no writes performed
             if not self.json_mode:
-                logger.info("Database safety configured: WAL mode, foreign keys enabled")
+                logger.info("Database safety configured: WAL mode, foreign keys enabled (read-only)")
         except Exception as e:
             logger.error(f"Failed to configure database safety: {e}")
     
@@ -80,7 +80,7 @@ class PipelineVerifier:
         except (ValueError, IndexError) as e:
             raise ValueError(f"Invalid --since format '{since_str}'. Use: 30m, 24h, 7d") from e
     
-    def _resolve_sha_prefix(self, sha_prefix: str) -> Optional[str]:
+    def _resolve_sha_prefix(self, sha_prefix: str) -> str | None:
         """Resolve short SHA prefix to full SHA256 with DISTINCT to handle chunks."""
         results = self.db.fetch(
             "SELECT DISTINCT sha256 FROM documents WHERE sha256 LIKE ? || '%' LIMIT 2",
@@ -94,7 +94,7 @@ class PipelineVerifier:
         else:
             return results[0]['sha256']
     
-    def _log_test_result(self, test_name: str, passed: bool, details: Dict[str, Any]):
+    def _log_test_result(self, test_name: str, passed: bool, details: dict[str, Any]):
         """Fix 4: Respect JSON mode for logging."""
         status = "PASS" if passed else "FAIL"
         
@@ -466,19 +466,20 @@ class PipelineVerifier:
         return passed
     
     def integrity_test(self) -> bool:
-        """Fix 5: Complete orphan and duplicate detection."""
+        """Enhanced orphan and duplicate detection with chunk-aware joins."""
         details = {}
         issues = []
         
         try:
             content_table = self._content_table()
             
-            # Fix 5: Orphaned content (no document)
+            # FIX 1: Orphaned content (no document) - use chunk-aware join
             orphaned_content = self.db.fetch_one(f"""
                 SELECT COUNT(*) AS orphaned_content
                 FROM {content_table} c
-                LEFT JOIN documents d ON c.source_type='pdf' AND c.source_id=d.sha256
-                WHERE c.source_type='pdf' AND d.chunk_id IS NULL
+                LEFT JOIN documents d 
+                  ON c.sha256 = d.sha256 AND c.chunk_index = d.chunk_index
+                WHERE c.sha256 IS NOT NULL AND d.sha256 IS NULL
             """)['orphaned_content']
             
             # Fix 5: Orphaned embeddings (no content)
@@ -489,16 +490,67 @@ class PipelineVerifier:
                 WHERE c.id IS NULL
             """)['orphaned_embeddings']
             
-            # Fix 5: Docs without content (processed docs missing normalization)
+            # FIX 2: Docs without content (processed docs missing normalization) - chunk-aware
             docs_without_content = self.db.fetch_one(f"""
                 SELECT COUNT(*) AS docs_without_content
                 FROM documents d
                 LEFT JOIN {content_table} c
-                  ON c.source_type='pdf' AND c.source_id=d.sha256
-                WHERE d.status='processed' AND c.id IS NULL
+                  ON d.sha256 = c.sha256 AND d.chunk_index = c.chunk_index
+                WHERE d.status='processed' AND d.sha256 IS NOT NULL AND c.id IS NULL
             """)['docs_without_content']
             
-            # Fix 5: Duplicate content rows per source
+            # FIX 3: Content missing embeddings (coverage)
+            content_without_embedding = self.db.fetch_one(f"""
+                SELECT COUNT(*) AS content_without_embedding
+                FROM {content_table} c
+                LEFT JOIN embeddings e ON e.content_id = c.id
+                WHERE c.ready_for_embedding = 1 AND e.id IS NULL
+            """)['content_without_embedding']
+            
+            # FIX 4: Docs with content but missing embeddings (upstream visibility)
+            docs_with_content_without_embedding = self.db.fetch_one(f"""
+                SELECT COUNT(*) AS docs_with_content_without_embedding
+                FROM documents d
+                JOIN {content_table} c 
+                  ON d.sha256 = c.sha256 AND d.chunk_index = c.chunk_index
+                LEFT JOIN embeddings e ON e.content_id = c.id
+                WHERE e.id IS NULL
+            """)['docs_with_content_without_embedding']
+            
+            # FIX 5: SHA256 duplicate keys (documents)
+            doc_sha256_dupe_keys = self.db.fetch_one("""
+                SELECT COUNT(*) AS doc_sha256_dupe_keys FROM (
+                  SELECT sha256, chunk_index FROM documents
+                  WHERE sha256 IS NOT NULL
+                  GROUP BY sha256, chunk_index
+                  HAVING COUNT(*) > 1
+                )
+            """)['doc_sha256_dupe_keys']
+            
+            # FIX 6: SHA256 duplicate keys (content_unified)  
+            content_sha256_dupe_keys = self.db.fetch_one(f"""
+                SELECT COUNT(*) AS content_sha256_dupe_keys FROM (
+                  SELECT sha256, chunk_index FROM {content_table}
+                  WHERE sha256 IS NOT NULL
+                  GROUP BY sha256, chunk_index
+                  HAVING COUNT(*) > 1
+                )
+            """)['content_sha256_dupe_keys']
+            
+            # FIX 8: Check for NULL SHA256 values (data integrity)
+            docs_null_sha256 = self.db.fetch_one("""
+                SELECT COUNT(*) AS docs_null_sha256
+                FROM documents
+                WHERE sha256 IS NULL AND status='processed'
+            """)['docs_null_sha256']
+            
+            content_null_sha256 = self.db.fetch_one(f"""
+                SELECT COUNT(*) AS content_null_sha256
+                FROM {content_table}
+                WHERE sha256 IS NULL
+            """)['content_null_sha256']
+            
+            # FIX 7: Duplicate content rows per source (legacy check)
             dup_content = self.db.fetch_one(f"""
                 SELECT COUNT(*) AS dup_content
                 FROM (
@@ -523,6 +575,12 @@ class PipelineVerifier:
                 "orphaned_content": orphaned_content,
                 "orphaned_embeddings": orphaned_embeddings,
                 "docs_without_content": docs_without_content,
+                "content_without_embedding": content_without_embedding,
+                "docs_with_content_without_embedding": docs_with_content_without_embedding,
+                "doc_sha256_dupe_keys": doc_sha256_dupe_keys,
+                "content_sha256_dupe_keys": content_sha256_dupe_keys,
+                "docs_null_sha256": docs_null_sha256,
+                "content_null_sha256": content_null_sha256,
                 "duplicate_content": dup_content,
                 "quarantine": {
                     "failed_docs": quarantine_stats['failed_docs'],
@@ -531,18 +589,38 @@ class PipelineVerifier:
                 }
             }
             
-            # Determine if integrity issues exist
-            if orphaned_content > 0:
-                issues.append(f"{orphaned_content} orphaned content records")
-            if orphaned_embeddings > 0:
-                issues.append(f"{orphaned_embeddings} orphaned embeddings")
-            if docs_without_content > 0:
-                issues.append(f"{docs_without_content} processed docs without content")
-            if dup_content > 0:
-                issues.append(f"{dup_content} duplicate content entries")
+            # Determine if integrity issues exist (updated thresholds)
+            failures = []
+            warnings = []
             
-            details["issues"] = issues
-            passed = len(issues) == 0
+            # Critical failures that cause test to fail
+            if docs_null_sha256 > 0:
+                failures.append(f"{docs_null_sha256} processed documents with NULL SHA256")
+            if content_null_sha256 > 0:
+                failures.append(f"{content_null_sha256} content entries with NULL SHA256")
+            if orphaned_content > 0:
+                failures.append(f"{orphaned_content} orphaned content records")
+            if orphaned_embeddings > 0:
+                failures.append(f"{orphaned_embeddings} orphaned embeddings")
+            if docs_without_content > 0:
+                failures.append(f"{docs_without_content} processed docs without content")
+            if doc_sha256_dupe_keys > 0:
+                failures.append(f"{doc_sha256_dupe_keys} duplicate SHA256+chunk_index keys in documents")
+            if content_sha256_dupe_keys > 0:
+                failures.append(f"{content_sha256_dupe_keys} duplicate SHA256+chunk_index keys in content_unified")
+            if dup_content > 0:
+                failures.append(f"{dup_content} duplicate content entries")
+            
+            # Embedding coverage warnings (informational, not failures)
+            if content_without_embedding > 0:
+                warnings.append(f"{content_without_embedding} content entries missing embeddings")
+            if docs_with_content_without_embedding > 0:
+                warnings.append(f"{docs_with_content_without_embedding} docs with content missing embeddings")
+            
+            details["failures"] = failures
+            details["warnings"] = warnings
+            details["issues"] = failures + [f"WARN: {w}" for w in warnings]  # Legacy format
+            passed = len(failures) == 0
             
         except Exception as e:
             details["error"] = str(e)
@@ -642,7 +720,7 @@ class PipelineVerifier:
             # Test quarantine handler availability
             try:
                 from tools.cli.quarantine_handler import QuarantineHandler
-                handler = QuarantineHandler()
+                QuarantineHandler()
                 details["quarantine_handler"] = "available"
             except ImportError:
                 details["quarantine_handler"] = "not_available"
@@ -806,7 +884,7 @@ class PipelineVerifier:
         else:
             logger.info("└── ❌ No document chunks found")
     
-    def run_all_tests(self, since: str = None, trace_sha: str = None) -> Dict[str, Any]:
+    def run_all_tests(self, since: str = None, trace_sha: str = None) -> dict[str, Any]:
         """Run complete verification suite."""
         if not self.json_mode:
             logger.info("Starting PDF pipeline verification")
@@ -910,12 +988,20 @@ Examples:
             results = verifier.run_all_tests(since=args.since, trace_sha=args.trace)
             
             if args.json:
-                # Fix 4: Single-line CI summary in JSON mode
+                # Fix 4: Enhanced CI summary with new integrity metrics
+                integrity_details = results["tests"].get("integrity", {}).get("details", {})
                 summary = {
                     "status": results["overall_status"],
                     "chain": results["tests"].get("smoke", {}).get("details", {}).get("has_complete_chain", False),
-                    "orphans": results["tests"].get("integrity", {}).get("details", {}).get("orphaned_content", 0),
-                    "dup_content": results["tests"].get("integrity", {}).get("details", {}).get("duplicate_content", 0),
+                    "orphans": integrity_details.get("orphaned_content", 0),
+                    "docs_without_content": integrity_details.get("docs_without_content", 0),
+                    "content_without_embedding": integrity_details.get("content_without_embedding", 0),
+                    "docs_with_content_without_embedding": integrity_details.get("docs_with_content_without_embedding", 0),
+                    "doc_sha256_dupe_keys": integrity_details.get("doc_sha256_dupe_keys", 0),
+                    "content_sha256_dupe_keys": integrity_details.get("content_sha256_dupe_keys", 0),
+                    "docs_null_sha256": integrity_details.get("docs_null_sha256", 0),
+                    "content_null_sha256": integrity_details.get("content_null_sha256", 0),
+                    "dup_content": integrity_details.get("duplicate_content", 0),
                 }
                 
                 if args.since:

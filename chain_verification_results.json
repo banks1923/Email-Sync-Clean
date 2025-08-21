@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-08-21T09:41:07.149158",
+  "database_path": "data/emails.db",
+  "docs_null_sha256": 0,
+  "docs_total": 585,
+  "docs_without_content": 0,
+  "first_chunks_without_content": 0,
+  "content_without_doc": 0,
+  "broken_chain_total": 0,
+  "content_total": 8,
+  "content_ready_embedding": 6,
+  "content_without_embedding": 0,
+  "docs_with_content_without_embedding": 0,
+  "files_without_embedding": 0,
+  "doc_sha256_dupe_keys": 0,
+  "content_sha256_dupe_keys": 0,
+  "embeddings_total": 8,
+  "docs_by_source": {
+    "pdf": 4,
+    "upload": 581
+  },
+  "upload_docs_total": 581,
+  "upload_docs_with_sha256": 581,
+  "upload_content_total": 4
+}

@@ -10,7 +10,6 @@ This script:
 """
 
 import sys
-import os
 import uuid
 from pathlib import Path
 
@@ -18,7 +17,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from loguru import logger
-from utilities.vector_store import get_vector_store
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 

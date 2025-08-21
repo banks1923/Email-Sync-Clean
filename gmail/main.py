@@ -542,11 +542,13 @@ class GmailService:
                                     f,
                                     indent=2,
                                 )
-                            # Move to processed since it's just metadata
-                            self.pipeline.move_to_staged(os.path.basename(placeholder_path))
-                            self.pipeline.move_to_processed(
-                                os.path.basename(placeholder_path),
-                                {"type": "email_attachment_metadata"},
+                            # Track attachment metadata using simple processor
+                            from shared.simple_file_processor import process_file_simple
+                            process_file_simple(
+                                Path(placeholder_path),
+                                json.dumps(attachment_metadata, indent=2),
+                                file_type="email_attachment",
+                                metadata={"type": "email_attachment_metadata"}
                             )
                         except Exception as e:
                             logger.warning(f"Could not track attachment in pipeline: {e}")

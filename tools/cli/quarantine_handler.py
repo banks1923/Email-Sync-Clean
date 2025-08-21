@@ -17,7 +17,7 @@ class QuarantineHandler:
         self.db_path = os.getenv("APP_DB_PATH", "data/emails.db")
         self.quarantine_dir = Path("data/quarantine")
     
-    def list_quarantined(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def list_quarantined(self, limit: int = 50) -> list[dict[str, Any]]:
         """List documents in quarantine"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -50,7 +50,7 @@ class QuarantineHandler:
         conn.close()
         return results
     
-    def retry_document(self, sha256_prefix: str) -> Dict[str, Any]:
+    def retry_document(self, sha256_prefix: str) -> dict[str, Any]:
         """Retry processing a quarantined document"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -117,7 +117,7 @@ class QuarantineHandler:
         except Exception as e:
             return {"success": False, "error": f"Failed to initialize PDF service: {e}"}
     
-    def purge_quarantined(self, older_than_days: int = 30, permanent_only: bool = True) -> Dict[str, Any]:
+    def purge_quarantined(self, older_than_days: int = 30, permanent_only: bool = True) -> dict[str, Any]:
         """Purge old quarantined documents"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -152,7 +152,7 @@ class QuarantineHandler:
             "files_cleaned": cleaned_files
         }
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get quarantine statistics"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()

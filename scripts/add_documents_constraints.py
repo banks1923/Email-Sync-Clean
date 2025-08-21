@@ -16,7 +16,6 @@ import sqlite3
 import sys
 import os
 from datetime import datetime
-from pathlib import Path
 
 
 def create_backup(db_path: str) -> str:

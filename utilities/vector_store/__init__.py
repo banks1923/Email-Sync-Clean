@@ -5,7 +5,7 @@ No complexity. Just vector storage.
 
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any
 from collections.abc import Generator
 
 from loguru import logger

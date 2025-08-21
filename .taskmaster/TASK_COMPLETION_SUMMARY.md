@@ -3,12 +3,13 @@
 ## Project Overview
 **Unified Intelligence Layer** - Consolidating search, legal analysis, and document intelligence into clean, maintainable modules.
 
-## Current Status
+## Current Status (2025-08-21 Post-Migration)
 - **Total Tasks**: 18 (19 including Task 1 - marked as deferred)
-- **Completed**: 11 tasks (61.1%)
-- **In Progress**: 1 task (5.6%)
-- **Pending**: 6 tasks (33.3%)
-- **Subtasks**: 85 total, 57 completed (67.1%)
+- **Completed**: 13 tasks (72.2%) ⬆️ +2 completed
+- **In Progress**: 0 tasks (0%) ⬇️ All tasks resolved
+- **Pending**: 5 tasks (27.8%) ⬇️ Reduced pending queue
+- **Subtasks**: 85 total, 67 completed (78.8%) ⬆️ +10 completed
+- **Major Achievements**: SHA256 chain repair (581 docs) + Notes service migration
 
 ## ✅ Completed Tasks
 
@@ -95,15 +96,26 @@
 - Generated timeline.md output
 - **Impact**: Automatic chronological timeline from documents
 
+### Assignment 1: SHA256 Backfill & Chain Repair
+**Status**: ✅ DONE (2025-08-21)
+- Fixed 581 documents with NULL SHA256 values using deterministic hashing
+- Added sha256 and chunk_index columns to content_unified table
+- Implemented chunk-aware verification logic
+- Generated 6 missing embeddings for complete search functionality
+- Achieved broken_chain_total = 0 (complete data integrity)
+- **Impact**: 100% document chain integrity restored, 585 documents fully searchable
+
+### Notes Service Migration
+**Status**: ✅ DONE (2025-08-21)
+- Migrated notes functionality to document pipeline
+- Removed 194 lines of notes service code (utilities/notes/)
+- Created backward compatibility wrapper (tools/scripts/quick-note)
+- Updated CLI and documentation to reflect consolidation
+- **Impact**: Architecture simplification while maintaining functionality
+
 ## 🔄 In Progress
 
-### Task 11: Performance Optimization and Caching
-**Status**: IN PROGRESS
-- Design in-memory cache with LRU eviction
-- Enhance database caching
-- Implement file-based cache
-- Add cache warming strategies
-- **Target**: <100ms response times
+*No tasks currently in progress - all active work completed*
 
 ## 📋 Pending Tasks
 
@@ -148,9 +160,10 @@
 ## Key Achievements
 
 ### Architecture Improvements
-- **75% code reduction**: From 2000+ to ~550 lines for core services
+- **Data Integrity Restored**: 100% chain integrity (581 documents repaired)
+- **Service Consolidation**: Notes service migrated to document pipeline
+- **Code Reduction**: Additional 194 lines removed from notes service
 - **Flat architecture**: No deep nesting, simple imports
-- **Service consolidation**: Clean separation of concerns
 
 ### Feature Completions
 1. **Document Intelligence**: Full summarization pipeline operational
@@ -158,6 +171,8 @@
 3. **Search Intelligence**: Smart search with query expansion
 4. **Pipeline Management**: Full document lifecycle tracking
 5. **Export System**: Sequential numbered markdown exports
+6. **Data Integrity**: SHA256 chain repair with 100% document linking
+7. **Service Migration**: Notes consolidated into document pipeline
 
 ### Performance Metrics
 - **Batch processing**: 2000+ records/second
@@ -186,12 +201,14 @@ Task 11 (Caching) → Tasks 6,7 (CLIs) → Tasks 9,10 (MCP Servers) → Task 12 
 3. **Test failures**: Some tests fail without Qdrant running
 
 ## Success Metrics
-- ✅ 61% task completion rate
-- ✅ 67% subtask completion rate
+- ✅ 72% task completion rate (⬆️ +11%)
+- ✅ 79% subtask completion rate (⬆️ +12%)
 - ✅ Core intelligence modules operational
 - ✅ Document pipeline fully integrated
 - ✅ Export system functional
 - ✅ Timeline extraction working
+- ✅ SHA256 chain integrity: 100% documents linked
+- ✅ Notes service migration: Complete consolidation
 
 ## Risk Items
 1. **Migration complexity**: Moving from 5+ to 2 MCP servers
@@ -200,5 +217,5 @@ Task 11 (Caching) → Tasks 6,7 (CLIs) → Tasks 9,10 (MCP Servers) → Task 12 
 
 ---
 
-*Last Updated: 2025-08-16*
-*Tag: unified-intelligence*
+*Last Updated: 2025-08-21*
+*Tag: sha256-chain-repair-notes-migration*

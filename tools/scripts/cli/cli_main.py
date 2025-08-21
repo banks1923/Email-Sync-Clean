@@ -20,7 +20,7 @@ from tools.scripts.cli.docs_handler import (
     show_docs_summary,
 )
 from tools.scripts.cli.info_handler import show_info, show_pdf_stats
-from tools.scripts.cli.notes_handler import create_note, show_notes_for_content
+# Notes service removed - functionality migrated to document pipeline
 from tools.scripts.cli.process_handler import embed_content, process_emails
 from tools.scripts.cli.search_handler import search_emails, search_multi_content
 from tools.scripts.cli.timeline_handler import show_timeline
@@ -116,24 +116,9 @@ def setup_timeline_commands(subparsers):
     )
 
 
-def setup_notes_commands(subparsers):
-    """Setup notes commands"""
-    note_parser = subparsers.add_parser("note", help="Create a note")
-    note_parser.add_argument("title", help="Note title")
-    note_parser.add_argument("content", help="Note content")
-    note_parser.add_argument("--type", default="general", help="Note type (default: general)")
-    note_parser.add_argument("--tags", nargs="*", help="Note tags")
-    note_parser.add_argument(
-        "--importance",
-        type=int,
-        choices=[1, 2, 3, 4, 5],
-        default=1,
-        help="Importance level 1-5 (default: 1)",
-    )
-
-    show_notes_parser = subparsers.add_parser("notes", help="Show notes for content")
-    show_notes_parser.add_argument("content_type", choices=["email", "document", "transcript"])
-    show_notes_parser.add_argument("content_id", help="Content identifier")
+# Notes commands removed - migrated to document pipeline
+# Use: vsearch upload --type note "content" for note creation
+# Use: vsearch search "query" for note searching
 
 
 def setup_docs_commands(subparsers):
@@ -187,10 +172,8 @@ def route_command(args):
         "process-pdf-uploads": process_pdf_uploads,
         "multi-search": lambda: search_multi_content(args.query, args.limit),
         "timeline": lambda: show_timeline(args.start_date, args.end_date, args.types, args.limit),
-        "note": lambda: create_note(
-            args.title, args.content, args.type, args.tags, args.importance
-        ),
-        "notes": lambda: show_notes_for_content(args.content_type, args.content_id),
+        # "note": removed - use: vsearch upload --type note "content"
+        # "notes": removed - use: vsearch search "query"
         "upload": lambda: _handle_upload(args),
         "docs": lambda: _handle_docs(args),
     }
@@ -211,7 +194,7 @@ def main():
     setup_upload_commands(subparsers)
     setup_info_commands(subparsers)
     setup_timeline_commands(subparsers)
-    setup_notes_commands(subparsers)
+    # setup_notes_commands(subparsers)  # Removed - migrated to document pipeline
     setup_docs_commands(subparsers)
 
     # Parse arguments

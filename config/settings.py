@@ -5,7 +5,7 @@ validated configuration management.
 """
 
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -204,7 +204,7 @@ class SemanticSettings(BaseSettings):
     semantics_on_ingest: bool = Field(default=True, env="SEMANTICS_ON_INGEST")
     
     # Steps to run in order
-    semantics_steps: List[str] = Field(
+    semantics_steps: list[str] = Field(
         default=["summary", "entities", "embeddings", "timeline"],
         env="SEMANTICS_STEPS"
     )

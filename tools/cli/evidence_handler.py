@@ -5,12 +5,11 @@ Direct implementation for vsearch evidence commands.
 
 import json
 from typing import Optional, List
-from loguru import logger
 
 from legal_evidence import get_evidence_tracker, get_thread_analyzer, get_report_generator
 
 
-def assign_eids_command(limit: Optional[int] = None):
+def assign_eids_command(limit: int | None = None):
     """Assign Evidence IDs (EIDs) to all emails."""
     print("📋 Assigning Evidence IDs to emails...")
     
@@ -40,7 +39,7 @@ def assign_threads_command():
         print("❌ Failed to assign thread IDs")
         
 
-def lookup_command(eid: Optional[str] = None, thread: Optional[str] = None):
+def lookup_command(eid: str | None = None, thread: str | None = None):
     """Look up specific evidence by EID or thread."""
     tracker = get_evidence_tracker()
     
@@ -94,8 +93,8 @@ def lookup_command(eid: Optional[str] = None, thread: Optional[str] = None):
         
 
 def report_command(output_dir: str = "legal_evidence_export",
-                  keywords: Optional[List[str]] = None,
-                  threads: Optional[List[str]] = None,
+                  keywords: list[str] | None = None,
+                  threads: list[str] | None = None,
                   mode: str = "both"):
     """Generate legal evidence reports."""
     print(f"📄 Generating legal evidence reports...")

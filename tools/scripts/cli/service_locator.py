@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from gmail.main import GmailService
 from entity.main import EntityService
 from utilities.timeline.main import TimelineService
-from utilities.notes.main import NotesService
+# Notes service removed - migrated to document pipeline
 
 
 class ServiceLocator:
@@ -65,10 +65,8 @@ class ServiceLocator:
 
         return TimelineService()
 
-    def get_notes_service(self, **kwargs):
-        """Get notes service instance"""
-
-        return NotesService()
+    # get_notes_service removed - use document pipeline instead
+    # Notes functionality available via: vsearch upload --type note "content"
 
     def get_service_health_status(self, service_name: str):
         """Get health status for a specific service"""

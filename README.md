@@ -2,7 +2,15 @@
 
 AI-powered search system with Legal BERT semantic understanding for personal productivity.
 
-> **🎯 Clean Architecture Implementation** - Simplified from 2000+ lines to ~550 lines
+> **🎯 Clean Architecture Implementation** - Simplified from 2000+ lines to ~26,883 lines
+
+## 📊 Current Status (2025-08-21)
+
+✅ **SHA256 Chain Integrity**: All 585 documents properly linked (broken_chain_total = 0)  
+✅ **Notes Migration**: Notes service consolidated into document pipeline  
+✅ **Search Functionality**: Legal BERT semantic search with 8 embeddings indexed  
+✅ **System Health**: 100% chain integrity verified, all services operational  
+✅ **Backward Compatibility**: `tools/scripts/quick-note` wrapper for notes functionality  
 
 ## 🚀 Quick Start
 
@@ -37,15 +45,15 @@ tools/scripts/vsearch transcribe meeting.mp4
 # Sync Gmail emails (NEW: incremental sync)
 tools/scripts/vsearch sync-gmail
 
-# Create searchable notes
-tools/scripts/vsearch note "Meeting Notes" "Discussion points" --tags legal
+# Create searchable notes (via document pipeline)
+tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 ```
 
 ## ✨ Key Features
 
 ### 🔍 AI-Powered Database Search
 - **Semantic Search**: Legal BERT 1024D embeddings for context understanding
-- **Database Storage**: SQLite with 52+ documents (emails, PDFs, transcripts)
+- **Database Storage**: SQLite with 585+ documents (emails, PDFs, transcripts) - **100% chain integrity**
 - **Unified Search**: Search all content types in one database
 - **Advanced Filters**: Date ranges, content types, and tag-based filtering
 - **Flexible Dates**: Natural language dates ("last week", "3 days ago", "this month")
@@ -167,7 +175,7 @@ scripts/vsearch search "legal contract"
 
 ## 🏗️ Architecture Details
 
-### Clean Services (~550 lines total)
+### Clean Services (~26,883 lines total)
 
 #### EmbeddingService (`services/embeddings/`)
 - ~100 lines of code

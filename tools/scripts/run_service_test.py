@@ -10,7 +10,7 @@ import time
 import argparse
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Tuple, Callable
+from typing import Dict, Tuple
 
 # Suppress verbose logging during tests
 import os
@@ -35,7 +35,7 @@ class ServiceTestHarness:
         self.results = {}
         self.fixture_dir = Path(__file__).parent.parent / "fixtures"
         
-    def run_all_tests(self) -> Dict[str, bool]:
+    def run_all_tests(self) -> dict[str, bool]:
         """Run tests for all services."""
         print(f"\n{'='*60}")
         print(f"Service Test Harness - {self.mode.upper()} Mode")
@@ -108,7 +108,7 @@ class ServiceTestHarness:
     
     # Core infrastructure tests
     
-    def test_database(self) -> Tuple[bool, Dict]:
+    def test_database(self) -> tuple[bool, dict]:
         """Test database connectivity and schema."""
         from shared.simple_db import SimpleDB
         
@@ -132,7 +132,7 @@ class ServiceTestHarness:
         
         return details["tables"] > 0, details
     
-    def test_vector_store(self) -> Tuple[bool, Dict]:
+    def test_vector_store(self) -> tuple[bool, dict]:
         """Test vector store connectivity."""
         try:
             from utilities.vector_store import get_vector_store
@@ -170,7 +170,7 @@ class ServiceTestHarness:
         except Exception as e:
             return False, {"error": str(e)}
     
-    def test_embeddings(self) -> Tuple[bool, Dict]:
+    def test_embeddings(self) -> tuple[bool, dict]:
         """Test embedding service."""
         from utilities.embeddings import get_embedding_service
         
@@ -193,7 +193,7 @@ class ServiceTestHarness:
     
     # Service-specific tests
     
-    def test_entity_extraction(self) -> Tuple[bool, Dict]:
+    def test_entity_extraction(self) -> tuple[bool, dict]:
         """Test entity extraction service."""
         from entity.main import EntityService
         
@@ -212,7 +212,7 @@ class ServiceTestHarness:
         
         return True, details
     
-    def test_timeline(self) -> Tuple[bool, Dict]:
+    def test_timeline(self) -> tuple[bool, dict]:
         """Test timeline service."""
         from utilities.timeline import TimelineService
         
@@ -230,7 +230,7 @@ class ServiceTestHarness:
         
         return True, details
     
-    def test_summarization(self) -> Tuple[bool, Dict]:
+    def test_summarization(self) -> tuple[bool, dict]:
         """Test summarization service."""
         from summarization import get_document_summarizer
         
@@ -250,7 +250,7 @@ class ServiceTestHarness:
         
         return result.get("summary_type") is not None, details
     
-    def test_knowledge_graph(self) -> Tuple[bool, Dict]:
+    def test_knowledge_graph(self) -> tuple[bool, dict]:
         """Test knowledge graph service."""
         try:
             from knowledge_graph import KnowledgeGraphService
@@ -271,7 +271,7 @@ class ServiceTestHarness:
         except Exception as e:
             return False, {"error": str(e)[:50]}
     
-    def test_search_intelligence(self) -> Tuple[bool, Dict]:
+    def test_search_intelligence(self) -> tuple[bool, dict]:
         """Test search intelligence service."""
         from search_intelligence import get_search_intelligence_service
         
@@ -293,7 +293,7 @@ class ServiceTestHarness:
         
         return health.get("status") == "healthy", details
     
-    def test_legal_intelligence(self) -> Tuple[bool, Dict]:
+    def test_legal_intelligence(self) -> tuple[bool, dict]:
         """Test legal intelligence service."""
         try:
             from legal_intelligence import get_legal_intelligence_service
@@ -303,7 +303,7 @@ class ServiceTestHarness:
             
             if self.mode == "deep":
                 try:
-                    legal = get_legal_intelligence_service()
+                    get_legal_intelligence_service()
                     # Would test legal.extract_legal_entities() here
                     details["initialized"] = True
                 except Exception as e:

@@ -5,7 +5,6 @@ Automated transformation to centralize configuration using LibCST.
 Replaces hardcoded paths and config instantiation across the codebase.
 """
 from pathlib import Path
-from typing import List
 
 import libcst as cst
 

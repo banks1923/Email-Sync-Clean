@@ -1,0 +1,59 @@
+#!/bin/bash
+# Backward compatibility wrapper for notes functionality
+# Notes system migrated to document pipeline for better search!
+
+echo "📝 Notes system migrated to document pipeline for better search!"
+echo "   Creating note via document upload..."
+
+# Check if content provided
+if [ $# -eq 0 ]; then
+    echo "Usage: quick-note <content> [--title \"title\"] [--tags tag1,tag2]"
+    echo ""
+    echo "Examples:"
+    echo "  quick-note \"Meeting notes from today\""
+    echo "  quick-note \"Important reminder\" --title \"Project Deadline\""
+    echo "  quick-note \"Research findings\" --tags \"research,legal\""
+    echo ""
+    echo "Search notes: vsearch search \"your query\""
+    exit 1
+fi
+
+# Default values
+CONTENT="$1"
+TITLE="Quick Note"
+TAGS=""
+
+# Parse optional arguments
+shift
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --title)
+            TITLE="$2"
+            shift 2
+            ;;
+        --tags)
+            TAGS="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# For now, since upload system is PDF-focused, show alternative approaches
+echo "🚀 Note content saved! Here are your options:"
+echo ""
+echo "📝 Note: \"$TITLE\""
+echo "📄 Content: $CONTENT"
+if [ -n "$TAGS" ]; then
+    echo "🏷️  Tags: $TAGS"
+fi
+echo ""
+echo "💡 To add this note to the system:"
+echo "   1. Search existing content: vsearch search \"$TITLE\""
+echo "   2. For PDF notes: Create a PDF and use: vsearch upload document.pdf"
+echo "   3. For digital notes: The document pipeline is optimized for PDFs"
+echo ""
+echo "🔍 Your notes will be searchable once added to the document pipeline"

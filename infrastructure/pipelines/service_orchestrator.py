@@ -16,6 +16,7 @@ from summarization import get_document_summarizer
 from search_intelligence import get_search_intelligence_service
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
+from utilities.maintenance.email_quarantine import EmailValidator
 from shared.simple_db import SimpleDB
 
 
@@ -45,8 +46,10 @@ class ServiceOrchestrator:
         self.services = {}
         self.results = {}
         self.start_time = None
+        self.validator = EmailValidator()
+        self.validation_enabled = True
         
-    def initialize_services(self) -> Dict[str, bool]:
+    def initialize_services(self) -> dict[str, bool]:
         """Initialize all services in dependency order."""
         logger.info("Initializing services in dependency order...")
         
@@ -79,8 +82,8 @@ class ServiceOrchestrator:
         self,
         content_type: str = "email",
         limit: int = 10,
-        operations: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        operations: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Process content through the pipeline.
         
@@ -240,7 +243,7 @@ class ServiceOrchestrator:
             logger.error(f"Search index update failed: {e}")
             self.results["search_index"] = {"success": False, "error": str(e)}
     
-    def get_pipeline_status(self) -> Dict[str, Any]:
+    def get_pipeline_status(self) -> dict[str, Any]:
         """Get current pipeline status."""
         status = {
             "timestamp": datetime.now().isoformat(),
@@ -260,6 +263,81 @@ class ServiceOrchestrator:
                 status[f"{name}_health"] = "unknown"
         
         return status
+    
+    def validate_before_embedding(self, content_data: Dict[str, Any]) -> bool:
+        """
+        Pre-embedding validation gate.
+        
+        Args:
+            content_data: Content data to validate (must include email fields if email type)
+            
+        Returns:
+            True if content passes validation, False otherwise
+        """
+        if not self.validation_enabled:
+            return True
+        
+        content_type = content_data.get('content_type', '').lower()
+        
+        # Only validate email content
+        if content_type != 'email':
+            return True
+        
+        try:
+            # Validate email data
+            is_valid, violations = self.validator.validate_email(content_data)
+            
+            if not is_valid:
+                logger.warning(f"Pre-embedding validation failed for email {content_data.get('message_id', 'unknown')}: {violations}")
+                
+                # Log to quarantine if database available
+                if "database" in self.services:
+                    self._log_validation_failure(content_data, violations)
+                
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Validation gate error: {e}")
+            return False  # Fail safe - reject on validation errors
+    
+    def _log_validation_failure(self, content_data: Dict[str, Any], violations: List[str]):
+        """Log validation failure to quarantine."""
+        try:
+            from utilities.maintenance.email_quarantine import EmailQuarantineManager
+            
+            quarantine_manager = EmailQuarantineManager()
+            
+            # Create a quarantine entry for this validation failure
+            batch_id = f"validation_failure_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
+            # Mock email data for quarantine logging
+            mock_email_id = content_data.get('id', 0)
+            message_id = content_data.get('message_id', 'unknown')
+            
+            self.services["database"].execute_sql("""
+                INSERT INTO emails_quarantine
+                (email_id, message_id, reason, batch_id, original_data, error_details)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                mock_email_id,
+                message_id,
+                violations[0] if violations else 'VALIDATION_FAILED',
+                batch_id,
+                json.dumps(content_data),
+                f"Pre-embedding validation failed: {', '.join(violations)}"
+            ))
+            
+            logger.info(f"Logged validation failure to quarantine: {message_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to log validation failure: {e}")
+    
+    def enable_validation_gate(self, enabled: bool = True):
+        """Enable or disable pre-embedding validation."""
+        self.validation_enabled = enabled
+        logger.info(f"Pre-embedding validation gate {'enabled' if enabled else 'disabled'}")
 
 
 def main():

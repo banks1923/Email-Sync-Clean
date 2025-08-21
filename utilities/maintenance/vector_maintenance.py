@@ -12,7 +12,7 @@ Combines functionality from:
 
 import sys
 import argparse
-from typing import Optional, Dict, Any
+from typing import Any
 from loguru import logger
 
 from shared.simple_db import SimpleDB

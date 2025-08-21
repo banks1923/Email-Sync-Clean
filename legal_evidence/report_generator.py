@@ -23,8 +23,8 @@ class LegalReportGenerator:
         self.threads = get_thread_analyzer(db_path)
         
     def generate_lookup_report(self, 
-                              thread_ids: Optional[List[str]] = None,
-                              keywords: Optional[List[str]] = None) -> str:
+                              thread_ids: list[str] | None = None,
+                              keywords: list[str] | None = None) -> str:
         """Generate structured lookup report with EID references.
         
         This is for quick evidence retrieval during legal proceedings.
@@ -109,8 +109,8 @@ class LegalReportGenerator:
         return "\n".join(report)
     
     def generate_narrative_report(self,
-                                 disputed_topics: List[str],
-                                 focus_senders: Optional[List[str]] = None) -> str:
+                                 disputed_topics: list[str],
+                                 focus_senders: list[str] | None = None) -> str:
         """Generate narrative report with pattern analysis for court filing."""
         report = []
         report.append("# Legal Evidence Analysis Report")
@@ -256,8 +256,8 @@ class LegalReportGenerator:
     
     def export_evidence_package(self, 
                                output_dir: str,
-                               thread_ids: Optional[List[str]] = None,
-                               keywords: Optional[List[str]] = None) -> Dict[str, Any]:
+                               thread_ids: list[str] | None = None,
+                               keywords: list[str] | None = None) -> dict[str, Any]:
         """Export complete evidence package with all reports and data."""
         os.makedirs(output_dir, exist_ok=True)
         

@@ -1,4 +1,4 @@
-.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-fix complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke full-run
+.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-truth-check docs-fix docs-audit docs-audit-summary docs-update complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke full-run email-scan email-quarantine vectors-reconcile ci-email-gate first-time-setup test-basic install-qdrant test-vector search upload sync-gmail health-check recent-activity install-all setup-gmail test-everything update-system backup diagnose check-requirements setup-gmail-auth test-gmail sync-gmail-recent db-stats performance-stats reindex-all start-qdrant qdrant-status fix-permissions check-disk-space memory-check system-report configure-advanced setup-backups setup-search-aliases optimize-db cleanup-old-data monitor-performance encrypt-database setup-secure-backups
 
 # Default target
 .DEFAULT_GOAL := help
@@ -136,13 +136,23 @@ security-check: ## Run security checks with bandit
 	bandit -r gmail/ search/ vector_store/ embeddings/ shared/
 
 # Documentation
-docs-check: ## Check markdown documentation for style issues
-	@echo "📝 Running markdownlint on documentation..."
+docs-check: ## Check documentation for style issues and truth alignment (CI guard)  
+	@echo "📝 Running comprehensive documentation checks..."
+	@echo "1. Checking markdown style..."
 	@if command -v markdownlint >/dev/null 2>&1; then \
 		markdownlint --config .config/.markdownlint.json *.md docs/*.md; \
 	else \
 		echo "⚠️  markdownlint not installed. Install with: npm install -g markdownlint-cli"; \
 	fi
+	@echo ""
+	@echo "2. Auditing documentation truth alignment..."
+	@$(PYTHON) tools/docs/audit.py --json | python3 -c "import sys, json; data=json.load(sys.stdin); missing_docs=[d for d in data['missing_docs'] if not d['exists']]; missing_tests=[t for t in data['test_paths'] if not t['exists']]; exit(1 if missing_docs or missing_tests else 0)" || (echo "❌ Documentation audit failed: missing files or incorrect paths" && $(PYTHON) tools/docs/audit.py --summary && exit 1)
+	@echo "✅ Documentation checks passed!"
+
+docs-truth-check: ## Check only documentation truth alignment (no style checking)
+	@echo "🔍 Auditing documentation truth alignment..."
+	@$(PYTHON) tools/docs/audit.py --json | python3 -c "import sys, json; data=json.load(sys.stdin); missing_docs=[d for d in data['missing_docs'] if not d['exists']]; missing_tests=[t for t in data['test_paths'] if not t['exists']]; exit(1 if missing_docs or missing_tests else 0)" || (echo "❌ Documentation audit failed: missing files or incorrect paths" && $(PYTHON) tools/docs/audit.py --summary && exit 1)
+	@echo "✅ Documentation truth alignment verified!"
 
 docs-fix: ## Auto-fix markdown documentation issues where possible
 	@echo "🔧 Auto-fixing markdown issues..."
@@ -151,6 +161,19 @@ docs-fix: ## Auto-fix markdown documentation issues where possible
 	else \
 		echo "⚠️  markdownlint not installed. Install with: npm install -g markdownlint-cli"; \
 	fi
+
+docs-audit: ## Audit documentation claims against reality (outputs JSON)
+	@echo "🔍 Auditing documentation claims against codebase..."
+	@$(PYTHON) tools/docs/audit.py --json
+
+docs-audit-summary: ## Show human-readable documentation audit summary
+	@echo "📋 Documentation Audit Summary"
+	@$(PYTHON) tools/docs/audit.py --summary
+
+docs-update: ## Update documentation with auto-generated content (line counts, service tables)
+	@echo "🔄 Updating documentation with current data..."
+	@$(PYTHON) tools/docs/update_counts.py
+	@echo "✅ Documentation updated with current line counts and service data"
 
 # Code Complexity Analysis
 complexity-check: ## Analyze code complexity with radon
@@ -283,6 +306,11 @@ vector-renormalize-fix: ensure-qdrant ## Apply vector renormalization
 	@echo "⚠️  Re-normalizing vectors to unit length..."
 	@$(PYTHON) utilities/maintenance/vector_maintenance.py renormalize --execute
 
+preflight-vector-parity: ensure-qdrant ## Check vector parity between database and Qdrant
+	@echo "🔍 Checking vector parity..."
+	@APP_DB_PATH=data/emails.db VSTORE_COLLECTION=emails ALLOW_EMPTY_COLLECTION=false EXPECTED_DIM=1024 DELTA_THRESHOLD=50 \
+	$(PYTHON) tools/preflight/vector_parity_check.py
+
 maintenance-all: ## Run all maintenance checks
 	@echo "🛠️  Running all maintenance checks..."
 	@make db-validate
@@ -324,6 +352,52 @@ backfill-embeddings: ensure-qdrant ## Backfill embeddings for old emails
 backfill-timeline: ensure-qdrant ## Backfill timeline events for old emails
 	@echo "📅 Backfilling timeline events..."
 	@$(PYTHON) scripts/backfill_semantic.py --steps timeline
+
+# Email Corpus Sanitation Targets
+email-scan: ## Scan email corpus for validation issues (JSON output)
+	@echo "🔍 Scanning email corpus for validation issues..."
+	@$(PYTHON) tools/cli/email_sanitizer.py scan --json
+
+email-quarantine: ## Move invalid emails to quarantine with batch tracking
+	@echo "🚨 Quarantining invalid emails..."
+	@$(PYTHON) tools/cli/email_sanitizer.py quarantine --json
+
+email-quarantine-dry: ## Dry run quarantine (scan only, no changes)
+	@echo "🔍 Dry run: checking what would be quarantined..."
+	@$(PYTHON) tools/cli/email_sanitizer.py quarantine --dry-run --json
+
+vectors-reconcile: ensure-qdrant ## Reconcile vectors between database and Qdrant
+	@echo "🔄 Reconciling vectors between database and Qdrant..."
+	@$(PYTHON) tools/cli/email_sanitizer.py reconcile --json
+
+ci-email-gate: ## CI validation gate (exits non-zero on violations)
+	@echo "🚪 Running CI email validation gate..."
+	@$(PYTHON) tools/scripts/email_sanitation_report.py --ci-check
+
+email-report: ## Generate comprehensive email sanitation report
+	@echo "📊 Generating email sanitation report..."
+	@$(PYTHON) tools/scripts/email_sanitation_report.py --format pretty
+
+email-report-json: ## Generate JSON email sanitation report
+	@echo "📊 Generating JSON email sanitation report..."
+	@$(PYTHON) tools/scripts/email_sanitation_report.py --format json
+
+email-setup: ## Setup email quarantine infrastructure
+	@echo "🏗️  Setting up email quarantine infrastructure..."
+	@$(PYTHON) scripts/create_quarantine_tables.py
+	@echo "✅ Email quarantine infrastructure ready!"
+
+email-rollback: ## Rollback quarantine batch (requires BATCH_ID)
+	@if [ -z "$(BATCH_ID)" ]; then \
+		echo "❌ Usage: make email-rollback BATCH_ID=batch-uuid"; \
+		exit 1; \
+	fi
+	@echo "🔄 Rolling back quarantine batch: $(BATCH_ID)..."
+	@$(PYTHON) tools/cli/email_sanitizer.py rollback $(BATCH_ID) --json
+
+email-stats: ## Show quarantine statistics
+	@echo "📈 Email quarantine statistics..."
+	@$(PYTHON) tools/cli/email_sanitizer.py stats
 
 backfill-all: ensure-qdrant ## Backfill all semantic enrichment for old emails
 	@echo "🚀 Backfilling all semantic enrichment..."
@@ -429,4 +503,369 @@ ingest-status:
 	@echo -n "Documents Failed: "; sqlite3 data/emails.db "SELECT COUNT(DISTINCT sha256) FROM documents WHERE status='failed'" 2>/dev/null || echo "0"
 	@echo -n "Ready for Embedding: "; sqlite3 data/emails.db "SELECT COUNT(*) FROM content_unified WHERE ready_for_embedding=1" 2>/dev/null || echo "0"
 
-.PHONY: preflight quarantine-list quarantine-stats embeddings-backfill ingest-status
+sha-backfill: ## Repair SHA256 and content_unified chain for upload documents
+	python3 scripts/backfill_sha256_uploads.py --db ${APP_DB_PATH} --source-type upload
+
+sha-backfill-dry: ## Dry run SHA256 backfill (shows what would be fixed)
+	python3 scripts/backfill_sha256_uploads.py --db ${APP_DB_PATH} --source-type upload --dry-run
+
+.PHONY: preflight quarantine-list quarantine-stats embeddings-backfill ingest-status sha-backfill sha-backfill-dry
+
+# =============================================================================
+# USER-FRIENDLY COMMANDS (Easy setup and daily use)
+# =============================================================================
+
+# First-time setup commands
+first-time-setup: ## Complete first-time setup from scratch
+	@echo "🚀 Starting complete Email Sync setup..."
+	@echo ""
+	@echo "Step 1: Installing dependencies..."
+	@$(MAKE) install-dev
+	@echo ""
+	@echo "Step 2: Testing basic functionality..."
+	@$(MAKE) test-basic
+	@echo ""
+	@echo "Step 3: Setting up vector search..."
+	@$(MAKE) install-qdrant || echo "⚠️  Vector search setup failed (optional)"
+	@echo ""
+	@echo "Step 4: Running health check..."
+	@$(MAKE) health-check
+	@echo ""
+	@echo "✅ Setup complete! Try: make search QUERY=\"test\""
+
+test-basic: ## Test basic system functionality (no external dependencies)
+	@echo "🧪 Testing basic system functionality..."
+	@$(PYTHON) -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+try: \
+    from shared.simple_db import SimpleDB; \
+    db = SimpleDB(); \
+    print('✅ Database connection works'); \
+    from utilities.embeddings import get_embedding_service; \
+    emb = get_embedding_service(); \
+    vec = emb.encode('test'); \
+    print(f'✅ AI embeddings work ({len(vec)} dimensions)'); \
+    print('✅ Basic functionality test passed!'); \
+except Exception as e: \
+    print(f'❌ Basic test failed: {e}'); \
+    sys.exit(1); \
+"
+
+install-qdrant: ## Install Qdrant vector database locally
+	@echo "📦 Installing Qdrant vector database..."
+	@if [ ! -f ~/bin/qdrant ]; then \
+		echo "   Downloading Qdrant..."; \
+		mkdir -p ~/bin; \
+		if [ "$$(uname -m)" = "arm64" ]; then \
+			curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-aarch64-apple-darwin.tar.gz; \
+		else \
+			curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-x86_64-apple-darwin.tar.gz; \
+		fi; \
+		tar -xzf /tmp/qdrant.tar.gz -C /tmp; \
+		cp /tmp/qdrant ~/bin/qdrant; \
+		chmod +x ~/bin/qdrant; \
+		rm -f /tmp/qdrant.tar.gz; \
+		echo "✅ Qdrant installed to ~/bin/qdrant"; \
+	else \
+		echo "✅ Qdrant already installed"; \
+	fi
+	@$(MAKE) start-qdrant
+
+test-vector: ensure-qdrant ## Test vector search functionality
+	@echo "🧪 Testing vector search..."
+	@$(MAKE) vector-smoke
+
+# Daily use commands
+search: ## Search documents (usage: make search QUERY="your search terms")
+	@if [ -z "$(QUERY)" ]; then \
+		echo "❌ Usage: make search QUERY=\"your search terms\""; \
+		echo "   Example: make search QUERY=\"contract terms\""; \
+		exit 1; \
+	fi
+	@echo "🔍 Searching for: $(QUERY)"
+	@tools/scripts/vsearch search "$(QUERY)"
+
+upload: ## Upload document (usage: make upload FILE="document.pdf")
+	@if [ -z "$(FILE)" ]; then \
+		echo "❌ Usage: make upload FILE=\"document.pdf\""; \
+		echo "   Example: make upload FILE=\"contract.pdf\""; \
+		exit 1; \
+	fi
+	@echo "📄 Uploading: $(FILE)"
+	@tools/scripts/vsearch upload "$(FILE)"
+
+sync-gmail: ## Sync Gmail emails
+	@echo "📧 Syncing Gmail emails..."
+	@tools/scripts/vsearch sync-gmail
+
+health-check: ## Quick system health check
+	@echo "🏥 System Health Check"
+	@echo "===================="
+	@tools/scripts/vsearch info
+	@echo ""
+	@$(MAKE) diag-wiring
+
+recent-activity: ## Show recent system activity
+	@echo "📊 Recent Activity"
+	@echo "=================="
+	@$(PYTHON) -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+from shared.simple_db import SimpleDB; \
+db = SimpleDB(); \
+try: \
+    cursor = db.execute('SELECT source_type, COUNT(*) as count FROM documents WHERE created_at > datetime(\"now\", \"-7 days\") GROUP BY source_type ORDER BY count DESC'); \
+    results = cursor.fetchall(); \
+    if results: \
+        print('Documents added in last 7 days:'); \
+        for source, count in results: \
+            print(f'  {source}: {count} documents'); \
+    else: \
+        print('No recent activity'); \
+except Exception as e: \
+    print(f'Unable to check activity: {e}'); \
+"
+
+# Setup and configuration commands
+install-all: install-dev install-qdrant ## Install all components including optional ones
+	@echo "✅ All components installed!"
+
+setup-gmail: ## Setup Gmail integration (interactive)
+	@echo "📧 Setting up Gmail integration..."
+	@echo "This requires Gmail API credentials."
+	@echo "Visit: https://developers.google.com/gmail/api/quickstart"
+	@echo "Follow the setup guide in gmail/CLAUDE.md"
+
+test-everything: ## Run comprehensive system test
+	@echo "🧪 Running comprehensive tests..."
+	@$(MAKE) test-basic
+	@$(MAKE) test-vector
+	@$(MAKE) health-check
+	@echo "✅ All tests passed!"
+
+# Maintenance commands
+update-system: ## Update system components
+	@echo "🔄 Updating system components..."
+	@$(PIP) install --upgrade -r requirements.txt
+	@$(PIP) install --upgrade -r requirements-dev.txt
+	@echo "✅ System updated!"
+
+backup: ## Backup your data
+	@echo "💾 Creating backup..."
+	@mkdir -p backups
+	@timestamp=$$(date +%Y%m%d_%H%M%S); \
+	cp data/emails.db "backups/emails_$$timestamp.db"; \
+	tar -czf "backups/qdrant_data_$$timestamp.tar.gz" qdrant_data/ 2>/dev/null || true; \
+	echo "✅ Backup created: backups/emails_$$timestamp.db"
+
+diagnose: ## Run comprehensive system diagnostics
+	@echo "🔬 Running system diagnostics..."
+	@echo ""
+	@echo "=== Basic Health ==="
+	@$(MAKE) health-check
+	@echo ""
+	@echo "=== Memory Usage ==="
+	@$(MAKE) memory-check
+	@echo ""
+	@echo "=== Disk Space ==="
+	@$(MAKE) check-disk-space
+	@echo ""
+	@echo "=== Recent Activity ==="
+	@$(MAKE) recent-activity
+
+# Utility commands
+check-requirements: ## Check system requirements
+	@echo "🔍 Checking system requirements..."
+	@echo -n "Python version: "; python3 --version
+	@echo -n "Available memory: "; \
+	if command -v free >/dev/null 2>&1; then \
+		free -h | grep Mem | awk '{print $$7}'; \
+	elif command -v vm_stat >/dev/null 2>&1; then \
+		vm_stat | grep "Pages free" | awk '{print int($$3) * 4096 / 1024 / 1024 "MB"}'; \
+	else \
+		echo "Unable to check"; \
+	fi
+	@echo -n "Disk space: "; df -h . | tail -1 | awk '{print $$4" available"}'
+	@echo ""
+	@if python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)"; then \
+		echo "✅ Python 3.8+ detected"; \
+	else \
+		echo "❌ Python 3.8+ required"; \
+	fi
+
+setup-gmail-auth: ## Setup Gmail API authentication
+	@echo "🔑 Gmail API setup instructions:"
+	@echo "1. Go to: https://console.developers.google.com/"
+	@echo "2. Create a new project or select existing"
+	@echo "3. Enable Gmail API"
+	@echo "4. Create OAuth 2.0 credentials"
+	@echo "5. Download credentials.json to project root"
+	@echo "6. Run: tools/scripts/vsearch sync-gmail"
+
+test-gmail: ## Test Gmail connection
+	@echo "📧 Testing Gmail connection..."
+	@$(PYTHON) -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+try: \
+    from gmail.main import GmailService; \
+    service = GmailService(); \
+    print('✅ Gmail connection works'); \
+except Exception as e: \
+    print(f'❌ Gmail test failed: {e}'); \
+    print('Run: make setup-gmail-auth for setup instructions'); \
+"
+
+sync-gmail-recent: ## Sync recent Gmail emails (last 100)
+	@echo "📧 Syncing recent emails..."
+	@tools/scripts/vsearch process -n 100
+
+# Statistics and monitoring
+db-stats: ## Show database statistics
+	@echo "📊 Database Statistics"
+	@echo "====================="
+	@$(PYTHON) -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+from shared.simple_db import SimpleDB; \
+db = SimpleDB(); \
+try: \
+    cursor = db.execute('SELECT COUNT(DISTINCT sha256) FROM documents'); \
+    total_docs = cursor.fetchone()[0]; \
+    print(f'Total documents: {total_docs}'); \
+    cursor = db.execute('SELECT source_type, COUNT(*) FROM documents GROUP BY source_type'); \
+    for source, count in cursor.fetchall(): \
+        print(f'{source}: {count}'); \
+    cursor = db.execute('SELECT COUNT(*) FROM content'); \
+    content_count = cursor.fetchone()[0]; \
+    print(f'Content entries: {content_count}'); \
+    import os; \
+    if os.path.exists('data/emails.db'): \
+        size_mb = os.path.getsize('data/emails.db') / 1024 / 1024; \
+        print(f'Database size: {size_mb:.1f} MB'); \
+except Exception as e: \
+    print(f'Error getting stats: {e}'); \
+"
+
+performance-stats: ## Show performance statistics
+	@echo "⚡ Performance Statistics"
+	@echo "========================"
+	@$(PYTHON) -c "\
+import sys, time; \
+sys.path.insert(0, '.'); \
+from utilities.embeddings import get_embedding_service; \
+from shared.simple_db import SimpleDB; \
+print('Testing embedding speed...'); \
+start = time.time(); \
+emb = get_embedding_service(); \
+vec = emb.encode('test query for performance'); \
+embed_time = time.time() - start; \
+print(f'Embedding generation: {embed_time:.3f}s'); \
+print('Testing database speed...'); \
+start = time.time(); \
+db = SimpleDB(); \
+cursor = db.execute('SELECT COUNT(*) FROM documents'); \
+result = cursor.fetchone(); \
+db_time = time.time() - start; \
+print(f'Database query: {db_time:.3f}s'); \
+"
+
+# Quick fixes
+reindex-all: ensure-qdrant ## Reindex all content for search
+	@echo "🔄 Reindexing all content..."
+	@$(MAKE) vector-sync
+
+start-qdrant: ## Start Qdrant vector database
+	@$(MAKE) ensure-qdrant
+
+qdrant-status: ## Check Qdrant status
+	@echo "📊 Qdrant Status"
+	@echo "==============="
+	@if curl -s http://localhost:6333/readyz >/dev/null 2>&1; then \
+		echo "✅ Qdrant is running"; \
+		curl -s http://localhost:6333/ | head -5; \
+	else \
+		echo "❌ Qdrant is not running"; \
+		echo "   Run: make start-qdrant"; \
+	fi
+
+fix-permissions: ## Fix file permissions
+	@echo "🔧 Fixing file permissions..."
+	@chmod +x tools/scripts/vsearch 2>/dev/null || true
+	@chmod +x tools/scripts/* 2>/dev/null || true
+	@echo "✅ Permissions fixed"
+
+check-disk-space: ## Check available disk space
+	@echo "💾 Disk Space Check"
+	@echo "=================="
+	@df -h . | head -1
+	@df -h . | tail -1
+	@echo ""
+	@du -sh data/ 2>/dev/null || echo "No data directory"
+	@du -sh qdrant_data/ 2>/dev/null || echo "No qdrant_data directory"
+
+memory-check: ## Check memory usage
+	@echo "🧠 Memory Check"
+	@echo "=============="
+	@if command -v ps >/dev/null 2>&1; then \
+		ps aux | grep -E "(python|qdrant)" | grep -v grep | head -5; \
+	else \
+		echo "Unable to check memory usage"; \
+	fi
+
+system-report: ## Generate comprehensive system report
+	@echo "📋 Email Sync System Report"
+	@echo "==========================="
+	@date
+	@echo ""
+	@$(MAKE) check-requirements
+	@echo ""
+	@$(MAKE) db-stats
+	@echo ""
+	@$(MAKE) qdrant-status
+	@echo ""
+	@$(MAKE) performance-stats
+
+# Advanced configuration (placeholders for future implementation)
+configure-advanced: ## Configure advanced system settings
+	@echo "⚙️  Advanced configuration (coming soon)"
+	@echo "Edit config/settings.py for now"
+
+setup-backups: ## Setup automated backups
+	@echo "💾 Automated backup setup (coming soon)"
+	@echo "For now, run: make backup"
+
+setup-search-aliases: ## Setup custom search aliases
+	@echo "🔍 Search alias setup (coming soon)"
+	@echo "For now, use: make search QUERY=\"...\""
+
+optimize-db: ## Optimize database performance
+	@echo "⚡ Optimizing database..."
+	@$(PYTHON) -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+from shared.simple_db import SimpleDB; \
+db = SimpleDB(); \
+db.execute('VACUUM'); \
+db.execute('REINDEX'); \
+print('✅ Database optimized'); \
+"
+
+cleanup-old-data: ## Clean up old temporary data
+	@echo "🧹 Cleaning up old data..."
+	@find data/staged/ -type f -mtime +7 -delete 2>/dev/null || true
+	@find logs/ -name "*.log" -mtime +30 -delete 2>/dev/null || true
+	@echo "✅ Old data cleaned up"
+
+monitor-performance: ## Monitor system performance
+	@echo "📊 Performance monitoring (coming soon)"
+	@echo "For now, use: make performance-stats"
+
+encrypt-database: ## Encrypt database (placeholder)
+	@echo "🔒 Database encryption (coming soon)"
+	@echo "Currently using SQLite without encryption"
+
+setup-secure-backups: ## Setup secure encrypted backups
+	@echo "🔐 Secure backup setup (coming soon)"
+	@echo "For now, use: make backup"

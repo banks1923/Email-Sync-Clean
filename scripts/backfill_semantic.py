@@ -5,7 +5,6 @@ Processes old emails through the semantic pipeline (entities, embeddings, timeli
 """
 
 import sys
-import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import argparse
@@ -14,7 +13,6 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
-from config.settings import semantic_settings
 from shared.simple_db import SimpleDB
 from utilities.semantic_pipeline import get_semantic_pipeline
 

@@ -27,7 +27,7 @@ class IdempotentPDFWriter:
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
     
-    def check_existing(self, sha256: str) -> Optional[Dict[str, Any]]:
+    def check_existing(self, sha256: str) -> dict[str, Any] | None:
         """Check if document with this SHA256 already exists"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -51,8 +51,8 @@ class IdempotentPDFWriter:
         self, 
         file_path: str,
         chunks: list,
-        metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Transactionally write PDF data with rollback on failure
         
@@ -233,7 +233,7 @@ def make_pdf_write_idempotent(pdf_service_instance):
     # Store original method
     original_process = pdf_service_instance._process_pdf_internal
     
-    def wrapped_process(pdf_path: str, file_hash: str, source: str) -> Dict[str, Any]:
+    def wrapped_process(pdf_path: str, file_hash: str, source: str) -> dict[str, Any]:
         """Wrapped version with idempotent writes"""
         # First, do the extraction
         result = original_process(pdf_path, file_hash, source)

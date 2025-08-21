@@ -8,7 +8,6 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from loguru import logger
 
 
 def setup_semantic_schema(db_path="data/emails.db"):

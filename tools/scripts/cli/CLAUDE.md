@@ -38,7 +38,7 @@ Modular CLI implementation following clean architecture principles.
 - **info_handler.py** (288 lines) - Information display: `info`, `pdf-stats`, `transcription-stats`
 - **transcription_handler.py** (46 lines) - Transcription operations: `transcribe`
 - **timeline_handler.py** (72 lines) - Timeline operations: `timeline`
-- **notes_handler.py** (90 lines) - Notes operations: `note`, `notes`
+- ~~**notes_handler.py**~~ - **REMOVED** - Notes migrated to document pipeline
 
 ## Usage
 
@@ -81,7 +81,7 @@ def search_emails(query, limit=5):
 - `get_transcription_service()` - Audio transcription
 - `get_entity_service()` - Named entity recognition
 - `get_timeline_service()` - Chronological content timeline
-- `get_notes_service()` - Notes management system
+- ~~`get_notes_service()`~~ - **REMOVED** - Use document pipeline for notes
 
 ### Health Monitoring
 ```python

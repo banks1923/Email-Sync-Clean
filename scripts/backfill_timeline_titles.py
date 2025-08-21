@@ -6,7 +6,6 @@ for timeline events that were created without them.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to path

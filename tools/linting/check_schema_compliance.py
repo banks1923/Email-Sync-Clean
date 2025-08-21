@@ -12,7 +12,6 @@ This tool can be run locally or in CI to ensure:
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 import subprocess
 
 def check_content_id_usage() -> list[tuple[str, int, str]]:
