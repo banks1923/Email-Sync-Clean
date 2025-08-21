@@ -21,11 +21,14 @@ class GmailConfig:
         """Build Gmail API query string from configured sender filters.
 
         Returns:
-            str: Gmail query string with OR-joined sender filters.
+            str: Gmail query string with OR-joined sender filters and date restriction.
         """
-        # Build sender filter only - no date restrictions
+        # Build sender filter
         sender_queries = [f"from:{sender}" for sender in self.preferred_senders]
         sender_filter = " OR ".join(sender_queries)
 
-        # Return just the sender filter
-        return f"({sender_filter})"
+        # Add date restriction to exclude emails before 2023
+        date_filter = "after:2022/12/31"
+
+        # Return sender filter with date restriction
+        return f"({sender_filter}) {date_filter}"
