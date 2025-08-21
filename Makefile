@@ -534,23 +534,7 @@ first-time-setup: ## Complete first-time setup from scratch
 	@echo "✅ Setup complete! Try: make search QUERY=\"test\""
 
 test-basic: ## Test basic system functionality (no external dependencies)
-	@echo "🧪 Testing basic system functionality..."
-	@$(PYTHON) -c "\
-import sys; \
-sys.path.insert(0, '.'); \
-try: \
-    from shared.simple_db import SimpleDB; \
-    db = SimpleDB(); \
-    print('✅ Database connection works'); \
-    from utilities.embeddings import get_embedding_service; \
-    emb = get_embedding_service(); \
-    vec = emb.encode('test'); \
-    print(f'✅ AI embeddings work ({len(vec)} dimensions)'); \
-    print('✅ Basic functionality test passed!'); \
-except Exception as e: \
-    print(f'❌ Basic test failed: {e}'); \
-    sys.exit(1); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py test_basic
 
 install-qdrant: ## Install Qdrant vector database locally
 	@echo "📦 Installing Qdrant vector database..."
@@ -607,25 +591,7 @@ health-check: ## Quick system health check
 	@$(MAKE) diag-wiring
 
 recent-activity: ## Show recent system activity
-	@echo "📊 Recent Activity"
-	@echo "=================="
-	@$(PYTHON) -c "\
-import sys; \
-sys.path.insert(0, '.'); \
-from shared.simple_db import SimpleDB; \
-db = SimpleDB(); \
-try: \
-    cursor = db.execute('SELECT source_type, COUNT(*) as count FROM documents WHERE created_at > datetime(\"now\", \"-7 days\") GROUP BY source_type ORDER BY count DESC'); \
-    results = cursor.fetchall(); \
-    if results: \
-        print('Documents added in last 7 days:'); \
-        for source, count in results: \
-            print(f'  {source}: {count} documents'); \
-    else: \
-        print('No recent activity'); \
-except Exception as e: \
-    print(f'Unable to check activity: {e}'); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py recent_activity
 
 # Setup and configuration commands
 install-all: install-dev install-qdrant ## Install all components including optional ones
@@ -704,18 +670,7 @@ setup-gmail-auth: ## Setup Gmail API authentication
 	@echo "6. Run: tools/scripts/vsearch sync-gmail"
 
 test-gmail: ## Test Gmail connection
-	@echo "📧 Testing Gmail connection..."
-	@$(PYTHON) -c "\
-import sys; \
-sys.path.insert(0, '.'); \
-try: \
-    from gmail.main import GmailService; \
-    service = GmailService(); \
-    print('✅ Gmail connection works'); \
-except Exception as e: \
-    print(f'❌ Gmail test failed: {e}'); \
-    print('Run: make setup-gmail-auth for setup instructions'); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py test_gmail
 
 sync-gmail-recent: ## Sync recent Gmail emails (last 100)
 	@echo "📧 Syncing recent emails..."
@@ -723,53 +678,10 @@ sync-gmail-recent: ## Sync recent Gmail emails (last 100)
 
 # Statistics and monitoring
 db-stats: ## Show database statistics
-	@echo "📊 Database Statistics"
-	@echo "====================="
-	@$(PYTHON) -c "\
-import sys; \
-sys.path.insert(0, '.'); \
-from shared.simple_db import SimpleDB; \
-db = SimpleDB(); \
-try: \
-    cursor = db.execute('SELECT COUNT(DISTINCT sha256) FROM documents'); \
-    total_docs = cursor.fetchone()[0]; \
-    print(f'Total documents: {total_docs}'); \
-    cursor = db.execute('SELECT source_type, COUNT(*) FROM documents GROUP BY source_type'); \
-    for source, count in cursor.fetchall(): \
-        print(f'{source}: {count}'); \
-    cursor = db.execute('SELECT COUNT(*) FROM content'); \
-    content_count = cursor.fetchone()[0]; \
-    print(f'Content entries: {content_count}'); \
-    import os; \
-    if os.path.exists('data/emails.db'): \
-        size_mb = os.path.getsize('data/emails.db') / 1024 / 1024; \
-        print(f'Database size: {size_mb:.1f} MB'); \
-except Exception as e: \
-    print(f'Error getting stats: {e}'); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py db_stats
 
 performance-stats: ## Show performance statistics
-	@echo "⚡ Performance Statistics"
-	@echo "========================"
-	@$(PYTHON) -c "\
-import sys, time; \
-sys.path.insert(0, '.'); \
-from utilities.embeddings import get_embedding_service; \
-from shared.simple_db import SimpleDB; \
-print('Testing embedding speed...'); \
-start = time.time(); \
-emb = get_embedding_service(); \
-vec = emb.encode('test query for performance'); \
-embed_time = time.time() - start; \
-print(f'Embedding generation: {embed_time:.3f}s'); \
-print('Testing database speed...'); \
-start = time.time(); \
-db = SimpleDB(); \
-cursor = db.execute('SELECT COUNT(*) FROM documents'); \
-result = cursor.fetchone(); \
-db_time = time.time() - start; \
-print(f'Database query: {db_time:.3f}s'); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py performance_stats
 
 # Quick fixes
 reindex-all: ensure-qdrant ## Reindex all content for search
@@ -841,16 +753,7 @@ setup-search-aliases: ## Setup custom search aliases
 	@echo "For now, use: make search QUERY=\"...\""
 
 optimize-db: ## Optimize database performance
-	@echo "⚡ Optimizing database..."
-	@$(PYTHON) -c "\
-import sys; \
-sys.path.insert(0, '.'); \
-from shared.simple_db import SimpleDB; \
-db = SimpleDB(); \
-db.execute('VACUUM'); \
-db.execute('REINDEX'); \
-print('✅ Database optimized'); \
-"
+	@$(PYTHON) tools/scripts/make_helpers.py optimize_db
 
 cleanup-old-data: ## Clean up old temporary data
 	@echo "🧹 Cleaning up old data..."

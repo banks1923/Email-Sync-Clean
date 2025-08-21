@@ -73,6 +73,10 @@ temp/
 tmp/
 .tmp/
 
+# Google Drive temporary upload files
+*.tmp.driveupload/
+.tmp.driveupload*/
+
 # Test files
 test_*.db
 data/test/

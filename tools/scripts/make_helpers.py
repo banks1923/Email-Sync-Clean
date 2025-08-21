@@ -38,7 +38,7 @@ def recent_activity():
     try:
         from shared.simple_db import SimpleDB
         db = SimpleDB()
-        cursor = db.execute('SELECT source_type, COUNT(*) as count FROM documents WHERE created_at > datetime("now", "-7 days") GROUP BY source_type ORDER BY count DESC')
+        cursor = db.execute('SELECT source_type, COUNT(*) as count FROM documents WHERE extraction_date > datetime("now", "-7 days") GROUP BY source_type ORDER BY count DESC')
         results = cursor.fetchall()
         if results:
             print('Documents added in last 7 days:')

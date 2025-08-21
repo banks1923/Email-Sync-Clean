@@ -545,6 +545,48 @@ class SimpleDB:
         
         return stats
 
+    def get_content_count(self, content_type: str | None = None) -> int:
+        """Get count of content entries by type.
+        
+        Args:
+            content_type: Optional type filter ('email', 'pdf', 'transcript', etc.)
+                         If None, returns total count across all types.
+        
+        Returns:
+            Count of content entries
+        """
+        stats = self.get_content_stats()
+        if content_type is not None:
+            # Map plural collection names to singular content types
+            type_mapping = {
+                'emails': 'email',
+                'pdfs': 'pdf',
+                'transcriptions': 'transcript',
+                'notes': 'note'
+            }
+            # Use mapped type if available, otherwise use as-is
+            mapped_type = type_mapping.get(content_type, content_type)
+            # Return count for specific type from content_by_type dict
+            return int(stats.get("content_by_type", {}).get(mapped_type, 0))
+        # Return total count
+        return int(stats.get("total_content", 0))
+    
+    def get_connection(self):
+        """Get database connection for direct SQL operations.
+        
+        Returns:
+            sqlite3.Connection: A new database connection with configured pragmas
+            
+        Note:
+            Prefer using higher-level SimpleDB methods when possible.
+            This is provided for maintenance scripts that need direct access.
+            Caller is responsible for closing the connection.
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        self._configure_connection(conn)
+        return conn
+
     # Batch operations for deduplication (Task 1.1 + 1.4)
     def batch_insert(
         self,
