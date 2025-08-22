@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/gmail/gmail_api.py
-# hypothesis_version: 6.138.2
-
-[100, '404', 'Date', 'From', 'History ID expired', 'Subject', 'To', 'attachmentId', 'attachment_id', 'attachments', 'body', 'content', 'count', 'credentials', 'data', 'datetime_utc', 'email', 'emailAddress', 'error', 'filename', 'gmail', 'headers', 'history', 'historyId', 'history_id', 'id', 'labelsAdded', 'maxResults', 'me', 'message', 'message_id', 'messages', 'messagesAdded', 'messagesTotal', 'messages_total', 'mimeType', 'mime_type', 'name', 'need_full_sync', 'nextPageToken', 'next_page_token', 'pageToken', 'parts', 'payload', 'recipient_to', 'sender', 'size', 'size_bytes', 'startHistoryId', 'subject', 'success', 'text/html', 'text/plain', 'threadsTotal', 'threads_total', 'userId', 'utf-8', 'v1', 'value']

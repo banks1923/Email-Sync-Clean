@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/entity/extractors/combined_extractor.py
-# hypothesis_version: 6.138.2
-
-[0.5, 'available', 'available_extractors', 'combined', 'component_extractors', 'confidence', 'count', 'end', 'entities', 'error', 'extraction_results', 'legal', 'message_id', 'spacy', 'start', 'success', 'supported_types']

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/shared/logging_config.py
-# hypothesis_version: 6.138.2
-
-[10485760, '%Y%m%d', '%Y-%m-%d %H:%M:%S', '.', 'INFO', 'logs']

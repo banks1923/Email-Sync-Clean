@@ -73,9 +73,11 @@ temp/
 tmp/
 .tmp/
 
-# Google Drive temporary upload files
+# Google Drive temporary upload files  
 *.tmp.driveupload/
 .tmp.driveupload*/
+.tmp.drivedownload/
+*.tmp.drivedownload/
 
 # Test files
 test_*.db
@@ -87,8 +89,15 @@ data/test/
 .coverage.*
 htmlcov/
 .tox/
-.cache
+
+# Centralized cache directory
+.cache/
+.cache/*
+
+# Legacy cache directories (should not exist with new config)
 .mypy_cache/
+.ruff_cache/
+.hypothesis/
 
 # Vector database
 qdrant_data/

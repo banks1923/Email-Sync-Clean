@@ -437,7 +437,7 @@ class SimpleDB:
 
     def get_content(self, content_id: str) -> dict | None:
         """Get content by ID."""
-        return self.fetch_one("SELECT * FROM content WHERE id = ?", (content_id,))
+        return self.fetch_one("SELECT * FROM content_unified WHERE id = ?", (content_id,))
 
     def search_content(
         self,
@@ -450,12 +450,12 @@ class SimpleDB:
         from .date_utils import get_date_range
 
         # Base WHERE clause
-        where_clauses = ["(title LIKE ? OR content LIKE ?)"]
+        where_clauses = ["(title LIKE ? OR body LIKE ?)"]
         params = [f"%{keyword}%", f"%{keyword}%"]
 
         # Add content type filter
         if content_type:
-            where_clauses.append("content_type = ?")
+            where_clauses.append("source_type = ?")
             params.append(content_type)
 
         # Add filters if provided
@@ -506,7 +506,7 @@ class SimpleDB:
 
         # Build final query
         where_clause = " AND ".join(where_clauses)
-        query = f"SELECT * FROM content WHERE {where_clause} ORDER BY created_at DESC LIMIT ?"
+        query = f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_time DESC LIMIT ?"
         params.append(limit)
 
         return self.fetch(query, tuple(params))
@@ -1108,7 +1108,7 @@ class SimpleDB:
             """
             SELECT * FROM document_summaries
             WHERE document_id = ?
-            ORDER BY created_at DESC
+            ORDER BY created_time DESC
         """,
             (document_id,),
         )
@@ -1159,14 +1159,14 @@ class SimpleDB:
             query = """
                 SELECT * FROM document_intelligence
                 WHERE document_id = ? AND intelligence_type = ?
-                ORDER BY created_at DESC
+                ORDER BY created_time DESC
             """
             params = (document_id, intelligence_type)
         else:
             query = """
                 SELECT * FROM document_intelligence
                 WHERE document_id = ?
-                ORDER BY created_at DESC
+                ORDER BY created_time DESC
             """
             params = (document_id,)
 
@@ -1767,11 +1767,11 @@ class SimpleDB:
     
     def get_all_content_ids(self, content_type: str = None) -> list[str]:
         """Get all content IDs, optionally filtered by type. Streams in pages of 1000."""
-        query = "SELECT id FROM content"
+        query = "SELECT id FROM content_unified"
         params = ()
         
         if content_type:
-            query += " WHERE content_type = ?"
+            query += " WHERE source_type = ?"
             params = (content_type,)
         
         query += " ORDER BY id"
@@ -1791,7 +1791,7 @@ class SimpleDB:
         for i in range(0, len(ids), batch_size):
             batch_ids = ids[i:i + batch_size]
             placeholders = ",".join("?" * len(batch_ids))
-            query = f"SELECT * FROM content WHERE id IN ({placeholders})"
+            query = f"SELECT * FROM content_unified WHERE id IN ({placeholders})"
             
             cursor = self.execute(query, tuple(batch_ids))
             # Convert sqlite3.Row objects to dictionaries
@@ -1804,7 +1804,7 @@ class SimpleDB:
         """Mark single content as vectorized."""
         try:
             cursor = self.execute(
-                "UPDATE content SET vector_processed = 1 WHERE id = ?",
+                "UPDATE content_unified SET vector_processed = 1 WHERE id = ?",
                 (content_id,)
             )
             return cursor.rowcount > 0
@@ -1823,7 +1823,7 @@ class SimpleDB:
         for i in range(0, len(content_ids), batch_size):
             batch_ids = content_ids[i:i + batch_size]
             placeholders = ",".join("?" * len(batch_ids))
-            query = f"UPDATE content SET vector_processed = 1 WHERE id IN ({placeholders})"
+            query = f"UPDATE content_unified SET vector_processed = 1 WHERE id IN ({placeholders})"
             
             try:
                 cursor = self.execute(query, tuple(batch_ids))

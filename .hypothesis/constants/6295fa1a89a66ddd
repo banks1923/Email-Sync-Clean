@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/tools/scripts/cli/intelligence_handler.py
-# hypothesis_version: 6.138.2
-
-[0.0, 0.7, 0.95, 1.0, 100, 200, '\n📄 Key Sentences:', '\n🔑 Top Keywords:', 'No title', 'Unknown', 'cached', 'cluster_id', 'confidence', 'content', 'content_id', 'content_type', 'count', 'document', 'documents', 'email', 'entities', 'hash', 'id', 'metadata', 'name', 'note', 'pdf', 'score', 'semantic', 'sentence', 'similarity', 'similarity_score', 'size', 'summary_text', 'text', 'textrank_sentences', 'tf_idf_keywords', 'title', 'transcript', 'type', 'unknown', '❌ No clusters found', '❌ No entities found', '❌ No results found', '🎙️', '📄', '📋 Results from cache', '📝', '📧', '🔄 Freshly extracted', '🔄 Freshly generated', '🚫 Cache disabled', '🧠 Smart Search']

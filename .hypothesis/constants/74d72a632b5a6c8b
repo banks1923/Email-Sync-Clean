@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/documents/processors/markdown_processor.py
-# hypothesis_version: 6.138.2
-
-['\\*([^*]+)\\*', '\\*\\*([^*]+)\\*\\*', '\\1', '\\n{3,}', '^#{1,6}\\s+', '^(#{1,6})\\s+(.+)$', '^>\\s+', '^[\\*\\-\\+] .+$', '^[\\*\\-_]{3,}$', '^\\d+\\. .+$', '^\\|.*\\|.*\\|.*$', '_([^_]+)_', '__([^_]+)__', '_frontmatter', '`([^`]+)`', '```[\\s\\S]*?```', 'author', 'categories', 'code_block_count', 'date', 'description', 'frontmatter', 'heading_count', 'image_count', 'link_count', 'list_count', 'md', 'structure', 'table_count', 'tags', 'title', 'utf-8']

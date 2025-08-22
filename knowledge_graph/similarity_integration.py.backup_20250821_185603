@@ -310,10 +310,10 @@ class SimilarityIntegration:
         Get content IDs for analysis.
         """
         if content_type:
-            query = "SELECT id FROM content_unified WHERE source_type = ?"
+            query = "SELECT id FROM content WHERE content_type = ?"
             params = (content_type,)
         else:
-            query = "SELECT id FROM content_unified"
+            query = "SELECT id FROM content"
             params = ()
 
         rows = self.db.fetch(query, params)

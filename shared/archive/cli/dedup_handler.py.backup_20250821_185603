@@ -39,7 +39,7 @@ def find_duplicates_command(
         # Build query
         if content_type:
             console.print(f"Filtering by type: {content_type}")
-            results = db.search_content("", source_type =content_type, limit=1000)
+            results = db.search_content("", content_type=content_type, limit=1000)
         else:
             results = db.search_content("", limit=1000)
             
@@ -57,10 +57,10 @@ def find_duplicates_command(
         for result in track(results, description="Processing documents..."):
             documents.append({
                 'id': result.get('content_id', result.get('id')),
-                'content_unified': result.get('content_unified', ''),
+                'content': result.get('content', ''),
                 'metadata': {
                     'title': result.get('title', ''),
-                    'type': result.get('source_type', ''),
+                    'type': result.get('content_type', ''),
                     'date': result.get('created_time', result.get('created_at', ''))
                 }
             })
@@ -137,8 +137,8 @@ def compare_documents_command(
         # Calculate similarity
         detector = get_duplicate_detector()
         similarity = detector.get_similarity(
-            doc1.get('content_unified', ''),
-            doc2.get('content_unified', '')
+            doc1.get('content', ''),
+            doc2.get('content', '')
         )
         
         # Display results
@@ -149,8 +149,8 @@ def compare_documents_command(
         
         table.add_row("ID", str(doc_id1), str(doc_id2))
         table.add_row("Title", doc1.get('title', 'N/A')[:50], doc2.get('title', 'N/A')[:50])
-        table.add_row("Type", doc1.get('source_type', 'N/A'), doc2.get('source_type', 'N/A'))
-        table.add_row("Size", f"{len(doc1.get('content_unified', ''))} chars", f"{len(doc2.get('content_unified', ''))} chars")
+        table.add_row("Type", doc1.get('content_type', 'N/A'), doc2.get('content_type', 'N/A'))
+        table.add_row("Size", f"{len(doc1.get('content', ''))} chars", f"{len(doc2.get('content', ''))} chars")
         
         console.print(table)
         
@@ -169,9 +169,9 @@ def compare_documents_command(
         if show_diff and similarity > 0.3:
             console.print("\n[bold]Content Preview:[/bold]")
             console.print("\n[green]Document 1:[/green]")
-            console.print(doc1.get('content_unified', '')[:300] + "...")
+            console.print(doc1.get('content', '')[:300] + "...")
             console.print("\n[blue]Document 2:[/blue]")
-            console.print(doc2.get('content_unified', '')[:300] + "...")
+            console.print(doc2.get('content', '')[:300] + "...")
             
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
@@ -206,7 +206,7 @@ def deduplicate_database_command(
         
         # Get content
         if content_type:
-            results = db.search_content("", source_type =content_type, limit=5000)
+            results = db.search_content("", content_type=content_type, limit=5000)
         else:
             results = db.search_content("", limit=5000)
             
@@ -217,10 +217,10 @@ def deduplicate_database_command(
         documents = [
             {
                 'id': r.get('content_id', r.get('id')),
-                'content_unified': r.get('content_unified', ''),
+                'content': r.get('content', ''),
                 'metadata': {
                     'title': r.get('title', ''),
-                    'type': r.get('source_type', ''),
+                    'type': r.get('content_type', ''),
                     'created_at': r.get('created_time', r.get('created_at', ''))
                 }
             }
@@ -277,9 +277,9 @@ def deduplicate_database_command(
                 deleted = 0
                 for doc_id in track(to_delete, description="Deleting..."):
                     try:
-                        # Delete FROM content_unified table
+                        # Delete from content table
                         db.db.execute_query(
-                            "DELETE FROM content_unified WHERE id = ?",
+                            "DELETE FROM content WHERE id = ?",
                             (doc_id,)
                         )
                         deleted += 1
@@ -313,10 +313,10 @@ def build_duplicate_index_command():
         for result in track(results, description="Building index..."):
             detector.add_document(
                 str(result.get('content_id', result.get('id'))),
-                result.get('content_unified', ''),
+                result.get('content', ''),
                 {
                     'title': result.get('title', ''),
-                    'type': result.get('source_type', ''),
+                    'type': result.get('content_type', ''),
                     'created_at': result.get('created_time', result.get('created_at', ''))
                 }
             )

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/pipelines/orchestrator.py
-# hypothesis_version: 6.138.2
-
-['*.meta.json', '.meta', 'Document', 'Z', 'both', 'content_size', 'created_at', 'data', 'error', 'error_info', 'export', 'export_format', 'exported_at', 'exported_files', 'json', 'markdown', 'message', 'original_filename', 'output_files', 'pipeline_id', 'processed', 'processed_at', 'processing_failed', 'quarantine', 'quarantined', 'quarantined_at', 'quarantined_from', 'raw', 'saved_at', 'stage', 'staged', 'staged_at', 'staged_file', 'status', 'subject', 'title', 'updated_at', 'validation_failed', 'w']

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/knowledge_graph/main.py
-# hypothesis_version: 6.138.2
-
-[0.0, 1000, ',', '?', 'both', 'content_id', 'content_type', 'content_types', 'count', 'edge_id', 'edge_metadata', 'emails.db', 'ignored', 'incoming', 'inserted', 'kg_edges', 'kg_nodes', 'metadata', 'node_id', 'node_metadata', 'outgoing', 'relationship_type', 'relationship_types', 'source_node_id', 'strength', 'target_node_id', 'title', 'total', 'total_edges', 'total_nodes', 'value']

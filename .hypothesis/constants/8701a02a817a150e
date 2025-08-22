@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/documents/naming_convention.py
-# hypothesis_version: 6.138.2
-
-['%Y%m%d', '%Y%m%d_%H%M%S', 'DOC', 'ERROR', 'GENERAL', '[^\\w\\s\\-_]', '\\s+', '^\\d{8}_\\d{6}_', '_', '_+', '_processed.md', 'base_name', 'case', 'data/.doc_counter', 'date', 'doc_id', 'export', 'format', 'md', 'original_name', 'processed', 'quarantine', 'raw', 'sequence', 'stage', 'staged', 'type', 'year']

@@ -1,5 +1,67 @@
 # Changelog
 
+## [2025-08-21] - Pipeline Infrastructure Removal 🎯
+
+### Major Architecture Simplification
+- **Removed Entire Pipeline Infrastructure**: Eliminated ~3,000 lines of unused pipeline code
+  - **Deleted infrastructure/pipelines/** (10 files, 2,673 lines): Unused orchestration complexity
+  - **Removed empty directories**: data/raw/, data/staged/, data/processed/ (only had .gitkeep files)
+  - **Simplified data flow**: Direct processing instead of multi-stage pipeline
+
+### New Simple Processing Approach
+- **Created SimpleUploadProcessor** (180 lines): Direct file → SimpleDB processing
+- **Created SimpleExportManager** (320 lines): Direct SimpleDB → clean text export
+- **Created SimpleQuarantineManager** (230 lines): Simple file quarantine without state management
+
+### Services Updated
+- **gmail/main.py**: Removed pipeline and exporter imports, simplified attachment handling
+- **pdf/main.py**: Removed pipeline usage, simplified upload methods
+- **pdf/wiring.py**: Removed pipeline provider factories
+- **CLI handlers**: Updated to use simple processors instead of pipeline
+
+### Benefits
+- **85% Code Reduction**: ~3,000 lines removed, ~450 lines added
+- **Simpler Data Flow**: Upload → Process → Store (no intermediate directories)
+- **Better Performance**: No file copying between directories
+- **Clearer Architecture**: One obvious path for data
+
+### Data Flow Comparison
+- **Before**: Upload → raw/ → staged/ → Pipeline → processed/ → export/ → SimpleDB
+- **After**: Upload → SimpleUploadProcessor → SimpleDB → SimpleExportManager → Files
+
+---
+
+## [2025-08-21] - Complete Table Reference Migration 🔧
+
+### Fixed
+- **Critical**: Fixed table confusion between `content` (deprecated) and `content_unified` (actual)
+  - Updated 10+ files to reference correct table
+  - Migrated column names: `content_type` → `source_type`, `content` → `body`
+  - Fixed embedding pipeline to use `ready_for_embedding` flag
+  - Resolved issue where only 58/999 content items had embeddings
+
+### Two-Phase Fix
+#### Phase 1: Initial Migration
+- **process_embeddings.py**: Fixed table references but missed PRAGMA and column aliases
+- **knowledge_graph modules**: All 5 modules updated but dictionary access patterns missed
+- **search_intelligence**: Updated table names but some column references remained
+
+#### Phase 2: Complete Fix
+- **process_embeddings.py**: Fixed PRAGMA table_info to check `content_unified` not `content`
+- **process_embeddings.py**: Removed column aliases, now uses actual column names
+- **similarity_analyzer.py**: Fixed dictionary access from `["content_unified"]` to `["body"]`
+- **topic_clustering.py**: Fixed redundant SELECT statements and dictionary keys
+- **SimpleDB.get_content()**: Now correctly queries `content_unified` table
+
+### Technical Details
+- Migration scripts: `fix_table_references.py` and `fix_remaining_columns.py`
+- Automatically updated SQL queries, column references, and dictionary access patterns
+- Created backups of all modified files
+- No data loss - only reference fixes
+- All modules now import successfully
+
+---
+
 ## [2025-08-21] - File Processing Simplification: Process In Place 🚀
 
 ### Major Architecture Simplification

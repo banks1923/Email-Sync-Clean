@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/utilities/timeline/main.py
-# hypothesis_version: 6.138.2
-
-[100, 'No Subject', 'char_count', 'chunk_id', 'count', 'datetime_utc', 'document', 'email', 'emails.db', 'error', 'event_date', 'events', 'file_name', 'gmail', 'message_id', 'processed_time', 'sender', 'subject', 'success', 'synced_events', 'timeline', 'upload']

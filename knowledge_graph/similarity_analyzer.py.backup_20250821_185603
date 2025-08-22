@@ -77,8 +77,8 @@ class SimilarityAnalyzer:
         start_time = time.time()
 
         # Get embeddings
-        embedding_1 = self.embedding_service.encode(content_1["body"])
-        embedding_2 = self.embedding_service.encode(content_2["body"])
+        embedding_1 = self.embedding_service.encode(content_1["content"])
+        embedding_2 = self.embedding_service.encode(content_2["content"])
 
         # Compute cosine similarity
         similarity = self._cosine_similarity(embedding_1, embedding_2)
@@ -152,7 +152,7 @@ class SimilarityAnalyzer:
         """
         # Get all content IDs except the target
         all_content = self.db.fetch(
-            "SELECT id FROM content_unified WHERE id != ?", (content_id,)
+            "SELECT id FROM content WHERE id != ?", (content_id,)
         )
 
         similarities = []
@@ -267,10 +267,10 @@ class SimilarityAnalyzer:
         Precompute similarities for all content of a given type.
         """
         if content_type:
-            content_query = "SELECT id FROM content_unified WHERE source_type = ?"
+            content_query = "SELECT id FROM content WHERE content_type = ?"
             params = (content_type,)
         else:
-            content_query = "SELECT id FROM content_unified"
+            content_query = "SELECT id FROM content"
             params = ()
 
         content_rows = self.db.fetch(content_query, params)

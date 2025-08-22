@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/transcription/main.py
-# hypothesis_version: 6.138.2
-
-['.avi', '.flv', '.mkv', '.mov', '.mp4', '.wmv', 'avg_confidence', 'base', 'confidence', 'content_id', 'data', 'data/Uploads/Videos', 'duration', 'emails.db', 'engine', 'error', 'failed', 'failed_files', 'file', 'filename', 'input_directory', 'language', 'last_updated', 'limited', 'metadata', 'operational', 'output_directory', 'processed', 'processed_files', 'providers_available', 'results', 'segments', 'session_stats', 'skipped', 'status', 'success', 'successful', 'text', 'total_files', 'transcript', 'whisper_local']

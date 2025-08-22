@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/search_intelligence/similarity.py
-# hypothesis_version: 6.138.2
-
-[0.7, 100, 86400, 'body', 'cluster_id', 'clustered_at', 'content', 'content_id', 'content_type', 'document', 'email', 'emails', 'id', 'in_cluster_with', 'members', 'metadata', 'payload', 'precomputed', 'score', 'similarity_score', 'size', 'subject', 'text_content', 'total_members', 'unknown', 'vector']

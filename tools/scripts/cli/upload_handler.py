@@ -14,9 +14,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.simple_upload_processor import get_upload_processor
 
-# Import service modules
-from pdf.wiring import build_pdf_service
-
 
 def upload_pdf(pdf_path, source="upload"):
     """Upload single PDF file using direct processing."""
@@ -68,69 +65,26 @@ def upload_directory(dir_path, limit=None):
 
 
 def transcribe_file(file_path, source="transcribe"):
-    """Transcribe audio/video file."""
+    """Transcribe audio/video file using direct processing."""
     print(f"🎤 Transcribing: {os.path.basename(file_path)}")
-
-    try:
-        service = TranscriptionService()
-        result = service.transcribe_file(str(file_path), metadata={"source": source})
-
-        if result["success"]:
-            print("✅ Transcription complete")
-            print(f"📄 Content ID: {result['content_id']}")
-            print("📝 Transcript saved to database")
-            return True
-        else:
-            print(f"❌ Transcription failed: {result['error']}")
-            return False
-
-    except Exception as e:
-        print(f"❌ Transcription error: {e}")
-        return False
+    print("⚠️  Transcription service not yet implemented in simple processing")
+    
+    # TODO: Implement direct transcription when needed
+    # For now, treat as unsupported file type
+    return False
 
 
 def process_uploads():
-    """Process all files in upload queue."""
-    print("⚙️  Processing upload queue...")
-
-    try:
-        service = build_pdf_service()
-        # Process all pending uploads
-        result = service.process_upload_queue()
-
-        if result["success"]:
-            stats = result["stats"]
-            print(f"✅ Processed {stats['processed']}/{stats['total']} files")
-            if stats["errors"]:
-                print(f"❌ {stats['errors']} errors occurred")
-            return True
-        else:
-            print(f"❌ Processing failed: {result['error']}")
-            return False
-
-    except Exception as e:
-        print(f"❌ Queue processing error: {e}")
-        return False
+    """Process all files in upload queue (deprecated - use direct upload)."""
+    print("⚠️  Queue-based processing deprecated")
+    print("📋 Use 'upload <file>' or 'upload-dir <directory>' for direct processing")
+    print("💡 This system now uses direct processing without queues")
+    return True
 
 
 def process_pdf_uploads():
-    """Process PDF files specifically."""
-    print("📄 Processing PDF uploads...")
-
-    try:
-        pipeline = DataPipelineOrchestrator()
-        # Process staged PDFs
-        result = pipeline.process_staged()
-
-        if result["success"]:
-            print(f"✅ Processed {result['processed']} PDFs")
-            if result.get("errors"):
-                print(f"❌ {len(result['errors'])} errors occurred")
-            return True
-        else:
-            print(f"❌ PDF processing failed: {result['error']}")
-            return False
-
-    except Exception as e:
-        print(f"❌ PDF processing error: {e}")
-        return False
+    """Process PDF files specifically (deprecated - use direct upload)."""
+    print("⚠️  PDF queue processing deprecated")
+    print("📋 Use 'upload <file.pdf>' for direct PDF processing")
+    print("💡 PDFs are now processed directly without staging")
+    return True

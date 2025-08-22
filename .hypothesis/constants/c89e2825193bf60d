@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/pdf/pdf_storage_enhanced.py
-# hypothesis_version: 6.138.2
-
-[1.5, 1024, 4096, '.pdf', '_last_db_path', 'avg_chars_per_chunk', 'avg_chunks_per_doc', 'char_count', 'chunk_count', 'chunk_id', 'chunk_index', 'chunks_stored', 'content_id', 'doc_count', 'error', 'extraction_method', 'extraction_methods', 'file_hash', 'legal_metadata', 'ocr', 'ocr_confidence', 'ocr_processed', 'pdf', 'rb', 'stats', 'storage_mb_estimate', 'success', 'text', 'text_extracted', 'text_extraction', 'total_characters', 'total_chars', 'total_chunks', 'total_documents', 'upload', 'vector_pending', 'vector_processed']

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/gmail/main.py
-# hypothesis_version: 6.138.2
-
-[100, 500, 'No Subject', 'No emails to save', 'No new messages', 'Performing full sync', '__main__', 'attachment_id', 'attachments', 'combined', 'content', 'data', 'data/raw', 'datetime_utc', 'duplicates', 'email', 'emails.db', 'error', 'errors', 'filename', 'gmail', 'history', 'history_id', 'id', 'idle', 'ignored', 'inserted', 'last_history_id', 'logs', 'message', 'message_id', 'mime_type', 'need_full_sync', 'processed', 'recipient', 'recipient_to', 'retrieved', 'sender', 'size_bytes', 'source', 'subject', 'success', 'summary_text', 'syncing', 'textrank_sentences', 'tf_idf_keywords', 'type', 'validation_errors', 'w']

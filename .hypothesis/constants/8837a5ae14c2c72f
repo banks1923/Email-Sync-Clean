@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/utilities/timeline/database.py
-# hypothesis_version: 6.138.2
-
-['AND event_date <= ?', 'AND event_date >= ?', 'AND event_type = ?', 'count', 'data', 'emails.db', 'error', 'event_id', 'events', 'metadata', 'related', 'related_events', 'relationship_id', 'success']

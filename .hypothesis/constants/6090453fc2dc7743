@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/pdf/pdf_validator.py
-# hypothesis_version: 6.138.2
-
-[100, 512, 1024, '.pdf', '/', 'File must be a PDF', 'disk_free_gb', 'disk_percent_used', 'error', 'max_file_size_mb', 'memory_available_mb', 'memory_percent_used', 'memory_threshold_mb', 'resources', 'success']

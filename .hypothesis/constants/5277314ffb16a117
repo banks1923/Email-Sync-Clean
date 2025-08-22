@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/pdf/pdf_processor_enhanced.py
-# hypothesis_version: 6.138.2
-
-[0.0, 100, 900, 'all_available', 'available', 'chunk_count', 'chunk_id', 'chunk_index', 'chunks', 'confidence', 'error', 'extraction_method', 'legal_metadata', 'ocr', 'ocr_confidence', 'ocr_used', 'page_count', 'pdf', 'pypdf2', 'ready', 'success', 'text']

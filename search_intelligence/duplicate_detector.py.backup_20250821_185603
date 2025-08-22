@@ -120,15 +120,15 @@ class DuplicateDetector:
             # Get all documents of type
             if content_type:
                 query = """
-                    SELECT id, source_type, title, content
-                    FROM content_unified
-                    WHERE source_type = ?
+                    SELECT id, content_type, title, content
+                    FROM content
+                    WHERE content_type = ?
                 """
                 params = (content_type,)
             else:
                 query = """
-                    SELECT id, source_type, title, content
-                    FROM content_unified
+                    SELECT id, content_type, title, content
+                    FROM content
                 """
                 params = ()
 
@@ -141,13 +141,13 @@ class DuplicateDetector:
 
     def _get_document(self, doc_id: str) -> dict | None:
         """Get single document."""
-        result = self.db.fetch_one("SELECT * FROM content_unified WHERE id = ?", (doc_id,))
+        result = self.db.fetch_one("SELECT * FROM content WHERE id = ?", (doc_id,))
         if result:
             return result
 
         # Try other tables
         result = self.db.fetch_one(
-            "SELECT message_id as content_id, 'email' as source_type, "  # ALLOWED: content_id
+            "SELECT message_id as content_id, 'email' as content_type, "  # ALLOWED: content_id
             "subject as title, body as content FROM emails WHERE message_id = ?",
             (doc_id,),
         )
@@ -155,7 +155,7 @@ class DuplicateDetector:
             return result
 
         result = self.db.fetch_one(
-            "SELECT chunk_id as content_id, 'document' as source_type, "  # ALLOWED: content_id
+            "SELECT chunk_id as content_id, 'document' as content_type, "  # ALLOWED: content_id
             "file_name as title, text_content as content "
             "FROM documents WHERE chunk_id = ?",
             (doc_id,),
@@ -196,7 +196,7 @@ class DuplicateDetector:
             return self._hash_cache[doc_id]
 
         # Extract and normalize content
-        content = doc.get("content_unified", "") or doc.get("body", "")
+        content = doc.get("content", "") or doc.get("body", "")
         title = doc.get("title", "") or doc.get("subject", "")
 
         # Combine title and content for hashing
@@ -276,7 +276,7 @@ class DuplicateDetector:
                 return np.array(result["vector"])
 
             # Generate new embedding
-            text = doc.get("content_unified", "") or doc.get("body", "")
+            text = doc.get("content", "") or doc.get("body", "")
             title = doc.get("title", "") or doc.get("subject", "")
 
             full_text = f"{title} {text}".strip()
@@ -443,7 +443,7 @@ class DuplicateDetector:
                 "id": email["message_id"],
                 "content_type": "email",
                 "title": email.get("subject", ""),
-                "content_unified": email.get("body", ""),
+                "content": email.get("body", ""),
                 "created_at": email.get("date", ""),
             }
             for email in emails
@@ -470,5 +470,5 @@ def detect_all_duplicates(content_type: str = None, similarity_threshold: float 
     """
     detector = DuplicateDetector()
     return detector.detect_duplicates(
-        source_type =content_type, similarity_threshold=similarity_threshold, check_semantic=True
+        content_type=content_type, similarity_threshold=similarity_threshold, check_semantic=True
     )

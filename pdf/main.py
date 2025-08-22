@@ -39,7 +39,7 @@ class PDFService(IService):
     """Thin Facade over core PDF components; optional features resolved via providers.
 
     Core deps (eager): db, processor, storage
-    Optional deps (lazy via providers): validator, ocr, summarizer, pipeline, exporter,
+    Optional deps (lazy via providers): validator, ocr, summarizer,
     health_monitor, error_recovery, health_manager
     """
 
@@ -116,13 +116,7 @@ class PDFService(IService):
     def summarizer(self):
         return self._get("summarizer")
 
-    @property
-    def pipeline(self):
-        return self._get("pipeline")
-
-    @property
-    def exporter(self):
-        return self._get("exporter")
+    # Pipeline and exporter removed - using direct processing
 
     @property
     def health_monitor(self):
@@ -148,37 +142,24 @@ class PDFService(IService):
         return self.health_manager.perform_health_check()
 
     def upload_single_pdf(
-        self, pdf_path: str, source: str = "upload", use_pipeline: bool = True
+        self, pdf_path: str, source: str = "upload"
     ) -> dict[str, Any]:
-        """Upload single PDF with integrated processing and pipeline support"""
+        """Upload single PDF with integrated processing"""
         with _upload_semaphore:
             try:
                 # Basic validation (process file in place)
                 validation_result = self.validator.validate_pdf_file(pdf_path)
                 if not validation_result["success"]:
-                    if use_pipeline:
-                        from shared.simple_file_processor import quarantine_file
-                        quarantine_file(Path(pdf_path), validation_result.get("error", "Validation failed"))
                     return validation_result
 
                 # Check resource limits
                 resource_check = self.validator.check_resource_limits(pdf_path)
                 if not resource_check["success"]:
-                    if use_pipeline:
-                        from shared.simple_file_processor import quarantine_file
-                        quarantine_file(Path(pdf_path),
-                            resource_check.get("error", "Resource limit exceeded"),
-                        )
                     return resource_check
 
                 # Check for duplicates
                 file_hash = self.storage.hash_file(pdf_path)
                 if self.storage.is_duplicate(file_hash):
-                    if use_pipeline:
-                        # Move to processed since it's already in the system
-                        self.pipeline.move_to_processed(
-                            os.path.basename(pdf_path), {"status": "duplicate", "hash": file_hash}
-                        )
                     return {
                         "success": True,
                         "skipped": True,
@@ -187,24 +168,6 @@ class PDFService(IService):
 
                 # Process PDF
                 result = self._process_pdf_internal(pdf_path, file_hash, source)
-
-                # Process using simple approach
-                if use_pipeline:
-                    if result.get("success"):
-                        # Use simple processor to save clean version
-                        from shared.simple_file_processor import process_file_simple
-                        content = result.get("content", "")
-                        metadata = {
-                            "processed_at": datetime.now().isoformat(),
-                            "chunks": result.get("chunks_processed", 0),
-                            "extraction_method": result.get("extraction_method", "unknown"),
-                            "hash": file_hash,
-                        }
-                        process_file_simple(Path(pdf_path), content, "pdf", metadata)
-                    else:
-                        from shared.simple_file_processor import quarantine_file
-                        quarantine_file(Path(pdf_path), result.get("error", "Processing failed"))
-
                 return result
 
             except Exception as e:

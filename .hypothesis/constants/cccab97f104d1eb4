@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/pipelines/document_exporter.py
-# hypothesis_version: 6.138.2
-
-['## Content\n\n', '## Summary\n\n', '---\n\n', '.counter', '1', 'Untitled Document', '[-\\s]+', '[^\\w\\s-]', '_', 'a', 'content', 'content_type', 'counter', 'created_at', 'created_time', 'data/export', 'document', 'error', 'filename', 'filepath', 'manifest.txt', 'metadata', 'success', 'summary_text', 'tf_idf_keywords', 'title', 'utf-8', 'w']

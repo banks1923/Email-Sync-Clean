@@ -1,6 +1,6 @@
 """Timeline-Based Relationship Engine for Knowledge Graph.
 
-Extracts temporal data FROM content_unified and creates chronological
+Extracts temporal data from content and creates chronological
 relationships. Follows CLAUDE.md principles: simple patterns, functions
 under 30 lines.
 """
@@ -31,10 +31,10 @@ class TimelineRelationships:
 
     def extract_content_dates(self, content_id: str) -> datetime | None:
         """
-        Extract primary date FROM content_unified based on type.
+        Extract primary date from content based on type.
         """
         content = self.db.fetch_one(
-            "SELECT source_type, metadata, created_time FROM content_unified WHERE id = ?",
+            "SELECT content_type, metadata, created_time FROM content WHERE id = ?",
             (content_id,),
         )
 
@@ -207,7 +207,7 @@ class TimelineRelationships:
         """
         Get all content IDs with their dates.
         """
-        content_items = self.db.fetch("SELECT id FROM content_unified")
+        content_items = self.db.fetch("SELECT id FROM content")
 
         content_dates = []
         for item in content_items:

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/shared/date_utils.py
-# hypothesis_version: 6.138.2
-
-[365, 999999, '%Y-%m-%d', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S', '%Y/%m/%d', '%d/%m/%Y', '%m-%d-%Y', '%m/%d/%Y', 'day', 'last month', 'last week', 'last year', 'month', 'this month', 'this week', 'this year', 'today', 'tomorrow', 'week', 'year', 'yesterday']

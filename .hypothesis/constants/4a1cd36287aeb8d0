@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/gmail/validators.py
-# hypothesis_version: 6.138.2
-
-[100, 255, 320, 1000, 1024, 10000, '\x00', '"', '"[^"]*"', '%Y-%m-%dT%H:%M:%S', '+00:00', '.', '..', '/', '<', '<([^>]+)>', '>', '@', 'Invalid limit format', 'Z', '\\', 'datetime', 'end', 'error', 'extracted_email', 'filename', 'is_rfc5322_format', 'limit', 'original_header', 'query', 'size', 'start', 'success']

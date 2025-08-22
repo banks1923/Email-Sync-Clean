@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/knowledge_graph/graph_queries.py
-# hypothesis_version: 6.138.2
-
-[0.0, 0.0001, 0.5, 0.85, 1.0, 100, ',', '?', 'after', 'before', 'concurrent', 'concurrent_with', 'content_id', 'content_type', 'cooccurrence_count', 'created_time', 'd3', 'depth', 'edge_id', 'edge_metadata', 'edges', 'emails.db', 'entities', 'entity', 'error', 'followed_by', 'group', 'id', 'label', 'length', 'links', 'message', 'metadata', 'network', 'node_id', 'node_metadata', 'nodes', 'pagerank', 'pagerank_score', 'path', 'preceded_by', 'references', 'related', 'relationship', 'relationship_type', 'relationship_types', 'relevance_score', 'shared_documents', 'similar_to', 'source', 'source_content', 'source_node_id', 'source_title', 'strength', 'target', 'target_content', 'target_node_id', 'target_title', 'title', 'total_documents', 'total_links', 'total_nodes', 'total_strength', 'type', 'value']

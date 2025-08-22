@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/transcription/providers/whisper_provider.py
-# hypothesis_version: 6.138.2
-
-[-1.0, 0.0, 0.001, 0.5, 10.0, 'avg_confidence', 'avg_logprob', 'base', 'confidence', 'data', 'duration', 'end', 'engine', 'error', 'filename', 'language', 'rms_energy', 'sample_rate', 'segments', 'start', 'success', 'text', 'unknown', 'valid']

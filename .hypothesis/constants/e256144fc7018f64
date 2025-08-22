@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/documents/lifecycle_manager.py
-# hypothesis_version: 6.138.2
-
-[1024, '%Y%m%d_%H%M%S', '*', 'count', 'data', 'export', 'path', 'processed', 'quarantine', 'raw', 'size_mb', 'staged']

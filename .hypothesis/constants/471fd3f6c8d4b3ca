@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/documents/processors/__init__.py
-# hypothesis_version: 6.138.2
-
-['BaseProcessor', 'DocxProcessor', 'MarkdownProcessor', 'TextProcessor']

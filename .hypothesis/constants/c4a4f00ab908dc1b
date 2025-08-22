@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/shared/error_handler.py
-# hypothesis_version: 6.138.2
-
-[' (request timed out)', 'Unknown error', 'category', 'connection', 'connection refused', 'context', 'credentials', 'database_error', 'details', 'error', 'file not found', 'gmail', 'locked', 'model', 'network_error', 'no such file', 'no such table', 'not found', 'permission denied', 'qdrant', 'service_error', 'success', 'timeout', 'type', 'validation_error']

@@ -48,13 +48,7 @@ def build_pdf_service(db_path: str = "emails.db") -> "PDFService":
         from summarization import get_document_summarizer
         return get_document_summarizer()
 
-    def make_pipeline():
-        from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
-        return DataPipelineOrchestrator()
-
-    def make_exporter():
-        from infrastructure.pipelines.document_exporter import DocumentExporter
-        return DocumentExporter()
+    # Pipeline and exporter removed - using direct processing now
 
     def make_health_manager():
         """Special case: needs other components assembled. Reuse core instances."""
@@ -76,8 +70,6 @@ def build_pdf_service(db_path: str = "emails.db") -> "PDFService":
         "health_monitor": make_health_monitor,
         "error_recovery": make_error_recovery,
         "summarizer": make_summarizer,
-        "pipeline": make_pipeline,
-        "exporter": make_exporter,
         "health_manager": make_health_manager,
     }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Process embeddings for all content in database.
-Updates ready_for_embedding flag and stores in Qdrant.
+Updates vector_processed flag and stores in Qdrant.
 """
 
 import sys
@@ -33,20 +33,20 @@ def process_all_embeddings(batch_size: int = 10):
     conn = sqlite3.connect(db.db_path)
     cursor = conn.cursor()
 
-    # Check if ready_for_embedding column exists
-    cursor.execute("PRAGMA table_info(content_unified)")
+    # Check if vector_processed column exists
+    cursor.execute("PRAGMA table_info(content)")
     columns = {col[1] for col in cursor.fetchall()}
     
-    if 'ready_for_embedding' in columns:
-        where_clause = "WHERE ready_for_embedding = 0 OR ready_for_embedding IS NULL"
+    if 'vector_processed' in columns:
+        where_clause = "WHERE vector_processed = 0 OR vector_processed IS NULL"
     else:
         # Add the column if it doesn't exist
-        cursor.execute("ALTER TABLE content_unified ADD COLUMN ready_for_embedding INTEGER DEFAULT 0")
-        where_clause = "WHERE ready_for_embedding = 0 OR ready_for_embedding IS NULL"
+        cursor.execute("ALTER TABLE content ADD COLUMN vector_processed INTEGER DEFAULT 0")
+        where_clause = "WHERE vector_processed = 0 OR vector_processed IS NULL"
     
     cursor.execute(f"""
-        SELECT id, source_type, title, body
-        FROM content_unified
+        SELECT id, type as content_type, title, content
+        FROM content
         {where_clause}
         ORDER BY created_at DESC
     """)
@@ -93,11 +93,11 @@ def process_all_embeddings(batch_size: int = 10):
                     id=content_id,
                 )
 
-                # Update ready_for_embedding flag
+                # Update vector_processed flag
                 cursor.execute(
                     """
-                    UPDATE content_unified
-                    SET ready_for_embedding = 1
+                    UPDATE content
+                    SET vector_processed = 1
                     WHERE id = ?
                 """,
                     (content_id,),

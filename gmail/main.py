@@ -3,8 +3,6 @@ from typing import Any
 
 from loguru import logger
 
-from infrastructure.pipelines.data_pipeline import DataPipelineOrchestrator
-from infrastructure.pipelines.document_exporter import DocumentExporter
 from shared.simple_db import SimpleDB
 from summarization import get_document_summarizer
 
@@ -40,8 +38,6 @@ class GmailService:
         self.config = GmailConfig()
         self.db = SimpleDB(db_path)
         self.summarizer = get_document_summarizer()
-        self.pipeline = DataPipelineOrchestrator()  # Add pipeline orchestrator
-        self.exporter = DocumentExporter()  # Add document exporter
         
         # Initialize EmailThreadProcessor if available
         if THREAD_PROCESSOR_AVAILABLE:
@@ -513,45 +509,10 @@ class GmailService:
             # Use the same thread processing logic as batch mode
             result = self._process_thread_batch(threads_grouped, email_list)
             
-            # Save attachments with pipeline support
+            # Save attachments directly to database
             for message_id, attachments in attachments_by_message.items():
                 # Save attachment metadata to database
                 self.storage.save_attachments(message_id, attachments)
-
-                # Add attachment info to pipeline for tracking
-                for attachment in attachments:
-                    if attachment.get("filename"):
-                        # Create a placeholder file in raw for tracking
-                        placeholder_path = (
-                            f"data/raw/email_attachment_{message_id}_{attachment['filename']}.meta"
-                        )
-                        try:
-                            os.makedirs("data/raw", exist_ok=True)
-                            with open(placeholder_path, "w") as f:
-                                import json
-
-                                json.dump(
-                                    {
-                                        "message_id": message_id,
-                                        "filename": attachment["filename"],
-                                        "mime_type": attachment.get("mime_type", ""),
-                                        "size_bytes": attachment.get("size_bytes", 0),
-                                        "attachment_id": attachment.get("attachment_id", ""),
-                                        "source": "gmail",
-                                    },
-                                    f,
-                                    indent=2,
-                                )
-                            # Track attachment metadata using simple processor
-                            from shared.simple_file_processor import process_file_simple
-                            process_file_simple(
-                                Path(placeholder_path),
-                                json.dumps(attachment_metadata, indent=2),
-                                file_type="email_attachment",
-                                metadata={"type": "email_attachment_metadata"}
-                            )
-                        except Exception as e:
-                            logger.warning(f"Could not track attachment in pipeline: {e}")
             
             save_result = {"success": True, "inserted": result["processed"], "ignored": result["duplicates"]}
 
@@ -628,22 +589,8 @@ class GmailService:
                                 f"Generated summary for email: {email_data.get('subject', 'No Subject')[:50]}"
                             )
 
-                            # Export email to markdown (don't fail sync if this fails)
-                            try:
-                                subject = email_data.get("subject", "No Subject")
-                                export_result = self.exporter.save_to_export(
-                                    content_id, subject[:50]  # Limit subject length for filename
-                                )
-                                if export_result["success"]:
-                                    logger.debug(f"Exported email to {export_result['filename']}")
-                                else:
-                                    logger.warning(
-                                        f"Export failed for email {subject[:30]}: {export_result.get('error')}"
-                                    )
-                            except Exception as export_e:
-                                logger.warning(
-                                    f"Could not export email {email_data.get('subject', 'Unknown')[:30]}: {export_e}"
-                                )
+                            # Exports are now done separately via export_documents.py
+                            logger.debug(f"Email stored with content_id: {content_id}")
 
         except Exception as e:
             # Don't fail email sync if summarization fails

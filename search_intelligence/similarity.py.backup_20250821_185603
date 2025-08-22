@@ -137,7 +137,7 @@ class DocumentSimilarityAnalyzer:
     def _get_document_content(self, doc_id: str) -> dict | None:
         """Get document content from database."""
         # Try content table first
-        result = self.db.fetch_one("SELECT * FROM content_unified WHERE id = ?", (doc_id,))
+        result = self.db.fetch_one("SELECT * FROM content WHERE id = ?", (doc_id,))
         if result:
             return result
 
@@ -146,13 +146,13 @@ class DocumentSimilarityAnalyzer:
             "SELECT * FROM emails WHERE message_id = ? OR id = ?", (doc_id, doc_id)
         )
         if result:
-            result["source_type"] = "email"
+            result["content_type"] = "email"
             return result
 
         # Try documents
         result = self.db.fetch_one("SELECT * FROM documents WHERE chunk_id = ?", (doc_id,))
         if result:
-            result["source_type"] = "document"
+            result["content_type"] = "document"
 
         return result
 
@@ -161,7 +161,7 @@ class DocumentSimilarityAnalyzer:
         return (
             doc.get("body", "")
             or doc.get("text_content", "")
-            or doc.get("content_unified", "")
+            or doc.get("content", "")
             or doc.get("subject", "")
         )
 
@@ -247,10 +247,10 @@ class DocumentClusterer:
         try:
             # Get document IDs
             if content_type:
-                query = "SELECT id FROM content_unified WHERE source_type = ? LIMIT ?"
+                query = "SELECT id FROM content WHERE content_type = ? LIMIT ?"
                 params = (content_type, limit)
             else:
-                query = "SELECT id FROM content_unified LIMIT ?"
+                query = "SELECT id FROM content LIMIT ?"
                 params = (limit,)
 
             results = self.db.fetch(query, params)
@@ -340,7 +340,7 @@ def cluster_similar_content(
 
     # Find clusters
     clusters = clusterer.find_content_clusters(
-        source_type =content_type, limit=limit, threshold=threshold
+        content_type=content_type, limit=limit, threshold=threshold
     )
 
     # Store relationships if requested

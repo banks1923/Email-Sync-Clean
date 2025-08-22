@@ -13,7 +13,8 @@ import uuid
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
+from collections.abc import Generator
 
 # Import new error handling and retry utilities
 from loguru import logger
@@ -44,7 +45,7 @@ class DBMetrics:
 class SimpleDB:
     """The entire database layer in under 100 lines. No BS."""
 
-    def __init__(self, db_path: str = "emails.db") -> None:
+    def __init__(self, db_path: str = "data/emails.db") -> None:
         self.db_path = db_path
         self._ensure_data_directories()
         self.batch_stats = {
@@ -157,7 +158,7 @@ class SimpleDB:
                 
                 # Slow-query logging
                 t0 = time.perf_counter()
-                cursor = conn.execute(query, params)
+                cursor = conn.execute(query, params) if params else conn.execute(query)
                 dt_ms = (time.perf_counter() - t0) * 1000
                 
                 if dt_ms > 100:  # Log queries slower than 100ms
@@ -219,7 +220,7 @@ class SimpleDB:
         metadata: dict | None = None,
         source_path: str | None = None,
     ) -> str:
-        """Add content - emails, transcripts, PDFs. Returns content_id."""
+        """Add content - emails, transcripts, PDFs. Returns content ID."""
         # Calculate content hash for deduplication
         normalized_title = (title or "").strip().lower()
         normalized_content = (content or "").strip()
@@ -233,9 +234,9 @@ class SimpleDB:
 
         if existing:
             logger.info(
-                f"Duplicate content detected, returning existing content_id: {existing['content_id']}"
+                f"Duplicate content detected, returning existing ID: {existing['id']}"
             )
-            return existing["content_id"]
+            return existing["id"]
 
         # Create new content
         content_id = str(uuid.uuid4())
@@ -270,6 +271,73 @@ class SimpleDB:
 
         return content_id
 
+    
+    def upsert_content(
+        self,
+        source_type: str,
+        external_id: str,
+        content_type: str,
+        title: str,
+        content: str,
+        metadata: dict = None,
+        parent_content_id: str = None
+    ) -> str:
+        """
+        Upsert content using business key (source_type, external_id).
+
+        Args:
+            source_type: Type of source (email, pdf, transcript, etc.)
+            external_id: External identifier (message_id, file_hash, etc.)
+            content_type: Type of content
+            title: Content title
+            content: Actual content text
+            metadata: Optional metadata dict
+            parent_content_id: Optional parent content ID for attachments
+
+        Returns:
+            Content ID (UUID)
+        """
+        from uuid import UUID, uuid5
+        import json
+        import hashlib
+
+        # Deterministic UUID from business key (namespace DNS as stable base)
+        UUID_NAMESPACE = UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
+        content_id = str(uuid5(UUID_NAMESPACE, f"{source_type}:{external_id}"))
+
+        # Calculate content hash for deduplication
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+
+        # Prepare metadata
+        if metadata is None:
+            metadata = {}
+        metadata_json = json.dumps(metadata, ensure_ascii=False)
+
+        # UPSERT operation
+        cursor = self.execute("""
+            INSERT INTO content (
+                id, type, source_type, external_id, content_type, title, 
+                content, metadata, content_hash, char_count, parent_content_id,
+                created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(source_type, external_id) DO UPDATE SET
+                type = excluded.type,
+                title = excluded.title,
+                content = excluded.content,
+                metadata = excluded.metadata,
+                content_hash = excluded.content_hash,
+                char_count = excluded.char_count,
+                updated_at = CURRENT_TIMESTAMP
+        """, (content_id, content_type, source_type, external_id, content_type, title,
+            content, metadata_json, content_hash, len(content), parent_content_id
+        ))
+
+        if cursor.rowcount > 0:
+            logger.info(f"Content upserted: {source_type}:{external_id} -> {content_id}")
+
+        return content_id
+
     def update_content(self, content_id: str, **kwargs) -> bool:
         """Update content fields. Returns True if successful."""
         if not kwargs:
@@ -299,7 +367,7 @@ class SimpleDB:
             params.extend([len(content.split()) if content else 0, len(content) if content else 0])
         
         params.append(content_id)
-        query = f"UPDATE content SET {', '.join(set_clauses)} WHERE content_id = ?"
+        query = f"UPDATE content SET {', '.join(set_clauses)} WHERE id = ?"
         
         cursor = self.execute(query, tuple(params))
         return cursor.rowcount > 0
@@ -447,35 +515,72 @@ class SimpleDB:
         """Get simple stats."""
         stats = {}
         
-        # Get content count
-        content_result = self.fetch_one("SELECT COUNT(*) as count FROM content")
+        # Get content count from the CORRECT table (content_unified not content)
+        content_result = self.fetch_one("SELECT COUNT(*) as count FROM content_unified")
         stats["total_content"] = content_result["count"] if content_result else 0
         
-        # Get content by type
+        # Get content by type from content_unified
         type_results = self.fetch(
-            "SELECT content_type, COUNT(*) as count FROM content GROUP BY content_type"
+            "SELECT source_type, COUNT(*) as count FROM content_unified GROUP BY source_type"
         )
-        stats["content_by_type"] = {row["content_type"]: row["count"] for row in type_results} if type_results else {}
+        stats["content_by_type"] = {row["source_type"]: row["count"] for row in type_results} if type_results else {}
         
-        # Get total characters
-        char_result = self.fetch_one("SELECT SUM(char_count) as total FROM content")
-        stats["total_characters"] = char_result["total"] if char_result and char_result["total"] else 0
+        # Get actual document count from documents table
+        doc_result = self.fetch_one("SELECT COUNT(*) as count FROM documents")
+        stats["total_documents"] = doc_result["count"] if doc_result else 0
         
-        # Check if content table exists before querying
-        table_check = self.fetch_one(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='content'"
-        )
-        if table_check:
-            doc_result = self.fetch_one("SELECT COUNT(*) as count FROM content")
-            stats["total_documents"] = doc_result["count"] if doc_result else 0
-        else:
-            stats["total_documents"] = 0
+        # Get breakdown by source type
+        stats["total_emails"] = stats["content_by_type"].get("email", 0)
+        stats["total_pdfs"] = stats["content_by_type"].get("pdf", 0)
+        stats["total_transcripts"] = stats["content_by_type"].get("transcript", 0)
             
         # Add database size
         db_info = self.fetch_one("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
         stats["database_size_bytes"] = db_info["size"] if db_info else 0
         
         return stats
+
+    def get_content_count(self, content_type: str | None = None) -> int:
+        """Get count of content entries by type.
+        
+        Args:
+            content_type: Optional type filter ('email', 'pdf', 'transcript', etc.)
+                         If None, returns total count across all types.
+        
+        Returns:
+            Count of content entries
+        """
+        stats = self.get_content_stats()
+        if content_type is not None:
+            # Map plural collection names to singular content types
+            type_mapping = {
+                'emails': 'email',
+                'pdfs': 'pdf',
+                'transcriptions': 'transcript',
+                'notes': 'note'
+            }
+            # Use mapped type if available, otherwise use as-is
+            mapped_type = type_mapping.get(content_type, content_type)
+            # Return count for specific type from content_by_type dict
+            return int(stats.get("content_by_type", {}).get(mapped_type, 0))
+        # Return total count
+        return int(stats.get("total_content", 0))
+    
+    def get_connection(self):
+        """Get database connection for direct SQL operations.
+        
+        Returns:
+            sqlite3.Connection: A new database connection with configured pragmas
+            
+        Note:
+            Prefer using higher-level SimpleDB methods when possible.
+            This is provided for maintenance scripts that need direct access.
+            Caller is responsible for closing the connection.
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        self._configure_connection(conn)
+        return conn
 
     # Batch operations for deduplication (Task 1.1 + 1.4)
     def batch_insert(
@@ -696,8 +801,7 @@ class SimpleDB:
 
         # Use batch_insert with content table columns (no created_time - uses DEFAULT)
         columns = [
-            "content_id",
-            "content_type",
+            "id", "content_type",
             "title",
             "content",
             "source_path",
@@ -781,9 +885,9 @@ class SimpleDB:
             f"{len(file_paths)} unique files, {total_chars} total chars"
         )
 
-        # Use batch_insert with content table columns
+        # Use batch_insert with content table columns (correct primary key 'id')
         columns = [
-            "content_id",
+            "id",
             "file_path",
             "file_name",
             "chunk_index",
@@ -1658,6 +1762,77 @@ class SimpleDB:
             "textrank_sentences",
         ]
         return self.batch_insert("document_summaries", columns, prepared_data, batch_size)
+
+    # Vector processing methods
+    
+    def get_all_content_ids(self, content_type: str = None) -> list[str]:
+        """Get all content IDs, optionally filtered by type. Streams in pages of 1000."""
+        query = "SELECT id FROM content"
+        params = ()
+        
+        if content_type:
+            query += " WHERE content_type = ?"
+            params = (content_type,)
+        
+        query += " ORDER BY id"
+        
+        cursor = self.execute(query, params)
+        return [row[0] for row in cursor.fetchall()]
+    
+    def get_content_by_ids(self, ids: list[str]) -> list[dict]:
+        """Get content by IDs, batching ≤500 to avoid SQLite 999 limit."""
+        if not ids:
+            return []
+        
+        results = []
+        # Batch to avoid SQLite's 999 variable limit
+        batch_size = 500
+        
+        for i in range(0, len(ids), batch_size):
+            batch_ids = ids[i:i + batch_size]
+            placeholders = ",".join("?" * len(batch_ids))
+            query = f"SELECT * FROM content WHERE id IN ({placeholders})"
+            
+            cursor = self.execute(query, tuple(batch_ids))
+            # Convert sqlite3.Row objects to dictionaries
+            batch_results = [dict(row) for row in cursor.fetchall()]
+            results.extend(batch_results)
+        
+        return results
+    
+    def mark_content_vectorized(self, content_id: str) -> bool:
+        """Mark single content as vectorized."""
+        try:
+            cursor = self.execute(
+                "UPDATE content SET vector_processed = 1 WHERE id = ?",
+                (content_id,)
+            )
+            return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f"Failed to mark content {content_id} as vectorized: {e}")
+            return False
+    
+    def batch_mark_vectorized(self, content_ids: list[str]) -> int:
+        """Batch mark content as vectorized, chunking to ≤500."""
+        if not content_ids:
+            return 0
+        
+        total_updated = 0
+        batch_size = 500
+        
+        for i in range(0, len(content_ids), batch_size):
+            batch_ids = content_ids[i:i + batch_size]
+            placeholders = ",".join("?" * len(batch_ids))
+            query = f"UPDATE content SET vector_processed = 1 WHERE id IN ({placeholders})"
+            
+            try:
+                cursor = self.execute(query, tuple(batch_ids))
+                total_updated += cursor.rowcount
+            except Exception as e:
+                logger.error(f"Failed to batch mark vectorized for {len(batch_ids)} items: {e}")
+                continue
+        
+        return total_updated
 
 
 # That's it. That's the whole database layer.

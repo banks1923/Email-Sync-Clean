@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/pdf/database_error_recovery.py
-# hypothesis_version: 6.138.2
-
-[0.1, 5.0, 100, 1024, '%Y%m%d_%H%M%S', '.db', 'BACKUP_FAILED', 'CIRCUIT_BREAKER_OPEN', 'CRITICAL', 'DATABASE_LOCKED', 'DISK_IO_ERROR', 'HIGH', 'LOW', 'MEDIUM', 'RESTORE_FAILED', 'SCHEMA_ERROR', 'attempts', 'available_backups', 'backup', 'backup_directory', 'backup_path', 'backup_size_mb', 'backups', 'circuit_breaker', 'circuit_open', 'created', 'data', 'database is locked', 'degraded_mode', 'disk i/o error', 'emails_backup_', 'error', 'failure_count', 'filename', 'last_failure', 'message', 'no such table', 'ok', 'open', 'operation', 'path', 'pre_restore_backup', 'recent_alerts', 'recovery_attempted', 'restored_from', 'retry_after_seconds', 'retry_suggested', 'severity', 'size_mb', 'success', 'test', 'timestamp', 'type']

@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/knowledge_graph/similarity_integration.py
-# hypothesis_version: 6.138.2
-
-[0.0, 0.7, 100, 'avg_node_degree', 'avg_similarity', 'cluster_id', 'computed_at', 'connected_nodes', 'content_id', 'content_ids', 'content_type', 'content_types', 'edge_count', 'edge_id', 'edges', 'emails.db', 'legal_bert', 'method', 'model', 'node_count', 'nodes', 'processed', 'processed_documents', 'processed_pairs', 'similar_to', 'similarity', 'similarity_degree', 'similarity_edges', 'size', 'skipped', 'source_content', 'source_node_id', 'target_content', 'target_node_id', 'threshold', 'time_seconds', 'total_edges', 'updated']

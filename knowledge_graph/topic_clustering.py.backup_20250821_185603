@@ -83,11 +83,11 @@ class TopicClusteringService:
         for content_id in content_ids:
             # Get content and generate embedding
             content = self.db.fetch_one(
-                "SELECT * FROM content_unified WHERE id = ?", (content_id,)
+                "SELECT title, content FROM content WHERE id = ?", (content_id,)
             )
 
             if content:
-                text = f"{content['title'] or ''} {content['body'] or ''}"[:5000]
+                text = f"{content['title'] or ''} {content['content'] or ''}"[:5000]
                 embedding = self.embedding_service.encode(text)
                 embeddings[content_id] = embedding
 
@@ -124,13 +124,13 @@ class TopicClusteringService:
 
         for content_id in content_ids[:10]:  # Sample first 10 for efficiency
             content = self.db.fetch_one(
-                "SELECT * FROM content_unified WHERE id = ?", (content_id,)
+                "SELECT content FROM content WHERE id = ?", (content_id,)
             )
 
-            if content and content["body"]:
+            if content and content["content"]:
                 # Extract entities
                 result = self.entity_service.extract_email_entities(
-                    content_id, content["body"][:1000], {}  # First 1000 chars
+                    content_id, content["content"][:1000], {}  # First 1000 chars
                 )
 
                 if result.get("success") and result.get("entities"):
@@ -176,10 +176,10 @@ class TopicClusteringService:
         logger.info("Calculating entity co-occurrence matrix")
 
         # Get content to analyze
-        query = "SELECT * FROM content_unified"
+        query = "SELECT id, content FROM content"
         params = []
         if content_type:
-            query += " WHERE source_type = ?"
+            query += " WHERE content_type = ?"
             params.append(content_type)
 
         content_items = self.db.fetch(query, tuple(params))
@@ -189,7 +189,7 @@ class TopicClusteringService:
         entity_documents = defaultdict(set)  # Track which docs contain each entity
 
         for item in content_items:
-            entities = self._extract_entities_from_content(item["content_id"], item["body"])
+            entities = self._extract_entities_from_content(item["content_id"], item["content"])
 
             # Update co-occurrence counts
             for i, entity1 in enumerate(entities):
@@ -213,7 +213,7 @@ class TopicClusteringService:
 
     def _extract_entities_from_content(self, content_id: str, content: str) -> list[str]:
         """
-        Extract unique entities FROM content_unified.
+        Extract unique entities from content.
         """
         if not content:
             return []
@@ -308,7 +308,7 @@ class TopicClusteringService:
 
         # If too many new items, trigger full recalculation
         if len(new_content_ids) > recalculate_threshold:
-            all_content = self.db.fetch("SELECT id FROM content_unified")
+            all_content = self.db.fetch("SELECT id FROM content")
             all_ids = [item["content_id"] for item in all_content]
             return self.perform_hierarchical_clustering(all_ids)
 

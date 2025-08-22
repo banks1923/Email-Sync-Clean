@@ -77,8 +77,8 @@ class SimilarityAnalyzer:
         start_time = time.time()
 
         # Get embeddings
-        embedding_1 = self.embedding_service.encode(content_1["body"])
-        embedding_2 = self.embedding_service.encode(content_2["body"])
+        embedding_1 = self.embedding_service.encode(content_1["content_unified"])
+        embedding_2 = self.embedding_service.encode(content_2["content_unified"])
 
         # Compute cosine similarity
         similarity = self._cosine_similarity(embedding_1, embedding_2)

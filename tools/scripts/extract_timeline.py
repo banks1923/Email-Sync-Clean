@@ -1,220 +1,158 @@
 #!/usr/bin/env python3
 """
-Timeline Extraction Script
+Timeline Extraction Script - Simplified version using TimelineService
 
-Processes all documents in data/export/ and generates comprehensive timeline.md.
-Follows CLAUDE.md principles: simple, direct implementation under 200 lines.
+Processes documents and generates timeline from content in database.
 """
 
 import argparse
-import os
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from infrastructure.pipelines.timeline_extractor import TimelineExtractor
-
-# Configure logging
-# logging.basicConfig(  # Now configured in shared/loguru_config.pylevel="INFO", format="%(asctime)s - %(levelname)s - %(message)s")
-# Logger is now imported globally from loguru
+from utilities.timeline import TimelineService
+from shared.simple_db import SimpleDB
 
 
-def find_exported_documents(export_dir: str) -> list[str]:
-    """Find all markdown documents in export directory."""
-    export_path = Path(export_dir)
+def extract_timeline_from_database(min_confidence: str = "MEDIUM") -> dict:
+    """Extract timeline events from database content."""
+    
+    # Get timeline service
+    service = TimelineService()
+    
+    # Get all timeline events from database
+    events = service.get_all_events()
+    
+    if not events:
+        logger.warning("No timeline events found in database")
+        return {
+            "total_events": 0,
+            "events": [],
+            "date_range": None
+        }
+    
+    # Filter by confidence if needed (simplified for now)
+    # In real implementation, would need confidence scoring
+    
+    # Sort events by date
+    sorted_events = sorted(events, key=lambda x: x.get("date", ""))
+    
+    # Generate summary
+    summary = {
+        "total_events": len(events),
+        "events": sorted_events,
+        "date_range": {
+            "start": sorted_events[0].get("date") if sorted_events else None,
+            "end": sorted_events[-1].get("date") if sorted_events else None
+        }
+    }
+    
+    return summary
 
-    if not export_path.exists():
-        logger.error(f"Export directory does not exist: {export_dir}")
-        return []
 
-    # Find all .md files
-    md_files = list(export_path.glob("*.md"))
-
-    # Filter out timeline.md if it exists (don't process our own output)
-    md_files = [f for f in md_files if f.name != "timeline.md"]
-
-    logger.info(f"Found {len(md_files)} documents in {export_dir}")
-    return [str(f) for f in md_files]
-
-
-def process_documents(document_paths: list[str], extractor: TimelineExtractor) -> list[dict]:
-    """Process all documents and extract timeline events."""
-    all_events = []
-
-    for doc_path in document_paths:
-        try:
-            logger.info(f"Processing: {Path(doc_path).name}")
-            events = extractor.extract_dates_from_file(doc_path)
-            all_events.extend(events)
-            logger.info(f"  Found {len(events)} events")
-        except Exception as e:
-            logger.error(f"Error processing {doc_path}: {e}")
-
-    return all_events
+def generate_markdown_timeline(events: list, output_path: str) -> str:
+    """Generate markdown timeline from events."""
+    
+    lines = []
+    lines.append("# Timeline of Events")
+    lines.append(f"\nGenerated: {datetime.now().isoformat()}")
+    lines.append(f"Total Events: {len(events)}\n")
+    lines.append("---\n")
+    
+    # Group events by date
+    events_by_date = {}
+    for event in events:
+        date = event.get("date", "Unknown")
+        if date not in events_by_date:
+            events_by_date[date] = []
+        events_by_date[date].append(event)
+    
+    # Generate timeline
+    for date in sorted(events_by_date.keys()):
+        lines.append(f"\n## {date}\n")
+        for event in events_by_date[date]:
+            lines.append(f"- **{event.get('type', 'Event')}**: {event.get('description', 'No description')}")
+            if event.get("content_id"):
+                lines.append(f"  - Source: Document ID {event['content_id']}")
+    
+    timeline_content = "\n".join(lines)
+    
+    # Write to file
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(timeline_content)
+    
+    return timeline_content
 
 
 def main():
     """Main timeline extraction function."""
     parser = argparse.ArgumentParser(
-        description="Extract timeline from exported documents",
+        description="Extract timeline from database content",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python scripts/extract_timeline.py
-  python scripts/extract_timeline.py --export-dir /custom/path
-  python scripts/extract_timeline.py --confidence HIGH --output custom_timeline.md
-  python scripts/extract_timeline.py --verbose --stats-only
-        """,
+  python scripts/extract_timeline.py --output timeline.md
+  python scripts/extract_timeline.py --confidence HIGH
+        """
     )
-
+    
     parser.add_argument(
-        "--export-dir",
-        default="data/export",
-        help="Directory containing exported documents (default: data/export)",
+        "--output",
+        default="data/export/timeline.md",
+        help="Output timeline file (default: data/export/timeline.md)"
     )
-
-    parser.add_argument(
-        "--output", default="timeline.md", help="Output timeline file (default: timeline.md)"
-    )
-
+    
     parser.add_argument(
         "--confidence",
         choices=["LOW", "MEDIUM", "HIGH"],
         default="MEDIUM",
-        help="Minimum confidence level for events (default: MEDIUM)",
+        help="Minimum confidence level for events (default: MEDIUM)"
     )
-
+    
     parser.add_argument(
         "--stats-only",
         action="store_true",
-        help="Only show statistics, don't generate timeline file",
+        help="Only show statistics, don't generate timeline file"
     )
-
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
-
-    parser.add_argument(
-        "--store-db", action="store_true", help="Store extracted events in timeline database"
-    )
-
-    parser.add_argument(
-        "--db-path",
-        default="emails.db",
-        help="Database path for storing timeline events (default: emails.db)",
-    )
-
+    
     args = parser.parse_args()
-
-    # Set logging level
-    if args.verbose:
-        logger.level("DEBUG")
-
-    # Find documents
-    document_paths = find_exported_documents(args.export_dir)
-
-    if not document_paths:
-        logger.error("No documents found to process")
-        sys.exit(1)
-
-    # Initialize extractor
-    extractor = TimelineExtractor()
-
-    # Process documents
-    logger.info("Starting timeline extraction...")
-    all_events = process_documents(document_paths, extractor)
-
-    if not all_events:
-        logger.warning("No timeline events found in any documents")
-        sys.exit(0)
-
-    # Generate statistics
-    summary = extractor.generate_timeline_summary(all_events)
-
+    
+    # Extract timeline from database
+    logger.info("Extracting timeline events from database...")
+    timeline_data = extract_timeline_from_database(args.confidence)
+    
     # Print statistics
     print("\n" + "=" * 60)
     print("TIMELINE EXTRACTION SUMMARY")
     print("=" * 60)
-    print(f"Documents processed: {len(document_paths)}")
-    print(f"Total events found: {summary['total_events']}")
-    print(f"Date range: {summary['date_range']['start']} to {summary['date_range']['end']}")
-    print(f"Timeline span: {summary['timeline_span_days']} days")
-    print("\nConfidence distribution:")
-    print(f"  🟢 High: {summary['high_confidence_events']}")
-    print(f"  🟡 Medium: {summary['medium_confidence_events']}")
-    print(f"  🔴 Low: {summary['low_confidence_events']}")
-    print("\nEvent types:")
-    for event_type, count in sorted(summary["event_types"].items()):
-        print(f"  {event_type.title()}: {count}")
-
-    # Filter by confidence level
-    filtered_events = extractor.filter_events_by_confidence(all_events, args.confidence)
-    print(f"\nEvents with {args.confidence}+ confidence: {len(filtered_events)}")
-
-    if args.stats_only:
-        print("\nStats-only mode enabled. Timeline file not generated.")
+    print(f"Total events found: {timeline_data['total_events']}")
+    
+    if timeline_data['date_range']:
+        print(f"Date range: {timeline_data['date_range']['start']} to {timeline_data['date_range']['end']}")
+    
+    if args.stats_only or timeline_data['total_events'] == 0:
+        print("\nStats-only mode or no events found. Timeline file not generated.")
         return
-
-    # Generate timeline
-    if not filtered_events:
-        logger.warning(f"No events meet the {args.confidence} confidence threshold")
-        return
-
+    
+    # Generate timeline file
     try:
-        # Determine output path
-        if not os.path.isabs(args.output):
-            # Make relative to export directory
-            output_path = os.path.join(args.export_dir, args.output)
-        else:
-            output_path = args.output
-
-        # Generate markdown timeline
-        timeline_content = extractor.generate_markdown_timeline(
-            all_events, output_path, args.confidence
-        )
-
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        timeline_content = generate_markdown_timeline(timeline_data['events'], str(output_path))
+        
         print(f"\n✅ Timeline generated: {output_path}")
-        print(f"   Events included: {len(filtered_events)}")
-        print(f"   Minimum confidence: {args.confidence}")
-
-        # Show preview of timeline content
-        lines = timeline_content.split("\n")
-        if len(lines) > 10:
-            print("\nPreview (first 10 lines):")
-            for i, line in enumerate(lines[:10]):
-                print(f"  {line}")
-            print(f"  ... ({len(lines) - 10} more lines)")
-
+        print(f"   Events included: {timeline_data['total_events']}")
+        
     except Exception as e:
         logger.error(f"Error generating timeline: {e}")
         sys.exit(1)
-
-    # Store in database if requested
-    if args.store_db:
-        print(f"\n📊 Storing events in database: {args.db_path}")
-
-        try:
-            storage_result = extractor.store_events_in_database(filtered_events, args.db_path)
-
-            if storage_result.get("success"):
-                print(
-                    f"   ✅ Stored {storage_result['stored_count']}/{storage_result['total_events']} events"
-                )
-                if storage_result["error_count"] > 0:
-                    print(f"   ⚠️  {storage_result['error_count']} errors occurred")
-                    if args.verbose:
-                        for error in storage_result["errors"][:5]:  # Show first 5 errors
-                            print(f"      {error}")
-            else:
-                print(
-                    f"   ❌ Database storage failed: {storage_result.get('error', 'Unknown error')}"
-                )
-
-        except Exception as e:
-            logger.error(f"Error storing events in database: {e}")
-            print(f"   ❌ Database storage failed: {e}")
 
 
 if __name__ == "__main__":

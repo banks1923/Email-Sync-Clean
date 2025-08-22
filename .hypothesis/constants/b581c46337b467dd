@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/knowledge_graph/topic_clustering.py
-# hypothesis_version: 6.138.2
-
-[0.0, 0.5, 0.6, 0.7, 1.0, 10.0, 1000, 5000, ', ', 'cluster_id', 'cluster_label', 'cluster_size', 'clusters', 'contains_entities', 'content', 'content_id', 'cooccurrence_count', 'cosine', 'count', 'distance', 'distance_threshold', 'edge_metadata', 'emails.db', 'entities', 'entity1', 'entity2', 'entity_cooccurrences', 'entity_pair', 'error', 'incremental_addition', 'incremental_update', 'items_processed', 'label', 'members', 'method', 'min_cooccurrence', 'new_assignments', 'num_clusters', 'same_cluster', 'significant_pairs', 'size', 'source_node_id', 'success', 'text', 'top_cooccurrences', 'top_entities', 'total_entities', 'total_shared_docs', 'ward']

@@ -78,7 +78,7 @@ def db_stats():
         for source, count in cursor.fetchall():
             print(f'{source}: {count}')
         
-        cursor = db.execute('SELECT COUNT(*) FROM content_unified')
+        cursor = db.execute('SELECT COUNT(*) FROM content')
         content_count = cursor.fetchone()[0]
         print(f'Content entries: {content_count}')
         

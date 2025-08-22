@@ -1,4 +1,0 @@
-# file: /Users/jim/Projects/Email Sync/infrastructure/documents/processors/text_processor.py
-# hypothesis_version: 6.138.2
-
-[0.7, 1000, 10000, '\x00', '#', ',', '/*', '//', 'ERROR', 'INFO', 'WARNING', 'ascii', 'class', 'code', 'confidence', 'cp1252', 'csv_like', 'def', 'encoding', 'from', 'ignore', 'import', 'latin-1', 'log', 'plain', 'rb', 'text_type', 'txt', 'unknown', 'utf-16', 'utf-8']
