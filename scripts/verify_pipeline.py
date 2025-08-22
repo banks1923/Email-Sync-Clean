@@ -473,13 +473,15 @@ class PipelineVerifier:
         try:
             content_table = self._content_table()
             
-            # FIX 1: Orphaned content (no document) - use chunk-aware join
+            # FIX 1: Check PDFs are properly linked to documents table
             orphaned_content = self.db.fetch_one(f"""
                 SELECT COUNT(*) AS orphaned_content
                 FROM {content_table} c
                 LEFT JOIN documents d 
-                  ON c.sha256 = d.sha256 AND c.chunk_index = d.chunk_index
-                WHERE c.sha256 IS NOT NULL AND d.sha256 IS NULL
+                  ON c.sha256 = d.sha256
+                WHERE c.source_type = 'pdf' 
+                  AND c.sha256 IS NOT NULL 
+                  AND d.sha256 IS NULL
             """)['orphaned_content']
             
             # Fix 5: Orphaned embeddings (no content)
@@ -490,13 +492,18 @@ class PipelineVerifier:
                 WHERE c.id IS NULL
             """)['orphaned_embeddings']
             
-            # FIX 2: Docs without content (processed docs missing normalization) - chunk-aware
+            # FIX 2: All documents should now be in content_unified (except empty ones)
             docs_without_content = self.db.fetch_one(f"""
-                SELECT COUNT(*) AS docs_without_content
+                SELECT COUNT(DISTINCT d.sha256) AS docs_without_content
                 FROM documents d
                 LEFT JOIN {content_table} c
-                  ON d.sha256 = c.sha256 AND d.chunk_index = c.chunk_index
-                WHERE d.status='processed' AND d.sha256 IS NOT NULL AND c.id IS NULL
+                  ON d.sha256 = c.source_id AND c.source_type = 'pdf'
+                WHERE d.status='processed' 
+                  AND d.sha256 IS NOT NULL 
+                  AND c.source_id IS NULL
+                  AND d.char_count > 10  -- Skip empty/tiny documents
+                  AND d.text_content IS NOT NULL
+                  AND d.text_content != ''
             """)['docs_without_content']
             
             # FIX 3: Content missing embeddings (coverage)

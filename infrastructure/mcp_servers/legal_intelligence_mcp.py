@@ -11,8 +11,16 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add project root to path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root to path - flexible path resolution
+try:
+    # Use Pydantic config for path management if available
+    from config.settings import settings
+    project_root = Path(settings.paths.data_root).parent
+except ImportError:
+    # Fallback to path calculation (3 levels deep: infrastructure/mcp_servers/*.py)
+    project_root = Path(__file__).parent.parent.parent
+
+sys.path.insert(0, str(project_root))
 
 # MCP imports
 from mcp.server import NotificationOptions, Server
@@ -28,28 +36,18 @@ except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
 
-# Service factories - to be injected from higher layers
-_entity_service_factory = None
-_legal_intelligence_service_factory = None
-
-def set_service_factories(entity_factory=None, legal_factory=None):
-    """Inject service factories from higher layers."""
-    global _entity_service_factory, _legal_intelligence_service_factory
-    _entity_service_factory = entity_factory
-    _legal_intelligence_service_factory = legal_factory
+# Clean architecture - no factory injection needed
 
 
 def legal_extract_entities(content: str, case_id: str | None = None) -> str:
     """Extract legal entities from text content using Legal BERT and NER"""
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
-    if not _entity_service_factory:
-        return "Entity service not configured - must be injected from higher layer"
 
     try:
-        # Use the injected entity service factory
-        entity_service = _entity_service_factory()
+        # Direct import following clean architecture pattern
+        from entity import EntityService
+        entity_service = EntityService()
 
         # Extract entities using the entity service
         doc_id = case_id or f"legal_entity_extract_{len(content)}"
@@ -110,11 +108,10 @@ def legal_timeline_events(
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
-    if not _legal_intelligence_service_factory:
-        return "Legal intelligence service not configured - must be injected from higher layer"
-
     try:
-        legal_service = _legal_intelligence_service_factory()
+        # Direct import following clean architecture pattern
+        from legal_intelligence import get_legal_intelligence_service
+        legal_service = get_legal_intelligence_service()
 
         # Generate case timeline using the legal intelligence service
         timeline_result = legal_service.generate_case_timeline(case_number)
@@ -210,11 +207,10 @@ def legal_knowledge_graph(case_number: str, include_relationships: bool = True) 
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
-    if not _legal_intelligence_service_factory:
-        return "Legal intelligence service not configured - must be injected from higher layer"
-
     try:
-        legal_service = _legal_intelligence_service_factory()
+        # Direct import following clean architecture pattern
+        from legal_intelligence import get_legal_intelligence_service
+        legal_service = get_legal_intelligence_service()
 
         # Build relationship graph using the legal intelligence service
         graph_result = legal_service.build_relationship_graph(case_number)
@@ -299,11 +295,10 @@ def legal_document_analysis(case_number: str, analysis_type: str = "comprehensiv
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
-    if not _legal_intelligence_service_factory:
-        return "Legal intelligence service not configured - must be injected from higher layer"
-
     try:
-        legal_service = _legal_intelligence_service_factory()
+        # Direct import following clean architecture pattern
+        from legal_intelligence import get_legal_intelligence_service
+        legal_service = get_legal_intelligence_service()
 
         # Perform document pattern analysis
         if analysis_type == "patterns":
@@ -418,11 +413,10 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
-    if not _legal_intelligence_service_factory:
-        return "Legal intelligence service not configured - must be injected from higher layer"
-
     try:
-        legal_service = _legal_intelligence_service_factory()
+        # Direct import following clean architecture pattern
+        from legal_intelligence import get_legal_intelligence_service
+        legal_service = get_legal_intelligence_service()
 
         # Get case documents for analysis
         case_documents = legal_service._get_case_documents(case_number)
@@ -543,11 +537,10 @@ def legal_relationship_discovery(case_number: str, entity_focus: str | None = No
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
-    if not _legal_intelligence_service_factory:
-        return "Legal intelligence service not configured - must be injected from higher layer"
-
     try:
-        legal_service = _legal_intelligence_service_factory()
+        # Direct import following clean architecture pattern
+        from legal_intelligence import get_legal_intelligence_service
+        legal_service = get_legal_intelligence_service()
 
         # Get case documents
         case_documents = legal_service._get_case_documents(case_number)

@@ -44,8 +44,12 @@ def count_db_eligible(db_path: str) -> int:
     """Count eligible content in the database."""
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    # Adjust eligibility rule as needed
-    cur.execute("SELECT COUNT(*) FROM content_unified WHERE ready_for_embedding = 1")
+    # Count content that has embeddings (already processed)
+    cur.execute("""
+        SELECT COUNT(DISTINCT c.id) 
+        FROM content_unified c
+        INNER JOIN embeddings e ON c.id = e.content_id
+    """)
     n = cur.fetchone()[0]
     conn.close()
     return int(n)
@@ -102,7 +106,8 @@ def qdrant_stats(client, collection: str):
 
 
 def main():
-    db = os.getenv("APP_DB_PATH", "data/emails.db")
+    from config.settings import DatabaseSettings
+    db = DatabaseSettings().emails_db_path
     collection = os.getenv("VSTORE_COLLECTION", "emails")  # Default to emails
     allow_empty = _bool("ALLOW_EMPTY_COLLECTION", False)
     expected_dim = int(os.getenv("EXPECTED_DIM", "1024"))

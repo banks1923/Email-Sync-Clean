@@ -220,7 +220,7 @@ class SimpleDB:
         metadata: dict | None = None,
         source_path: str | None = None,
     ) -> str:
-        """Add content - emails, transcripts, PDFs. Returns content ID."""
+        """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID."""
         # Calculate content hash for deduplication
         normalized_title = (title or "").strip().lower()
         normalized_content = (content or "").strip()
@@ -229,7 +229,7 @@ class SimpleDB:
 
         # Check if content already exists by hash
         existing = self.fetch_one(
-            "SELECT id FROM content WHERE content_hash = ?", (content_hash,)
+            "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
         )
 
         if existing:
@@ -238,39 +238,95 @@ class SimpleDB:
             )
             return existing["id"]
 
-        # Create new content
-        content_id = str(uuid.uuid4())
-        word_count = len(content.split()) if content else 0
-        char_count = len(content) if content else 0
+        # Generate numeric source_id from hash
+        source_id = abs(hash(content_hash)) % 2147483647  # Ensure it fits in INTEGER
         
-        # Handle JSON serialization gracefully
-        try:
-            metadata_json = json.dumps(metadata) if metadata else None
-        except (TypeError, ValueError) as e:
-            logger.warning(f"Failed to serialize metadata to JSON: {e}. Storing as string.")
-            metadata_json = str(metadata) if metadata else None
-
-        self.execute(
+        cursor = self.execute(
             """
-            INSERT OR IGNORE INTO content (id, content_type, title, content, source_path,
-                               metadata, word_count, char_count, content_hash)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
+            VALUES (?, ?, ?, ?, ?, ?)
         """,
             (
-                content_id,
-                content_type,
+                content_type,  # Maps to source_type
+                source_id,
                 title,
-                content,
-                source_path,
-                metadata_json,
-                word_count,
-                char_count,
-                content_hash,
+                content,  # Maps to body
+                content_hash,  # Maps to sha256
+                1  # Mark ready for embedding
             ),
         )
+        
+        # Get the auto-generated ID
+        if cursor.lastrowid:
+            return str(cursor.lastrowid)
+        else:
+            # If insert was ignored due to duplicate, find existing ID
+            existing = self.fetch_one(
+                "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
+            )
+            return str(existing["id"]) if existing else str(source_id)
 
-        return content_id
-
+    def add_email_message(
+        self,
+        message_content: str,
+        thread_id: str,
+        email_id: str,
+        sender: str = None,
+        date: str = None,
+        subject: str = None,
+        depth: int = 0,
+        message_type: str = "extracted"
+    ) -> str:
+        """
+        Add individual email message from thread parsing.
+        Special handling for legal case evidence preservation.
+        """
+        # For legal cases, include sender and date in hash to catch harassment patterns
+        # This ensures repeated identical messages from same sender are preserved as evidence
+        hash_input = f"email_message:{sender}:{date}:{message_content}"
+        content_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
+        
+        # Check for existing message
+        existing = self.fetch_one(
+            "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
+        )
+        
+        if existing:
+            logger.info(f"Duplicate message detected from {sender} at {date}, returning existing ID: {existing['id']}")
+            return existing["id"]
+        
+        # Generate source_id
+        source_id = abs(hash(content_hash)) % 2147483647
+        
+        # Create descriptive title
+        title = f"{subject} - {sender}" if subject and sender else f"Message from {sender}" if sender else "Email Message"
+        
+        cursor = self.execute(
+            """
+            INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "email_message",
+                source_id,
+                title,
+                message_content,
+                content_hash,
+                1  # Ready for embedding
+            ),
+        )
+        
+        # Get the auto-generated ID
+        if cursor.lastrowid:
+            message_id = str(cursor.lastrowid)
+            logger.info(f"Stored email message from {sender}: {message_id}")
+            return message_id
+        else:
+            # If insert was ignored, find existing
+            existing = self.fetch_one(
+                "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
+            )
+            return str(existing["id"]) if existing else str(source_id)
     
     def upsert_content(
         self,
@@ -287,56 +343,48 @@ class SimpleDB:
 
         Args:
             source_type: Type of source (email, pdf, transcript, etc.)
-            external_id: External identifier (message_id, file_hash, etc.)
-            content_type: Type of content
+            external_id: External identifier (message_id, file_hash, etc.)  
+            content_type: Type of content (ignored - use source_type)
             title: Content title
             content: Actual content text
-            metadata: Optional metadata dict
-            parent_content_id: Optional parent content ID for attachments
+            metadata: Optional metadata dict (ignored - not in schema)
+            parent_content_id: Optional parent content ID (ignored - not in schema)
 
         Returns:
-            Content ID (UUID)
+            Content ID from database
         """
-        from uuid import UUID, uuid5
-        import json
         import hashlib
 
-        # Deterministic UUID from business key (namespace DNS as stable base)
-        UUID_NAMESPACE = UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
-        content_id = str(uuid5(UUID_NAMESPACE, f"{source_type}:{external_id}"))
+        # Convert external_id to numeric source_id
+        source_id = abs(hash(external_id)) % 2147483647
 
         # Calculate content hash for deduplication
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        # Prepare metadata
-        if metadata is None:
-            metadata = {}
-        metadata_json = json.dumps(metadata, ensure_ascii=False)
-
-        # UPSERT operation
+        # UPSERT operation using actual content_unified schema
+        # Columns: id, source_type, source_id, title, body, created_at, ready_for_embedding, sha256, chunk_index
         cursor = self.execute("""
-            INSERT INTO content (
-                id, type, source_type, external_id, content_type, title, 
-                content, metadata, content_hash, char_count, parent_content_id,
-                created_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT(source_type, external_id) DO UPDATE SET
-                type = excluded.type,
+            INSERT INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(source_type, source_id) DO UPDATE SET
                 title = excluded.title,
-                content = excluded.content,
-                metadata = excluded.metadata,
-                content_hash = excluded.content_hash,
-                char_count = excluded.char_count,
-                updated_at = CURRENT_TIMESTAMP
-        """, (content_id, content_type, source_type, external_id, content_type, title,
-            content, metadata_json, content_hash, len(content), parent_content_id
-        ))
+                body = excluded.body,
+                sha256 = excluded.sha256,
+                ready_for_embedding = excluded.ready_for_embedding
+        """, (source_type, source_id, title, content, content_hash, 1))
 
-        if cursor.rowcount > 0:
-            logger.info(f"Content upserted: {source_type}:{external_id} -> {content_id}")
+        # Get the ID of the upserted record
+        result = self.fetch_one(
+            "SELECT id FROM content_unified WHERE source_type = ? AND source_id = ?",
+            (source_type, source_id)
+        )
 
-        return content_id
+        if result:
+            logger.info(f"Content upserted: {source_type}:{external_id} -> {result['id']}")
+            return str(result['id'])
+        else:
+            logger.error(f"Failed to upsert content: {source_type}:{external_id}")
+            return str(source_id)
 
     def update_content(self, content_id: str, **kwargs) -> bool:
         """Update content fields. Returns True if successful."""
@@ -367,14 +415,14 @@ class SimpleDB:
             params.extend([len(content.split()) if content else 0, len(content) if content else 0])
         
         params.append(content_id)
-        query = f"UPDATE content SET {', '.join(set_clauses)} WHERE id = ?"
+        query = f"UPDATE content_unified SET {', '.join(set_clauses)} WHERE id = ?"
         
         cursor = self.execute(query, tuple(params))
         return cursor.rowcount > 0
 
     def delete_content(self, content_id: str) -> bool:
         """Delete content by ID. Returns True if successful."""
-        cursor = self.execute("DELETE FROM content WHERE id = ?", (content_id,))
+        cursor = self.execute("DELETE FROM content_unified WHERE id = ?", (content_id,))
         return cursor.rowcount > 0
 
     # Simple thread tracking methods
@@ -410,9 +458,9 @@ class SimpleDB:
 
         self.execute(
             """
-            INSERT INTO content (id, file_path, file_name, chunk_index,
+            INSERT INTO content_unified (id, file_path, file_name, chunk_index,
                 text_content, char_count, file_size, file_hash,
-                source_type, processed_time, content_type, vector_processed,
+                source_type, processed_time, content_type, ready_for_embedding,
                 extraction_method
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
@@ -428,7 +476,7 @@ class SimpleDB:
                 chunk_data.get("source_type", "upload"),
                 chunk_data.get("processed_time", datetime.now().isoformat()),
                 chunk_data.get("content_type", "document"),
-                chunk_data.get("vector_processed", 0),
+                chunk_data.get("ready_for_embedding", 0),
                 chunk_data.get("extraction_method", "pdfplumber"),
             ),
         )
@@ -476,7 +524,7 @@ class SimpleDB:
             content_types = filters.get("content_types")
             if content_types and isinstance(content_types, list):
                 placeholders = ",".join(["?"] * len(content_types))
-                where_clauses.append(f"content_type IN ({placeholders})")
+                where_clauses.append(f"source_type IN ({placeholders})")
                 params.extend(content_types)
 
             # Tags filtering
@@ -489,7 +537,7 @@ class SimpleDB:
                     if tag_logic == "AND":
                         for tag in tags:
                             where_clauses.append(
-                                "(metadata LIKE ? OR title LIKE ? OR content LIKE ?)"
+                                "(metadata LIKE ? OR title LIKE ? OR body LIKE ?)"
                             )
                             tag_pattern = f"%{tag}%"
                             params.extend([tag_pattern, tag_pattern, tag_pattern])
@@ -497,7 +545,7 @@ class SimpleDB:
                         tag_conditions = []
                         for tag in tags:
                             tag_conditions.append(
-                                "(metadata LIKE ? OR title LIKE ? OR content LIKE ?)"
+                                "(metadata LIKE ? OR title LIKE ? OR body LIKE ?)"
                             )
                             tag_pattern = f"%{tag}%"
                             params.extend([tag_pattern, tag_pattern, tag_pattern])
@@ -506,7 +554,7 @@ class SimpleDB:
 
         # Build final query
         where_clause = " AND ".join(where_clauses)
-        query = f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_time DESC LIMIT ?"
+        query = f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
 
         return self.fetch(query, tuple(params))
@@ -749,18 +797,11 @@ class SimpleDB:
         prepared_data = []
         content_ids = []
         total_chars = 0
-        total_words = 0
 
         for idx, item in enumerate(content_list):
-            # Auto-generate content_id if not provided
-            content_id = item.get("content_id", str(uuid.uuid4()))
-            content_ids.append(content_id)
-
-            # Calculate word and char counts
+            # Calculate char count
             content = item.get("content", "")
-            word_count = len(content.split()) if content else 0
             char_count = len(content) if content else 0
-            total_words += word_count
             total_chars += char_count
 
             # Calculate content hash for deduplication
@@ -771,24 +812,24 @@ class SimpleDB:
             hash_input = f"{content_type}:{normalized_title}:{normalized_content}"
             content_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
 
-            # Serialize metadata to JSON
-            metadata = item.get("metadata")
-            metadata_json = json.dumps(metadata) if metadata else None
+            # Generate numeric source_id from hash
+            source_id = abs(hash(content_hash)) % 2147483647
 
-            # Create tuple for batch insert (matches content table schema)
+            # Create tuple for batch insert (matches content_unified schema)
+            # Columns: source_type, source_id, title, body, sha256, ready_for_embedding
             prepared_data.append(
                 (
-                    content_id,
-                    content_type,
-                    title,
-                    content,
-                    item.get("source_path"),
-                    metadata_json,
-                    word_count,
-                    char_count,
-                    content_hash,
+                    content_type,  # source_type
+                    source_id,     # source_id
+                    title,         # title  
+                    content,       # body
+                    content_hash,  # sha256
+                    1,             # ready_for_embedding
                 )
             )
+            
+            # Store the auto-generated ID for returning
+            content_ids.append(str(source_id))
 
             if (idx + 1) % 100 == 0:
                 logger.debug(f"Prepared {idx + 1}/{len(content_list)} content items")
@@ -796,27 +837,25 @@ class SimpleDB:
         prep_time = time.time() - start_time
         logger.info(
             f"Data preparation complete: {prep_time:.2f}s, "
-            f"{total_words} words, {total_chars} chars"
+            f"{total_chars} chars"
         )
 
-        # Use batch_insert with content table columns (no created_time - uses DEFAULT)
+        # Use batch_insert with content_unified table columns
         columns = [
-            "id", "content_type",
+            "source_type",
+            "source_id", 
             "title",
-            "content",
-            "source_path",
-            "metadata",
-            "word_count",
-            "char_count",
-            "content_hash",
+            "body",
+            "sha256",
+            "ready_for_embedding",
         ]
 
-        stats = self.batch_insert("content", columns, prepared_data, batch_size, progress_callback)
+        stats = self.batch_insert("content_unified", columns, prepared_data, batch_size, progress_callback)
 
         # Log content-specific stats
         logger.info(
             f"Content batch complete: {stats['inserted']} new items, "
-            f"avg {total_words//len(content_list)} words/item"
+            f"avg {total_chars//len(content_list)} chars/item"
         )
 
         return {"stats": stats, "content_ids": content_ids}
@@ -871,7 +910,7 @@ class SimpleDB:
                     chunk.get("source_type", "upload"),
                     chunk.get("processed_time", datetime.now().isoformat()),
                     chunk.get("content_type", "document"),
-                    chunk.get("vector_processed", 0),
+                    chunk.get("ready_for_embedding", 0),
                     chunk.get("extraction_method", "pdfplumber"),
                 )
             )
@@ -898,7 +937,7 @@ class SimpleDB:
             "source_type",
             "processed_time",
             "content_type",
-            "vector_processed",
+            "ready_for_embedding",
             "extraction_method",
         ]
 
@@ -968,7 +1007,7 @@ class SimpleDB:
                 textrank_sentences TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (document_id) REFERENCES content(id) ON DELETE CASCADE
+                FOREIGN KEY (document_id) REFERENCES content_unified(id) ON DELETE CASCADE
             )
         """
         )
@@ -984,7 +1023,7 @@ class SimpleDB:
                 confidence_score REAL DEFAULT 0.0 CHECK(confidence_score >= 0.0 AND confidence_score <= 1.0),
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (document_id) REFERENCES content(id) ON DELETE CASCADE
+                FOREIGN KEY (document_id) REFERENCES content_unified(id) ON DELETE CASCADE
             )
         """
         )
@@ -1001,8 +1040,8 @@ class SimpleDB:
                 cached_data TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 expires_at TEXT,
-                FOREIGN KEY (source_id) REFERENCES content(id) ON DELETE CASCADE,
-                FOREIGN KEY (target_id) REFERENCES content(id) ON DELETE CASCADE,
+                FOREIGN KEY (source_id) REFERENCES content_unified(id) ON DELETE CASCADE,
+                FOREIGN KEY (target_id) REFERENCES content_unified(id) ON DELETE CASCADE,
                 UNIQUE(source_id, target_id, relationship_type)
             )
         """
@@ -1108,7 +1147,7 @@ class SimpleDB:
             """
             SELECT * FROM document_summaries
             WHERE document_id = ?
-            ORDER BY created_time DESC
+            ORDER BY created_at DESC
         """,
             (document_id,),
         )
@@ -1159,14 +1198,14 @@ class SimpleDB:
             query = """
                 SELECT * FROM document_intelligence
                 WHERE document_id = ? AND intelligence_type = ?
-                ORDER BY created_time DESC
+                ORDER BY created_at DESC
             """
             params = (document_id, intelligence_type)
         else:
             query = """
                 SELECT * FROM document_intelligence
                 WHERE document_id = ?
-                ORDER BY created_time DESC
+                ORDER BY created_at DESC
             """
             params = (document_id,)
 
@@ -1804,7 +1843,7 @@ class SimpleDB:
         """Mark single content as vectorized."""
         try:
             cursor = self.execute(
-                "UPDATE content_unified SET vector_processed = 1 WHERE id = ?",
+                "UPDATE content_unified SET ready_for_embedding = 1 WHERE id = ?",
                 (content_id,)
             )
             return cursor.rowcount > 0
@@ -1823,7 +1862,7 @@ class SimpleDB:
         for i in range(0, len(content_ids), batch_size):
             batch_ids = content_ids[i:i + batch_size]
             placeholders = ",".join("?" * len(batch_ids))
-            query = f"UPDATE content_unified SET vector_processed = 1 WHERE id IN ({placeholders})"
+            query = f"UPDATE content_unified SET ready_for_embedding = 1 WHERE id IN ({placeholders})"
             
             try:
                 cursor = self.execute(query, tuple(batch_ids))

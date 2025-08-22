@@ -66,6 +66,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py", "test_coverup_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+benchmark_storage = ".cache/benchmarks"
 addopts = [
     "-ra",
     "--strict-markers",

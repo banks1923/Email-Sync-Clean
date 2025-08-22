@@ -130,7 +130,9 @@ class SimpleUploadProcessor:
             # Use existing PDF service for extraction
             from pdf.pdf_processor import PDFProcessor
             processor = PDFProcessor()
-            return processor.extract_text(str(file_path))
+            result = processor.extract_text_from_pdf(str(file_path))
+            # Return concatenated text from all chunks
+            return '\n'.join(result.get('chunks', []))
         elif suffix == '.docx':
             # Simple docx extraction (could be enhanced)
             try:

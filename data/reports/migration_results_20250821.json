@@ -1,0 +1,29 @@
+{
+  "migration_timestamp": "2025-08-21T21:20:06.985240",
+  "backup_path": "data/emails.db.backup_20250821_212006",
+  "docs_total": 581,
+  "docs_fixed_sha256": 581,
+  "docs_null_sha256": 0,
+  "docs_without_content": 577,
+  "content_entries_created": 4,
+  "content_entries_updated": 0,
+  "files_processed": 4,
+  "files_detail": {
+    "CRD Narrative copy_20250820_163224.pdf": {
+      "chunks": 168,
+      "file_hash": "ae2723cb5f87e55b3757325d7a2bd0774bdb52271fd619e7b6fa0cffa0d06b2d"
+    },
+    "Inspection Report - Blue Ribbon _20250820_163124.pdf": {
+      "chunks": 177,
+      "file_hash": "0bda05ea8eeb2f4a15f509d2abdeb446514a8b2863997f89f86e73579dfd52e0"
+    },
+    "Mold Inspection Report_20250820_163237.pdf": {
+      "chunks": 134,
+      "file_hash": "b8b379c5bb147c1818df908be5b40f4a6120cfe0544f0591b1dc6fffa827a112"
+    },
+    "Mold Inspection email confirmation _20250820_163246.pdf": {
+      "chunks": 102,
+      "file_hash": "d6dc0984168e0f90273f1414e72c437ddbf4018b3dea77f409dc9d43b9c2ca3f"
+    }
+  }
+}

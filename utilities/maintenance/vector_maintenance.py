@@ -55,10 +55,10 @@ class VectorMaintenance:
                 }
                 db_type = type_mapping.get(content_type, content_type)
                 
-                query = "SELECT id FROM content WHERE content_type = ?"
+                query = "SELECT id FROM content_unified WHERE content_type = ?"
                 result = self.db.execute(query, (db_type,))
             else:
-                query = "SELECT id FROM content"
+                query = "SELECT id FROM content_unified"
                 result = self.db.execute(query)
             
             return [row['id'] for row in result.fetchall()]
@@ -71,7 +71,7 @@ class VectorMaintenance:
         try:
             query = """
                 SELECT id, message_id, subject, content 
-                FROM content 
+                FROM content_unified 
                 WHERE content_type = 'email' 
                 AND id NOT IN (
                     SELECT DISTINCT content_id 

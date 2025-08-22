@@ -10,7 +10,7 @@ from shared.simple_db import SimpleDB
 
 
 class EntityDatabase:
-    def __init__(self, db_path="emails.db") -> None:
+    def __init__(self, db_path="data/emails.db") -> None:
         self.db = SimpleDB(db_path)
         self.db_path = db_path
         self.init_result = self._ensure_entities_table()

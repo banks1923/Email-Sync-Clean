@@ -56,7 +56,7 @@ class PreflightChecker:
             conn = sqlite3.connect('data/emails.db')
             
             # Check content table columns
-            cursor = conn.execute('PRAGMA table_info(content)')
+            cursor = conn.execute('PRAGMA table_info(content_unified)')
             columns = {row[1]: row[2] for row in cursor.fetchall()}
             
             required_columns = {
@@ -65,7 +65,7 @@ class PreflightChecker:
                 'message_id': 'TEXT', 
                 'word_count': 'INTEGER',
                 'source_path': 'TEXT',
-                'vector_processed': 'INTEGER'
+                'ready_for_embedding': 'INTEGER'
             }
             
             all_present = True
@@ -84,7 +84,7 @@ class PreflightChecker:
             
             required_indexes = {
                 'ix_content_message_id',
-                'ix_content_vector_processed', 
+                'ix_content_ready_for_embedding', 
                 'ix_content_eid'
             }
             

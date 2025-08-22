@@ -94,6 +94,11 @@ htmlcov/
 .cache/
 .cache/*
 
+# Dependency graph files
+*.dot
+*.svg
+*.png
+
 # Legacy cache directories (should not exist with new config)
 .mypy_cache/
 .ruff_cache/

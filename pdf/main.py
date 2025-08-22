@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loguru import logger
 from typing import TYPE_CHECKING
 from collections.abc import Callable
-from shared.service_interfaces import IService
+
 
 # Type-only imports to avoid runtime coupling
 if TYPE_CHECKING:  # pragma: no cover
@@ -35,7 +35,7 @@ MAX_CONCURRENT_UPLOADS = 10  # Maximum concurrent upload operations
 _upload_semaphore = threading.Semaphore(MAX_CONCURRENT_UPLOADS)
 
 
-class PDFService(IService):
+class PDFService:
     """Thin Facade over core PDF components; optional features resolved via providers.
 
     Core deps (eager): db, processor, storage
@@ -52,7 +52,7 @@ class PDFService(IService):
         logger: object | None = None,
         db_path: str | None = None,
     ) -> None:
-        self.db_path = db_path or getattr(storage, "db_path", "emails.db")
+        self.db_path = db_path or getattr(storage, "db_path", "data/emails.db")
         self.db = db
         self.processor = processor
         self.storage = storage
@@ -76,7 +76,7 @@ class PDFService(IService):
         self._enable_idempotent_writes()
 
     @classmethod
-    def from_db_path(cls, db_path: str = "emails.db") -> "PDFService":
+    def from_db_path(cls, db_path: str = "data/emails.db") -> "PDFService":
         """Legacy compatibility constructor - creates PDFService with all dependencies.
         
         Args:

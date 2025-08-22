@@ -26,7 +26,7 @@ class EntityService:
     Follows service independence with database-only communication.
     """
 
-    def __init__(self, db_path: str = "emails.db") -> None:
+    def __init__(self, db_path: str = "data/emails.db") -> None:
         """
         Initialize EntityService with configuration validation.
         """
@@ -371,7 +371,7 @@ class EntityService:
             return {"success": False, "error": error_msg}
 
 
-def get_entity_service(db_path: str = "emails.db") -> EntityService:
+def get_entity_service(db_path: str = "data/emails.db") -> EntityService:
     """Factory function to create EntityService instance.
     
     Args:

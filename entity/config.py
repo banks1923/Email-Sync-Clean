@@ -29,7 +29,7 @@ class EntityConfig:
             "confidence_threshold": float(os.getenv("ENTITY_CONFIDENCE_THRESHOLD", "0.5")),
             "entity_types": os.getenv("ENTITY_TYPES", "PERSON,ORG,GPE,MONEY,DATE").split(","),
             # Database configuration
-            "db_path": os.getenv("ENTITY_DB_PATH", "emails.db"),
+            "db_path": os.getenv("ENTITY_DB_PATH", "data/emails.db"),
             "max_connections": int(os.getenv("ENTITY_DB_CONNECTIONS", "5")),
             # Processing configuration
             "max_text_length": int(os.getenv("ENTITY_MAX_TEXT_LENGTH", "10000")),

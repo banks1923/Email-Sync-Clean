@@ -7,8 +7,11 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 <!-- ⚠️ CRITICAL CUSTOM INSTRUCTIONS - DO NOT MODIFY ⚠️ -->
 <!-- REQUIRES 3X CONFIRMATION TO CHANGE THIS SECTION -->
 <!-- PROTECTED WORKFLOW INSTRUCTIONS BELOW -->
- 
+
+ ------
+
 ## **CORE**: 
+
 1. **Smooth is steady** steady is fast. 
 2. Build it right, build it once. Build it fast, build it again. 
 3. **PLAN** and investigate assumptions before finalizing 
@@ -17,12 +20,14 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 Core Development Principles
 
 ## Anti-Patterns (NEVER DO)
+
 - NO **Needless Complexity** unless *high ROI* and practical
 - No **No Monster Files**: *IF* modular approach is best practices choice
 - NO **Bandaids**: Fix it *right* unless time is a constraint
 - NO **Redesign**: Without *USER Explicit approval* SAME for massive changes to files or functionality
 
 ## Good Patterns (ALWAYS DO)
+
 - **Atomic Tasks** break tasks down into small steps
 - **GREP** Libraries and extentions are your friend.
 - **Single responsibility** Clean modular build
@@ -292,7 +297,7 @@ These are guidance targets to prevent monster files; they are not hard caps.
 
 
 ### Core Business Services
-- **Gmail Service** (`gmail/`): Email sync with History API, 500+ emails/batch
+- **Gmail Service** (`gmail/`): Email sync with History API, **advanced email parsing with individual message extraction**
 - **PDF Service** (`pdf/`): Intelligent OCR detection, batch processing
 - **Search Intelligence** (`search_intelligence/`): Smart search with query expansion
 - **Legal Intelligence** (`legal_intelligence/`): Case analysis and timeline generation
@@ -315,17 +320,123 @@ These are guidance targets to prevent monster files; they are not hard caps.
 - **Vector Maintenance** (`utilities/maintenance/vector_maintenance.py`): Unified vector operations
 - **Schema Maintenance** (`utilities/maintenance/schema_maintenance.py`): Database schema operations
 
+## 📊 Database Schema
+
+### Primary Content Table: `content_unified`
+The system uses a single unified content table for all document types:
+
+**Table Structure:**
+- `id` (TEXT PRIMARY KEY) - UUID for content
+- `source_type` (TEXT) - Type of content: 'email', 'pdf', 'upload', 'transcript', **'email_message'**
+- `source_id` (TEXT) - Original document/email ID
+- `title` (TEXT) - Document title or email subject
+- `body` (TEXT) - Full text content
+- `created_at` (TIMESTAMP) - When content was added
+- `ready_for_embedding` (BOOLEAN) - Flag for embedding pipeline
+- `sha256` (TEXT) - Document hash for deduplication (includes sender/date for email_message evidence preservation)
+- Additional metadata columns for specific content types
+
+**Advanced Email Processing (2025-08-22):**
+- **Individual Message Extraction**: Email threads are parsed to extract individual quoted messages
+- **Legal Evidence Preservation**: Duplicate harassment signatures stored separately for evidence
+- **Thread Reconstruction**: Messages maintain thread_id relationships for chronological timeline analysis
+- **Pattern Detection**: Automated detection of harassment patterns (anonymous signatures, ignored messages)
+
+**Current Status (Verify with Commands):**
+- ⚠️ Migration in progress - run `make db-stats` for current counts
+- Run `sqlite3 data/emails.db "SELECT 'content:' || COUNT(*) FROM content UNION ALL SELECT 'content_unified:' || COUNT(*) FROM content_unified"` to check migration status
+- Run `make diag-wiring` to verify system health
+
+## 🔍 System Status Verification
+
+**Never trust documentation numbers. Always verify current state:**
+
+```bash
+# Check record counts across tables
+make db-stats
+
+# Check migration status  
+sqlite3 data/emails.db "SELECT 'OLD content:' || COUNT(*) FROM content UNION ALL SELECT 'NEW content_unified:' || COUNT(*) FROM content_unified UNION ALL SELECT 'embeddings:' || COUNT(*) FROM embeddings"
+
+# Check embedding coverage (includes email_message type for individual messages)
+sqlite3 data/emails.db "SELECT source_type, COUNT(*) FROM content_unified GROUP BY source_type"
+
+# Test advanced email parsing capabilities
+python3 test_advanced_parsing.py     # Test parsing with subset
+python3 test_full_integration.py     # Full integration test
+
+# System health check
+make diag-wiring
+```
+
 For detailed API documentation and usage examples, see **[docs/SERVICES_API.md](docs/SERVICES_API.md)**
 
 ## 🔧 MCP Server Integration
 
-The system provides 40+ specialized tools through MCP servers:
-- **Legal Intelligence MCP Server**: 6 legal analysis tools
-- **Search Intelligence MCP Server**: 6 search and document intelligence tools
+**Clean Architecture MCP Servers (2025-08-22 Update)**
+
+The system provides unified MCP servers with flexible path resolution and centralized configuration management.
+
+### Configuration Management
+
+**Centralized MCP Configuration**: `infrastructure/mcp_config/`
+- **Secure API key loading** from `~/Secrets/.env` (no hardcoded secrets)
+- **Pydantic validation** with graceful fallback to dataclasses
+- **Unified generation** for both Claude Code (.mcp.json) and Claude Desktop
+- **Automatic server detection** based on available API keys
+
+**Configuration Commands:**
+```bash
+# Show configuration status and API key counts
+make mcp-status
+
+# Generate .mcp.json for Claude Code
+make mcp-generate
+
+# Generate Claude Desktop configuration  
+make mcp-generate-claude
+
+# Validate all MCP servers exist and can start
+make mcp-validate
+
+# Preview configuration without writing files
+make mcp-preview
+
+# Remove generated configuration files
+make mcp-clean
+```
+
+### Active Servers
+- **Legal Intelligence MCP Server** (`legal_intelligence_mcp.py`): 6 comprehensive legal analysis tools
+  - Entity extraction with Legal BERT + spaCy
+  - Case timeline generation and gap analysis  
+  - Knowledge graph relationships for legal cases
+  - Document analysis with harassment pattern detection
+  - Case tracking with deadline and procedural analysis
+  - Cross-case relationship discovery
+  
+- **Search Intelligence MCP Server** (`search_intelligence_mcp.py`): 6 advanced search tools
+  - Smart search with query preprocessing and expansion
+  - Document similarity analysis with configurable thresholds
+  - Entity extraction from documents or raw text
+  - Document summarization with keyword extraction
+  - Document clustering for pattern analysis
+  - Batch processing operations
+
+### Configuration-Driven Architecture
+- **Secure Environment Loading**: API keys from ~/Secrets/.env via direnv
+- **Flexible Path Resolution**: Uses Pydantic config system with graceful fallback
+- **Direct Service Imports**: No factory injection complexity (follows Clean Architecture)
+- **Legal Evidence Support**: Full integration with advanced email parsing system
+- **Error Resilience**: Graceful degradation when dependencies unavailable
+- **Security Validation**: Automatic file permission checks and warnings
+
+### Other MCP Integrations
 - **Sequential Thinking**: Structured problem-solving framework
-- **Memory Server**: Persistent knowledge graph across sessions
-- **Firecrawl**: Advanced web scraping capabilities
-- **Qdrant**: Semantic memory and vector operations
+- **Memory Server**: Persistent knowledge graph across sessions  
+- **Task Master AI**: Advanced task management (conditional on API keys)
+- **Filesystem**: File operations for Claude Code
+- **Puppeteer**: Browser automation (Claude Desktop only)
 
 For complete MCP server documentation, see **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)**
 

@@ -14,7 +14,8 @@ class QuarantineHandler:
     """Handles quarantine operations for failed documents"""
     
     def __init__(self):
-        self.db_path = os.getenv("APP_DB_PATH", "data/emails.db")
+        from config.settings import DatabaseSettings
+        self.db_path = DatabaseSettings().emails_db_path
         self.quarantine_dir = Path("data/quarantine")
     
     def list_quarantined(self, limit: int = 50) -> list[dict[str, Any]]:

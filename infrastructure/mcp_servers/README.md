@@ -12,38 +12,30 @@ Each MCP server is a standalone Python module (~150-500 lines) that:
 
 ## Available Servers
 
-### entity_mcp_server.py (306 lines)
-**Entity extraction and relationship mapping using Legal BERT + spaCy**
-- `extract_entities` - Extract named entities from text
-- `search_entities` - Search consolidated entities
-- `knowledge_graph` - Get entity relationship graph
-- `entity_stats` - Entity extraction statistics
+### legal_intelligence_mcp.py (879 lines)
+**Unified Legal Intelligence with Legal BERT + Entity Extraction**
+- `legal_extract_entities` - Extract legal entities using Legal BERT and NER
+- `legal_timeline_events` - Generate comprehensive legal case timeline
+- `legal_knowledge_graph` - Build document relationships for legal cases
+- `legal_document_analysis` - Comprehensive document analysis with Legal BERT
+- `legal_case_tracking` - Track case status, deadlines, and requirements
+- `legal_relationship_discovery` - Discover entity/document/case relationships
 
-### docs_mcp_server.py (197 lines)
-**Documentation viewer for project files**
-- `docs` - Show CLAUDE.md, README.md, and other documentation
-  - Options: type (claude/readme/changelog), service filter, summary view
+### search_intelligence_mcp.py (600+ lines)
+**Unified Search Intelligence with Smart Query Processing**
+- `search_smart` - Smart search with query preprocessing and expansion
+- `search_similar` - Find documents similar to a given document
+- `search_entities` - Extract entities from documents or text
+- `search_summarize` - Summarize documents or text content
+- `search_cluster` - Cluster similar documents for analysis
+- `search_process_all` - Batch process documents with specified operations
 
-### search_mcp_server.py (325 lines)
-**Search functionality across all content**
-- `search_content` - Basic keyword search with type filtering
-- `hybrid_search` - Semantic + keyword using Legal BERT embeddings
-- `search_by_type` - Filter by content type (email/pdf/transcript/note)
-- `search_stats` - Vector and content statistics
-
-### legal_mcp_server.py (510 lines)
-**Legal document analysis and procedural intelligence**
-- `tag_evidence` - Auto-tag documents with legal categories
-- `find_case_documents` - Search documents by case number
-- `detect_missing_documents` - Identify procedural gaps
-- `analyze_case_relationships` - Document relationship analysis
-
-### timeline_mcp_server.py (483 lines)
-**Chronological event tracking and timeline management**
-- `build_timeline` - Create chronological event timeline
-- `timeline_gaps` - Identify missing time periods
-- `add_timeline_event` - Add manual events to timeline
-- `export_timeline` - Export timeline as JSON or Markdown
+## Deprecated Servers (Legacy)
+- `entity_mcp_server.py` - Replaced by legal_intelligence_mcp.py
+- `search_mcp_server.py` - Replaced by search_intelligence_mcp.py  
+- `legal_mcp_server.py` - Replaced by legal_intelligence_mcp.py
+- `timeline_mcp_server.py` - Integrated into legal_intelligence_mcp.py
+- `docs_mcp_server.py` - Basic documentation viewer
 
 ## Usage
 
@@ -58,34 +50,21 @@ Add to `~/.config/claude-desktop/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "email-sync-entity": {
+    "legal-intelligence": {
       "command": "python3",
-      "args": ["/path/to/Email Sync/mcp_servers/entity_mcp_server.py"],
-      "env": {"PYTHONPATH": "/path/to/Email Sync"}
+      "args": ["/path/to/Email-Sync-Clean-Backup/infrastructure/mcp_servers/legal_intelligence_mcp.py"],
+      "env": {"PYTHONPATH": "/path/to/Email-Sync-Clean-Backup"}
     },
-    "email-sync-search": {
-      "command": "python3",
-      "args": ["/path/to/Email Sync/mcp_servers/search_mcp_server.py"],
-      "env": {"PYTHONPATH": "/path/to/Email Sync"}
-    },
-    "email-sync-legal": {
-      "command": "python3",
-      "args": ["/path/to/Email Sync/mcp_servers/legal_mcp_server.py"],
-      "env": {"PYTHONPATH": "/path/to/Email Sync"}
-    },
-    "email-sync-timeline": {
-      "command": "python3",
-      "args": ["/path/to/Email Sync/mcp_servers/timeline_mcp_server.py"],
-      "env": {"PYTHONPATH": "/path/to/Email Sync"}
-    },
-    "email-sync-docs": {
-      "command": "python3",
-      "args": ["/path/to/Email Sync/mcp_servers/docs_mcp_server.py"],
-      "env": {"PYTHONPATH": "/path/to/Email Sync"}
+    "search-intelligence": {
+      "command": "python3", 
+      "args": ["/path/to/Email-Sync-Clean-Backup/infrastructure/mcp_servers/search_intelligence_mcp.py"],
+      "env": {"PYTHONPATH": "/path/to/Email-Sync-Clean-Backup"}
     }
   }
 }
 ```
+
+**Note**: No PYTHONPATH needed if you have proper Pydantic configuration in `config/settings.py`
 
 ## Development Guidelines
 
@@ -101,8 +80,14 @@ Add to `~/.config/claude-desktop/claude_desktop_config.json`:
    #!/usr/bin/env python3
    """Simple [Domain] MCP Server"""
 
-   # Add project root to path
-   sys.path.append(str(Path(__file__).parent.parent))
+   # Add project root to path - flexible resolution
+   try:
+       from config.settings import settings
+       project_root = Path(settings.paths.data_root).parent
+   except ImportError:
+       # Fallback for 3-level deep paths: infrastructure/mcp_servers/*.py
+       project_root = Path(__file__).parent.parent.parent
+   sys.path.insert(0, str(project_root))
 
    # Import services directly
    from service.main import ServiceClass

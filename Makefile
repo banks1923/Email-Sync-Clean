@@ -772,3 +772,28 @@ encrypt-database: ## Encrypt database (placeholder)
 setup-secure-backups: ## Setup secure encrypted backups
 	@echo "🔐 Secure backup setup (coming soon)"
 	@echo "For now, use: make backup"
+
+# MCP Configuration Management
+mcp-status: ## Show MCP configuration status
+	@echo "🔧 MCP Configuration Status"
+	@$(PYTHON) infrastructure/mcp_config/generate.py status
+
+mcp-generate: ## Generate .mcp.json from Pydantic config
+	@echo "📄 Generating .mcp.json..."
+	@$(PYTHON) infrastructure/mcp_config/generate.py generate
+
+mcp-generate-claude: ## Generate Claude Desktop config
+	@echo "🖥️ Generating Claude Desktop config..."
+	@$(PYTHON) infrastructure/mcp_config/generate.py generate --claude-desktop
+
+mcp-validate: ## Validate MCP servers can start
+	@echo "✅ Validating MCP servers..."
+	@$(PYTHON) infrastructure/mcp_config/generate.py validate
+
+mcp-clean: ## Remove generated MCP configs
+	@echo "🗑️ Cleaning MCP configurations..."
+	@$(PYTHON) infrastructure/mcp_config/generate.py clean
+
+mcp-preview: ## Preview MCP configuration without writing files
+	@echo "👀 MCP Configuration Preview:"
+	@$(PYTHON) infrastructure/mcp_config/generate.py generate --dry-run

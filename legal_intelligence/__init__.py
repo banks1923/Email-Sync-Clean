@@ -7,7 +7,7 @@ building, and case processing into a unified service.
 from .main import LegalIntelligenceService
 
 
-def get_legal_intelligence_service(db_path: str = "emails.db"):
+def get_legal_intelligence_service(db_path: str = "data/emails.db"):
     """
     Get singleton instance of LegalIntelligenceService.
     """

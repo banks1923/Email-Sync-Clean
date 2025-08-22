@@ -22,7 +22,7 @@ class SimilarityIntegration:
     Integrate similarity analysis with knowledge graph storage.
     """
 
-    def __init__(self, db_path: str = "emails.db", similarity_threshold: float = 0.7):
+    def __init__(self, db_path: str = "data/emails.db", similarity_threshold: float = 0.7):
         self.kg_service = KnowledgeGraphService(db_path)
         self.similarity_analyzer = SimilarityAnalyzer(db_path, similarity_threshold)
         self.db = SimpleDB(db_path)
@@ -154,8 +154,8 @@ class SimilarityIntegration:
                 logger.warning(f"Missing nodes for edge {edge['edge_id']}")
                 continue
 
-            source_content_id = source_node["content_id"]
-            target_content_id = target_node["content_id"]
+            source_content_id = source_node["id"]
+            target_content_id = target_node["id"]
 
             # Check if we should recalculate
             if not recalculate:
@@ -317,7 +317,7 @@ class SimilarityIntegration:
             params = ()
 
         rows = self.db.fetch(query, params)
-        return [row["content_id"] for row in rows]
+        return [row["id"] for row in rows]  # Fixed: column is 'id', not 'content_id'
 
     def _find_connected_cluster(
         self, start_node: str, edges: list[dict], visited: set[str]
@@ -367,7 +367,7 @@ class SimilarityIntegration:
 
 
 def get_similarity_integration(
-    db_path: str = "emails.db", similarity_threshold: float = 0.7
+    db_path: str = "data/emails.db", similarity_threshold: float = 0.7
 ) -> SimilarityIntegration:
     """
     Get similarity integration instance.

@@ -6,15 +6,18 @@ from loguru import logger
 from shared.simple_db import SimpleDB
 from summarization import get_document_summarizer
 
-# Import EmailThreadProcessor
+# Import advanced email parsing modules
 try:
-    from infrastructure.documents.processors.email_thread_processor import (
-        get_email_thread_processor,
-    )
-    THREAD_PROCESSOR_AVAILABLE = True
+    from shared.email_parser import parse_conversation_chain, QuotedMessage
+    from shared.thread_manager import ThreadService, extract_thread_messages, deduplicate_messages
+    from shared.email_cleaner import EmailCleaner
+    ADVANCED_PARSING_AVAILABLE = True
+    logger.info("Advanced email parsing modules loaded")
 except ImportError:
-    THREAD_PROCESSOR_AVAILABLE = False
-    logger.warning("EmailThreadProcessor not available - using legacy email processing only")
+    ADVANCED_PARSING_AVAILABLE = False
+    logger.warning("Advanced email parsing not available - using legacy processing")
+
+# Legacy EmailThreadProcessor removed - using advanced parsing only
 
 from .config import GmailConfig
 from .gmail_api import GmailAPI
@@ -39,13 +42,16 @@ class GmailService:
         self.db = SimpleDB(db_path)
         self.summarizer = get_document_summarizer()
         
-        # Initialize EmailThreadProcessor if available
-        if THREAD_PROCESSOR_AVAILABLE:
-            # Pass self as gmail_service to EmailThreadProcessor
-            self.thread_processor = get_email_thread_processor(gmail_service=self)
-            logger.info("EmailThreadProcessor initialized for thread-based processing")
+        # Initialize advanced parsing services
+        if ADVANCED_PARSING_AVAILABLE:
+            self.thread_service = ThreadService()
+            self.email_cleaner = EmailCleaner()
+            logger.info("Advanced email parsing services initialized")
         else:
-            self.thread_processor = None
+            self.thread_service = None
+            self.email_cleaner = None
+        
+        # Legacy EmailThreadProcessor removed - using advanced parsing only
             
         self._setup_logging()
 
@@ -334,6 +340,90 @@ class GmailService:
         
         return threads
 
+    def _process_threads_advanced(self, threads_grouped: dict[str, list[dict]]) -> dict[str, Any]:
+        """
+        Process threads using advanced parsing to extract individual messages.
+        This is the new unified approach for legal case evidence preservation.
+        """
+        if not ADVANCED_PARSING_AVAILABLE:
+            logger.warning("Advanced parsing not available, skipping individual message extraction")
+            return {"processed": 0, "messages_extracted": 0, "errors": 0}
+        
+        total_messages = 0
+        total_processed = 0
+        errors = 0
+        
+        logger.info(f"Processing {len(threads_grouped)} threads with advanced parsing")
+        
+        for thread_id, thread_emails in threads_grouped.items():
+            try:
+                # Extract individual messages from this thread
+                all_messages = extract_thread_messages(thread_emails)
+                
+                if not all_messages:
+                    continue
+                
+                # Convert QuotedMessage objects to dictionaries for deduplication
+                message_dicts = []
+                for msg in all_messages:
+                    from shared.thread_manager import quoted_message_to_dict
+                    message_dicts.append(quoted_message_to_dict(msg))
+                
+                # Deduplicate messages (preserve evidence while removing exact duplicates)
+                unique_message_dicts = deduplicate_messages(message_dicts, similarity_threshold=0.95)
+                
+                # Convert back to QuotedMessage objects for processing
+                unique_messages = []
+                for msg_dict in unique_message_dicts:
+                    # Find original QuotedMessage object
+                    for orig_msg in all_messages:
+                        if orig_msg.content == msg_dict.get("content"):
+                            unique_messages.append(orig_msg)
+                            break
+                
+                logger.info(f"Thread {thread_id}: {len(all_messages)} raw messages -> {len(unique_messages)} unique messages")
+                
+                # Store each unique message individually
+                for message in unique_messages:
+                    try:
+                        # Store in content_unified table for unified search/analysis
+                        message_id = self.db.add_email_message(
+                            message_content=message.content,
+                            thread_id=thread_id,
+                            email_id=message.email_id,
+                            sender=message.sender,
+                            date=message.date,
+                            subject=message.subject,
+                            depth=message.depth,
+                            message_type=message.message_type
+                        )
+                        
+                        total_processed += 1
+                        
+                        # Log important patterns for legal case
+                        if message.sender and "stoneman staff" in message.sender.lower():
+                            logger.info(f"Detected anonymous signature: {message.sender} in message {message_id}")
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to store message from {message.sender}: {e}")
+                        errors += 1
+                
+                total_messages += len(all_messages)
+                
+            except Exception as e:
+                logger.error(f"Failed to process thread {thread_id}: {e}")
+                errors += 1
+        
+        result = {
+            "processed": total_processed,
+            "messages_extracted": total_messages,
+            "unique_messages": total_processed,
+            "errors": errors
+        }
+        
+        logger.info(f"Advanced thread processing complete: {result}")
+        return result
+
     def _process_thread_batch(self, threads_grouped: dict[str, list[dict]], email_list: list[dict]) -> dict[str, Any]:
         """Process grouped threads and save to both email storage and analog DB.
         
@@ -395,65 +485,15 @@ class GmailService:
             logger.error(f"Email storage failed: {save_result.get('error')}")
             errors += len(email_list)
         
-        # Process threads using EmailThreadProcessor if available
-        if self.thread_processor and threads_grouped:
+        # NEW: Process threads using advanced parsing to extract individual messages
+        if save_result["success"] and save_result["inserted"] > 0:
             try:
-                logger.info(f"Processing {len(threads_grouped)} threads with EmailThreadProcessor")
-                thread_processed = 0
-                
-                for thread_id, thread_emails in threads_grouped.items():
-                    if len(thread_emails) > 1:  # Only process actual threads (multiple emails)
-                        try:
-                            # Sort emails chronologically for thread processing
-                            sorted_emails = sorted(thread_emails, key=lambda x: x.get("datetime_utc", ""))
-                            
-                            # Create thread data compatible with EmailThreadProcessor
-                            thread_data = {
-                                "id": thread_id,
-                                "messages": []
-                            }
-                            
-                            for email in sorted_emails:
-                                message_data = {
-                                    "id": email.get("message_id"),
-                                    "payload": {
-                                        "headers": [
-                                            {"name": "Subject", "value": email.get("subject", "")},
-                                            {"name": "From", "value": email.get("sender", "")},
-                                            {"name": "To", "value": email.get("recipient_to", "")},
-                                            {"name": "Date", "value": email.get("datetime_utc", "")}
-                                        ]
-                                    },
-                                    "internalDate": email.get("datetime_utc", ""),
-                                    "body": {"data": email.get("content", "")}
-                                }
-                                thread_data["messages"].append(message_data)
-                            
-                            # Process thread with adapter handling save_to_db mismatch
-                            # TODO: Remove adapter by 2025-09-01 - fix process_thread signature
-                            from adapters import EmailThreadAdapter
-                            adapted_processor = EmailThreadAdapter(self.thread_processor)
-                            result = adapted_processor.process_thread(
-                                thread_id=thread_id,
-                                include_metadata=True,
-                                save_to_db=True
-                            )
-                            
-                            if result.get("success"):
-                                thread_processed += 1
-                                logger.debug(f"Thread {thread_id} processed successfully")
-                                
-                                # Track thread processing in database
-                                self.db.add_thread_tracking(thread_id, len(thread_emails), "processed")
-                            
-                        except Exception as e:
-                            logger.warning(f"Failed to process thread {thread_id}: {e}")
-                            continue
-                
-                logger.info(f"EmailThreadProcessor completed: {thread_processed} threads processed")
-                
+                advanced_result = self._process_threads_advanced(threads_grouped)
+                logger.info(f"Advanced parsing: {advanced_result['processed']} messages stored from {advanced_result['messages_extracted']} extracted")
             except Exception as e:
-                logger.error(f"EmailThreadProcessor failed: {e}")
+                logger.error(f"Advanced thread processing failed: {e}")
+        
+        # Legacy EmailThreadProcessor code removed - using advanced parsing only
         
         return {
             "processed": processed,

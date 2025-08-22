@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS document_summaries (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
-    -- Foreign key to content table
-    FOREIGN KEY (document_id) REFERENCES content(content_id) ON DELETE CASCADE
+    -- Foreign key to content_unified table
+    FOREIGN KEY (document_id) REFERENCES content_unified(id) ON DELETE CASCADE
 );
 
 -- Indexes for document_summaries
@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS document_intelligence (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
-    -- Foreign key to content table
-    FOREIGN KEY (document_id) REFERENCES content(content_id) ON DELETE CASCADE
+    -- Foreign key to content_unified table
+    FOREIGN KEY (document_id) REFERENCES content_unified(id) ON DELETE CASCADE
 );
 
 -- Indexes for document_intelligence
@@ -56,9 +56,9 @@ CREATE TABLE IF NOT EXISTS relationship_cache (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     expires_at TEXT, -- Optional TTL for cache expiration
 
-    -- Foreign keys to content table
-    FOREIGN KEY (source_id) REFERENCES content(content_id) ON DELETE CASCADE,
-    FOREIGN KEY (target_id) REFERENCES content(content_id) ON DELETE CASCADE,
+    -- Foreign keys to content_unified table
+    FOREIGN KEY (source_id) REFERENCES content_unified(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_id) REFERENCES content_unified(id) ON DELETE CASCADE,
 
     -- Ensure unique relationships per type
     UNIQUE(source_id, target_id, relationship_type)
@@ -83,25 +83,25 @@ WHERE expires_at IS NOT NULL AND expires_at < datetime('now');
 -- View for document summary overview
 CREATE VIEW IF NOT EXISTS document_summary_overview AS
 SELECT
-    c.content_id,
-    c.content_type,
+    c.id,
+    c.source_type,
     c.title,
     ds.summary_type,
     ds.summary_text,
     ds.created_at as summary_created
-FROM content c
-LEFT JOIN document_summaries ds ON c.content_id = ds.document_id
+FROM content_unified c
+LEFT JOIN document_summaries ds ON c.id = ds.document_id
 ORDER BY ds.created_at DESC;
 
 -- View for document intelligence overview
 CREATE VIEW IF NOT EXISTS document_intelligence_overview AS
 SELECT
-    c.content_id,
-    c.content_type,
+    c.id,
+    c.source_type,
     c.title,
     di.intelligence_type,
     di.confidence_score,
     di.created_at as intelligence_created
-FROM content c
-LEFT JOIN document_intelligence di ON c.content_id = di.document_id
+FROM content_unified c
+LEFT JOIN document_intelligence di ON c.id = di.document_id
 ORDER BY di.created_at DESC;

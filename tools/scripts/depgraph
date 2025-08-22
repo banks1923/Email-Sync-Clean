@@ -1,0 +1,15 @@
+#!/bin/bash
+# Generate dependency graphs in the cache directory
+
+# Default to current directory if no argument provided
+TARGET=${1:-.}
+
+# Create output directory
+mkdir -p .cache/graphs
+
+# Generate dependency graphs
+echo "Generating dependency graphs for $TARGET..."
+pyreverse --output-directory .cache/graphs -o dot $TARGET
+
+echo "Graphs saved to .cache/graphs/"
+echo "To view: open .cache/graphs/*.dot with GraphViz or convert to PNG"

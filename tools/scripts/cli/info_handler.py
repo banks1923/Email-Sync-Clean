@@ -132,10 +132,10 @@ def show_pdf_stats():
             SELECT
                 COUNT(DISTINCT source_path) as total_pdfs,
                 COUNT(*) as total_chunks,
-                SUM(LENGTH(content)) as total_chars,
-                AVG(LENGTH(content)) as avg_chunk_size
-            FROM content
-            WHERE type = 'pdf'
+                SUM(LENGTH(body)) as total_chars,
+                AVG(LENGTH(body)) as avg_chunk_size
+            FROM content_unified
+            WHERE source_type = 'pdf'
         """
         )
 
@@ -179,11 +179,11 @@ def show_transcription_stats():
             SELECT
                 COUNT(*) as total_transcripts,
                 COUNT(DISTINCT source_path) as unique_files,
-                SUM(LENGTH(content)) as total_chars,
+                SUM(LENGTH(body)) as total_chars,
                 MIN(created_at) as first_transcript,
                 MAX(created_at) as last_transcript
-            FROM content
-            WHERE type = 'transcript'
+            FROM content_unified
+            WHERE source_type = 'transcript'
         """
         )
 

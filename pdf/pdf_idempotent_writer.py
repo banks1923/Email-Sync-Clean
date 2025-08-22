@@ -17,7 +17,8 @@ class IdempotentPDFWriter:
     def __init__(self, db_path: str = None):
         """Initialize with database path from environment or default"""
         import os
-        self.db_path = db_path or os.getenv("APP_DB_PATH", "data/emails.db")
+        from config.settings import DatabaseSettings
+        self.db_path = db_path or DatabaseSettings().emails_db_path
         
     def compute_sha256(self, file_path: str) -> str:
         """Compute SHA256 hash of file contents"""

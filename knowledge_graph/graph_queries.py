@@ -24,7 +24,7 @@ class GraphQueryService:
     Advanced graph traversal and query operations for knowledge graph.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "data/emails.db"):
         """
         Initialize graph query service with database connection.
         """
@@ -109,7 +109,7 @@ class GraphQueryService:
 
         for node, depth, path in traversal_results:
             result = {
-                "content_id": node["content_id"],
+                "content_id": node["id"],  # Fixed: column is now 'id', not 'content_id'
                 "content_type": node["content_type"],
                 "title": node.get("title", ""),
                 "depth": depth,
@@ -178,8 +178,8 @@ class GraphQueryService:
                     "SELECT id FROM kg_nodes WHERE node_id = ?", (next_id,)
                 )
 
-                if next_node and next_node["content_id"] not in path:
-                    new_path = path + [next_node["content_id"]]
+                if next_node and next_node["id"] not in path:
+                    new_path = path + [next_node["id"]]
                     new_strength = strength_sum + edge.get("strength", 0.5)
                     queue.append((next_id, new_path, new_strength, depth + 1))
 
@@ -214,7 +214,7 @@ class GraphQueryService:
         # Initialize scores
         n = len(nodes)
         scores = {node["node_id"]: 1.0 / n for node in nodes}
-        node_to_content = {node["node_id"]: node["content_id"] for node in nodes}
+        node_to_content = {node["node_id"]: node["id"] for node in nodes}
 
         # Build adjacency lists
         outgoing_edges = defaultdict(list)
@@ -300,11 +300,11 @@ class GraphQueryService:
         for node, depth, path in self.breadth_first_traversal(
             content_id, max_depth, relationship_types
         ):
-            if node["content_id"] == content_id:
+            if node["id"] == content_id:
                 continue  # Skip self
 
-            if node["content_id"] not in seen_content:
-                seen_content.add(node["content_id"])
+            if node["id"] not in seen_content:
+                seen_content.add(node["id"])
 
                 # Calculate relevance score (closer = higher score)
                 distance_score = 1.0 / (depth + 1)
@@ -320,7 +320,7 @@ class GraphQueryService:
 
                 results.append(
                     {
-                        "content_id": node["content_id"],
+                        "content_id": node["id"],
                         "content_type": node["content_type"],
                         "title": node.get("title", ""),
                         "depth": depth,
@@ -460,7 +460,7 @@ class GraphQueryService:
                         for ent in entities:
                             if ent != entity_name:
                                 entity_counts[ent] += 1
-                                entity_docs[ent].add(node["content_id"])
+                                entity_docs[ent].add(node["id"])
                     except json.JSONDecodeError:
                         continue
 
@@ -574,10 +574,10 @@ class GraphQueryService:
         d3_nodes = []
         for node in nodes:
             d3_node = {
-                "id": node["content_id"],
+                "id": node["id"],
                 "node_id": node["node_id"],
                 "group": node["content_type"],
-                "label": node.get("title", node["content_id"])[:50],
+                "label": node.get("title", node["id"])[:50],
                 "value": node.get("pagerank", 1.0) * 100,  # Size by PageRank
             }
 
@@ -626,7 +626,7 @@ class GraphQueryService:
         """
         return {
             "node_id": node["node_id"],
-            "content_id": node["content_id"],
+            "content_id": node["id"],
             "content_type": node["content_type"],
             "title": node.get("title", ""),
             "created_time": node.get("created_time", ""),
@@ -646,7 +646,7 @@ class GraphQueryService:
         }
 
 
-def get_graph_query_service(db_path: str = "emails.db") -> GraphQueryService:
+def get_graph_query_service(db_path: str = "data/emails.db") -> GraphQueryService:
     """
     Get singleton instance of GraphQueryService.
     """

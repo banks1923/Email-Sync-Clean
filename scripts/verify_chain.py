@@ -293,7 +293,8 @@ def main():
         print_verification_report(results)
         
         # Save JSON results
-        results_path = "chain_verification_results.json"
+        os.makedirs("logs", exist_ok=True)
+        results_path = "logs/chain_verification_results.json"
         with open(results_path, 'w') as f:
             # Remove internal exit code from saved JSON
             save_results = {k: v for k, v in results.items() if not k.startswith("_")}

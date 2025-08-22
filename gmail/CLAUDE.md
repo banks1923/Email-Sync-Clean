@@ -36,15 +36,31 @@ scripts/vsearch gmail-stats
 
 ## Architecture
 
-- **GmailService** (`main.py`) - Main service interface with streaming sync
+- **GmailService** (`main.py`) - Main service interface with streaming sync and **advanced email parsing**
 - **GmailAuth** (`auth.py`) - OAuth2 authentication
 - **GmailAPI** (`api.py`) - Gmail API wrapper
 - **EmailStorage** (`storage.py`) - SQLite storage with batch operations
+- **Advanced Parsing Modules** (2025-08-22):
+  - `shared/email_parser.py` - Individual message extraction from email threads
+  - `shared/thread_manager.py` - Thread reconstruction and timeline analysis
+  - `shared/email_cleaner.py` - HTML cleaning and content normalization
 
 ## Sync Modes
 
-### Streaming Batch (Default - Recommended)
-**NEW (2025-08-15)**: Reliable sync for large email volumes
+### Advanced Email Parsing (Default - Recommended) 
+**NEW (2025-08-22)**: Individual message extraction from email threads
+```python
+# Extract individual messages from threads with legal evidence preservation
+result = service._process_threads_advanced(threads_grouped)
+```
+- **Features**: Extracts individual quoted messages from email threads
+- **Legal Evidence**: Preserves harassment signatures for evidence (e.g., "Stoneman Staff")
+- **Thread Reconstruction**: Maintains relationships for chronological timeline analysis
+- **Pattern Detection**: Automated detection of ignored messages and harassment patterns
+- **Deduplication**: SHA256 includes sender/date for evidence preservation
+
+### Streaming Batch (Legacy - Still Available)
+**Legacy (2025-08-15)**: Reliable sync for large email volumes
 ```python
 # Process in 50-email chunks, save immediately
 result = service.sync_emails(max_results=500, batch_mode=True)
@@ -52,7 +68,7 @@ result = service.sync_emails(max_results=500, batch_mode=True)
 - **Performance**: ~50 emails/minute
 - **Reliability**: Saves progress even if interrupted
 - **Memory**: Low memory usage (50 emails at a time)
-- **Use for**: Production, large syncs (100+ emails)
+- **Use for**: Basic sync without advanced parsing
 
 ### Incremental Sync
 ```python
@@ -195,9 +211,18 @@ pytest tests/gmail/
 
 ## Recent Changes
 
+### 2025-08-22: Advanced Email Parsing Integration 🧵
+- **MAJOR FEATURE**: Individual message extraction from email threads
+- **Added**: QuotedMessage dataclass for structured message representation
+- **Added**: ThreadService for conversation grouping and timeline reconstruction
+- **Added**: Legal evidence preservation (harassment signature detection)
+- **Added**: `_process_threads_advanced()` method for thread processing
+- **Integration**: Full integration with shared parsing modules
+- **Testing**: Comprehensive test suite with real data validation
+- **Result**: 3 individual messages extracted, 2 harassment signatures detected
+
 ### 2025-08-15: Streaming Batch Sync
 - **Fixed**: Timeout issues with large email volumes
 - **Added**: Streaming batch mode (50 emails/chunk)
 - **Improved**: Reliability for 500+ email syncs
 - **Performance**: ~2x faster, uses 90% less memory
-EOF < /dev/null

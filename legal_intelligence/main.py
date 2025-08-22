@@ -231,11 +231,12 @@ class LegalIntelligenceService:
 
         # Filter to ensure relevance
         case_docs = []
+        case_upper = case_number.upper()
         for doc in search_results:
-            # Check if case number is in title or content
+            # Check if case number is in title or content (case-insensitive)
             if (
-                case_number in doc.get("title", "").upper()
-                or case_number in doc.get("content", "").upper()
+                case_upper in doc.get("title", "").upper()
+                or case_upper in doc.get("body", "").upper()
             ):
                 case_docs.append(doc)
 
@@ -249,7 +250,7 @@ class LegalIntelligenceService:
         entity_relationships = []
 
         for doc in documents:
-            content = doc.get("content", "")
+            content = doc.get("body", "")
             if content:
                 # Extract entities using the entity service
                 # Use extract_email_entities with a dummy message_id
@@ -328,7 +329,7 @@ class LegalIntelligenceService:
                 "type": "document",
                 "title": doc.get("title"),
                 "metadata": {
-                    "content_type": doc.get("content_type"),
+                    "content_type": doc.get("source_type"),
                     "date": doc.get("datetime_utc"),
                 },
             }
@@ -411,7 +412,7 @@ class LegalIntelligenceService:
 
         for doc in documents:
             title = doc.get("title", "").lower()
-            content_preview = doc.get("content", "")[:500].lower()
+            content_preview = doc.get("body", "")[:500].lower()
 
             for doc_type, patterns in self._legal_doc_patterns.items():
                 for pattern in patterns:
@@ -431,7 +432,7 @@ class LegalIntelligenceService:
         if "complaint" in doc_types:
             # Check for specific case type indicators
             for doc in documents:
-                content = doc.get("content", "").lower()
+                content = doc.get("body", "").lower()
                 if "unlawful detainer" in content:
                     return "unlawful_detainer"
                 elif "personal injury" in content:
@@ -507,7 +508,7 @@ class LegalIntelligenceService:
 
         # Check for references to missing document
         for doc in documents:
-            content = doc.get("content", "").lower()
+            content = doc.get("body", "").lower()
             if doc_type in content:
                 confidence += 0.2
                 break
@@ -709,7 +710,7 @@ class LegalIntelligenceService:
         for theme_name, keywords in common_themes.items():
             count = 0
             for doc in documents:
-                content = doc.get("content", "").lower()
+                content = doc.get("body", "").lower()
                 for keyword in keywords:
                     if keyword in content:
                         count += 1
@@ -806,7 +807,7 @@ class LegalIntelligenceService:
         return summary
 
 
-def get_legal_intelligence_service(db_path: str = "emails.db") -> LegalIntelligenceService:
+def get_legal_intelligence_service(db_path: str = "data/emails.db") -> LegalIntelligenceService:
     """Factory function to create LegalIntelligenceService instance.
     
     Args:

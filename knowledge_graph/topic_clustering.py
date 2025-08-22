@@ -29,7 +29,7 @@ class TopicClusteringService:
     occurrence.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "data/emails.db"):
         self.db = SimpleDB(db_path)
         self.kg_service = KnowledgeGraphService(db_path)
         self.similarity_analyzer = SimilarityAnalyzer(db_path)
@@ -462,7 +462,7 @@ class TopicClusteringService:
         return stats
 
 
-def get_topic_clustering_service(db_path: str = "emails.db") -> TopicClusteringService:
+def get_topic_clustering_service(db_path: str = "data/emails.db") -> TopicClusteringService:
     """
     Factory function to get topic clustering service instance.
     """

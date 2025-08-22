@@ -11,8 +11,16 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add project root to path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root to path - flexible path resolution
+try:
+    # Use Pydantic config for path management if available
+    from config.settings import settings
+    project_root = Path(settings.paths.data_root).parent
+except ImportError:
+    # Fallback to path calculation (3 levels deep: infrastructure/mcp_servers/*.py)
+    project_root = Path(__file__).parent.parent.parent
+
+sys.path.insert(0, str(project_root))
 
 # MCP imports
 from mcp.server import NotificationOptions, Server
@@ -28,17 +36,7 @@ except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
 
-# Service factories - to be injected from higher layers
-_search_intelligence_factory = None
-_summarizer_factory = None
-_entity_service_factory = None
-
-def set_service_factories(search_factory=None, summarizer_factory=None, entity_factory=None):
-    """Inject service factories from higher layers."""
-    global _search_intelligence_factory, _summarizer_factory, _entity_service_factory
-    _search_intelligence_factory = search_factory
-    _summarizer_factory = summarizer_factory
-    _entity_service_factory = entity_factory
+# Clean architecture - no factory injection needed
 
 
 def search_smart(
@@ -49,9 +47,9 @@ def search_smart(
         return "Search intelligence services not available"
 
     try:
-        if not _search_intelligence_factory:
-            return "Search intelligence service not configured - must be injected from higher layer"
-        service = _search_intelligence_factory()
+        # Direct import following clean architecture pattern
+        from search_intelligence import get_search_intelligence_service
+        service = get_search_intelligence_service()
 
         # Add content type filter if specified
         filters = {}
@@ -105,9 +103,9 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
         return "Search intelligence services not available"
 
     try:
-        if not _search_intelligence_factory:
-            return "Search intelligence service not configured - must be injected from higher layer"
-        service = _search_intelligence_factory()
+        # Direct import following clean architecture pattern
+        from search_intelligence import get_search_intelligence_service
+        service = get_search_intelligence_service()
 
         # Find similar documents
         similar_docs = service.analyze_document_similarity(
@@ -154,9 +152,9 @@ def search_entities(
         return "Search intelligence services not available"
 
     try:
-        if not _search_intelligence_factory:
-            return "Search intelligence service not configured - must be injected from higher layer"
-        service = _search_intelligence_factory()
+        # Direct import following clean architecture pattern
+        from search_intelligence import get_search_intelligence_service
+        service = get_search_intelligence_service()
 
         if document_id:
             # Extract from existing document
@@ -166,10 +164,9 @@ def search_entities(
             source = f"document '{document_id}'"
         elif text:
             # Extract from provided text
-            if not _entity_service_factory:
-                return "Entity service not configured - must be injected from higher layer"
-
-            entity_service = _entity_service_factory()
+            # Direct import following clean architecture pattern
+            from entity import EntityService
+            entity_service = EntityService()
 
             result = entity_service.extract_email_entities("temp_doc", text)
             entities = result.get("entities", [])
@@ -258,9 +255,9 @@ def search_summarize(
             return f"📭 No content to summarize in {source}"
 
         # Get summarizer and extract summary
-        if not _summarizer_factory:
-            return "Summarizer service not configured - must be injected from higher layer"
-        summarizer = _summarizer_factory()
+        # Direct import following clean architecture pattern
+        from summarization import get_document_summarizer
+        summarizer = get_document_summarizer()
         summary = summarizer.extract_summary(
             text=text,
             max_sentences=max_sentences,
@@ -301,9 +298,9 @@ def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: i
         return "Search intelligence services not available"
 
     try:
-        if not _search_intelligence_factory:
-            return "Search intelligence service not configured - must be injected from higher layer"
-        service = _search_intelligence_factory()
+        # Direct import following clean architecture pattern
+        from search_intelligence import get_search_intelligence_service
+        service = get_search_intelligence_service()
 
         # Perform clustering
         clusters = service.cluster_similar_content(threshold=threshold, limit=limit)
@@ -364,9 +361,9 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
         return "Search intelligence services not available"
 
     try:
-        if not _search_intelligence_factory:
-            return "Search intelligence service not configured - must be injected from higher layer"
-        service = _search_intelligence_factory()
+        # Direct import following clean architecture pattern
+        from search_intelligence import get_search_intelligence_service
+        service = get_search_intelligence_service()
         db = SimpleDB()
 
         # Get documents to process
@@ -397,9 +394,10 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
 
         elif operation == "generate_summaries":
             output += f"📝 Generating summaries for {len(documents)} documents...\n\n"
-            if not _summarizer_factory:
-                return "Summarizer service not configured - must be injected from higher layer"
-            summarizer = _summarizer_factory()
+            
+            # Direct import following clean architecture pattern
+            from summarization import get_document_summarizer
+            summarizer = get_document_summarizer()
 
             for doc in documents:
                 try:

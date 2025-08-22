@@ -22,7 +22,7 @@ class SimilarityAnalyzer:
     Compute document similarity using Legal BERT embeddings.
     """
 
-    def __init__(self, db_path: str = "emails.db", similarity_threshold: float = 0.7):
+    def __init__(self, db_path: str = "data/emails.db", similarity_threshold: float = 0.7):
         self.db = SimpleDB(db_path)
         self.embedding_service = get_embedding_service()
         self.similarity_threshold = similarity_threshold
@@ -158,7 +158,7 @@ class SimilarityAnalyzer:
         similarities = []
 
         for row in all_content:
-            other_id = row["content_id"]
+            other_id = row["id"]  # Fixed: column is 'id', not 'content_id'
             similarity = self.compute_similarity(content_id, other_id)
 
             if similarity is not None and similarity >= self.similarity_threshold:
@@ -274,7 +274,7 @@ class SimilarityAnalyzer:
             params = ()
 
         content_rows = self.db.fetch(content_query, params)
-        content_ids = [row["content_id"] for row in content_rows]
+        content_ids = [row["id"] for row in content_rows]  # Fixed: column is 'id', not 'content_id'
 
         logger.info(
             f"Precomputing similarities for {len(content_ids)} "
@@ -312,7 +312,7 @@ class SimilarityAnalyzer:
 
 
 def get_similarity_analyzer(
-    db_path: str = "emails.db", similarity_threshold: float = 0.7
+    db_path: str = "data/emails.db", similarity_threshold: float = 0.7
 ) -> SimilarityAnalyzer:
     """
     Get similarity analyzer instance.

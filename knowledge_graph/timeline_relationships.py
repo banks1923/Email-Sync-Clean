@@ -24,7 +24,7 @@ class TimelineRelationships:
     Create and manage temporal relationships in the knowledge graph.
     """
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = "data/emails.db"):
         self.kg_service = KnowledgeGraphService(db_path)
         self.db = SimpleDB(db_path)
         self.time_window_hours = 24  # Default clustering window
@@ -34,7 +34,7 @@ class TimelineRelationships:
         Extract primary date FROM content_unified based on type.
         """
         content = self.db.fetch_one(
-            "SELECT source_type, metadata, created_time FROM content_unified WHERE id = ?",
+            "SELECT source_type, metadata, created_at FROM content_unified WHERE id = ?",
             (content_id,),
         )
 
@@ -49,8 +49,8 @@ class TimelineRelationships:
         elif content["content_type"] == "transcript":
             return self._extract_transcript_date(content_id, content["metadata"])
         else:
-            # Fallback to created_time
-            return self._parse_date_string(content["created_time"])
+            # Fallback to created_at
+            return self._parse_date_string(content["created_at"])
 
     def _extract_email_date(self, content_id: str) -> datetime | None:
         """
@@ -517,7 +517,7 @@ class TimelineRelationships:
         return clusters
 
 
-def get_timeline_relationships(db_path: str = "emails.db") -> TimelineRelationships:
+def get_timeline_relationships(db_path: str = "data/emails.db") -> TimelineRelationships:
     """
     Factory function to get timeline relationships instance.
     """

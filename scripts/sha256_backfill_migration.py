@@ -267,7 +267,8 @@ def main():
     """Main migration entry point"""
     
     # Use environment variable or default path
-    db_path = os.getenv("APP_DB_PATH", "data/emails.db")
+    from config.settings import DatabaseSettings
+    db_path = DatabaseSettings().emails_db_path
     
     if not Path(db_path).exists():
         print(f"❌ Database not found: {db_path}")
@@ -277,7 +278,8 @@ def main():
         results = run_migration(db_path)
         
         # Save results to file
-        results_path = "migration_results.json"
+        os.makedirs("logs", exist_ok=True)
+        results_path = "logs/migration_results.json"
         with open(results_path, 'w') as f:
             json.dump(results, f, indent=2)
         

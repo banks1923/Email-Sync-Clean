@@ -26,7 +26,7 @@ def get_orphaned_vectors(db) -> dict:
     """Find vectors that don't have corresponding content in database"""
     try:
         # Get all content IDs from database
-        content_records = db.fetch("SELECT id FROM content")
+        content_records = db.fetch("SELECT id FROM content_unified")
         valid_content_ids = {record["id"] for record in content_records}
 
         logger.info(f"Database has {len(valid_content_ids)} content records")
@@ -110,7 +110,7 @@ def verify_synchronization(vector_store, db) -> dict:
     try:
         vector_store = get_vector_store()
         vector_count = vector_store.count()
-        content_count = db.fetch_one("SELECT COUNT(*) as count FROM content")["count"]
+        content_count = db.fetch_one("SELECT COUNT(*) as count FROM content_unified")["count"]
 
         # Check for remaining orphaned vectors
         analysis = get_orphaned_vectors(db)

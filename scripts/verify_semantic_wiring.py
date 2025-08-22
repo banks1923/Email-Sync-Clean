@@ -136,7 +136,7 @@ class SemanticWiringVerifier:
         
         # Check content table linkage
         cursor = self.db.execute("""
-            SELECT id, content_type FROM content 
+            SELECT id, source_type FROM content_unified 
             WHERE metadata LIKE ? 
             LIMIT 1
         """, (f'%"message_id":"{message_id}"%',))
@@ -419,7 +419,7 @@ class SemanticWiringVerifier:
             
         # Check vector coverage
         cursor = self.db.execute("""
-            SELECT COUNT(*) FROM content 
+            SELECT COUNT(*) FROM content_unified 
             WHERE metadata NOT LIKE '%vectorized%'
         """)
         unvectorized = cursor.fetchone()[0]
@@ -535,7 +535,7 @@ def eid_lookup(eid: str):
     cursor = db.execute("""
         SELECT event_date, event_type, description
         FROM timeline_events t
-        JOIN content c ON t.content_id = c.id
+        JOIN content_unified c ON t.content_id = c.id
         WHERE c.metadata LIKE ?
         ORDER BY event_date
         LIMIT 5

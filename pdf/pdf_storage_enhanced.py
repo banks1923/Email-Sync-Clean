@@ -99,7 +99,7 @@ class EnhancedPDFStorage:
                         INSERT OR REPLACE INTO documents (
                             chunk_id, file_path, file_name, chunk_index, text_content,
                             char_count, file_size, file_hash, source_type, modified_time,
-                            processed_time, content_type, vector_processed,
+                            processed_time, content_type, ready_for_embedding,
                             legal_metadata, extraction_method, ocr_confidence
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
                                   'document', 0, ?, ?, ?)
@@ -195,8 +195,8 @@ class EnhancedPDFStorage:
                     "avg_chunks_per_doc": round(avg_chunks, 1),
                     "avg_chars_per_chunk": round(avg_chars, 1),
                     "storage_mb_estimate": round(storage_mb, 1),
-                    "vector_processed": stats["vector_processed"],
-                    "vector_pending": stats["chunk_count"] - stats["vector_processed"],
+                    "ready_for_embedding": stats["ready_for_embedding"],
+                    "vector_pending": stats["chunk_count"] - stats["ready_for_embedding"],
                     "extraction_methods": extraction_methods,
                     "documents_with_legal_metadata": has_legal_metadata,
                     "ocr_processed": extraction_methods.get("ocr", 0),
@@ -221,15 +221,15 @@ class EnhancedPDFStorage:
         total_chars = cursor.fetchone()[0] or 0
 
         cursor.execute(
-            "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND vector_processed = 1"
+            "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND ready_for_embedding = 1"
         )
-        vector_processed = cursor.fetchone()[0]
+        ready_for_embedding = cursor.fetchone()[0]
 
         return {
             "doc_count": doc_count,
             "chunk_count": chunk_count,
             "total_chars": total_chars,
-            "vector_processed": vector_processed,
+            "ready_for_embedding": ready_for_embedding,
         }
 
     # Legacy compatibility

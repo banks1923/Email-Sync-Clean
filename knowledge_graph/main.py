@@ -55,7 +55,7 @@ class KnowledgeGraphService:
                 node_id TEXT PRIMARY KEY, id TEXT NOT NULL,
                 content_type TEXT NOT NULL, title TEXT,
                 node_metadata TEXT, created_time TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (id) REFERENCES content(id)
+                FOREIGN KEY (id) REFERENCES content_unified(id)
             )
         """
         )
@@ -95,7 +95,7 @@ class KnowledgeGraphService:
         Create performance indexes for knowledge graph tables.
         """
         indexes = [
-            "CREATE INDEX IF NOT EXISTS idx_kg_nodes_content ON kg_nodes(content_id)",
+            "CREATE INDEX IF NOT EXISTS idx_kg_nodes_content ON kg_nodes(id)",  # Fixed: column is 'id', not 'content_id'
             "CREATE INDEX IF NOT EXISTS idx_kg_nodes_type ON kg_nodes(content_type)",
             "CREATE INDEX IF NOT EXISTS idx_kg_edges_source ON kg_edges(source_node_id)",
             "CREATE INDEX IF NOT EXISTS idx_kg_edges_target ON kg_edges(target_node_id)",
@@ -118,7 +118,7 @@ class KnowledgeGraphService:
         self.db.execute(
             """
             INSERT OR IGNORE INTO kg_nodes
-            (node_id, content_id, content_type, title, node_metadata)
+            (node_id, id, content_type, title, node_metadata)
             VALUES (?, ?, ?, ?, ?)
         """,
             (node_id, content_id, content_type, title, metadata_json),
@@ -253,7 +253,7 @@ class KnowledgeGraphService:
                 (e.source_node_id = n2.node_id AND n1.node_id != n2.node_id) OR
                 (e.target_node_id = n2.node_id AND n1.node_id != n2.node_id)
             )
-            JOIN content c ON n2.id = c.id
+            JOIN content_unified c ON n2.id = c.id
             WHERE n1.id = ?
         """
 
@@ -298,7 +298,7 @@ class KnowledgeGraphService:
                 )
             )
 
-        columns = ["node_id", "content_id", "content_type", "title", "node_metadata"]
+        columns = ["node_id", "id", "content_type", "title", "node_metadata"]  # Fixed: column is 'id', not 'content_id'
         return self.db.batch_insert("kg_nodes", columns, prepared_data, batch_size)
 
     def batch_add_edges(self, edge_data: list[dict], batch_size: int = 1000) -> dict:
@@ -413,7 +413,7 @@ class KnowledgeGraphService:
         Perform breadth-first search between nodes.
         """
         visited = set()
-        queue = [(source_node["node_id"], [source_node["content_id"]])]
+        queue = [(source_node["node_id"], [source_node["id"]])]
 
         while queue and len(queue[0][1]) <= max_depth:
             current_node_id, path = queue.pop(0)
@@ -446,12 +446,12 @@ class KnowledgeGraphService:
             if next_node_id not in visited:
                 next_node = self.get_node(next_node_id)
                 if next_node:
-                    new_path = path + [next_node["content_id"]]
+                    new_path = path + [next_node["id"]]
                     queue.append((next_node_id, new_path))
 
 
 # Factory function for consistent service access
-def get_knowledge_graph_service(db_path: str = "emails.db") -> KnowledgeGraphService:
+def get_knowledge_graph_service(db_path: str = "data/emails.db") -> KnowledgeGraphService:
     """
     Get knowledge graph service instance.
     """

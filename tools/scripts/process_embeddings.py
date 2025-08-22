@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 """
+⚠️ DEPRECATED - DO NOT USE ⚠️
+
+This script is deprecated. Please use one of the following instead:
+- scripts/backfill_embeddings.py - For batch embedding generation
+- utilities/semantic_pipeline.py - For integrated pipeline processing
+
 Process embeddings for all content in database.
 Updates ready_for_embedding flag and stores in Qdrant.
 """
 
+print("⚠️ WARNING: This script is deprecated!")
+print("Please use: python3 scripts/backfill_embeddings.py")
+print("Or for pipeline: python3 utilities/semantic_pipeline.py")
 import sys
+sys.exit(1)
+
 import time
 from pathlib import Path
 
