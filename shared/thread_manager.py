@@ -5,7 +5,7 @@ Handles email threading, deduplication, and chronological ordering
 
 import re
 import hashlib
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List
 from datetime import datetime
 from .email_parser import QuotedMessage
 

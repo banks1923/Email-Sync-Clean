@@ -7,7 +7,6 @@ Shows which modules depend on content_unified table.
 import ast
 import re
 from pathlib import Path
-from collections import defaultdict
 
 def analyze_file(filepath):
     """Analyze a Python file for imports and table references."""

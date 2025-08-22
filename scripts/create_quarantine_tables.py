@@ -5,8 +5,6 @@ Migration script to add quarantine infrastructure.
 """
 
 import sys
-import sqlite3
-from datetime import datetime
 from pathlib import Path
 
 # Add project root to path

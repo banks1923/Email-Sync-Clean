@@ -123,7 +123,7 @@ def backfill_sha256_values(cursor):
     print(f"✓ Updated SHA256 for {updates_made} documents")
     
     # Print file summary
-    print(f"Files processed:")
+    print("Files processed:")
     for file_name, info in files_processed.items():
         print(f"  {file_name}: {info['chunks']} chunks")
     
@@ -246,7 +246,7 @@ def run_migration(db_path):
             "files_detail": files_processed
         }
         
-        print(f"\n✓ Migration completed successfully!")
+        print("\n✓ Migration completed successfully!")
         print(f"✓ Fixed SHA256 for {updates_made} documents")
         print(f"✓ Remaining NULL SHA256: {remaining_nulls}")
         print(f"✓ Documents without content: {docs_without_content}")
@@ -286,7 +286,7 @@ def main():
         print(f"\n✓ Results saved to: {results_path}")
         
         # Print final summary
-        print(f"\nFinal Migration Summary:")
+        print("\nFinal Migration Summary:")
         print(f"  Documents fixed: {results['docs_fixed_sha256']}")
         print(f"  NULL SHA256 remaining: {results['docs_null_sha256']}")
         print(f"  Content entries created: {results['content_entries_created']}")

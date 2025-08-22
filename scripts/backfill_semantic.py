@@ -43,7 +43,7 @@ def backfill_semantic(
     if steps is None:
         steps = ['entities', 'embeddings', 'timeline']
     
-    print(f"\n📋 Configuration:")
+    print("\n📋 Configuration:")
     print(f"  Steps: {', '.join(steps)}")
     print(f"  Batch size: {batch_size}")
     print(f"  Limit: {limit or 'No limit'}")

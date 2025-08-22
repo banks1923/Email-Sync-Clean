@@ -9,8 +9,6 @@ that have duplicate SHA256 values due to inconsistent hashing methods.
 import sqlite3
 import hashlib
 import re
-import os
-from datetime import datetime
 from pathlib import Path
 
 
@@ -195,7 +193,7 @@ def main():
         # Step 2: Create missing content entries
         content_created = create_missing_content(db_path)
         
-        print(f"\n✅ Summary:")
+        print("\n✅ Summary:")
         print(f"   Fixed SHA256 duplicates: {fixed_count}")
         print(f"   Created content entries: {content_created}")
         

@@ -5,7 +5,6 @@ Secure, centralized configuration for all MCP servers with environment-based
 API key loading. Follows CLAUDE.md principles: Simple > Complex, Working > Perfect.
 """
 
-import os
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 

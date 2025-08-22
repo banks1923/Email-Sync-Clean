@@ -4,7 +4,7 @@ Simple implementation for identifying patterns in email threads.
 """
 
 import re
-from typing import Dict, List, Any, Optional
+from typing import Any
 from collections import defaultdict
 from datetime import datetime
 

@@ -8,7 +8,6 @@ Returns proper exit codes for CI systems.
 
 import sqlite3
 import os
-import sys
 from pathlib import Path
 
 

@@ -4,18 +4,15 @@ Sync individual email message embeddings to vector store.
 """
 
 import sys
-import os
 import pickle
-import uuid
 from pathlib import Path
 
-# Add project root to Python path  
-project_root = Path(__file__).parent
+# Add project root to Python path (scripts/ is one level down)
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from utilities.vector_store import get_vector_store
 from shared.simple_db import SimpleDB
-from loguru import logger
 
 def sync_email_message_vectors():
     """Sync individual email message embeddings to vector store."""
@@ -55,7 +52,7 @@ def sync_email_message_vectors():
             content_id = embedding_record['content_id']
             vector_blob = embedding_record['vector']
             title = embedding_record['title'] or ""
-            body = embedding_record['body'] or ""
+            embedding_record['body'] or ""
             
             # Deserialize the embedding vector
             vector = pickle.loads(vector_blob)
@@ -89,7 +86,7 @@ def sync_email_message_vectors():
             continue
     
     print()
-    print(f"✅ Vector sync completed!")
+    print("✅ Vector sync completed!")
     print(f"   📈 Successful: {successful}")
     print(f"   ❌ Failed: {failed}")
     print(f"   📊 Success rate: {(successful/(successful+failed)*100):.1f}%")

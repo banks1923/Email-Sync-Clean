@@ -206,10 +206,10 @@ def show_rollback_instructions(backup_path: str, db_path: str):
     """Show instructions for rolling back changes"""
     print("\n📋 ROLLBACK INSTRUCTIONS:")
     print("If you need to roll back these changes:")
-    print(f"1. Stop all applications using the database")
-    print(f"2. Replace current database:")
+    print("1. Stop all applications using the database")
+    print("2. Replace current database:")
     print(f"   cp {backup_path} {db_path}")
-    print(f"3. Restart applications")
+    print("3. Restart applications")
     print(f"\nBackup location: {backup_path}")
 
 
@@ -231,7 +231,7 @@ def main():
     conn = sqlite3.connect(db_path)
     analysis = analyze_existing_data(conn)
     
-    print(f"\n📈 Current Database State:")
+    print("\n📈 Current Database State:")
     print(f"Total documents: {analysis['total_docs']}")
     print(f"Unique SHA256s: {analysis['unique_sha256s']}")
     print(f"Unique (SHA256, chunk_index): {analysis['unique_sha256_chunks']}")
@@ -278,7 +278,7 @@ def main():
     
     show_rollback_instructions(backup_path, db_path)
     
-    print(f"\n🔒 Database Integrity Status:")
+    print("\n🔒 Database Integrity Status:")
     print("✅ Documents table now prevents duplicate (SHA256, chunk_index)")
     print("✅ Content_unified table has UNIQUE(source_type, source_id)")
     print("✅ Embeddings table has UNIQUE(content_id, model)")

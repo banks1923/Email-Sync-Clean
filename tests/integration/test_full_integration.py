@@ -5,7 +5,6 @@ This simulates what would happen during normal Gmail sync operations.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to Python path
@@ -14,7 +13,6 @@ sys.path.insert(0, str(project_root))
 
 from shared.simple_db import SimpleDB
 from gmail.main import GmailService
-from loguru import logger
 
 def test_full_integration():
     """Test full email processing pipeline with advanced parsing."""
@@ -67,7 +65,7 @@ def test_full_integration():
     try:
         result = service._process_threads_advanced(threads_grouped)
         
-        print(f"✅ Processing result:")
+        print("✅ Processing result:")
         print(f"   📈 Messages extracted: {result['messages_extracted']}")
         print(f"   💾 Messages stored: {result['processed']}")
         print(f"   ❌ Errors: {result['errors']}")

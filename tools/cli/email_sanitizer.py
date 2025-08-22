@@ -9,7 +9,7 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 import click
 from loguru import logger
@@ -299,7 +299,7 @@ def scan(ctx, output_json):
     if output_json:
         print(json.dumps(report, indent=2))
     else:
-        print(f"Email Corpus Scan Results")
+        print("Email Corpus Scan Results")
         print(f"Total emails: {report['dataset_scan']['total']}")
         print(f"Invalid IDs: {report['dataset_scan']['invalid_ids']}")
         print(f"No subject: {report['dataset_scan']['no_subject']}")
@@ -324,10 +324,10 @@ def quarantine(ctx, batch_id, dry_run, output_json):
         print(json.dumps(report, indent=2))
     else:
         if dry_run:
-            print(f"Dry run complete")
+            print("Dry run complete")
             print(f"Would quarantine: {report.get('violations_found', 0)} emails")
         else:
-            print(f"Quarantine operation complete")
+            print("Quarantine operation complete")
             print(f"Batch ID: {report.get('batch_id', 'N/A')}")
             print(f"Quarantined: {report.get('quarantined_rows', 0)}")
             print(f"Kept: {report.get('kept_rows', 0)}")
@@ -344,7 +344,7 @@ def reconcile(ctx, output_json):
     if output_json:
         print(json.dumps(report, indent=2))
     else:
-        print(f"Vector reconciliation complete")
+        print("Vector reconciliation complete")
         print(f"Vectors deleted: {report.get('vectors_deleted_from_qdrant', 0)}")
         print(f"Content entries created: {report.get('content_unified_created', 0)}")
         print(f"Embeddings enqueued: {report.get('embeddings_enqueued', 0)}")
@@ -379,7 +379,7 @@ def stats(ctx, output_json):
         print(json.dumps(report, indent=2))
     else:
         stats = report['quarantine_stats']
-        print(f"Quarantine Statistics")
+        print("Quarantine Statistics")
         print(f"Total quarantined: {stats.get('total_quarantined', 0)}")
         print(f"By reason: {stats.get('by_reason', {})}")
 

@@ -4,16 +4,14 @@ Generate embeddings for individual email messages.
 """
 
 import sys
-import os
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent
+# Add project root to Python path (scripts/ is one level down)
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from utilities.embeddings import get_embedding_service
 from shared.simple_db import SimpleDB
-from loguru import logger
 
 def generate_email_message_embeddings():
     """Generate embeddings for all individual email messages."""
@@ -88,7 +86,7 @@ def generate_email_message_embeddings():
             continue
     
     print()
-    print(f"✅ Embedding generation completed!")
+    print("✅ Embedding generation completed!")
     print(f"   📈 Successful: {successful}")
     print(f"   ❌ Failed: {failed}")
     print(f"   📊 Success rate: {(successful/(successful+failed)*100):.1f}%")
@@ -98,7 +96,7 @@ def generate_email_message_embeddings():
     remaining_to_process = db.fetch_one("SELECT COUNT(*) as count FROM content_unified WHERE source_type = 'email_message' AND ready_for_embedding = 1")['count']
     
     print()
-    print(f"📊 Final Status:")
+    print("📊 Final Status:")
     print(f"   🧠 Total embeddings in database: {final_embeddings}")
     print(f"   ⏳ Individual messages still needing embeddings: {remaining_to_process}")
     

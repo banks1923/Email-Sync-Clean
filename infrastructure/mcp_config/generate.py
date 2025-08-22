@@ -82,7 +82,7 @@ def show_status() -> None:
     # Show server counts
     mcp_servers = config.get_mcp_servers()
     claude_servers = config.get_claude_desktop_servers()
-    print(f"\n📊 Server Counts:")
+    print("\n📊 Server Counts:")
     print(f"  Claude Code (.mcp.json): {len(mcp_servers)} servers")
     print(f"  Claude Desktop: {len(claude_servers)} servers")
 

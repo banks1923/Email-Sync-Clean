@@ -16,7 +16,6 @@ from loguru import logger
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from utilities.timeline import TimelineService
-from shared.simple_db import SimpleDB
 
 
 def extract_timeline_from_database(min_confidence: str = "MEDIUM") -> dict:
@@ -145,7 +144,7 @@ Examples:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        timeline_content = generate_markdown_timeline(timeline_data['events'], str(output_path))
+        generate_markdown_timeline(timeline_data['events'], str(output_path))
         
         print(f"\n✅ Timeline generated: {output_path}")
         print(f"   Events included: {timeline_data['total_events']}")

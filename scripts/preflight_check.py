@@ -41,7 +41,7 @@ def check_schema():
     if missing:
         print(f"❌ Missing columns in documents: {missing}")
         return False
-    print(f"✓ Documents table has all required columns")
+    print("✓ Documents table has all required columns")
     
     # Check other critical tables
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -52,7 +52,7 @@ def check_schema():
     if missing_tables:
         print(f"❌ Missing tables: {missing_tables}")
         return False
-    print(f"✓ All required tables exist")
+    print("✓ All required tables exist")
     
     conn.close()
     return True

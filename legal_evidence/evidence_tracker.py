@@ -8,7 +8,7 @@ Direct implementation following CLAUDE.md principles:
 
 import re
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any
 from loguru import logger
 
 from shared.simple_db import SimpleDB

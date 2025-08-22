@@ -136,7 +136,7 @@ def update_readme_md(audit_report: dict, file_path: Path) -> bool:
     
     # Look for and update any "550 lines" or similar claims
     total_lines = audit_report['total_service_lines']
-    code_lines = audit_report['total_code_lines']
+    audit_report['total_code_lines']
     
     # Replace patterns that mention the old line count
     patterns = [
@@ -171,7 +171,7 @@ def main():
     
     # Get audit data
     auditor = DocumentationAuditor(str(project_root))
-    report = auditor.generate_report()
+    auditor.generate_report()
     audit_data = json.loads(auditor.output_json())
     
     print("📊 Current Service Status:")

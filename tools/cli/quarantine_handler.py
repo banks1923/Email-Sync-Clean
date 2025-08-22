@@ -6,8 +6,7 @@ Manages failed documents with retry logic and purging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any
-import os
+from typing import Any
 
 
 class QuarantineHandler:

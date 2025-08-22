@@ -27,7 +27,7 @@ def collect_final_counts(db_path):
     docs_null_sha256 = cursor.fetchone()[0]
     
     cursor.execute("SELECT COUNT(*) FROM documents WHERE source_type = 'upload'")
-    upload_docs_total = cursor.fetchone()[0]
+    cursor.fetchone()[0]
     
     cursor.execute("SELECT COUNT(*) FROM documents WHERE source_type = 'upload' AND sha256 IS NOT NULL")
     docs_fixed_sha256 = cursor.fetchone()[0]
@@ -70,7 +70,7 @@ def collect_final_counts(db_path):
     qdrant_points = "unknown"
     try:
         from utilities.vector_store import get_vector_store
-        vector_store = get_vector_store()
+        get_vector_store()
         # This would need the actual method to count points
         # qdrant_points = vector_store.count_points()
     except Exception:
@@ -171,7 +171,7 @@ def main():
         print(f"✓ Final deliverable saved to: {output_file}")
         
         # Print summary to console
-        print(f"\n🎉 Assignment 1 - COMPLETED SUCCESSFULLY!")
+        print("\n🎉 Assignment 1 - COMPLETED SUCCESSFULLY!")
         print(f"   Fixed SHA256 for: {final_counts['docs_fixed_sha256']} documents")
         print(f"   NULL SHA256 remaining: {final_counts['docs_null_sha256']}")
         print(f"   Broken chain total: {final_counts['docs_without_content']}")

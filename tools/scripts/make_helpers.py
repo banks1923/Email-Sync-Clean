@@ -4,7 +4,6 @@
 import sys
 import os
 import time
-import sqlite3
 from pathlib import Path
 
 # Add project root to path
@@ -16,7 +15,7 @@ def test_basic():
     print("🧪 Testing basic system functionality...")
     try:
         from shared.simple_db import SimpleDB
-        db = SimpleDB()
+        SimpleDB()
         print('✅ Database connection works')
         
         from utilities.embeddings import get_embedding_service
@@ -55,7 +54,7 @@ def test_gmail():
     print("📧 Testing Gmail connection...")
     try:
         from gmail.main import GmailService
-        service = GmailService()
+        GmailService()
         print('✅ Gmail connection works')
     except Exception as e:
         print(f'❌ Gmail test failed: {e}')
@@ -101,7 +100,7 @@ def performance_stats():
         print('Testing embedding speed...')
         start = time.time()
         emb = get_embedding_service()
-        vec = emb.encode('test query for performance')
+        emb.encode('test query for performance')
         embed_time = time.time() - start
         print(f'Embedding generation: {embed_time:.3f}s')
         
@@ -109,7 +108,7 @@ def performance_stats():
         start = time.time()
         db = SimpleDB()
         cursor = db.execute('SELECT COUNT(*) FROM documents')
-        result = cursor.fetchone()
+        cursor.fetchone()
         db_time = time.time() - start
         print(f'Database query: {db_time:.3f}s')
     except Exception as e:

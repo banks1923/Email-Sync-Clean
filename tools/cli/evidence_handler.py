@@ -4,7 +4,6 @@ Direct implementation for vsearch evidence commands.
 """
 
 import json
-from typing import Optional, List
 
 from legal_evidence import get_evidence_tracker, get_thread_analyzer, get_report_generator
 
@@ -97,7 +96,7 @@ def report_command(output_dir: str = "legal_evidence_export",
                   threads: list[str] | None = None,
                   mode: str = "both"):
     """Generate legal evidence reports."""
-    print(f"📄 Generating legal evidence reports...")
+    print("📄 Generating legal evidence reports...")
     
     generator = get_report_generator()
     

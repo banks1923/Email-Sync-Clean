@@ -5,13 +5,10 @@ Audits documentation claims against reality and outputs JSON report.
 """
 
 import json
-import os
 import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Optional
-import subprocess
-import glob
+from typing import List, Optional
 
 
 @dataclass

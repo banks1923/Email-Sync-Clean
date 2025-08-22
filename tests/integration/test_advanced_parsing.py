@@ -5,17 +5,15 @@ Tests the new unified pipeline with existing emails.
 """
 
 import sys
-import os
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent
+# Add project root to Python path (tests/integration/ is two levels down)
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from shared.simple_db import SimpleDB
 from shared.email_parser import parse_conversation_chain  
 from shared.thread_manager import extract_thread_messages, deduplicate_messages
-from loguru import logger
 
 def test_advanced_parsing():
     """Test the advanced parsing with a small subset of emails."""

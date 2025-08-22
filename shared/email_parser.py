@@ -4,9 +4,7 @@ Clean implementation following CLAUDE.md principles: Simple > Complex
 """
 
 import re
-import html as html_lib
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import List, Optional
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -151,7 +149,7 @@ def parse_conversation_chain(email_body: str) -> List[QuotedMessage]:
     for i, line in enumerate(lines):
         # Count quote depth (> markers)
         stripped_line = line.lstrip()
-        current_quote_depth = len(line) - len(stripped_line.lstrip('>'))
+        len(line) - len(stripped_line.lstrip('>'))
         
         if stripped_line.startswith('>'):
             quote_depth = stripped_line.count('>')

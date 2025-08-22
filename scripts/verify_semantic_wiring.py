@@ -61,7 +61,7 @@ class SemanticWiringVerifier:
         required_tables = ['emails', 'content', 'entity_content_mapping', 
                           'timeline_events', 'consolidated_entities']
         for table in required_tables:
-            cursor = self.db.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+            cursor = self.db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
             if cursor.fetchone():
                 print(f"✅ Table '{table}' exists")
                 self.results["checks"][f"table_{table}"] = True
@@ -97,7 +97,7 @@ class SemanticWiringVerifier:
                 print(f"✅ Hybrid search: {len(results)} results")
                 self.results["checks"]["hybrid_search"] = True
             else:
-                print(f"⚠️  Hybrid search: no results (may need indexing)")
+                print("⚠️  Hybrid search: no results (may need indexing)")
                 self.results["checks"]["hybrid_search"] = False
         except Exception as e:
             print(f"❌ Hybrid search failed: {e}")
@@ -170,7 +170,7 @@ class SemanticWiringVerifier:
                 print(f"✅ Qdrant payload: content_id={content_id}")
                 self.results["linkage"]["qdrant_payload"] = True
             else:
-                print(f"⚠️  Qdrant payload missing or mismatched")
+                print("⚠️  Qdrant payload missing or mismatched")
                 self.results["linkage"]["qdrant_payload"] = False
         except Exception as e:
             print(f"⚠️  Qdrant check skipped: {e}")
@@ -296,7 +296,7 @@ class SemanticWiringVerifier:
             
             for query in ["test", "invoice", "payment"]:
                 start = time.time()
-                results = search_service.search(query, limit=10)
+                search_service.search(query, limit=10)
                 latency = (time.time() - start) * 1000  # ms
                 latencies.append(latency)
                 

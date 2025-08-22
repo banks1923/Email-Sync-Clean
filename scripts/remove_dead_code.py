@@ -5,7 +5,6 @@ Removes unused modules and rarely imported functions identified by analysis.
 Creates backup before removal and verifies system still works.
 """
 
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -82,11 +81,6 @@ class DeadCodeRemover:
         ]
         
         # Keep email_thread_processor as it's used by gmail
-        keep_modules = [
-            "infrastructure/documents/processors/email_thread_processor.py",
-            "infrastructure/documents/processors/__init__.py",
-            "infrastructure/documents/__init__.py",
-        ]
         
         for module in unused_modules:
             file_path = self.project_root / module

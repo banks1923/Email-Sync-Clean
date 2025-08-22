@@ -6,7 +6,7 @@ Generates both lookup mode (structured references) and report mode (narrative).
 import re
 import os
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any
 from collections import defaultdict
 from loguru import logger
 
@@ -233,7 +233,7 @@ class LegalReportGenerator:
         # Auto-generate significance points based on patterns
         if len(disputed_threads) > 0:
             report.append(f"1. **Pattern of Communication**: {len(disputed_threads)} separate threads")
-            report.append(f"   discussing disputed topics over the period analyzed.")
+            report.append("   discussing disputed topics over the period analyzed.")
             
         if contradiction_count > 0:
             report.append(f"2. **Inconsistent Positions**: {contradiction_count} instances where")

@@ -363,7 +363,7 @@ class SimpleDB:
 
         # UPSERT operation using actual content_unified schema
         # Columns: id, source_type, source_id, title, body, created_at, ready_for_embedding, sha256, chunk_index
-        cursor = self.execute("""
+        self.execute("""
             INSERT INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
             VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(source_type, source_id) DO UPDATE SET

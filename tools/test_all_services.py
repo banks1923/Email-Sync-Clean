@@ -106,13 +106,13 @@ def test_vector_store():
         from utilities.vector_store import get_vector_store
         
         get_vector_store('emails')
-        print(f"✓ Vector store connected to collection: emails")
+        print("✓ Vector store connected to collection: emails")
         
         # Check if Qdrant is running
         import requests
         response = requests.get("http://localhost:6333/readyz", timeout=2)
         if response.text == "all shards are ready":
-            print(f"✓ Qdrant is running and ready")
+            print("✓ Qdrant is running and ready")
         
         return True
     except Exception as e:

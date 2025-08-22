@@ -10,7 +10,6 @@ import time
 import argparse
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Tuple
 
 # Suppress verbose logging during tests
 import os
@@ -158,7 +157,7 @@ class ServiceTestHarness:
                     vs.upsert(vector=test_vector, payload={"test": True}, id=test_id)
                     
                     # Search
-                    results = vs.search(test_vector, limit=1)
+                    vs.search(test_vector, limit=1)
                     
                     # Delete
                     vs.delete(test_id)

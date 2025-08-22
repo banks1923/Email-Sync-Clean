@@ -125,7 +125,7 @@ class EmailSanitationReporter:
         
         return f"Sanitation complete: {quarantined} emails quarantined, {kept} kept. " + \
                f"Removed {vectors_deleted} vectors from Qdrant. " + \
-               f"Pre-embedding validation gate active."
+               "Pre-embedding validation gate active."
     
     def validate_report_schema(self, report: Dict[str, Any]) -> bool:
         """

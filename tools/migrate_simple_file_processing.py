@@ -10,7 +10,6 @@ Removes tables that were used by OriginalFileManager and EnhancedArchiveManager:
 These are no longer needed with the simple file processing approach.
 """
 
-from pathlib import Path
 from shared.simple_db import SimpleDB
 from loguru import logger
 

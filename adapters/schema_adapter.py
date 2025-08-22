@@ -56,7 +56,7 @@ class SchemaAdapter:
         """
         # Filter out fields that don't exist in schema
         if source_path and "source_path" not in self.existing_columns:
-            logger.debug(f"source_path column missing, storing in metadata")
+            logger.debug("source_path column missing, storing in metadata")
             if metadata is None:
                 metadata = {}
             metadata["source_path"] = source_path

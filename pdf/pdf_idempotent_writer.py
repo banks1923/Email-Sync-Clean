@@ -6,7 +6,7 @@ Ensures atomic writes with SHA256 deduplication and proper retry handling
 import hashlib
 import sqlite3
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime, timedelta
 from loguru import logger
 
@@ -16,7 +16,6 @@ class IdempotentPDFWriter:
     
     def __init__(self, db_path: str = None):
         """Initialize with database path from environment or default"""
-        import os
         from config.settings import DatabaseSettings
         self.db_path = db_path or DatabaseSettings().emails_db_path
         

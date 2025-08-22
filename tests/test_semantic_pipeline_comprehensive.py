@@ -336,7 +336,7 @@ class TestSemanticPipeline(unittest.TestCase):
         }
         
         message_ids = ['msg_001']
-        result1 = self.pipeline.run_for_messages(
+        self.pipeline.run_for_messages(
             message_ids=message_ids,
             steps=['entities']
         )
@@ -445,7 +445,7 @@ class TestSemanticIntegration(unittest.TestCase):
             with patch.object(service, 'store_email') as mock_store:
                 mock_store.return_value = 'stored_msg_id'
                 
-                result = service.sync_emails(max_results=5)
+                service.sync_emails(max_results=5)
                 
                 # Verify semantic pipeline was called
                 mock_get_pipeline.assert_called_once()

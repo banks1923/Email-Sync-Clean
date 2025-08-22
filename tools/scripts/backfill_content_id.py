@@ -97,7 +97,7 @@ def main():
         if offset is None:
             break
 
-    logger.success(f"Backfill complete!")
+    logger.success("Backfill complete!")
     logger.info(f"  Total scanned: {scanned}")
     logger.info(f"  Already had content_id: {already_has_content_id}")
     logger.info(f"  Updated with content_id: {updated}")

@@ -5,8 +5,6 @@ Simplified approach: Process files in place, save clean versions.
 No complex folder lifecycle or archiving.
 """
 
-import shutil
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 

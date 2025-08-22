@@ -6,7 +6,6 @@ Final cleanup - remove duplicates, fix orphans, and ensure 100% alignment.
 import sqlite3
 import sys
 from pathlib import Path
-from datetime import datetime
 
 def fix_duplicate_content(conn):
     """Remove duplicate content_unified entries (keep first)."""
@@ -173,7 +172,7 @@ def verify_final_state(conn):
     """)
     
     emb_stats = cursor.fetchone()
-    print(f"\n📈 Embedding Coverage:")
+    print("\n📈 Embedding Coverage:")
     print(f"  Ready for embedding: {emb_stats[0]}")
     print(f"  Total embeddings: {emb_stats[1]}")
     print(f"  Unique content with embeddings: {emb_stats[2]}")

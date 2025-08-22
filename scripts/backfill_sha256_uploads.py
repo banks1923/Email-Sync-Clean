@@ -20,7 +20,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, List
 
 LIKELY_DOC_TEXT_COLS = ["text_content", "text", "chunk_text", "content", "body"]
 LIKELY_CNT_TEXT_COLS = ["body", "text", "content"]
@@ -132,11 +132,10 @@ def main():
     # ---------------------------
     missing_created = 0
     unresolved_missing = 0
-    missing_detail = ""
     
     if not (cols.documents_has_chunk_index and cols.content_has_chunk_index):
         # join is unsafe without chunk_index
-        missing_detail = "chunk_index not present on both tables; cannot safely synthesize content rows"
+        pass
     else:
         cur.execute(f"""
             SELECT d.chunk_id as did, d.sha256 as dsha, d.chunk_index as dchunk,
@@ -178,7 +177,7 @@ def main():
                     cur.execute(f"INSERT OR IGNORE INTO content_unified ({','.join(cols_list)}) VALUES ({','.join(['?']*len(cols_list))})", vals)
                     if cur.rowcount > 0:
                         missing_created += 1
-                except sqlite3.IntegrityError as e:
+                except sqlite3.IntegrityError:
                     # Handle unique constraint violations gracefully
                     continue
 

@@ -28,7 +28,7 @@ def generate_missing_embeddings(db_path):
     
     # Initialize services
     try:
-        db = SimpleDB()
+        SimpleDB()
         embedding_service = get_embedding_service()
         print("✓ Services initialized")
     except Exception as e:
@@ -197,7 +197,7 @@ def main():
             print("\nSkipping vector sync (no new embeddings)")
         
         # Step 3: Final verification
-        print(f"\n📊 Final Summary:")
+        print("\n📊 Final Summary:")
         print(f"   Embeddings created: {embeddings_created}")
         print(f"   Vectors synced to Qdrant: {vectors_synced}")
         

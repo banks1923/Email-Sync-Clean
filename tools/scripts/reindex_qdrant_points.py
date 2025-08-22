@@ -136,7 +136,7 @@ def reindex_collection(collection_name: str = 'emails', batch_size: int = 100, d
             break
             
     # Final report
-    print(f"\n" + "=" * 60)
+    print("\n" + "=" * 60)
     print(f"Qdrant Reindexing {'Simulation ' if dry_run else ''}Complete")
     print("=" * 60)
     print(f"Total points processed: {reindexed + skipped + errors}")

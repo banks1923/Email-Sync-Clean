@@ -71,7 +71,7 @@ Examples:
             )
         
         if result["success"]:
-            print(f"\n✅ Export completed successfully!")
+            print("\n✅ Export completed successfully!")
             print(f"   Exported: {result['exported_count']} documents")
             
             if "source_counts" in result:

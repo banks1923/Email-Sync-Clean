@@ -4,7 +4,6 @@ Fix remaining column reference issues after incomplete table migration.
 Handles dictionary access patterns, SQL column names, and table references.
 """
 
-import os
 import re
 import shutil
 from pathlib import Path

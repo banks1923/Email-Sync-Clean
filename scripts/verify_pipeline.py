@@ -11,7 +11,7 @@ import sys
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -468,7 +468,6 @@ class PipelineVerifier:
     def integrity_test(self) -> bool:
         """Enhanced orphan and duplicate detection with chunk-aware joins."""
         details = {}
-        issues = []
         
         try:
             content_table = self._content_table()
@@ -863,7 +862,7 @@ class PipelineVerifier:
             total_chars = sum(chunk['char_count'] for chunk in doc_chunks)
             logger.info(f"├── File: {file_name}")
             logger.info(f"├── Total Characters: {total_chars:,}")
-            logger.info(f"├── Chunk Structure:")
+            logger.info("├── Chunk Structure:")
             
             for chunk in doc_chunks:
                 chunk_marker = "├──" if chunk != doc_chunks[-1] else "└──"
@@ -873,10 +872,10 @@ class PipelineVerifier:
             
             # Show content mapping
             if content_info:
-                logger.info(f"├── Content Unified:")
+                logger.info("├── Content Unified:")
                 logger.info(f"│   ├── ID: {content_info['id']}")
                 logger.info(f"│   ├── Title: {content_info['title'] or 'none'}")
-                logger.info(f"│   └── Note: Full document text from all chunks")
+                logger.info("│   └── Note: Full document text from all chunks")
                 
                 # Show embeddings
                 if embeddings:
@@ -885,9 +884,9 @@ class PipelineVerifier:
                         emb_marker = "├──" if i < len(embeddings) - 1 else "└──"
                         logger.info(f"    {emb_marker} ID {emb['id']}: {emb['model']} ({emb['created_at']})")
                 else:
-                    logger.info(f"└── ❌ No embeddings found")
+                    logger.info("└── ❌ No embeddings found")
             else:
-                logger.info(f"└── ❌ No content_unified entry found")
+                logger.info("└── ❌ No content_unified entry found")
         else:
             logger.info("└── ❌ No document chunks found")
     

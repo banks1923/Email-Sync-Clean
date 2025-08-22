@@ -100,7 +100,7 @@ Examples:
             print(f"✅ No content ready for embedding (type={args.type})")
             return
         
-        print(f"\n📊 Content ready for embedding:")
+        print("\n📊 Content ready for embedding:")
         total_pending = 0
         for row in pending:
             count = row['total']
@@ -127,7 +127,7 @@ Examples:
         )
         
         # Display results
-        print(f"\n📈 Processing Results:")
+        print("\n📈 Processing Results:")
         print(f"  ✅ Processed: {result['processed']}")
         print(f"  ⏭️  Skipped: {result['skipped']}")  
         print(f"  ❌ Errors: {result['errors']}")

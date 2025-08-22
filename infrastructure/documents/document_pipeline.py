@@ -5,7 +5,6 @@ Routes documents through the appropriate processor based on format.
 Manages the complete document lifecycle from raw to export.
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any

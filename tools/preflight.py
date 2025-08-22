@@ -193,7 +193,7 @@ class PreflightChecker:
             try:
                 # This should work without raising an exception if Qdrant is accessible
                 info = vector_store.client.get_collections()
-                self._print_check("Qdrant connection", True, f"Connected to Qdrant")
+                self._print_check("Qdrant connection", True, "Connected to Qdrant")
                 
                 # Check collection exists
                 collections = [c.name for c in info.collections]
