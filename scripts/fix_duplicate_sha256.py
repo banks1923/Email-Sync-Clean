@@ -6,9 +6,9 @@ Recalculates SHA256 values for original PDF documents (source_type='pdf')
 that have duplicate SHA256 values due to inconsistent hashing methods.
 """
 
-import sqlite3
 import hashlib
 import re
+import sqlite3
 from pathlib import Path
 
 

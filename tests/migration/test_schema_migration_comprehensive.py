@@ -6,15 +6,17 @@ Tests the complete migration process from content_id to id schema,
 including business keys, deterministic UUIDs, and UPSERT functionality.
 """
 
-import pytest
-import sqlite3
-import tempfile
 import os
-from pathlib import Path
-from uuid import UUID, uuid5
+import sqlite3
 
 # Add project root to path for imports
 import sys
+import tempfile
+from pathlib import Path
+from uuid import UUID, uuid5
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.simple_db import SimpleDB

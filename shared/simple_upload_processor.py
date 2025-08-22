@@ -10,9 +10,10 @@ import hashlib
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from loguru import logger
+
 from .simple_db import SimpleDB
 
 

@@ -13,9 +13,9 @@ from loguru import logger
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
+from entity.main import EntityService
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
-from entity.main import EntityService
 
 from .main import KnowledgeGraphService
 from .similarity_analyzer import SimilarityAnalyzer

@@ -333,7 +333,7 @@ class SystemRunner:
             if pdf_files:
                 try:
                     from pdf.main import PDFService
-                    
+
                     # Initialize PDFService with all dependencies
                     pdf_service = PDFService.from_db_path("data/emails.db")
                     

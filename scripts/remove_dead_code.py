@@ -6,10 +6,10 @@ Creates backup before removal and verifies system still works.
 """
 
 import shutil
-import sys
-from pathlib import Path
-from datetime import datetime
 import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

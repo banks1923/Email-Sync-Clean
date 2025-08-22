@@ -12,7 +12,6 @@ from typing import Any
 
 import torch
 
-
 # Configuration from template
 REPO_NAME = "Email-Sync-Clean-Backup"
 PY_ENTRYPOINT_ENV = "python3"
@@ -149,8 +148,8 @@ def check_embeddings() -> tuple[bool, dict]:
 def check_vectors() -> tuple[bool, dict]:
     """Check vector store batch_upsert, iter_ids, and upsert throughput."""
     try:
-        from utilities.vector_store import get_vector_store
         from utilities.embeddings import get_embedding_service
+        from utilities.vector_store import get_vector_store
         
         vs = get_vector_store(DEFAULT_COLLECTION)
         emb_service = get_embedding_service()
@@ -207,8 +206,8 @@ def check_vectors() -> tuple[bool, dict]:
 def check_search_ux() -> tuple[bool, dict]:
     """Check search UX with 3 canned queries, measure p95 latency and scores."""
     try:
-        from utilities.vector_store import get_vector_store
         from utilities.embeddings import get_embedding_service
+        from utilities.vector_store import get_vector_store
         
         vs = get_vector_store(DEFAULT_COLLECTION)
         emb_service = get_embedding_service()

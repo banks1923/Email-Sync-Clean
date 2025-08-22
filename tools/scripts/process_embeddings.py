@@ -14,6 +14,7 @@ print("⚠️ WARNING: This script is deprecated!")
 print("Please use: python3 scripts/backfill_embeddings.py")
 print("Or for pipeline: python3 utilities/semantic_pipeline.py")
 import sys
+
 sys.exit(1)
 
 import time

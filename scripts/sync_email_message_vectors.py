@@ -3,16 +3,17 @@
 Sync individual email message embeddings to vector store.
 """
 
-import sys
 import pickle
+import sys
 from pathlib import Path
 
 # Add project root to Python path (scripts/ is one level down)
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from utilities.vector_store import get_vector_store
 from shared.simple_db import SimpleDB
+from utilities.vector_store import get_vector_store
+
 
 def sync_email_message_vectors():
     """Sync individual email message embeddings to vector store."""

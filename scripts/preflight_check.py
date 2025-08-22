@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Preflight check for PDF pipeline - verify schema and environment"""
 
-import sys
 import os
 import sqlite3
+import sys
 from pathlib import Path
+
 
 def check_schema():
     """Verify database schema has required columns"""

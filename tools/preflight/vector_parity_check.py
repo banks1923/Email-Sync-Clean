@@ -22,8 +22,8 @@ Exit codes:
   2 Fail (mismatch, zero-vector violation, or connection error)
 """
 
-import os
 import json
+import os
 import sqlite3
 import sys
 from datetime import datetime

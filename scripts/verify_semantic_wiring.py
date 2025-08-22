@@ -8,21 +8,22 @@ Verifies:
 4. Data linkage and traceability
 """
 
+import hashlib
+import json
 import sys
 import time
-import json
-import hashlib
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import numpy as np
+
+from search_intelligence import get_search_intelligence_service
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
-from utilities.vector_store import get_vector_store
 from utilities.semantic_pipeline import get_semantic_pipeline
-from search_intelligence import get_search_intelligence_service
-import numpy as np
+from utilities.vector_store import get_vector_store
 
 
 class SemanticWiringVerifier:

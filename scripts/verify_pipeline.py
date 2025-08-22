@@ -7,8 +7,8 @@ Comprehensive end-to-end testing with all 8 issues fixed per user feedback.
 import argparse
 import json
 import os
-import sys
 import sqlite3
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,6 +17,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
+
 from shared.simple_db import SimpleDB
 
 

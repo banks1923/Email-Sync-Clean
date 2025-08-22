@@ -12,9 +12,9 @@ Safety features:
 - Validates constraints work
 """
 
+import os
 import sqlite3
 import sys
-import os
 from datetime import datetime
 
 

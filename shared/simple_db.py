@@ -10,11 +10,10 @@ import os
 import sqlite3
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from collections.abc import Generator
 
 # Import new error handling and retry utilities
 from loguru import logger

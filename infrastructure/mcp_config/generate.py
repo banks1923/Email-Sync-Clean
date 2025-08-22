@@ -6,9 +6,9 @@ CLI tool to generate MCP configurations for Claude Code and Claude Desktop.
 Follows CLAUDE.md principles: Simple > Complex, Working > Perfect.
 """
 
+import argparse
 import json
 import sys
-import argparse
 from pathlib import Path
 from typing import Optional
 

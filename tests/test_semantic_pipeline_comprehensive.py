@@ -4,19 +4,20 @@
 Tests all aspects of semantic enrichment during email ingestion.
 """
 
-import unittest
 import json
 import os
+import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
+
 import numpy as np
 
 # Set up test environment
 os.environ['SEMANTICS_ON_INGEST'] = 'true'
 
 from config.settings import semantic_settings
-from utilities.semantic_pipeline import SemanticPipeline, get_semantic_pipeline
 from shared.simple_db import SimpleDB
+from utilities.semantic_pipeline import SemanticPipeline, get_semantic_pipeline
 
 
 class TestSemanticPipeline(unittest.TestCase):
@@ -397,7 +398,7 @@ class TestSemanticIntegration(unittest.TestCase):
     def test_gmail_semantic_hook(self, mock_db_class, mock_get_pipeline):
         """Test that Gmail service calls semantic pipeline on ingest."""
         from gmail.main import GmailService
-        
+
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db
@@ -464,7 +465,7 @@ class TestBackfillScript(unittest.TestCase):
     def test_backfill_basic(self, mock_db_class, mock_get_pipeline):
         """Test basic backfill operation."""
         from scripts.backfill_semantic import backfill_semantic
-        
+
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db
@@ -501,7 +502,7 @@ class TestBackfillScript(unittest.TestCase):
     def test_backfill_with_date_filter(self, mock_db_class, mock_get_pipeline):
         """Test backfill with date filtering."""
         from scripts.backfill_semantic import backfill_semantic
-        
+
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db

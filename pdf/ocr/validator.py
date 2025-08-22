@@ -26,7 +26,7 @@ class PDFValidator:
         """Validate all required dependencies using existing OCR module flags."""
         # Import availability flags from actual OCR modules
         try:
-            from .ocr_engine import TESSERACT_AVAILABLE, CV2_AVAILABLE
+            from .ocr_engine import CV2_AVAILABLE, TESSERACT_AVAILABLE
             from .rasterizer import PDF2IMAGE_AVAILABLE
         except ImportError:
             TESSERACT_AVAILABLE = False

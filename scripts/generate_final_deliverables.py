@@ -6,9 +6,9 @@ Creates the required deliverables and final counts JSON for the SHA256
 backfill and chain repair assignment.
 """
 
-import sqlite3
 import json
 import os
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 

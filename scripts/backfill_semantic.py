@@ -4,15 +4,16 @@
 Processes old emails through the semantic pipeline (entities, embeddings, timeline).
 """
 
-import sys
-from pathlib import Path
-from datetime import datetime, timedelta
 import argparse
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
+
 from shared.simple_db import SimpleDB
 from utilities.semantic_pipeline import get_semantic_pipeline
 

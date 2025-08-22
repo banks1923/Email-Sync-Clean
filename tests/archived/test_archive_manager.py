@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-
 from zarchive.archive_manager import ArchiveManager, get_archive_manager
 
 

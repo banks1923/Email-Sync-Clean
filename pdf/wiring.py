@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     """Build PDF service with lazy-loaded providers"""
-    from shared.simple_db import SimpleDB
     from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
     from pdf.pdf_storage_enhanced import EnhancedPDFStorage
+    from shared.simple_db import SimpleDB
 
     # Construct core instances once; providers capture these by closure
     db = SimpleDB(db_path)

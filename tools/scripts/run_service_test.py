@@ -4,18 +4,20 @@ Unified service test harness for Email Sync system.
 Provides smoke and deep testing for all services.
 """
 
-import sys
-import json
-import time
 import argparse
-from pathlib import Path
-from datetime import datetime
+import json
 
 # Suppress verbose logging during tests
 import os
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
 os.environ['LOG_LEVEL'] = 'WARNING'
 
 from loguru import logger
+
 logger.remove()
 logger.add(sys.stderr, level="WARNING")
 
@@ -134,9 +136,10 @@ class ServiceTestHarness:
     def test_vector_store(self) -> tuple[bool, dict]:
         """Test vector store connectivity."""
         try:
-            from utilities.vector_store import get_vector_store
             import requests
-            
+
+            from utilities.vector_store import get_vector_store
+
             # Check Qdrant
             response = requests.get("http://localhost:6333/readyz", timeout=2)
             qdrant_ready = response.text == "all shards are ready"
@@ -253,7 +256,7 @@ class ServiceTestHarness:
         """Test knowledge graph service."""
         try:
             from knowledge_graph import KnowledgeGraphService
-            
+
             # Note: Has schema issues, so we just check import
             details = {"status": "importable"}
             
@@ -296,7 +299,7 @@ class ServiceTestHarness:
         """Test legal intelligence service."""
         try:
             from legal_intelligence import get_legal_intelligence_service
-            
+
             # Note: Depends on knowledge graph, may have issues
             details = {"status": "importable"}
             

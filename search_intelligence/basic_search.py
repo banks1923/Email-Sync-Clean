@@ -182,6 +182,7 @@ def _enrich_vector_results(vector_results: list[dict]) -> list[dict[str, Any]]:
                 if not content and str(content_id).isdigit():
                     # Get email directly from emails table
                     import sqlite3
+
                     from config.settings import settings
                     
                     conn = sqlite3.connect(settings.database.emails_db_path)

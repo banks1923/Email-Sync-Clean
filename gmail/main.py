@@ -8,9 +8,9 @@ from summarization import get_document_summarizer
 
 # Import advanced email parsing modules
 try:
-    from shared.email_parser import parse_conversation_chain, QuotedMessage
-    from shared.thread_manager import ThreadService, extract_thread_messages, deduplicate_messages
     from shared.email_cleaner import EmailCleaner
+    from shared.email_parser import QuotedMessage, parse_conversation_chain
+    from shared.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")
 except ImportError:
@@ -460,7 +460,7 @@ class GmailService:
                 from config.settings import semantic_settings
                 if semantic_settings.semantics_on_ingest:
                     from utilities.semantic_pipeline import get_semantic_pipeline
-                    
+
                     # Extract message IDs from saved emails
                     message_ids = [email.get("message_id") for email in email_list 
                                  if email.get("message_id")]

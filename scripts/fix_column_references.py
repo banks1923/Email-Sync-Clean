@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 from typing import List, Tuple
 
+
 def backup_file(filepath: Path) -> Path:
     """Create backup of file before modification."""
     backup_path = filepath.with_suffix(filepath.suffix + '.bak')

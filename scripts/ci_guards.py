@@ -6,8 +6,8 @@ Prevents deployment/CI when critical data integrity issues exist.
 Returns proper exit codes for CI systems.
 """
 
-import sqlite3
 import os
+import sqlite3
 from pathlib import Path
 
 

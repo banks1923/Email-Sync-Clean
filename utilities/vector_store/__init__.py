@@ -5,8 +5,8 @@ No complexity. Just vector storage.
 
 import time
 import uuid
-from typing import Any
 from collections.abc import Generator
+from typing import Any
 
 from loguru import logger
 from qdrant_client import QdrantClient

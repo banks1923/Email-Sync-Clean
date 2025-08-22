@@ -11,11 +11,11 @@ Repairs 581 uploaded PDF chunks with NULL SHA256 by:
 Idempotent: Can be run multiple times safely.
 """
 
-import sqlite3
 import hashlib
 import json
 import os
 import re
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 

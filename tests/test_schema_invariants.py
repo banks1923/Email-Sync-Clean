@@ -213,7 +213,7 @@ class TestSchemaInvariants(unittest.TestCase):
     def test_deterministic_uuid_namespace(self):
         """Test that UUID generation uses consistent namespace."""
         import uuid
-        
+
         # Expected namespace from business key implementation
         expected_namespace = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
         

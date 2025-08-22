@@ -6,8 +6,8 @@ Generates embeddings for content_unified entries that lack embeddings,
 particularly focusing on the repaired upload documents and PDF files.
 """
 
-import sqlite3
 import os
+import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -16,8 +16,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from utilities.embeddings import get_embedding_service
 from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
 
 
 def generate_missing_embeddings(db_path):
@@ -69,7 +69,7 @@ def generate_missing_embeddings(db_path):
                 # Store embedding in database using direct SQL
                 try:
                     import pickle
-                    
+
                     # Convert vector to blob for storage
                     vector_blob = pickle.dumps(vector)
                     
@@ -140,7 +140,7 @@ def sync_vectors_to_qdrant(db_path):
         for embedding_id, content_id, vector_blob, title, body, source_type in embeddings_data:
             try:
                 import pickle
-                
+
                 # Deserialize vector from blob
                 vector = pickle.loads(vector_blob)
                 

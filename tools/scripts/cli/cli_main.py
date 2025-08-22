@@ -20,6 +20,7 @@ from tools.scripts.cli.docs_handler import (
     show_docs_summary,
 )
 from tools.scripts.cli.info_handler import show_info, show_pdf_stats
+
 # Notes service removed - functionality migrated to document pipeline
 from tools.scripts.cli.process_handler import embed_content, process_emails
 from tools.scripts.cli.search_handler import search_emails, search_multi_content

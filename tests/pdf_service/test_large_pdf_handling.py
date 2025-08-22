@@ -10,8 +10,8 @@ from unittest.mock import patch
 
 import pytest
 
-from pdf.wiring import get_pdf_service
 from pdf.ocr.page_processor import PageByPageProcessor
+from pdf.wiring import get_pdf_service
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

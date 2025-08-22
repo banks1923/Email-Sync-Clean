@@ -223,7 +223,7 @@ class PreflightChecker:
         
         try:
             from utilities.embeddings import get_embedding_service
-            
+
             # Test without loading model yet
             self._print_check("Embedding service import", True)
             
@@ -264,7 +264,7 @@ class PreflightChecker:
         
         try:
             import subprocess
-            
+
             # Test vsearch help loads quickly
             result = subprocess.run(['python3', 'tools/scripts/vsearch', '--help'], 
                                   capture_output=True, text=True, timeout=3)
@@ -288,10 +288,10 @@ class PreflightChecker:
         print("\n=== Vector Parity Checks ===")
         
         try:
-            import subprocess
             import json
             import os
-            
+            import subprocess
+
             # Set environment variables for the check
             env = os.environ.copy()
             env.update({

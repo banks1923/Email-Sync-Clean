@@ -98,7 +98,7 @@ class SearchIntelligenceService:
         """
         # Use the hybrid search from basic_search module
         from .basic_search import search as hybrid_search
-        
+
         # Extract filters if present
         filters = kwargs.get('filters', None)
         

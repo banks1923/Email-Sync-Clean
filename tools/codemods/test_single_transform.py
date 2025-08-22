@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Test configuration transformation on a single file."""
 
-import libcst as cst
 from pathlib import Path
+
+import libcst as cst
+
 
 def test_single_file(file_path: str):
     """Test transformation on a single file."""

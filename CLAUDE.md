@@ -362,8 +362,8 @@ sqlite3 data/emails.db "SELECT 'OLD content:' || COUNT(*) FROM content UNION ALL
 sqlite3 data/emails.db "SELECT source_type, COUNT(*) FROM content_unified GROUP BY source_type"
 
 # Test advanced email parsing capabilities
-python3 test_advanced_parsing.py     # Test parsing with subset
-python3 test_full_integration.py     # Full integration test
+python3 tests/integration/test_advanced_parsing.py     # Test parsing with subset
+python3 tests/integration/test_full_integration.py     # Full integration test
 
 # System health check
 make diag-wiring

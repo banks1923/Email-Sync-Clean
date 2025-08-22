@@ -20,7 +20,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 LIKELY_DOC_TEXT_COLS = ["text_content", "text", "chunk_text", "content", "body"]
 LIKELY_CNT_TEXT_COLS = ["body", "text", "content"]

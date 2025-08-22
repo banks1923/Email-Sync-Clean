@@ -7,9 +7,9 @@ import os
 import sys
 import tempfile
 
-from pdf.wiring import get_pdf_service
 from pdf.ocr import OCRCoordinator, PageByPageProcessor
 from pdf.ocr.validator import PDFValidator
+from pdf.wiring import get_pdf_service
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

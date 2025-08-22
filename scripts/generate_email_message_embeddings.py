@@ -10,8 +10,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from utilities.embeddings import get_embedding_service
 from shared.simple_db import SimpleDB
+from utilities.embeddings import get_embedding_service
+
 
 def generate_email_message_embeddings():
     """Generate embeddings for all individual email messages."""

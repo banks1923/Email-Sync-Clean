@@ -9,11 +9,13 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from entity.main import EntityService
+
 # Direct service imports - service registry was removed as unused
 # Services are now imported directly when needed
 from gmail.main import GmailService
-from entity.main import EntityService
 from utilities.timeline.main import TimelineService
+
 # Notes service removed - migrated to document pipeline
 
 

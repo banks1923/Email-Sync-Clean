@@ -5,9 +5,11 @@ This fixes the issue where semantic search returns 0 results because
 the payload doesn't have content_id for database lookups.
 """
 
-from qdrant_client import QdrantClient
-from loguru import logger
 import sqlite3
+
+from loguru import logger
+from qdrant_client import QdrantClient
+
 from config.settings import settings
 
 

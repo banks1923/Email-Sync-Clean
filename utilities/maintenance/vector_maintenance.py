@@ -10,15 +10,16 @@ Combines functionality from:
 - purge_test_vectors.py
 """
 
-import sys
 import argparse
+import sys
 from typing import Any
+
 from loguru import logger
 
+from gmail.main import GmailService
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
-from gmail.main import GmailService
 
 # --- Tunables (guidelines, not hard limits) ---
 BATCH_SIZE = 500

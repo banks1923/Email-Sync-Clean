@@ -3,11 +3,12 @@
 Generates both lookup mode (structured references) and report mode (narrative).
 """
 
-import re
 import os
+import re
+from collections import defaultdict
 from datetime import datetime
 from typing import Any
-from collections import defaultdict
+
 from loguru import logger
 
 from .evidence_tracker import get_evidence_tracker

@@ -6,11 +6,11 @@ API key loading. Follows CLAUDE.md principles: Simple > Complex, Working > Perfe
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 try:
-    from pydantic_settings import BaseSettings
     from pydantic import Field, SecretStr
+    from pydantic_settings import BaseSettings
     PYDANTIC_AVAILABLE = True
 except ImportError:
     # Graceful fallback - use dataclasses

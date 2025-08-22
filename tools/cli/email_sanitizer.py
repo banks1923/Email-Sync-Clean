@@ -9,7 +9,7 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 import click
 from loguru import logger
@@ -18,9 +18,9 @@ from loguru import logger
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+from shared.simple_db import SimpleDB
 from utilities.maintenance.email_quarantine import EmailQuarantineManager, EmailValidator
 from utilities.vector_store import get_vector_store
-from shared.simple_db import SimpleDB
 
 
 class EmailSanitizer:

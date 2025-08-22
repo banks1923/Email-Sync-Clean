@@ -4,6 +4,7 @@
 import sqlite3
 from pathlib import Path
 
+
 def apply_migration():
     db_path = Path("data/emails.db")
     if not db_path.exists():

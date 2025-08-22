@@ -4,15 +4,17 @@ Integration Tests for Semantic Search Migration
 Tests the new search coordination module and CLI integration.
 """
 
-import pytest
+import sys
 import time
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from search_intelligence import basic_search as search, semantic_search, vector_store_available
+from search_intelligence import basic_search as search
+from search_intelligence import semantic_search, vector_store_available
 from shared.simple_db import SimpleDB
 
 
@@ -49,9 +51,9 @@ class TestSemanticSearchIntegration:
     def test_cli_search_modes(self):
         """Test CLI search modes work correctly"""
         # Import by adding the tools/scripts directory to path
-        import subprocess
         import os
-        
+        import subprocess
+
         # Test CLI via subprocess to avoid import issues
         script_path = os.path.join(os.path.dirname(__file__), "..", "tools", "scripts", "vsearch")
         
@@ -146,6 +148,7 @@ class TestSemanticSearchIntegration:
         # Test that intelligence commands would work
         try:
             from tools.scripts.cli.intelligence_handler import smart_search_command
+
             # This should not crash - actual execution tested via CLI
             assert hasattr(smart_search_command, '__call__'), "Intelligence handlers should be callable"
             print("✅ Intelligence handler compatibility OK")
@@ -156,6 +159,7 @@ class TestSemanticSearchIntegration:
         """Test that legal handlers still work"""
         try:
             from search_intelligence import basic_search as search_legal
+
             # This should not crash - actual execution tested via CLI
             assert hasattr(search_legal, '__call__'), "Legal handlers should be callable"
             print("✅ Legal handler compatibility OK")

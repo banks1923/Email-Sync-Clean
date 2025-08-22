@@ -4,9 +4,9 @@ Clean implementation following CLAUDE.md principles: Simple > Complex
 """
 
 import re
-from typing import List, Optional
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import List, Optional
 
 # Compile regex patterns once for performance
 COMPILED_PATTERNS = {

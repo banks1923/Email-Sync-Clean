@@ -5,7 +5,7 @@ Direct implementation for vsearch evidence commands.
 
 import json
 
-from legal_evidence import get_evidence_tracker, get_thread_analyzer, get_report_generator
+from legal_evidence import get_evidence_tracker, get_report_generator, get_thread_analyzer
 
 
 def assign_eids_command(limit: int | None = None):

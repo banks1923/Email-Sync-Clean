@@ -7,6 +7,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
+
 def fix_duplicate_content(conn):
     """Remove duplicate content_unified entries (keep first)."""
     cursor = conn.cursor()

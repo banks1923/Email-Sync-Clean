@@ -753,13 +753,13 @@ Examples:
     elif args.command == "evidence":
         # Import evidence handlers
         from tools.cli.evidence_handler import (
+            analyze_thread_command,
             assign_eids_command,
             assign_threads_command,
             lookup_command,
             report_command,
             search_pattern_command,
-            analyze_thread_command,
-            status_command
+            status_command,
         )
         
         if args.evidence_command == "assign-eids":

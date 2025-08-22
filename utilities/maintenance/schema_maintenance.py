@@ -8,10 +8,11 @@ Combines functionality from:
 - update_simpledb_schema_refs.py
 """
 
-import sys
 import argparse
-from typing import Any
+import sys
 from datetime import datetime
+from typing import Any
+
 from loguru import logger
 
 from shared.simple_db import SimpleDB

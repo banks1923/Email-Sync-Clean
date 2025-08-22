@@ -3,10 +3,10 @@ Email Cleaning and Sanitization Utilities
 Handles HTML stripping, signature removal, and content normalization
 """
 
-import re
 import html as html_lib
-from typing import Any, Dict, List
+import re
 from functools import lru_cache
+from typing import Any, Dict, List
 
 # Compiled patterns for HTML and text cleaning
 CLEANING_PATTERNS = {

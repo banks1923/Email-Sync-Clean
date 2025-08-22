@@ -6,9 +6,9 @@ Validates the documents → content_unified → embeddings chain integrity.
 Reports broken links and data quality issues.
 """
 
-import sqlite3
 import json
 import os
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 

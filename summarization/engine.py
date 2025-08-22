@@ -7,12 +7,9 @@ import re
 import sys
 from pathlib import Path
 
-from loguru import logger
-
 import networkx as nx
-
 import numpy as np
-
+from loguru import logger
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 

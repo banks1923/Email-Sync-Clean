@@ -287,11 +287,11 @@ class TestServiceIntegration:
         """
         Initialize all services.
         """
-        from utilities.embeddings.embedding_service import EmbeddingService
-        from search_intelligence import basic_search as search
         from entity.main import EntityService
-        from summarization.main import DocumentSummarizer
+        from search_intelligence import basic_search as search
         from shared.simple_db import SimpleDB
+        from summarization.main import DocumentSummarizer
+        from utilities.embeddings.embedding_service import EmbeddingService
         
         return {
             "embeddings": EmbeddingService(),

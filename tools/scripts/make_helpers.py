@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Helper scripts for make commands."""
 
-import sys
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -94,8 +94,8 @@ def performance_stats():
     print("⚡ Performance Statistics")
     print("========================")
     try:
-        from utilities.embeddings import get_embedding_service
         from shared.simple_db import SimpleDB
+        from utilities.embeddings import get_embedding_service
         
         print('Testing embedding speed...')
         start = time.time()

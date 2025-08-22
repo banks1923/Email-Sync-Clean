@@ -16,6 +16,7 @@ from pathlib import Path
 os.environ["SIMPLEDB_CACHE_KB"] = "2000"  # Small cache for baseline
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from shared.simple_db import SimpleDB
