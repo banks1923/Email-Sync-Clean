@@ -515,29 +515,24 @@ class SimpleDB:
         """Get simple stats."""
         stats = {}
         
-        # Get content count
-        content_result = self.fetch_one("SELECT COUNT(*) as count FROM content")
+        # Get content count from the CORRECT table (content_unified not content)
+        content_result = self.fetch_one("SELECT COUNT(*) as count FROM content_unified")
         stats["total_content"] = content_result["count"] if content_result else 0
         
-        # Get content by type
+        # Get content by type from content_unified
         type_results = self.fetch(
-            "SELECT content_type, COUNT(*) as count FROM content GROUP BY content_type"
+            "SELECT source_type, COUNT(*) as count FROM content_unified GROUP BY source_type"
         )
-        stats["content_by_type"] = {row["content_type"]: row["count"] for row in type_results} if type_results else {}
+        stats["content_by_type"] = {row["source_type"]: row["count"] for row in type_results} if type_results else {}
         
-        # Get total characters
-        char_result = self.fetch_one("SELECT SUM(char_count) as total FROM content")
-        stats["total_characters"] = char_result["total"] if char_result and char_result["total"] else 0
+        # Get actual document count from documents table
+        doc_result = self.fetch_one("SELECT COUNT(*) as count FROM documents")
+        stats["total_documents"] = doc_result["count"] if doc_result else 0
         
-        # Check if content table exists before querying
-        table_check = self.fetch_one(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='content'"
-        )
-        if table_check:
-            doc_result = self.fetch_one("SELECT COUNT(*) as count FROM content")
-            stats["total_documents"] = doc_result["count"] if doc_result else 0
-        else:
-            stats["total_documents"] = 0
+        # Get breakdown by source type
+        stats["total_emails"] = stats["content_by_type"].get("email", 0)
+        stats["total_pdfs"] = stats["content_by_type"].get("pdf", 0)
+        stats["total_transcripts"] = stats["content_by_type"].get("transcript", 0)
             
         # Add database size
         db_info = self.fetch_one("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")

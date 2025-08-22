@@ -33,10 +33,12 @@ def show_info():
         stats = db.get_content_stats()
 
         print("\n📁 Database Statistics:")
-        print(f"  📧 Emails: {stats.get('total_emails', 0)}")
-        print(f"  📄 PDFs: {stats.get('total_pdfs', 0)}")
-        print(f"  🎙️  Transcripts: {stats.get('total_transcripts', 0)}")
-        print(f"  📝 Total content: {stats.get('total_content', 0)}")
+        print(f"  📄 Raw documents: {stats.get('total_documents', 0)}")
+        print(f"  📝 Text chunks: {stats.get('total_content', 0)}")
+        print("  Breakdown by type:")
+        print(f"    📧 Email chunks: {stats.get('total_emails', 0)}")
+        print(f"    📄 PDF chunks: {stats.get('total_pdfs', 0)}")
+        print(f"    🎙️  Transcript chunks: {stats.get('total_transcripts', 0)}")
 
         # Show last sync times if available
         if stats.get("latest_email_date"):

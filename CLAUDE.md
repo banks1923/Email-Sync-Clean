@@ -7,32 +7,37 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 <!-- ⚠️ CRITICAL CUSTOM INSTRUCTIONS - DO NOT MODIFY ⚠️ -->
 <!-- REQUIRES 3X CONFIRMATION TO CHANGE THIS SECTION -->
 <!-- PROTECTED WORKFLOW INSTRUCTIONS BELOW -->
+ 
+## **CORE**: 
+1. **Smooth is steady** steady is fast. 
+2. Build it right, build it once. Build it fast, build it again. 
+3. **PLAN** and investigate assumptions before finalizing 
+4. **CLARIFY** - *STOP* If design choices or conflicts arise
 
-- **CORE**: PLAN,  Atomic steps, Always use todo list, web search best practices, 1orchestrationagent1.
+Core Development Principles
 
-## Core Development Principles
+## Anti-Patterns (NEVER DO)
+- NO **Needless Complexity** unless *high ROI* and practical
+- No **No Monster Files**: *IF* modular approach is best practices choice
+- NO **Bandaids**: Fix it *right* unless time is a constraint
+- NO **Redesign**: Without *USER Explicit approval* SAME for massive changes to files or functionality
 
-### Anti-Patterns (NEVER DO)
-- **No Complex Hierarchies**: Simple agent classes
-- **No Abstract Patterns**: Direct implementation
-- **No Meta-Programming**: Keep it simple
-- **No Long Context**: Break tasks into atomic steps
+## Good Patterns (ALWAYS DO)
+- **Atomic Tasks** break tasks down into small steps
+- **GREP** Libraries and extentions are your friend.
+- **Single responsibility** Clean modular build
+- *Read CLAUDE.md*:
+- *Changelog.md*: Log all changes to changelog.md + update References across repo
+- *Use TodoWrite*
 
-### Good Patterns (ALWAYS DO)
-- **Read CLAUDE.md First**:  read project principles
-- **Use TodoWrite**: Track all tasks with todo lists
-- **Small Tasks**: Maximum context per task to prevent confusion
-- **Changelog.md**: Log all changes to changelog
-- **No breaking Repo**: ASK before Going off the rails
-- **Remember**: The best code is no code. The second best is simple code that works.*
-- **PLAN**
-- **CLARIFY**
+## Guidelines (consider)
+- **Best practices** Seperation of concerns, clean repo, clean code
+- **Future proof**: no quick sloppy fix AND **Docstring/Documentation**
+- *GREP* Libraries and extentions are your friend.
+- *Organize* repo: scripts, tests, and configurables go: into proper directory.
+- *Research* Best Practices, dependencies, tools, solutions, libraries, Etc.
+- *Parallel* Use Subagents for grunt work, investigation, simple tasks.
 
-
-### Agent Workflow
-1. **Read CLAUDE.md** - Understand project principles
-2. **Create Todo List** - Break work into tiny tasks
-3. **Execute Tasks** - One small task at a time
 
 <!-- END PROTECTED SECTION - DO NOT MODIFY WITHOUT 3X CONFIRMATION -->
 
@@ -632,7 +637,7 @@ class SearchFactory:
 
 > Your system should be as simple as possible for YOUR needs.
 
-This is a **single-user hobby project**, not enterprise software. Every line of code should justify its existence. If you can't explain what it does in one sentence, it's too complex.
+This is a **single-user project**, important use case, not for profit, not enterprise software.
 
 ### Core Values
 1. **Working code > Perfect abstractions**

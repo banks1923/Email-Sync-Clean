@@ -283,6 +283,7 @@ def info_command():
         print(f"  Total PDFs: {stats.get('total_pdfs', 0)}")
         print(f"  Total transcripts: {stats.get('total_transcripts', 0)}")
         print(f"  Total content: {stats.get('total_content', 0)}")
+        print(f"  Note: {stats.get('total_documents', 0)} raw documents → {stats.get('total_content', 0)} text chunks")
     except Exception as e:
         print(f"  ⚠️  Database unavailable: {e}")
 

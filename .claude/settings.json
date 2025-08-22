@@ -1,0 +1,39 @@
+{
+  "allowedTools": [
+    "Edit",
+    "Read", 
+    "Write",
+    "MultiEdit",
+    "Bash",
+    "LS",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "WebFetch",
+    "WebSearch",
+    "mcp__task-master-ai__*",
+    "mcp__legal-intelligence__*",
+    "mcp__search-intelligence__*",
+    "mcp__sequential-thinking__*",
+    "mcp__filesystem__*"
+  ],
+  "autoApprove": [
+    "Bash(task-master *)",
+    "Bash(git status)",
+    "Bash(git diff)",
+    "Bash(make *)",
+    "Bash(python3 scripts/*)",
+    "mcp__task-master-ai__get_tasks",
+    "mcp__task-master-ai__next_task",
+    "mcp__task-master-ai__get_task"
+  ],
+  "preferences": {
+    "codeStyle": "pythonic",
+    "testFramework": "pytest", 
+    "linting": ["flake8", "ruff"],
+    "fileStructure": "Follow best practices - avoid monster files that could and should have been split. Research current best practices for file organization, single responsibility principle, and maintainable code structure. Split large files into logical, cohesive modules.",
+    "maxFunctionComplexity": 10,
+    "architecture": "flat-services",
+    "designPrinciples": "Research and apply current software engineering best practices for modularity, separation of concerns, and maintainable code organization"
+  }
+}
