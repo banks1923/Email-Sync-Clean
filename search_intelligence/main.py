@@ -27,14 +27,14 @@ from utilities.vector_store import get_vector_store
 class SearchIntelligenceService:
     """Unified search intelligence service"""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str | None = None) -> None:
         """Initialize Search Intelligence Service
         
         Args:
-            db_path: Path to the SQLite database
+            db_path: Path to the SQLite database (uses default if None)
         """
         # Logger is now imported globally from loguru
-        self.db = SimpleDB(db_path)
+        self.db = SimpleDB(db_path) if db_path else SimpleDB()
 
         # Initialize dependent services with error handling
         # Fail-fast: Vector store is required for hybrid search
@@ -200,19 +200,39 @@ class SearchIntelligenceService:
             # Preprocess query
             processed_query = self._preprocess_query(query)
 
-            # Expand query if enabled
+            # Build OR query if expansion enabled
             if use_expansion:
                 expanded_terms = self._expand_query(processed_query)
                 if expanded_terms:
-                    processed_query = f"{processed_query} {' '.join(expanded_terms)}"
-                    logger.debug(f"Expanded query: {processed_query}")
-
-            # Perform search using direct database query
-            results = self.db.search_content(processed_query, limit=limit, filters=filters)
+                    # Create proper OR query for database
+                    all_terms = [processed_query] + expanded_terms
+                    or_conditions = " OR ".join([f"(title LIKE '%{term}%' OR body LIKE '%{term}%')" for term in all_terms])
+                    
+                    # Execute custom OR query
+                    query_sql = f"SELECT * FROM content_unified WHERE ({or_conditions}) ORDER BY created_at DESC LIMIT ?"
+                    params = [limit]
+                    
+                    # Add filters if provided
+                    if filters:
+                        # This is a simplified version - full filter support would need more work
+                        content_types = filters.get("content_types")
+                        if content_types:
+                            type_conditions = " OR ".join([f"source_type = '{ct}'" for ct in content_types])
+                            query_sql = f"SELECT * FROM content_unified WHERE ({or_conditions}) AND ({type_conditions}) ORDER BY created_at DESC LIMIT ?"
+                    
+                    results = self.db.fetch(query_sql, tuple(params))
+                    logger.debug(f"OR query executed: {len(all_terms)} terms, {len(results)} results")
+                else:
+                    results = self.db.search_content(processed_query, limit=limit, filters=filters)
+            else:
+                results = self.db.search_content(processed_query, limit=limit, filters=filters)
 
             # Enhance results with intelligence
             if results:
                 results = self._enhance_search_results(results, query)
+            else:
+                # Debug logging for no-result queries to aid diagnostics
+                logger.debug(f"No results found for query: '{query}' (processed: '{processed_query}', expanded: {expanded_terms if use_expansion and expanded_terms else 'none'})")
 
             return results
 
@@ -313,6 +333,7 @@ class SearchIntelligenceService:
             # Get document content
             doc = self.db.get_content(content_id=doc_id)
             if not doc:
+                logger.debug(f"Document similarity analysis: document '{doc_id}' not found")
                 return []
 
             # Get document embedding
@@ -373,11 +394,14 @@ class SearchIntelligenceService:
             # Get document content
             doc = self.db.get_content(content_id=doc_id)
             if not doc:
+                logger.debug(f"Entity extraction: document '{doc_id}' not found")
                 return []
 
-            # Extract entities
-            content = doc.get("content", "")
-            entities = self.entity_service.extract_entities(content)
+            # Extract entities using the correct method name
+            content = doc.get("body", "") or doc.get("content", "")
+            title = doc.get("title", "")
+            result = self.entity_service.extract_email_entities(doc_id, content)
+            entities = result.get("entities", [])
 
             # Cache results
             if entities:

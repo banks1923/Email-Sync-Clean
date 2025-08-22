@@ -13,9 +13,9 @@ from pydantic_settings import BaseSettings
 class DatabaseSettings(BaseSettings):
     """Database configuration."""
 
-    # Main database path
-    emails_db_path: str = Field(default="data/emails.db", env="EMAILS_DB_PATH")
-    content_db_path: str = Field(default="shared/content.db", env="CONTENT_DB_PATH")
+    # Main database path (moved to system_data)
+    emails_db_path: str = Field(default="data/system_data/emails.db", env="EMAILS_DB_PATH")
+    content_db_path: str = Field(default="data/system_data/content.db", env="CONTENT_DB_PATH")
 
     # Connection settings
     max_connections: int = Field(default=5, env="DB_MAX_CONNECTIONS")
@@ -132,6 +132,8 @@ class PathSettings(BaseSettings):
 
     # Data directories
     data_root: str = Field(default="data", env="DATA_ROOT")
+    system_data: str = Field(default="data/system_data", env="SYSTEM_DATA_PATH")
+    user_data: str = Field(default="data/user_data", env="USER_DATA_PATH")
     raw_documents: str = Field(default="data/raw", env="RAW_DOCUMENTS_PATH")
     processed_documents: str = Field(default="data/processed", env="PROCESSED_DOCUMENTS_PATH")
     quarantine: str = Field(default="data/quarantine", env="QUARANTINE_PATH")
@@ -145,6 +147,8 @@ class PathSettings(BaseSettings):
 
     @field_validator(
         "data_root",
+        "system_data",
+        "user_data",
         "raw_documents",
         "processed_documents",
         "quarantine",
@@ -172,6 +176,27 @@ class LoggingSettings(BaseSettings):
     retention: str = Field(default="10 days", env="LOG_RETENTION")
 
 
+class SystemSettings(BaseSettings):
+    """System-related files configuration."""
+
+    # Sequential thinking storage
+    sequential_thinking_dir: str = Field(default="data/system_data/sequential_thinking", env="SEQUENTIAL_THINKING_DIR")
+    
+    # System cache and temporary files
+    cache_dir: str = Field(default="data/system_data/cache", env="SYSTEM_CACHE_DIR")
+    temp_dir: str = Field(default="data/system_data/temp", env="SYSTEM_TEMP_DIR")
+    
+    # Lock files and process management
+    locks_dir: str = Field(default="data/system_data/locks", env="SYSTEM_LOCKS_DIR")
+    
+    @field_validator("sequential_thinking_dir", "cache_dir", "temp_dir", "locks_dir")
+    @classmethod
+    def ensure_system_directories_exist(cls, v):
+        """Create system directories if they don't exist."""
+        Path(v).mkdir(parents=True, exist_ok=True)
+        return v
+
+
 class Settings(BaseSettings):
     """Main application settings combining all subsystems."""
 
@@ -187,6 +212,7 @@ class Settings(BaseSettings):
     api: APISettings = APISettings()
     paths: PathSettings = PathSettings()
     logging: LoggingSettings = LoggingSettings()
+    system: SystemSettings = SystemSettings()
 
     class Config:
         env_file = [".env", "~/Secrets/.env"]  # Check local first, then secrets
@@ -195,7 +221,6 @@ class Settings(BaseSettings):
         extra = "ignore"  # Ignore extra environment variables
 
 
-# Global settings instance
 class SemanticSettings(BaseSettings):
     """Semantic enrichment pipeline configuration."""
     
@@ -219,5 +244,11 @@ class SemanticSettings(BaseSettings):
         env_prefix = "SEMANTIC_"
 
 
+# Global settings instance
 settings = Settings()
 semantic_settings = SemanticSettings()
+
+
+def get_db_path() -> str:
+    """Get the database path from settings or environment."""
+    return settings.database.emails_db_path

@@ -6,7 +6,7 @@ Clean implementation following CLAUDE.md principles: Simple > Complex
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 # Compile regex patterns once for performance
 COMPILED_PATTERNS = {
@@ -128,7 +128,7 @@ def parse_conversation_chain(email_body: str) -> List[QuotedMessage]:
 
     messages = []
     lines = email_body.split("\n")
-    current_message = {"content": [], "depth": 0}
+    current_message: Dict[str, Any] = {"content": [], "depth": 0}
     
     # Enhanced patterns for different email clients
     header_patterns = [

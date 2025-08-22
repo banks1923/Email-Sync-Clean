@@ -346,8 +346,8 @@ def upload_command(file_path):
         return False
 
 
-def main():
-    """Main CLI entry point"""
+def _setup_argument_parser() -> argparse.ArgumentParser:
+    """Set up and configure the main argument parser."""
     parser = argparse.ArgumentParser(
         description="""AI-Powered Database Search CLI
 
@@ -641,35 +641,36 @@ Examples:
 
     # Add quarantine commands
     add_quarantine_commands(subparsers)
-
-    args = parser.parse_args()
     
-    # Handle global warmup flag
-    if hasattr(args, 'warmup') and args.warmup:
-        print("🚀 Global warmup requested...")
-        warmup_command()
-        print()  # Add spacing before main command
+    return parser
 
+
+def _build_search_filters(args) -> dict | None:
+    """Build filters dictionary from command line arguments."""
+    filters = {}
+    if args.since:
+        filters["since"] = args.since
+    if args.until:
+        filters["until"] = args.until
+    if args.types:
+        filters["content_types"] = args.types
+    if args.tags:
+        filters["tags"] = args.tags
+        filters["tag_logic"] = args.tag_logic
+    
+    # Return filters only if any are specified
+    return filters if filters else None
+
+
+def _dispatch_command(args) -> None:
+    """Dispatch to appropriate command handler based on parsed arguments."""
     # Default to search if no command but arguments provided
     if not args.command and len(sys.argv) > 1:
         # Treat first argument as search query
         query = " ".join(sys.argv[1:])
         search_command(query)
     elif args.command == "search":
-        # Build filters dictionary
-        filters = {}
-        if args.since:
-            filters["since"] = args.since
-        if args.until:
-            filters["until"] = args.until
-        if args.types:
-            filters["content_types"] = args.types
-        if args.tags:
-            filters["tags"] = args.tags
-            filters["tag_logic"] = args.tag_logic
-
-        # Pass filters only if any are specified
-        filters_to_pass = filters if filters else None
+        filters = _build_search_filters(args)
         
         # Determine search mode based on flags
         search_mode = "hybrid"  # default
@@ -685,7 +686,7 @@ Examples:
             args.query,
             args.limit,
             verbose=args.verbose,
-            filters=filters_to_pass,
+            filters=filters,
             search_mode=search_mode,
         )
     elif args.command == "warmup":
@@ -844,6 +845,20 @@ Examples:
         handle_quarantine_command(args)
     else:
         parser.print_help()
+
+
+def main():
+    """Main CLI entry point - simplified orchestrator."""
+    parser = _setup_argument_parser()
+    args = parser.parse_args()
+    
+    # Handle global warmup flag
+    if hasattr(args, 'warmup') and args.warmup:
+        print("🚀 Global warmup requested...")
+        warmup_command()
+        print()  # Add spacing before main command
+    
+    _dispatch_command(args)
 
 
 if __name__ == "__main__":

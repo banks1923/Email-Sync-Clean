@@ -327,7 +327,7 @@ class GmailAPI:
 
         return list(message_ids)
 
-    def get_attachments(self, message_id: str, message_data: dict = None) -> dict:
+    def get_attachments(self, message_id: str, message_data: dict | None = None) -> dict:
         """
         Get attachment metadata for a message.
 

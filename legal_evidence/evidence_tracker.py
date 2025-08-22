@@ -7,6 +7,7 @@ Direct implementation following CLAUDE.md principles:
 """
 
 import re
+import sqlite3
 from datetime import datetime
 from typing import Any
 
@@ -31,7 +32,7 @@ class EvidenceTracker:
                 ALTER TABLE emails ADD COLUMN eid TEXT UNIQUE
             """)
             logger.info("Added eid column to emails table")
-        except:
+        except sqlite3.OperationalError:
             pass  # Column already exists
             
         try:
@@ -39,7 +40,7 @@ class EvidenceTracker:
                 ALTER TABLE emails ADD COLUMN thread_id TEXT
             """)
             logger.info("Added thread_id column to emails table")
-        except:
+        except sqlite3.OperationalError:
             pass  # Column already exists
             
         # Create index for faster thread lookups
@@ -47,7 +48,7 @@ class EvidenceTracker:
             self.db.execute("""
                 CREATE INDEX idx_thread_id ON emails(thread_id)
             """)
-        except:
+        except sqlite3.OperationalError:
             pass  # Index already exists
     
     def generate_eid(self, message_id: str, datetime_utc: str) -> str:

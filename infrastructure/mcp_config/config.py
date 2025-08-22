@@ -64,7 +64,7 @@ if PYDANTIC_AVAILABLE:
                     "args": ["/Users/jim/Projects/mcp-sequential-thinking/run_server.py"],
                     "env": {
                         "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
-                        "MCP_STORAGE_DIR": str(self.project_root / "data/sequential_thinking")
+                        "MCP_STORAGE_DIR": str(self.project_root / "data/system_data/sequential_thinking")
                     }
                 }
             }
@@ -102,7 +102,7 @@ if PYDANTIC_AVAILABLE:
                     "args": ["/Users/jim/Projects/mcp-sequential-thinking/run_server.py"],
                     "env": {
                         "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
-                        "MCP_STORAGE_DIR": str(self.project_root / "data/sequential_thinking")
+                        "MCP_STORAGE_DIR": str(self.project_root / "data/system_data/sequential_thinking")
                     }
                 }
             }

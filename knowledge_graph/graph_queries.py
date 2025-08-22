@@ -504,17 +504,11 @@ class GraphQueryService:
             (node1["node_id"], node2["node_id"], node2["node_id"], node1["node_id"]),
         )
 
-    def export_for_visualization(
-        self, node_ids: list[str] | None = None, format: str = "d3"
-    ) -> dict:
-        """Export graph subset for visualization.
-
-        Default format is D3.js compatible JSON.
-        """
-        # Get nodes to export
+    def _select_nodes_for_export(self, node_ids: list[str] | None = None) -> list[dict]:
+        """Select nodes for export based on provided IDs or PageRank."""
         if node_ids:
             placeholders = ",".join(["?" for _ in node_ids])
-            nodes = self.db.fetch(
+            return self.db.fetch(
                 f"SELECT * FROM kg_nodes WHERE node_id IN ({placeholders})", node_ids
             )
         else:
@@ -528,13 +522,10 @@ class GraphQueryService:
                 if node:
                     node["pagerank"] = score
                     nodes.append(node)
-
-        if not nodes:
-            return {"nodes": [], "links": []}
-
-        node_ids_set = {n["node_id"] for n in nodes}
-
-        # Get edges between these nodes
+            return nodes
+    
+    def _filter_relevant_edges(self, node_ids_set: set[str]) -> list[dict]:
+        """Filter edges to only include those between selected nodes."""
         edges = []
         for node_id in node_ids_set:
             node_edges = self.db.fetch(
@@ -552,8 +543,27 @@ class GraphQueryService:
                     and edge["target_node_id"] in node_ids_set
                 ):
                     edges.append(edge)
+        return edges
 
-        # Format for D3.js
+    def export_for_visualization(
+        self, node_ids: list[str] | None = None, format: str = "d3"
+    ) -> dict:
+        """Export graph subset for visualization - simplified orchestrator.
+
+        Default format is D3.js compatible JSON.
+        """
+        # Select nodes for export
+        nodes = self._select_nodes_for_export(node_ids)
+        
+        if not nodes:
+            return {"nodes": [], "links": []}
+
+        node_ids_set = {n["node_id"] for n in nodes}
+        
+        # Get relevant edges
+        edges = self._filter_relevant_edges(node_ids_set)
+
+        # Format according to requested format
         if format == "d3":
             return self._format_for_d3(nodes, edges)
         else:

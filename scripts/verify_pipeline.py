@@ -115,8 +115,157 @@ class PipelineVerifier:
             if details and not passed:
                 logger.info(f"   Details: {details}")
     
+    def _validate_database_schema(self) -> list[str]:
+        """Validate database schema version and migrations."""
+        issues = []
+        try:
+            result = self.db.fetch_one("SELECT MAX(version) as version FROM schema_version")
+            schema_version = result['version'] if result and result['version'] else 0
+            
+            # Expected schema version after all current migrations
+            expected_version = 3  # V001 + V002 + V003
+            
+            if schema_version < 1:
+                issues.append("Schema migrations not applied")
+            elif schema_version < expected_version:
+                issues.append(f"Schema incomplete: version {schema_version}, expected {expected_version}")
+                
+        except sqlite3.OperationalError:
+            issues.append("No schema_version table")
+        
+        return issues
+    
+    def _get_schema_details(self) -> dict:
+        """Get schema details for reporting."""
+        details = {}
+        try:
+            result = self.db.fetch_one("SELECT MAX(version) as version FROM schema_version")
+            schema_version = result['version'] if result and result['version'] else 0
+            details["schema_version"] = schema_version
+            details["expected_schema_version"] = 3
+            
+            # Get applied migrations
+            migrations = self.db.fetch("SELECT version, description FROM schema_version ORDER BY version")
+            details["applied_migrations"] = {m['version']: m['description'] for m in migrations}
+        except sqlite3.OperationalError:
+            details["schema_version"] = 0
+            details["applied_migrations"] = {}
+        
+        return details
+    
+    def _validate_required_tables(self) -> list[str]:
+        """Validate required tables and columns exist."""
+        issues = []
+        
+        # Check required tables
+        required_tables = ['documents', 'embeddings', 'schema_version']
+        existing_tables = [row['name'] for row in self.db.fetch(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )]
+        
+        for table in required_tables:
+            if table not in existing_tables:
+                issues.append(f"Missing table: {table}")
+        
+        # Check required columns in documents table
+        required_columns = {'sha256', 'char_count', 'word_count', 'status', 'processed_at', 'chunk_index'}
+        try:
+            columns = self.db.fetch("PRAGMA table_info(documents)")
+            existing_columns = {col['name'] for col in columns}
+            missing_cols = required_columns - existing_columns
+            if missing_cols:
+                issues.append(f"Missing documents columns: {missing_cols}")
+        except sqlite3.OperationalError:
+            issues.append("Cannot check documents table schema")
+        
+        return issues
+    
+    def _validate_database_constraints(self) -> list[str]:
+        """Validate critical database constraints.""" 
+        issues = []
+        
+        try:
+            content_table = self._content_table()
+            
+            # Check for documents table unique constraint
+            indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='documents'")
+            index_names = [idx['name'] for idx in indexes]
+            
+            # Check for the critical unique constraint from V003
+            has_unique_constraint = any('sha256_chunk_unique' in name for name in index_names)
+            
+            if not has_unique_constraint:
+                issues.append("Missing unique constraint on documents(sha256, chunk_index)")
+                
+        except sqlite3.OperationalError as e:
+            issues.append(f"Cannot check database constraints: {str(e)}")
+        
+        return issues
+    
+    def _validate_vector_connectivity(self) -> list[str]:
+        """Validate Qdrant vector database connectivity."""
+        issues = []
+        
+        try:
+            import requests
+            resp = requests.get("http://localhost:6333/readyz", timeout=2)
+            if resp.status_code != 200:
+                issues.append(f"Qdrant unhealthy: HTTP {resp.status_code}")
+        except Exception as e:
+            issues.append(f"Qdrant not accessible: {str(e)}")
+        
+        return issues
+    
+    def _get_table_details(self) -> dict:
+        """Get table and constraint details for reporting."""
+        details = {}
+        
+        try:
+            content_table = self._content_table()
+            details["content_table"] = content_table
+            
+            # Get documents table columns
+            try:
+                columns = self.db.fetch("PRAGMA table_info(documents)")
+                details["documents_columns"] = [col['name'] for col in columns]
+            except sqlite3.OperationalError:
+                details["documents_columns"] = []
+            
+            # Get index information
+            try:
+                indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='documents'")
+                details["documents_indexes"] = [idx['name'] for idx in indexes]
+                
+                content_indexes = self.db.fetch(f"SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='{content_table}'")
+                details["content_indexes"] = [idx['name'] for idx in content_indexes]
+                
+                embeddings_indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='embeddings'")
+                details["embeddings_indexes"] = [idx['name'] for idx in embeddings_indexes]
+                
+                # Check constraint status
+                details["has_unique_constraint"] = any('sha256_chunk_unique' in name for name in details["documents_indexes"])
+                
+            except sqlite3.OperationalError:
+                details["documents_indexes"] = []
+                details["content_indexes"] = []
+                details["embeddings_indexes"] = []
+                details["has_unique_constraint"] = False
+            
+            # Qdrant status
+            try:
+                import requests
+                resp = requests.get("http://localhost:6333/readyz", timeout=2)
+                details["qdrant_status"] = "connected" if resp.status_code == 200 else f"unhealthy_{resp.status_code}"
+            except Exception:
+                details["qdrant_status"] = "not_accessible"
+                
+        except Exception as e:
+            details["error"] = str(e)
+        
+        return details
+
     def preflight_test(self) -> bool:
-        """Test schema and environment readiness."""
+        """Test schema and environment readiness - simplified orchestrator."""
         details = {}
         issues = []
         
@@ -125,92 +274,17 @@ class PipelineVerifier:
             if not Path(self.db_path).exists():
                 issues.append(f"Database not found: {self.db_path}")
             
-            # Check schema version
-            try:
-                result = self.db.fetch_one("SELECT MAX(version) as version FROM schema_version")
-                schema_version = result['version'] if result and result['version'] else 0
-                details["schema_version"] = schema_version
-                
-                # Expected schema version after all current migrations
-                expected_version = 3  # V001 + V002 + V003
-                details["expected_schema_version"] = expected_version
-                
-                if schema_version < 1:
-                    issues.append("Schema migrations not applied")
-                elif schema_version < expected_version:
-                    issues.append(f"Schema incomplete: version {schema_version}, expected {expected_version}")
-                    
-                # Validate specific migration entries
-                migrations = self.db.fetch("SELECT version, description FROM schema_version ORDER BY version")
-                details["applied_migrations"] = {m['version']: m['description'] for m in migrations}
-                
-            except sqlite3.OperationalError:
-                issues.append("No schema_version table")
+            # Run all validation checks
+            issues.extend(self._validate_database_schema())
+            issues.extend(self._validate_required_tables())
+            issues.extend(self._validate_database_constraints())
+            issues.extend(self._validate_vector_connectivity())
             
-            # Check required tables
-            content_table = self._content_table()
-            details["content_table"] = content_table
-            
-            required_tables = ['documents', 'embeddings', 'schema_version']
-            existing_tables = [row['name'] for row in self.db.fetch(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            )]
-            
-            for table in required_tables:
-                if table not in existing_tables:
-                    issues.append(f"Missing table: {table}")
-            
-            # Check required columns in documents table
-            required_columns = {'sha256', 'char_count', 'word_count', 'status', 'processed_at', 'chunk_index'}
-            try:
-                columns = self.db.fetch("PRAGMA table_info(documents)")
-                existing_columns = {col['name'] for col in columns}
-                missing_cols = required_columns - existing_columns
-                if missing_cols:
-                    issues.append(f"Missing documents columns: {missing_cols}")
-                details["documents_columns"] = list(existing_columns)
-            except sqlite3.OperationalError:
-                issues.append("Cannot check documents table schema")
-            
-            # Validate critical database constraints (V002 & V003 requirements)
-            try:
-                # Check for documents table unique constraint
-                indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='documents'")
-                index_names = [idx['name'] for idx in indexes]
-                details["documents_indexes"] = index_names
-                
-                # Check for the critical unique constraint from V003
-                has_unique_constraint = any('sha256_chunk_unique' in name for name in index_names)
-                details["has_unique_constraint"] = has_unique_constraint
-                
-                if not has_unique_constraint:
-                    issues.append("Missing unique constraint on documents(sha256, chunk_index)")
-                
-                # Check content_unified table constraints
-                content_indexes = self.db.fetch(f"SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='{content_table}'")
-                content_index_names = [idx['name'] for idx in content_indexes]
-                details["content_indexes"] = content_index_names
-                
-                # Check embeddings table constraints
-                embeddings_indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='embeddings'")  
-                embeddings_index_names = [idx['name'] for idx in embeddings_indexes]
-                details["embeddings_indexes"] = embeddings_index_names
-                
-            except sqlite3.OperationalError as e:
-                issues.append(f"Cannot check database constraints: {str(e)}")
-            
-            # Check Qdrant connection
-            try:
-                import requests
-                resp = requests.get("http://localhost:6333/readyz", timeout=2)
-                if resp.status_code == 200:
-                    details["qdrant_status"] = "connected"
-                else:
-                    issues.append(f"Qdrant unhealthy: HTTP {resp.status_code}")
-            except Exception as e:
-                issues.append(f"Qdrant not accessible: {str(e)}")
-            
+            # Collect details for reporting
+            details.update(self._get_schema_details())
+            details.update(self._get_table_details())
             details["issues"] = issues
+            
             passed = len(issues) == 0
             
         except Exception as e:

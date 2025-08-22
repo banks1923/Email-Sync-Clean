@@ -12,7 +12,7 @@ Combines functionality from:
 
 import argparse
 import sys
-from typing import Any
+from typing import Any, Generator, List
 
 from loguru import logger
 
@@ -26,7 +26,7 @@ BATCH_SIZE = 500
 EMBED_BATCH_SIZE = 16
 ID_PAGE_SIZE = 1000
 
-def _chunked(seq, size):
+def _chunked(seq: List[Any], size: int) -> Generator[List[Any], None, None]:
     for i in range(0, len(seq), size):
         yield seq[i:i + size]
 
@@ -34,7 +34,7 @@ def _chunked(seq, size):
 class VectorMaintenance:
     """Unified vector store maintenance operations."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         # Direct SimpleDB usage (VectorMaintenanceAdapter removed 2025-08-20)
         self.db = SimpleDB()
         self.embedding_service = get_embedding_service()
@@ -42,7 +42,7 @@ class VectorMaintenance:
         self.gmail_service = GmailService()
         
     # --- Direct SimpleDB methods (replaced adapter) --------------------------
-    def get_all_content_ids(self, content_type: str = None) -> list[str]:
+    def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
         """Get all content IDs, optionally filtered by type."""
         try:
             if content_type:
@@ -87,7 +87,7 @@ class VectorMaintenance:
             return []
 
     # --- Compatibility helpers -------------------------------------------------
-    def _db_get_all_content_ids(self, content_type: str):
+    def _db_get_all_content_ids(self, content_type: str) -> list[str]:
         """Get content IDs with fallback compatibility."""
         # Use our new direct method first
         try:
@@ -96,7 +96,7 @@ class VectorMaintenance:
             logger.error(f"Direct content ID lookup failed: {e}")
             return []
     
-    def _db_get_emails_without_vectors(self):
+    def _db_get_emails_without_vectors(self) -> list[dict[str, Any]]:
         """Get emails without vectors with fallback compatibility."""
         # Use our new direct method first
         try:
@@ -105,7 +105,7 @@ class VectorMaintenance:
             logger.error(f"DB compat: get_emails_without_vectors() not found: {e}")
             return []
 
-    def _db_get_content_by_id(self, content_id: str):
+    def _db_get_content_by_id(self, content_id: str) -> dict[str, Any] | None:
         candidates = ("get_content_by_id", "get_email_by_id", "get_document_by_id")
         for name in candidates:
             fn = getattr(self.db, name, None)
@@ -117,7 +117,7 @@ class VectorMaintenance:
         logger.warning(f"DB compat: no getter found for content_id={content_id}")
         return None
 
-    def _db_mark_emails_vectorized(self, ids):
+    def _db_mark_emails_vectorized(self, ids: list[str]) -> None:
         # Prefer bulk if available
         bulk = getattr(self.db, "mark_emails_vectorized", None)
         if bulk:
@@ -136,7 +136,7 @@ class VectorMaintenance:
                 except Exception as e:
                     logger.error(f"DB compat: failed to mark vectorized for {_id}: {e}")
 
-    def _vs_iter_ids(self, collection: str):
+    def _vs_iter_ids(self, collection: str) -> Generator[str, None, None]:
         # Prefer paginated iteration if supported
         it = getattr(self.vector_store, "iter_ids", None)
         if it:

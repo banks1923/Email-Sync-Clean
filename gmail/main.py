@@ -9,7 +9,6 @@ from summarization import get_document_summarizer
 # Import advanced email parsing modules
 try:
     from shared.email_cleaner import EmailCleaner
-    from shared.email_parser import QuotedMessage, parse_conversation_chain
     from shared.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")

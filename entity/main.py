@@ -5,7 +5,7 @@ Follows service independence patterns from existing codebase.
 
 import os
 import sys
-from typing import Any
+from typing import Any, Optional
 
 from loguru import logger
 
@@ -14,6 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from .config import EntityConfig
 from .database import EntityDatabase
+from .extractors.base_extractor import BaseExtractor
 from .extractors.extractor_factory import ExtractorFactory
 from .extractors.relationship_extractor import RelationshipExtractor
 from .processors.entity_normalizer import EntityNormalizer
@@ -25,6 +26,11 @@ class EntityService:
     Provides entity extraction capabilities using spaCy NLP models.
     Follows service independence with database-only communication.
     """
+    
+    # Type annotations for class attributes
+    extractor: Optional[BaseExtractor]
+    relationship_extractor: Optional[RelationshipExtractor]
+    normalizer: Optional[EntityNormalizer]
 
     def __init__(self, db_path: str = "data/emails.db") -> None:
         """
@@ -77,7 +83,7 @@ class EntityService:
         return {"success": True}
 
     def extract_email_entities(
-        self, message_id: str, content: str, email_data: dict = None
+        self, message_id: str, content: str, email_data: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Extract named entities from email content with relationships and
         deduplication.
@@ -98,6 +104,8 @@ class EntityService:
 
         try:
             # Extract entities using the configured extractor
+            if not self.extractor:
+                return {"success": False, "error": "Extractor not available"}
             extraction_result = self.extractor.extract_entities(content, message_id)
 
             if not extraction_result["success"]:

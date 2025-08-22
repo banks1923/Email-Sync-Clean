@@ -26,7 +26,7 @@ from .retry_helper import retry_database
 
 class DBMetrics:
     """Simple metrics tracking for database operations."""
-    def __init__(self):
+    def __init__(self) -> None:
         self.slow_sql_count = 0
         self.busy_events = 0
         self.checkpoint_ms = 0.0  # Changed to float for time calculations
@@ -44,7 +44,10 @@ class DBMetrics:
 class SimpleDB:
     """The entire database layer in under 100 lines. No BS."""
 
-    def __init__(self, db_path: str = "data/emails.db") -> None:
+    def __init__(self, db_path: str = None) -> None:
+        # Use environment variable if available, otherwise use new default path
+        if db_path is None:
+            db_path = os.getenv("APP_DB_PATH", "data/system_data/emails.db")
         self.db_path = db_path
         self._ensure_data_directories()
         self.batch_stats = {
@@ -270,9 +273,9 @@ class SimpleDB:
         message_content: str,
         thread_id: str,
         email_id: str,
-        sender: str = None,
-        date: str = None,
-        subject: str = None,
+        sender: str | None = None,
+        date: str | None = None,
+        subject: str | None = None,
         depth: int = 0,
         message_type: str = "extracted"
     ) -> str:
@@ -334,8 +337,8 @@ class SimpleDB:
         content_type: str,
         title: str,
         content: str,
-        metadata: dict = None,
-        parent_content_id: str = None
+        metadata: dict | None = None,
+        parent_content_id: str | None = None
     ) -> str:
         """
         Upsert content using business key (source_type, external_id).
@@ -385,7 +388,7 @@ class SimpleDB:
             logger.error(f"Failed to upsert content: {source_type}:{external_id}")
             return str(source_id)
 
-    def update_content(self, content_id: str, **kwargs) -> bool:
+    def update_content(self, content_id: str, **kwargs: Any) -> bool:
         """Update content fields. Returns True if successful."""
         if not kwargs:
             return False
@@ -1120,9 +1123,9 @@ class SimpleDB:
         self,
         document_id: str,
         summary_type: str,
-        summary_text: str = None,
-        tf_idf_keywords: dict = None,
-        textrank_sentences: list = None,
+        summary_text: str | None = None,
+        tf_idf_keywords: dict | None = None,
+        textrank_sentences: list | None = None,
     ) -> str:
         """Add a document summary."""
         summary_id = str(uuid.uuid4())
@@ -1190,8 +1193,8 @@ class SimpleDB:
         return intelligence_id
 
     def get_document_intelligence(
-        self, document_id: str, intelligence_type: str = None
-    ) -> list[dict]:
+        self, document_id: str, intelligence_type: str | None = None
+    ) -> list[dict[Any, Any]]:
         """Get intelligence data for a document."""
         if intelligence_type:
             query = """
@@ -1244,7 +1247,7 @@ class SimpleDB:
         """Get all summaries for a document (alias for get_document_summaries)."""
         return self.get_document_summaries(document_id)
 
-    def get_intelligence_for_document(self, document_id: str, intelligence_type: str = None) -> list[dict]:
+    def get_intelligence_for_document(self, document_id: str, intelligence_type: str | None = None) -> list[dict]:
         """Get intelligence data for a document (alias for get_document_intelligence)."""
         return self.get_document_intelligence(document_id, intelligence_type)
 
@@ -1270,8 +1273,8 @@ class SimpleDB:
         target_id: str,
         relationship_type: str,
         strength: float = 0.0,
-        cached_data: dict = None,
-        ttl_hours: int = None,
+        cached_data: dict | None = None,
+        ttl_hours: int | None = None,
     ) -> str:
         """Add or update a cached relationship."""
         cache_id = str(uuid.uuid4())
@@ -1294,7 +1297,7 @@ class SimpleDB:
         return cache_id
 
     def get_relationship_cache(
-        self, source_id: str = None, target_id: str = None, relationship_type: str = None
+        self, source_id: str | None = None, target_id: str | None = None, relationship_type: str | None = None
     ) -> list[dict]:
         """Get cached relationships with flexible filtering."""
         conditions = []
@@ -1399,7 +1402,7 @@ class SimpleDB:
         doc2_id: str,
         similarity_score: float,
         similarity_method: str = "cosine",
-        metadata: dict = None,
+        metadata: dict | None = None,
         ttl_hours: int = 168,  # 1 week default
     ) -> str:
         """
@@ -1597,7 +1600,7 @@ class SimpleDB:
         )
         return cursor.rowcount
 
-    def get_cache_statistics(self) -> dict[str, any]:
+    def get_cache_statistics(self) -> dict[str, Any]:
         """
         Get database cache statistics.
 
@@ -1711,7 +1714,7 @@ class SimpleDB:
         try:
             # Check WAL file size if it exists
             wal_path = Path(f"{self.db_path}-wal")
-            wal_size_mb = 0
+            wal_size_mb: float = 0
             should_checkpoint = True
             
             if wal_path.exists():
@@ -1803,7 +1806,7 @@ class SimpleDB:
 
     # Vector processing methods
     
-    def get_all_content_ids(self, content_type: str = None) -> list[str]:
+    def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
         """Get all content IDs, optionally filtered by type. Streams in pages of 1000."""
         query = "SELECT id FROM content_unified"
         params = ()

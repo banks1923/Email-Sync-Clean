@@ -69,9 +69,9 @@ def search_smart(
 
         # Show query expansion if used
         if use_expansion:
-            expanded_query = service.expand_query(query)
-            if expanded_query != query:
-                output += f"📝 Expanded Query: {expanded_query}\n\n"
+            expanded_terms = service._expand_query(query)
+            if expanded_terms:
+                output += f"📝 Expanded Terms: {', '.join(expanded_terms)}\n\n"
 
         # Format results
         for i, result in enumerate(results, 1):
@@ -159,7 +159,7 @@ def search_entities(
         if document_id:
             # Extract from existing document
             entities = service.extract_and_cache_entities(
-                document_id=document_id, cache_results=cache_results
+                doc_id=document_id, force_refresh=not cache_results
             )
             source = f"document '{document_id}'"
         elif text:
