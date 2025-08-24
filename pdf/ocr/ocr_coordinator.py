@@ -16,7 +16,7 @@ from .validator import PDFValidator
 class OCRCoordinator:
     """Coordinates the complete OCR pipeline."""
 
-    def __init__(self, dpi: int = 400) -> None:
+    def __init__(self, dpi: int = 300) -> None:
         """Initialize OCR coordinator with all components."""
         self.loader = PDFLoader()
         self.validator = PDFValidator()

@@ -27,6 +27,7 @@ except ImportError:
 # Import shared database
 try:
     from shared.simple_db import SimpleDB
+from config.settings import get_db_path
 
     DB_AVAILABLE = True
 except ImportError:
@@ -39,7 +40,7 @@ except ImportError:
 class DocumentPipeline:
     """Main document processing pipeline router."""
 
-    def __init__(self, base_path: str = "data", db_path: str = "emails.db"):
+    def __init__(self, base_path: str = "data", db_path: str = None):
         """
         Initialize document pipeline.
 
@@ -47,6 +48,10 @@ class DocumentPipeline:
             base_path: Base path for document folders
             db_path: Path to database
         """
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
+            
         self.lifecycle = DocumentLifecycleManager(base_path)
         self.naming = NamingConvention()
         self.detector = FormatDetector()

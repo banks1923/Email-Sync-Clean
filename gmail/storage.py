@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loguru import logger
 
 from gmail.validators import DateValidator, EmailValidator, InputSanitizer
+from config.settings import get_db_path
 
 # Logger is now imported globally from loguru
 
@@ -16,12 +17,15 @@ from gmail.validators import DateValidator, EmailValidator, InputSanitizer
 class EmailStorage:
     """SQLite storage backend for Gmail emails with deduplication and sync state tracking."""
 
-    def __init__(self, db_path="emails.db"):
+    def __init__(self, db_path=None):
         """Initialize email storage with database path.
 
         Args:
             db_path: Path to SQLite database file.
         """
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
         self.db_path = db_path
         self.init_db()
 

@@ -107,25 +107,16 @@ class SimpleDB:
             logger.info(f"SQLite config: mode={jm}, sync={sync}, cache={abs(cache)}KB, mmap={mmap}B")
 
     def _ensure_data_directories(self) -> None:
-        """Ensure /data/ directory structure exists for document processing pipeline."""
-        # Get project root (parent of shared directory)
+        """Ensure basic /data/ directory structure exists."""
+        # Get project root (parent of shared directory)  
         project_root = Path(__file__).parent.parent
         data_dir = project_root / "data"
 
-        # Define required subdirectories
-        subdirs = ["raw", "staged", "processed", "quarantine", "export"]
-
-        # Create directories if they don't exist
-        for subdir in subdirs:
-            dir_path = data_dir / subdir
-            try:
-                dir_path.mkdir(parents=True, exist_ok=True)
-                # Ensure .gitkeep exists
-                gitkeep = dir_path / ".gitkeep"
-                if not gitkeep.exists():
-                    gitkeep.touch()
-            except Exception as e:
-                logger.warning(f"Could not create data directory {dir_path}: {e}")
+        # Only create the main data directory - specific subdirs created as needed
+        try:
+            data_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Could not create data directory {data_dir}: {e}")
 
         # Log successful initialization
         if data_dir.exists():
@@ -1647,10 +1638,11 @@ class SimpleDB:
         return stats
 
     def validate_pipeline_directories(self) -> dict[str, bool]:
-        """Validate that all pipeline directories exist and are writable."""
+        """Validate basic data directories exist and are writable."""
         results = {}
         data_dir = Path(self.db_path).parent / "data"
-        pipeline_dirs = ["raw", "staged", "processed", "quarantine", "export"]
+        # Only validate system directories - user_data is case-specific
+        pipeline_dirs = ["system_data"]
 
         for dir_name in pipeline_dirs:
             dir_path = data_dir / dir_name
@@ -1678,10 +1670,11 @@ class SimpleDB:
         return results
 
     def get_pipeline_stats(self) -> dict[str, int]:
-        """Get file counts for each pipeline directory."""
+        """Get file counts for main data directories."""
         stats = {}
-        data_dir = Path(self.db_path).parent / "data"
-        pipeline_dirs = ["raw", "staged", "processed", "quarantine", "export"]
+        data_dir = Path(self.db_path).parent / "data" 
+        # Only stats for system directories - user_data is case-specific  
+        pipeline_dirs = ["system_data"]
 
         for dir_name in pipeline_dirs:
             dir_path = data_dir / dir_name

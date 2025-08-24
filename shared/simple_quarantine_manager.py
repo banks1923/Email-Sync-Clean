@@ -17,7 +17,7 @@ from loguru import logger
 class SimpleQuarantineManager:
     """Simple quarantine management. Copy files, log errors, enable recovery."""
 
-    def __init__(self, quarantine_dir: str = "data/quarantine"):
+    def __init__(self, quarantine_dir: str = "data/system_data/quarantine"):
         self.quarantine_dir = Path(quarantine_dir)
         self.quarantine_dir.mkdir(parents=True, exist_ok=True)
 

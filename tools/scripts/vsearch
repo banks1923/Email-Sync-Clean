@@ -346,6 +346,72 @@ def upload_command(file_path):
         return False
 
 
+def ingest_command(args):
+    """Unified ingestion command for emails and/or documents."""
+    from shared.unified_ingestion import get_ingestion_service
+    
+    # Determine what to process
+    process_emails = args.emails or args.all or (not args.emails and not args.docs and not args.all)
+    process_docs = args.docs or args.all or (not args.emails and not args.docs and not args.all)
+    
+    print("🔄 Starting unified ingestion...")
+    
+    try:
+        ingestion_service = get_ingestion_service()
+        
+        if process_emails and process_docs:
+            # Process both
+            result = ingestion_service.ingest_all(
+                document_directory=args.dir,
+                email_since=args.since
+            )
+            
+            # Display results
+            email_results = result.get("emails", {})
+            doc_results = result.get("documents", {})
+            
+            print(f"\n📧 Email Results:")
+            print(f"  Processed: {email_results.get('processed', 0)}")
+            if email_results.get('errors', 0) > 0:
+                print(f"  Errors: {email_results.get('errors', 0)}")
+            
+            print(f"\n📄 Document Results:")
+            print(f"  Processed: {doc_results.get('processed', 0)}")
+            if doc_results.get('errors', 0) > 0:
+                print(f"  Errors: {doc_results.get('errors', 0)}")
+            
+            print(f"\n✅ Total Processed: {result.get('totals', {}).get('processed', 0)}")
+            
+        elif process_emails:
+            # Process emails only
+            result = ingestion_service.ingest_emails(since=args.since)
+            
+            print(f"\n📧 Email Results:")
+            print(f"  Processed: {result.get('processed', 0)}")
+            if result.get('errors', 0) > 0:
+                print(f"  Errors: {result.get('errors', 0)}")
+            
+        elif process_docs:
+            # Process documents only
+            result = ingestion_service.ingest_documents(directory=args.dir)
+            
+            print(f"\n📄 Document Results:")
+            print(f"  Processed: {result.get('processed', 0)}")
+            if result.get('errors', 0) > 0:
+                print(f"  Errors: {result.get('errors', 0)}")
+        
+        if result.get("success", False):
+            print(f"\n✅ Ingestion completed successfully")
+            return True
+        else:
+            print(f"\n❌ Ingestion failed: {result.get('error', 'Unknown error')}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Ingestion error: {e}")
+        return False
+
+
 def _setup_argument_parser() -> argparse.ArgumentParser:
     """Set up and configure the main argument parser."""
     parser = argparse.ArgumentParser(
@@ -451,6 +517,16 @@ Examples:
     # Upload command
     upload_parser = subparsers.add_parser("upload", help="Upload and process a document")
     upload_parser.add_argument("file", help="Path to file to upload")
+
+    # Ingest command
+    ingest_parser = subparsers.add_parser("ingest", help="Ingest emails and/or documents through unified pipeline")
+    ingest_group = ingest_parser.add_mutually_exclusive_group()
+    ingest_group.add_argument("--emails", action="store_true", help="Process emails only")
+    ingest_group.add_argument("--docs", action="store_true", help="Process documents only")
+    ingest_group.add_argument("--all", action="store_true", help="Process both emails and documents (default)")
+    ingest_parser.add_argument("--dir", default="data/Stoneman_dispute/user_data", 
+                              help="Directory for document processing (default: data/Stoneman_dispute/user_data)")
+    ingest_parser.add_argument("--since", help="Date filter for emails (e.g., 'last week', '2024-01-01')")
 
     # Legal Intelligence commands
     legal_parser = subparsers.add_parser("legal", help="Legal Intelligence analysis tools")
@@ -697,6 +773,8 @@ def _dispatch_command(args) -> None:
         health_command(verbose=args.verbose)
     elif args.command == "upload":
         upload_command(args.file)
+    elif args.command == "ingest":
+        ingest_command(args)
     elif args.command == "legal":
         # Import legal handlers
         from tools.scripts.cli.legal_handler import (

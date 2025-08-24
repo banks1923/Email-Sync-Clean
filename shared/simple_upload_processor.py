@@ -20,7 +20,7 @@ from .simple_db import SimpleDB
 class SimpleUploadProcessor:
     """Direct file upload processing. No pipeline directories, no state management."""
 
-    def __init__(self, quarantine_dir: str = "data/quarantine"):
+    def __init__(self, quarantine_dir: str = "data/system_data/quarantine"):
         self.quarantine_dir = Path(quarantine_dir)
         self.quarantine_dir.mkdir(parents=True, exist_ok=True)
         self.db = SimpleDB()
@@ -43,10 +43,38 @@ class SimpleUploadProcessor:
             # Extract content based on file type
             content = self._extract_content(file_path)
             
+            # Validate extracted content
+            if not content or len(content.strip()) < 20:
+                # For PDFs, if extraction failed, try using the PDF service directly
+                if file_path.suffix.lower() == '.pdf':
+                    logger.warning(f"Empty/short content for PDF {file_path.name}, attempting direct PDF service processing")
+                    try:
+                        from pdf.main import PDFService
+                        pdf_service = PDFService()
+                        # Use the PDF service's upload method which handles chunking properly
+                        result = pdf_service.upload_single_pdf(str(file_path))
+                        if result.get('success'):
+                            # PDF service handles its own database storage
+                            logger.info(f"PDF processed via PDFService: {file_path.name}")
+                            return {
+                                "success": True,
+                                "content_id": result.get('content_id', 'pdf_processed'),
+                                "file_hash": self._get_file_hash(file_path),
+                                "message": f"PDF processed via PDFService: {file_path.name}",
+                                "chunks_processed": result.get('chunks_processed', 0)
+                            }
+                    except Exception as pdf_service_error:
+                        logger.error(f"PDF service fallback failed: {pdf_service_error}")
+                
+                # If still no content or not a PDF, log warning but continue
+                if not content:
+                    content = ""  # Ensure it's at least an empty string
+                    logger.warning(f"No content extracted from {file_path.name}, storing with empty body")
+            
             # Generate file hash for deduplication
             file_hash = self._get_file_hash(file_path)
             
-            # Store directly in database
+            # Store directly in database (even if content is empty - for tracking)
             content_id = self.db.add_content(
                 content_type=source,
                 title=file_path.name,
@@ -56,17 +84,20 @@ class SimpleUploadProcessor:
                     "file_hash": file_hash,
                     "file_size": file_path.stat().st_size,
                     "source": source,
-                    "processed_at": datetime.now().isoformat()
+                    "processed_at": datetime.now().isoformat(),
+                    "content_length": len(content),
+                    "extraction_status": "success" if content else "empty"
                 }
             )
 
-            logger.info(f"Processed {file_path.name} -> content_id: {content_id}")
+            logger.info(f"Processed {file_path.name} -> content_id: {content_id} ({len(content)} chars)")
             
             return {
                 "success": True,
                 "content_id": content_id,
                 "file_hash": file_hash,
-                "message": f"File processed successfully: {file_path.name}"
+                "content_length": len(content),
+                "message": f"File processed: {file_path.name} ({len(content)} chars extracted)"
             }
 
         except Exception as e:
@@ -121,6 +152,50 @@ class SimpleUploadProcessor:
         
         return results
 
+    def process_directory_recursive(self, dir_path: Path, extensions: list[str] = None) -> Dict[str, Any]:
+        """Process all supported files in a directory recursively."""
+        if not dir_path.exists() or not dir_path.is_dir():
+            return {"success": False, "error": f"Directory not found: {dir_path}"}
+
+        if extensions is None:
+            extensions = ['.pdf', '.txt', '.md', '.docx']
+        
+        # Collect all files recursively
+        files = []
+        for ext in extensions:
+            files.extend(dir_path.rglob(f"*{ext}"))
+
+        results = {
+            "total_files": len(files),
+            "success_count": 0,
+            "failed_count": 0,
+            "processed_files": [],
+            "failed_files": []
+        }
+
+        for file_path in files:
+            result = self.process_file(file_path, source="document")
+            
+            if result["success"]:
+                results["success_count"] += 1
+                results["processed_files"].append({
+                    "file": file_path.name,
+                    "path": str(file_path),
+                    "content_id": result["content_id"]
+                })
+            else:
+                results["failed_count"] += 1
+                results["failed_files"].append({
+                    "file": file_path.name,
+                    "path": str(file_path),
+                    "error": result["error"]
+                })
+
+        logger.info(f"Recursive directory processing complete: {results['success_count']}/{results['total_files']} successful")
+        results["success"] = results["failed_count"] == 0
+        
+        return results
+
     def _extract_content(self, file_path: Path) -> str:
         """Extract text content from file based on extension."""
         suffix = file_path.suffix.lower()
@@ -128,12 +203,55 @@ class SimpleUploadProcessor:
         if suffix == '.txt' or suffix == '.md':
             return file_path.read_text(encoding='utf-8')
         elif suffix == '.pdf':
-            # Use existing PDF service for extraction
-            from pdf.pdf_processor import PDFProcessor
-            processor = PDFProcessor()
-            result = processor.extract_text_from_pdf(str(file_path))
-            # Return concatenated text from all chunks
-            return '\n'.join(result.get('chunks', []))
+            # Use OCR-enabled PDF service for extraction
+            try:
+                from pdf.wiring import build_pdf_service
+                service = build_pdf_service()
+                
+                # First try the OCR coordinator directly
+                result = service.ocr.process_pdf_with_ocr(str(file_path))
+                
+                if result.get('success') and result.get('text'):
+                    extracted_text = result.get('text', '').strip()
+                    if extracted_text and len(extracted_text) > 20:
+                        logger.info(f"PDF extraction successful: {file_path.name} ({len(extracted_text)} chars)")
+                        return extracted_text
+                
+                # If OCR failed or returned empty, try direct text extraction
+                logger.warning(f"OCR extraction failed for {file_path.name}, trying direct text extraction")
+                
+                # Try using PyPDF2 directly for text-based PDFs
+                try:
+                    import PyPDF2
+                    with open(file_path, 'rb') as pdf_file:
+                        pdf_reader = PyPDF2.PdfReader(pdf_file)
+                        text_parts = []
+                        for page_num in range(len(pdf_reader.pages)):
+                            page = pdf_reader.pages[page_num]
+                            page_text = page.extract_text()
+                            if page_text:
+                                text_parts.append(page_text)
+                        
+                        combined_text = '\n'.join(text_parts).strip()
+                        if combined_text and len(combined_text) > 20:
+                            logger.info(f"Direct PDF text extraction successful: {file_path.name} ({len(combined_text)} chars)")
+                            return combined_text
+                except Exception as pypdf_error:
+                    logger.warning(f"PyPDF2 extraction also failed: {pypdf_error}")
+                
+                # If all methods failed, log error and return empty string (not placeholder)
+                error_msg = result.get('error', 'All extraction methods failed')
+                logger.error(f"PDF extraction completely failed for {file_path.name}: {error_msg}")
+                
+                # Store empty string instead of placeholder - this will be caught by validation
+                return ""
+                
+            except ImportError as e:
+                logger.error(f"Failed to import PDF service: {e}")
+                return ""
+            except Exception as e:
+                logger.error(f"Unexpected error extracting PDF {file_path.name}: {e}")
+                return ""
         elif suffix == '.docx':
             # Simple docx extraction (could be enhanced)
             try:

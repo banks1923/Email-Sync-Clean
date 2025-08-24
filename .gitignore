@@ -161,6 +161,9 @@ bfg.jar
 # Large/sensitive document files
 "S520 Standard for Professional Mold Remediation"
 
+# Data directory
+/data/
+
 # Task files
 # tasks.json
 # tasks/ 

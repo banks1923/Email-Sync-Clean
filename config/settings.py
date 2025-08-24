@@ -133,11 +133,7 @@ class PathSettings(BaseSettings):
     # Data directories
     data_root: str = Field(default="data", env="DATA_ROOT")
     system_data: str = Field(default="data/system_data", env="SYSTEM_DATA_PATH")
-    user_data: str = Field(default="data/user_data", env="USER_DATA_PATH")
-    raw_documents: str = Field(default="data/raw", env="RAW_DOCUMENTS_PATH")
-    processed_documents: str = Field(default="data/processed", env="PROCESSED_DOCUMENTS_PATH")
-    quarantine: str = Field(default="data/quarantine", env="QUARANTINE_PATH")
-    export_path: str = Field(default="data/export", env="EXPORT_PATH")
+    # USER_DATA REMOVED - Case-specific: data/Stoneman_dispute/user_data (CLI/service defaults)
 
     # Log directories
     logs_path: str = Field(default="logs", env="LOGS_PATH")
@@ -148,12 +144,7 @@ class PathSettings(BaseSettings):
     @field_validator(
         "data_root",
         "system_data",
-        "user_data",
-        "raw_documents",
-        "processed_documents",
-        "quarantine",
-        "export_path",
-        "logs_path",
+        "logs_path", 
         "config_dir",
     )
     @classmethod

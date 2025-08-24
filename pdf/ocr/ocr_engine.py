@@ -32,34 +32,28 @@ class OCREngine:
 
     def enhance_image_for_ocr(self, image: Image.Image) -> Image.Image:
         """
-        Enhance image quality for better OCR results.
-
+        Minimal image enhancement for OCR - research shows over-processing hurts accuracy.
+        
         Args:
             image: PIL Image to enhance
 
         Returns:
-            Enhanced PIL Image
+            Minimally enhanced PIL Image
         """
         try:
-            # Convert to grayscale
+            # Convert to grayscale only - most important step
             if image.mode != "L":
                 image = image.convert("L")
 
-            # Increase contrast more aggressively for better OCR
+            # Gentle contrast enhancement (research shows 1.2 is optimal vs 2.0)
             enhancer = ImageEnhance.Contrast(image)
-            image = enhancer.enhance(2.0)
+            image = enhancer.enhance(1.2)
 
-            # Apply stronger sharpening
+            # Single sharpen pass - double sharpening creates artifacts
             image = image.filter(ImageFilter.SHARPEN)
-            image = image.filter(ImageFilter.SHARPEN)  # Double sharpen for clarity
 
-            # Enhance brightness slightly for faded documents
-            brightness = ImageEnhance.Brightness(image)
-            image = brightness.enhance(1.1)
-
-            # Additional CV2 processing if available
-            if self.cv2_available:
-                image = self._enhance_with_cv2(image)
+            # Skip brightness adjustment for clean scans
+            # Skip CV2 processing - PIL is sufficient for clean documents
 
             return image
 
@@ -142,8 +136,8 @@ class OCREngine:
                 image = self.enhance_image_for_ocr(image)
 
             # Perform OCR with confidence scores and English language hint
-            # Add config for better legal document processing
-            custom_config = r"--oem 3 --psm 6 -l eng"
+            # PSM 11 (sparse text) better for legal documents with complex layouts
+            custom_config = r"--oem 3 --psm 11 -l eng"
             ocr_data = pytesseract.image_to_data(
                 image, output_type=pytesseract.Output.DICT, config=custom_config
             )

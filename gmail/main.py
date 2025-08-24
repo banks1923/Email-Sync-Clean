@@ -4,6 +4,7 @@ from typing import Any
 from loguru import logger
 
 from shared.simple_db import SimpleDB
+from config.settings import get_db_path
 from summarization import get_document_summarizer
 
 # Import advanced email parsing modules
@@ -28,13 +29,17 @@ from .storage import EmailStorage
 class GmailService:
     """Main Gmail service for email synchronization with batch processing support."""
 
-    def __init__(self, gmail_timeout: int = 30, db_path: str = "emails.db") -> None:
+    def __init__(self, gmail_timeout: int = 30, db_path: str = None) -> None:
         """Initialize Gmail service with API, storage, and processing components.
 
         Args:
             gmail_timeout: Timeout in seconds for Gmail API requests.
             db_path: Path to SQLite database file.
         """
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
+            
         self.gmail_api = GmailAPI(timeout=gmail_timeout)
         self.storage = EmailStorage(db_path)
         self.config = GmailConfig()

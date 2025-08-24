@@ -1,0 +1,100 @@
+graph TB
+    subgraph "Database Layer (1,480 content records)"
+        SimpleDB["SQLite Database<br/>content_unified: 1,480<br/>embeddings: 1,389<br/>emails: 420"]
+        VectorDB["Qdrant Vector Store<br/>1,389 embeddings<br/>Legal BERT 1024D"]
+        KnowledgeDB["Knowledge Graph<br/>0 nodes, 21 edges<br/>similarity_cache: 191"]
+        EntityDB["Entity Mappings<br/>entity_content_mapping: 719<br/>95.3% quality score"]
+    end
+    
+    subgraph "Core Services (24,713 lines total)"
+        Gmail["Gmail Service<br/>1,883 lines, 7 files<br/>Email sync & parsing"]
+        PDF["PDF Service<br/>3,523 lines, 19 files<br/>OCR & text extraction"]
+        Entity["Entity Service<br/>2,661 lines, 13 files<br/>Legal NER extraction"]
+        Shared["Shared Components<br/>6,123 lines, 20 files<br/>Core utilities"]
+    end
+    
+    subgraph "Intelligence Services (5,072 lines)"
+        SearchInt["Search Intelligence<br/>1,797 lines, 5 files<br/>Smart search & deduplication"]
+        KnowledgeGraph["Knowledge Graph<br/>2,839 lines, 7 files<br/>Similarity & clustering"]
+        LegalInt["Legal Intelligence<br/>837 lines, 2 files<br/>Case analysis & timelines"]
+        Summarization["Summarization<br/>499 lines, 2 files<br/>TF-IDF + Legal BERT"]
+    end
+    
+    subgraph "Infrastructure (4,551 lines)"
+        DocPipeline["Document Pipeline<br/>1,993 lines, 11 files<br/>Unified processing"]
+        MCPServers["MCP Servers<br/>1,589 lines, 3 files<br/>Claude Desktop integration"]
+        Embeddings["Embeddings Service<br/>157 lines, 2 files<br/>Legal BERT interface"]
+        VectorStore["Vector Store<br/>413 lines, 1 file<br/>Qdrant interface"]
+        Timeline["Timeline Service<br/>399 lines, 3 files<br/>Temporal analysis"]
+        EntityProcessor["Unified Entity Processor<br/>NEW - Quality filtering<br/>Cross-document attribution"]
+    end
+    
+    subgraph "Content Types Distribution"
+        EmailContent["Emails: 420<br/>Individual Messages: 426<br/>Advanced parsing enabled"]
+        PDFContent["PDFs: 543<br/>Mixed OCR/text extraction"]
+        DocumentContent["Documents: 45<br/>Upload: 45<br/>Unified ingestion"]
+    end
+    
+    %% Database connections
+    SimpleDB --> Gmail
+    SimpleDB --> PDF
+    SimpleDB --> Entity
+    SimpleDB --> DocPipeline
+    SimpleDB --> SearchInt
+    SimpleDB --> KnowledgeGraph
+    SimpleDB --> LegalInt
+    SimpleDB --> Timeline
+    
+    %% Vector store connections  
+    VectorDB --> SearchInt
+    VectorDB --> KnowledgeGraph
+    VectorDB --> LegalInt
+    
+    %% Knowledge graph connections
+    KnowledgeDB --> SearchInt
+    KnowledgeDB --> LegalInt
+    
+    %% Service interconnections
+    Embeddings --> VectorDB
+    Embeddings --> KnowledgeGraph
+    Embeddings --> SearchInt
+    VectorStore --> VectorDB
+    Entity --> KnowledgeGraph
+    EntityProcessor --> EntityDB
+    EntityProcessor --> Entity
+    
+    %% Content flow
+    EmailContent --> Gmail
+    PDFContent --> PDF
+    DocumentContent --> DocPipeline
+    
+    %% MCP integration
+    MCPServers --> SearchInt
+    MCPServers --> LegalInt
+    
+    %% Shared component usage
+    Shared --> Gmail
+    Shared --> PDF
+    Shared --> Entity
+    Shared --> SearchInt
+    Shared --> KnowledgeGraph
+    Shared --> LegalInt
+    
+    %% Intelligence service integration
+    SearchInt --> Summarization
+    KnowledgeGraph --> SearchInt
+    Entity --> LegalInt
+    Timeline --> LegalInt
+    
+    %% Styling
+    classDef database fill:#FFD700,stroke:#333,stroke-width:3px
+    classDef service fill:#87CEEB,stroke:#333,stroke-width:2px
+    classDef intelligence fill:#98FB98,stroke:#333,stroke-width:2px
+    classDef infrastructure fill:#DDA0DD,stroke:#333,stroke-width:2px
+    classDef content fill:#FFE4B5,stroke:#333,stroke-width:2px
+    
+    class SimpleDB,VectorDB,KnowledgeDB database
+    class Gmail,PDF,Entity,Shared service
+    class SearchInt,KnowledgeGraph,LegalInt,Summarization intelligence
+    class DocPipeline,MCPServers,Embeddings,VectorStore,Timeline infrastructure
+    class EmailContent,PDFContent,DocumentContent content

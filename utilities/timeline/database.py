@@ -8,12 +8,16 @@ import uuid
 from typing import Any
 
 from shared.simple_db import SimpleDB
+from config.settings import get_db_path
 
 
 class TimelineDatabase:
     """Database operations for timeline management."""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = None):
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
         self.db = SimpleDB(db_path)
 
     def create_timeline_event(

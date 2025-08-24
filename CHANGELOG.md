@@ -2,6 +2,145 @@
 
 > ⚠️ **IMPORTANT**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-23] - Documentation Consolidation 📚
+
+### 📉 CLAUDE.md Optimization (45% Reduction)
+- **Before**: 974 lines of mixed documentation and details
+- **After**: 537 lines of focused development guide
+- **Approach**: Preserved all critical workflow instructions while removing redundancy
+
+### 🔄 Content Reorganization
+- **Command Reference**: Created compact table replacing 68+ lines of verbose examples
+- **Testing Section**: Consolidated 3 scattered sections into single unified section
+- **MCP Integration**: Reduced from 50+ lines to 6 lines with external reference
+- **Entity Extraction**: Simplified from 55 lines to 10 lines of essentials
+- **Pipeline Verification**: Moved 100+ lines to new `docs/PIPELINE_VERIFICATION.md`
+- **Service Descriptions**: Removed duplicate descriptions (saved 40 lines)
+
+### 📁 New Documentation Files
+- **docs/PIPELINE_VERIFICATION.md**: Complete pipeline verification guide
+- **Existing Docs Enhanced**: 
+  - `docs/SERVICES_API.md` - Now contains all service details
+  - `docs/MCP_SERVERS.md` - Complete MCP documentation
+
+### ✅ Preserved Critical Content
+- **User Workflow Instructions**: Kept exact language for sensitive workflows
+- **Core Development Principles**: Maintained protected section unchanged
+- **Architecture Guidelines**: Preserved SimpleDB triggers and guidelines
+- **Quick Start**: Enhanced with cleaner command reference table
+
+## [2025-08-22] - Entity Extraction Integration Complete 🔬
+
+### 🎯 Missing Entity Extraction Gap Resolved
+- **Problem Identified**: 1,482 content records with zero entity extraction across unified pipeline
+- **Root Cause**: Entity service designed for emails only, no integration with unified content processing
+- **Solution Implemented**: Complete unified entity extraction system with quality filtering
+
+### 🔧 Unified Entity Processing System
+- **New Component**: `shared/unified_entity_processor.py` - Processes all unified content types
+- **CLI Integration**: `tools/scripts/cli/entity_handler.py` - Full CLI interface for entity operations
+- **Commands Added**:
+  - `extract-entities --missing-only` - Process entities from unified content
+  - `entity-status` - Check entity processing coverage and quality
+  - `search-entities --entity-type --entity-value` - Search content by entities
+
+### 🧹 Entity Quality Filtering System  
+- **Content Quality Filter**: Skip documents with >3% symbol density (OCR garbage detection)
+- **Entity Quality Filter**: Remove single digits, symbol-heavy strings, overly long/short entities
+- **OCR Garbage Removal**: Cleaned 99 garbage entities (12.1% quality improvement)
+- **Final Quality Score**: 95.3% quality entities (685 of 719 total)
+
+### 📊 Database Integration & Attribution
+- **entity_content_mapping Table**: Full entity-to-content attribution with confidence scores
+- **Cross-Document Analysis**: Entities traced across emails, PDFs, documents, uploads
+- **Search Capabilities**: Entity-based content discovery and legal case analysis
+- **Processing Metrics**: ~275 entities/second extraction rate
+
+### 📚 Documentation Updates
+- **Complete Integration Guide**: `docs/ENTITY_EXTRACTION_INTEGRATION.md` - Comprehensive system documentation
+- **Quality Analysis Tools**: `scripts/clean_entity_extraction.py`, `scripts/show_entity_proof.py`
+- **CLAUDE.md Updates**: Entity extraction section updated with current statistics and quality controls
+- **Dependency Graph**: Updated Mermaid diagram with entity processor and database integration
+
+### 🎯 Real Data Validation
+- **Legal Case Integration**: Successfully extracting "Stoneman Staff", "N. Stoneman Ave", specific dates
+- **Cross-Document Attribution**: Same entities appearing across multiple document types
+- **Search Functionality**: Entity-based search returning relevant legal documents
+- **Quality Examples**: Clean extraction of addresses, dates, legal entities, organizations
+
+### 📚 Documentation Added
+- **Entity Extraction Guide**: `docs/ENTITY_EXTRACTION_INTEGRATION.md` - Complete system documentation
+- **CLAUDE.md Updates**: Added entity extraction commands and system overview
+- **Architecture Diagrams**: Entity network graph showing document-entity relationships
+
+### 🔗 Integration Points
+- **MCP Server Integration**: Entity extraction available through Legal Intelligence MCP
+- **Search Intelligence**: Enhanced search with entity-based filtering
+- **Knowledge Graph**: Entities feed into relationship analysis
+- **Unified Pipeline**: Complete integration with content_unified table processing
+
+## [2025-08-23] - Configuration Alignment & Cleanup Complete 🧹
+
+### 🎯 Database Path Configuration Alignment
+- **Fixed Database Path Issue**: Resolved stale `emails.db` creation in project root
+  - **Root Cause**: Services using hardcoded "emails.db" instead of centralized configuration
+  - **Solution**: Updated 35+ files to use `get_db_path()` from centralized `config/settings.py`
+  - **Configuration**: All services now use `data/system_data/emails.db` consistently
+  - **Backward Compatibility**: Symbolic link from `data/emails.db` → `data/system_data/emails.db`
+
+### 🗂️ Old Pipeline Folders Cleanup  
+- **Removed Legacy Pipeline Folders**: Eliminated automatic creation of unused directories
+  - **Removed**: `data/raw/`, `data/staged/`, `data/processed/`, `data/export/` auto-creation
+  - **Updated Pydantic Settings**: Removed old pipeline folder definitions from `PathSettings`
+  - **SimpleDB Cleanup**: Only creates main data directory, not pipeline subdirectories
+  - **Quarantine Moved**: Relocated to `data/system_data/quarantine` for better organization
+
+### 🎯 User Data Path Alignment
+- **Standardized User Data Configuration**: Aligned all services to use case-specific path
+  - **Removed Generic Config**: Eliminated `user_data` field from Pydantic `PathSettings`
+  - **Aligned Paths**: CLI and services both use `data/Stoneman_dispute/user_data`
+  - **Verified Consistency**: CLI default matches service default for unified behavior
+  - **SimpleDB Updated**: Validation only checks required `system_data` directory
+
+### ✅ Configuration Files Updated
+- **Core Files Modified**:
+  - `config/settings.py` - Removed old pipeline and generic user data configurations
+  - `shared/simple_db.py` - Eliminated pipeline directory creation and validation
+  - `gmail/main.py` & `gmail/storage.py` - Updated to use centralized database configuration
+  - `shared/simple_quarantine_manager.py` - Moved to system_data subdirectory
+  - `infrastructure/documents/` modules - Updated to use `get_db_path()`
+  - `utilities/timeline/` modules - Fixed hardcoded database paths
+
+### 🔧 Technical Implementation
+- **Centralized Configuration**: All database access through `get_db_path()` helper function
+- **Pydantic Field Validators**: Updated to exclude removed paths from auto-creation
+- **Import Updates**: Services import from centralized config instead of hardcoding paths
+- **Comments Added**: Clear documentation of removed configurations with context
+
+## [2025-08-22] - Unified Ingestion Pipeline 🔄
+
+### 🚀 NEW: Manual Document & Email Ingestion
+- **UnifiedIngestionService** (`shared/unified_ingestion.py`) - Manual ingestion coordination for emails and documents
+- **Extended SimpleUploadProcessor** - Added recursive directory processing for document ingestion
+- **New vsearch Commands**:
+  - `tools/scripts/vsearch ingest` - Process both emails and documents
+  - `tools/scripts/vsearch ingest --docs` - Process documents only (recursive)
+  - `tools/scripts/vsearch ingest --emails` - Process emails only
+  - `tools/scripts/vsearch ingest --docs --dir /custom/path` - Custom directory processing
+
+### 🔧 Technical Implementation
+- **Unified Pipeline**: All content processed through same `content_unified` → embeddings → vector search flow
+- **Duplicate Detection**: SHA256 content hashing prevents reprocessing of same documents
+- **Content Type Preservation**: Documents tagged as `source_type: document` for filtered searches
+- **Recursive Processing**: Scans directories and subdirectories for PDF, DOCX, TXT, MD files
+- **Progress Reporting**: Real-time feedback with processed/duplicate/error counts
+
+### ✅ Verified Integration
+- **Tested**: Successfully processed 44 Stoneman case documents
+- **Search Integration**: Documents immediately available in search results
+- **Content Type Filtering**: `--type document` search filtering working
+- **Legal Intelligence**: Full compatibility with case analysis tools
+
 ## [2025-08-22] - System Data Organization & Technical Debt Resolution Complete 🧹
 
 ### 🗂️ NEW: System Data Organization

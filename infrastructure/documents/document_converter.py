@@ -12,6 +12,7 @@ from typing import Any
 
 import frontmatter
 from loguru import logger
+from config.settings import get_db_path
 
 # PDF service factories - to be injected from higher layers
 _pdf_service_factories = None
@@ -31,8 +32,12 @@ def set_pdf_service_factories(factories):
 class DocumentConverter:
     """Converts PDF files to markdown with YAML frontmatter metadata."""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = None):
         """Initialize converter with PDF infrastructure."""
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
+            
         if not PDF_AVAILABLE:
             raise ImportError("PDF infrastructure required for DocumentConverter")
         
@@ -355,9 +360,12 @@ class DocumentConverter:
 
 
 # Simple factory function following CLAUDE.md principles
-def get_document_converter(db_path: str = "emails.db") -> DocumentConverter | None:
+def get_document_converter(db_path: str = None) -> DocumentConverter | None:
     """Get or create DocumentConverter instance."""
     try:
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
         return DocumentConverter(db_path)
     except ImportError as e:
         logger.warning(f"DocumentConverter not available: {e}")

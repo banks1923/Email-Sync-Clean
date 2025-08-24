@@ -8,12 +8,16 @@ from typing import Any
 from loguru import logger
 
 from shared.simple_db import SimpleDB
+from config.settings import get_db_path
 
 
 class TimelineService:
     """Timeline management for chronological content navigation."""
 
-    def __init__(self, db_path: str = "emails.db"):
+    def __init__(self, db_path: str = None):
+        # Use centralized config if no path provided
+        if db_path is None:
+            db_path = get_db_path()
         self.db_path = db_path
         self.db = SimpleDB(db_path)
         # Logger is now imported globally from loguru
@@ -204,7 +208,7 @@ class TimelineService:
             return {"success": False, "error": str(e)}
 
 
-def get_timeline_service(db_path: str = "emails.db") -> TimelineService:
+def get_timeline_service(db_path: str = None) -> TimelineService:
     """Factory function to create TimelineService instance.
     
     Args:
@@ -213,4 +217,7 @@ def get_timeline_service(db_path: str = "emails.db") -> TimelineService:
     Returns:
         TimelineService instance
     """
+    # Use centralized config if no path provided
+    if db_path is None:
+        db_path = get_db_path()
     return TimelineService(db_path)
