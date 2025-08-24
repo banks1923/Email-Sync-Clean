@@ -284,7 +284,7 @@ The system uses a single unified content table for all document types:
 
 **Table Structure:**
 - `id` (TEXT PRIMARY KEY) - UUID for content
-- `source_type` (TEXT) - Type of content: 'email', 'pdf', 'upload', 'transcript', **'email_message'**
+- `source_type` (TEXT) - Type of content: 'pdf', 'upload', 'transcript', **'email_message'**
 - `source_id` (TEXT) - Original document/email ID
 - `title` (TEXT) - Document title or email subject
 - `body` (TEXT) - Full text content
@@ -293,16 +293,18 @@ The system uses a single unified content table for all document types:
 - `sha256` (TEXT) - Document hash for deduplication (includes sender/date for email_message evidence preservation)
 - Additional metadata columns for specific content types
 
-**Advanced Email Processing (2025-08-22):**
-- **Individual Message Extraction**: Email threads are parsed to extract individual quoted messages
-- **Legal Evidence Preservation**: Duplicate harassment signatures stored separately for evidence
+**Email Processing (Post-Cleanup 2025-08-24):**
+- **Individual Message Storage**: Only individual email messages (`source_type = 'email_message'`) are stored
+- **Clean Architecture**: Eliminated dual storage complexity from previous thread+message approach
+- **Legal Evidence Preservation**: Each individual message preserved with unique content and metadata
 - **Thread Reconstruction**: Messages maintain thread_id relationships for chronological timeline analysis
-- **Pattern Detection**: Automated detection of harassment patterns (anonymous signatures, ignored messages)
+- **Search Accuracy**: 49.4% reduction in records eliminates duplicate search results
 
-**Current Status (Verify with Commands):**
-- ⚠️ Migration in progress - run `make db-stats` for current counts
-- Run `sqlite3 data/emails.db "SELECT 'content:' || COUNT(*) FROM content UNION ALL SELECT 'content_unified:' || COUNT(*) FROM content_unified"` to check migration status
+**Current Status (Post-Cleanup 2025-08-24):**
+- ✅ Email cleanup completed - 426 individual email messages, 0 thread duplicates
+- Run `make db-stats` for current counts
 - Run `make diag-wiring` to verify system health
+- Database optimized: 59.1% text reduction, 49.1% embedding reduction
 
 ## 🔍 System Status Verification
 

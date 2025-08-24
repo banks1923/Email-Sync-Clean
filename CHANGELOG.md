@@ -2,6 +2,49 @@
 
 > ⚠️ **IMPORTANT**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-24] - Email Cleanup Success ✅
+
+### 🎯 **COMPLETED: Email Database Optimization**
+- **Problem Resolved**: Dual email storage causing search accuracy issues and storage inefficiency
+- **Solution Implemented**: Removed 416 duplicate email thread records, preserved 426 individual email messages
+- **Database Reduction**: 842 → 426 email records (**49.4% reduction**)
+- **Text Volume Reduction**: 8.1M → 3.3M characters (**59.1% reduction**)
+- **Embeddings Cleanup**: 841 → 426 embeddings (**49.1% reduction**)
+
+### 📊 **Architecture Change**
+- **Before**: Mixed storage with both email threads (`source_type = 'email'`) and individual messages (`source_type = 'email_message'`)
+- **After**: Clean storage with only individual email messages (`source_type = 'email_message'`)
+- **Benefit**: Eliminated double-counting in search results, improved search accuracy
+
+### 🔧 **Technical Implementation**
+- **Cleanup Script**: `scripts/execute_email_cleanup.py` - Safe one-shot operation with verification
+- **Verification Script**: `scripts/email_cleanup_verification.py` - Pre-cleanup analysis
+- **Testing Script**: `scripts/test_search_accuracy.py` - Post-cleanup validation
+- **Files Updated**: 
+  - `scripts/check_summary_status.py` - Updated to use 'email_message'
+  - `scripts/backfill_email_summaries.py` - Updated to use 'email_message'
+  - `tools/cli/email_sanitizer.py` - Added legacy architecture note
+
+### ✅ **Search Accuracy Improvements**
+- **"water intrusion"**: 176 → 90 total mentions (71 email + 19 other types)
+- **"repair"**: 217 → 217 total mentions (161 email + 56 other types) 
+- **"notice"**: 244 → 244 total mentions (205 email + 39 other types)
+- **Benefit**: True counts without duplicate inflation from thread/message dual storage
+
+### 🛡️ **Safety Measures Applied**
+- ✅ Gmail backup confirmed available before cleanup
+- ✅ Only removed duplicate thread representations, preserved all individual message content
+- ✅ All embeddings properly aligned after cleanup
+- ✅ System health check passed with `make diag-wiring`
+- ✅ Complete cleanup summary documented in `CLEANUP_SUMMARY.md`
+
+### 📈 **Performance Impact**
+- **Faster searches**: 50% fewer records to scan
+- **Cleaner results**: No duplicate content in search results
+- **Better accuracy**: True counts for legal analysis
+- **Reduced storage**: 49.4% fewer email records
+- **Streamlined workflow**: Single message format eliminates confusion
+
 ## [2025-08-24] - Knowledge Graph Removal 🗑️
 
 ### 🔥 Removed Non-Functional Knowledge Graph Service

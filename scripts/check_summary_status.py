@@ -20,7 +20,7 @@ def check_summary_status():
         # Total emails
         cursor.execute("""
             SELECT COUNT(*) FROM content_unified 
-            WHERE source_type = 'email'
+            WHERE source_type = 'email_message'
         """)
         total_emails = cursor.fetchone()[0]
         
@@ -29,7 +29,7 @@ def check_summary_status():
             SELECT COUNT(DISTINCT cu.id)
             FROM content_unified cu
             INNER JOIN document_summaries ds ON cu.id = ds.document_id
-            WHERE cu.source_type = 'email'
+            WHERE cu.source_type = 'email_message'
         """)
         emails_with_summaries = cursor.fetchone()[0]
         
@@ -45,7 +45,7 @@ def check_summary_status():
             SELECT ds.summary_id, cu.title, ds.created_at
             FROM document_summaries ds
             INNER JOIN content_unified cu ON ds.document_id = cu.id
-            WHERE cu.source_type = 'email'
+            WHERE cu.source_type = 'email_message'
             ORDER BY ds.created_at DESC
             LIMIT 5
         """)

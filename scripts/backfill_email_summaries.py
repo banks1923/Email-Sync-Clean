@@ -22,7 +22,7 @@ def backfill_email_summaries():
         SELECT cu.id, cu.title, cu.body, cu.source_id
         FROM content_unified cu
         LEFT JOIN document_summaries ds ON cu.id = ds.document_id
-        WHERE cu.source_type = 'email' 
+        WHERE cu.source_type = 'email_message' 
         AND ds.summary_id IS NULL
         AND cu.body IS NOT NULL
         AND LENGTH(cu.body) > 100
@@ -96,7 +96,7 @@ def backfill_email_summaries():
                COUNT(DISTINCT cu.id) as email_count
         FROM content_unified cu
         LEFT JOIN document_summaries ds ON cu.id = ds.document_id
-        WHERE cu.source_type = 'email'
+        WHERE cu.source_type = 'email_message'
     """
     
     with sqlite3.connect(db.db_path) as conn:

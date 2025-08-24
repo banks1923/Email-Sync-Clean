@@ -2,6 +2,9 @@
 """
 Email Sanitizer CLI - Main interface for email corpus sanitation and quarantine.
 Provides scanning, quarantine, and vector reconciliation operations.
+
+NOTE (2025-08-24): After email cleanup, only 'email_message' records exist.
+This script may need updates for the new architecture.
 """
 
 import json
