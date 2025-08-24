@@ -62,6 +62,41 @@ class GmailService:
     def _setup_logging(self) -> None:
         """Set up log directory for Gmail service."""
         os.makedirs("logs", exist_ok=True)
+    
+    def _should_exclude_email(self, email_data: dict) -> bool:
+        """Check if email should be excluded based on date.
+        
+        Args:
+            email_data: Email data dictionary with datetime_utc field
+            
+        Returns:
+            bool: True if email should be excluded, False otherwise
+        """
+        if not hasattr(self.config, 'excluded_dates'):
+            return False
+            
+        email_date = email_data.get('datetime_utc', '')
+        if not email_date:
+            return False
+            
+        # Convert email date to YYYY/MM/DD format for comparison
+        # Email dates are in format like "2023-10-03T12:39:32-07:00"
+        try:
+            from datetime import datetime
+            # Parse the datetime string
+            if 'T' in email_date:
+                date_part = email_date.split('T')[0]  # Get YYYY-MM-DD part
+                year, month, day = date_part.split('-')
+                formatted_date = f"{year}/{month}/{day}"
+                
+                # Check if this date is in our exclusion list
+                if formatted_date in self.config.excluded_dates:
+                    logger.info(f"Excluding email from {formatted_date} (in exclusion list)")
+                    return True
+        except Exception as e:
+            logger.debug(f"Could not parse date {email_date}: {e}")
+            
+        return False
 
     def sync_emails(
         self,
@@ -133,6 +168,13 @@ class GmailService:
                     continue
 
                 email_data = self.gmail_api.parse_message(detail_result["data"])
+                
+                # Check if email should be excluded based on date
+                if self._should_exclude_email(email_data):
+                    logger.info(f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}")
+                    total_duplicates += 1  # Count as duplicate for reporting
+                    continue
+                    
                 email_list.append(email_data)
 
             # Group emails by thread for processing
@@ -178,6 +220,12 @@ class GmailService:
                 continue
 
             email_data = self.gmail_api.parse_message(detail_result["data"])
+            
+            # Check if email should be excluded based on date
+            if self._should_exclude_email(email_data):
+                logger.info(f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}")
+                continue
+            
             save_result = self.storage.save_email(email_data)
 
             if save_result["success"]:
@@ -594,18 +642,28 @@ class GmailService:
                 if not email_data.get("content"):
                     continue
 
-                # First, add email to content table to get content_id
-                content_id = self.db.add_content(
-                    content_type="email",
-                    title=email_data.get("subject", "No Subject"),
-                    content=email_data.get("content", ""),
-                    metadata={
-                        "message_id": email_data.get("message_id"),
-                        "sender": email_data.get("sender"),
-                        "recipient": email_data.get("recipient_to"),
-                        "datetime_utc": email_data.get("datetime_utc"),
-                    },
+                # First, check if email already exists in content_unified
+                existing = self.db.fetch(
+                    "SELECT id FROM content_unified WHERE source_id = ? AND source_type = 'email'",
+                    (email_data.get("message_id"),)
                 )
+                
+                if not existing:
+                    # Use upsert_content which properly handles content_unified
+                    content_id = self.db.upsert_content(
+                        source_type="email",
+                        external_id=email_data.get("message_id"),
+                        content_type="email",  # Required by method signature
+                        title=email_data.get("subject", "No Subject"),
+                        content=email_data.get("content", ""),
+                        metadata={
+                            "sender": email_data.get("sender"),
+                            "recipient": email_data.get("recipient_to"),
+                            "datetime_utc": email_data.get("datetime_utc"),
+                        },
+                    )
+                else:
+                    content_id = existing[0]["id"]
 
                 # Generate summary
                 email_content = email_data.get("content", "")

@@ -42,7 +42,7 @@ class EmailSanitizer:
                 self.vector_store = False
         return self.vector_store if self.vector_store is not False else None
     
-    def scan_emails(self) -> Dict[str, Any]:
+    def scan_emails(self) -> dict[str, Any]:
         """
         Scan email corpus for validation issues.
         
@@ -67,7 +67,7 @@ class EmailSanitizer:
         
         return report
     
-    def quarantine_emails(self, batch_id: str = None, dry_run: bool = False) -> Dict[str, Any]:
+    def quarantine_emails(self, batch_id: str = None, dry_run: bool = False) -> dict[str, Any]:
         """
         Move invalid emails to quarantine.
         
@@ -120,7 +120,7 @@ class EmailSanitizer:
             "violations": result.violations
         }
     
-    def reconcile_vectors(self) -> Dict[str, Any]:
+    def reconcile_vectors(self) -> dict[str, Any]:
         """
         Reconcile vectors between database and Qdrant.
         
@@ -210,7 +210,7 @@ class EmailSanitizer:
         import hashlib
         return hashlib.sha256(content.encode('utf-8')).hexdigest()
     
-    def _summarize_violations(self, violations_by_email: Dict[int, list]) -> Dict[str, int]:
+    def _summarize_violations(self, violations_by_email: dict[int, list]) -> dict[str, int]:
         """Summarize violations by type."""
         summary = {}
         for violations in violations_by_email.values():
@@ -218,7 +218,7 @@ class EmailSanitizer:
                 summary[violation] = summary.get(violation, 0) + 1
         return summary
     
-    def rollback_batch(self, batch_id: str) -> Dict[str, Any]:
+    def rollback_batch(self, batch_id: str) -> dict[str, Any]:
         """Rollback a quarantine batch."""
         logger.info(f"Rolling back quarantine batch: {batch_id}")
         
@@ -231,7 +231,7 @@ class EmailSanitizer:
             "success": success
         }
     
-    def get_quarantine_stats(self) -> Dict[str, Any]:
+    def get_quarantine_stats(self) -> dict[str, Any]:
         """Get quarantine statistics."""
         stats = self.quarantine_manager.get_quarantine_stats()
         
@@ -240,7 +240,7 @@ class EmailSanitizer:
             "quarantine_stats": stats
         }
     
-    def generate_full_report(self) -> Dict[str, Any]:
+    def generate_full_report(self) -> dict[str, Any]:
         """Generate comprehensive sanitation report."""
         logger.info("Generating comprehensive email sanitation report")
         

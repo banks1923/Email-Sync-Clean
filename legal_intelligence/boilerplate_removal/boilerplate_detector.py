@@ -6,9 +6,9 @@ Integrates with the existing enhanced OCR pipeline and legal intelligence system
 """
 
 import re
-from typing import Dict, List, Set, Tuple, Optional, Any
+from typing import Dict, List, Set, Tuple, Any
 from dataclasses import dataclass, field
-from collections import Counter, defaultdict
+from collections import defaultdict
 import numpy as np
 from loguru import logger
 
@@ -16,7 +16,6 @@ from loguru import logger
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.cluster import DBSCAN
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -38,7 +37,7 @@ class BoilerplateSegment:
     pattern_type: str
     category: str = ""
     frequency: int = 1
-    document_ids: Set[str] = field(default_factory=set)
+    document_ids: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -50,7 +49,7 @@ class DocumentSection:
     section_type: str
     is_boilerplate: bool = False
     confidence: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class LegalBoilerplateDetector:
@@ -128,8 +127,8 @@ class LegalBoilerplateDetector:
     
     def detect_boilerplate_in_documents(
         self, 
-        documents: List[Dict[str, Any]]
-    ) -> List[List[BoilerplateSegment]]:
+        documents: list[dict[str, Any]]
+    ) -> list[list[BoilerplateSegment]]:
         """
         Detect boilerplate across multiple documents.
         
@@ -170,9 +169,9 @@ class LegalBoilerplateDetector:
     
     def _detect_pattern_boilerplate(
         self, 
-        documents: List[Dict[str, Any]], 
-        texts: List[str]
-    ) -> List[List[BoilerplateSegment]]:
+        documents: list[dict[str, Any]], 
+        texts: list[str]
+    ) -> list[list[BoilerplateSegment]]:
         """Detect boilerplate using predefined legal patterns"""
         all_segments = []
         
@@ -203,9 +202,9 @@ class LegalBoilerplateDetector:
     
     def _detect_similarity_boilerplate(
         self, 
-        documents: List[Dict[str, Any]], 
-        texts: List[str]
-    ) -> List[List[BoilerplateSegment]]:
+        documents: list[dict[str, Any]], 
+        texts: list[str]
+    ) -> list[list[BoilerplateSegment]]:
         """Detect boilerplate using TF-IDF similarity analysis"""
         if not SKLEARN_AVAILABLE:
             return [[] for _ in documents]
@@ -286,9 +285,9 @@ class LegalBoilerplateDetector:
     
     def _detect_frequency_boilerplate(
         self, 
-        segment_lists: List[List[BoilerplateSegment]], 
-        texts: List[str]
-    ) -> List[List[BoilerplateSegment]]:
+        segment_lists: list[list[BoilerplateSegment]], 
+        texts: list[str]
+    ) -> list[list[BoilerplateSegment]]:
         """Detect boilerplate based on frequency across documents"""
         
         # Collect all segments with their normalized text
@@ -320,9 +319,9 @@ class LegalBoilerplateDetector:
     
     def _merge_detection_results(
         self, 
-        pattern_segments: List[List[BoilerplateSegment]], 
-        similarity_segments: List[List[BoilerplateSegment]]
-    ) -> List[List[BoilerplateSegment]]:
+        pattern_segments: list[list[BoilerplateSegment]], 
+        similarity_segments: list[list[BoilerplateSegment]]
+    ) -> list[list[BoilerplateSegment]]:
         """Merge results from different detection methods"""
         
         merged = []
@@ -353,7 +352,7 @@ class LegalBoilerplateDetector:
         
         return merged
     
-    def _segment_text(self, text: str) -> List[Tuple[int, int, str]]:
+    def _segment_text(self, text: str) -> list[tuple[int, int, str]]:
         """Segment text into meaningful units (sentences/paragraphs)"""
         segments = []
         
@@ -425,9 +424,9 @@ class LegalBoilerplateDetector:
     
     def generate_boilerplate_report(
         self, 
-        segment_lists: List[List[BoilerplateSegment]],
-        document_info: List[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        segment_lists: list[list[BoilerplateSegment]],
+        document_info: list[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """Generate comprehensive boilerplate analysis report"""
         
         total_segments = sum(len(segments) for segments in segment_lists)
@@ -478,7 +477,7 @@ class LegalBoilerplateDetector:
         
         return report
     
-    def validate_setup(self) -> Dict[str, Any]:
+    def validate_setup(self) -> dict[str, Any]:
         """Validate detector setup and dependencies"""
         validation = {
             'sklearn_available': SKLEARN_AVAILABLE,

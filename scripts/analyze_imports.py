@@ -11,7 +11,7 @@ from pathlib import Path
 
 def analyze_file(filepath):
     """Analyze a Python file for imports and table references."""
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         content = f.read()
     
     # Check for table references

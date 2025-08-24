@@ -2,6 +2,26 @@
 
 > ⚠️ **IMPORTANT**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-24] - Knowledge Graph Removal 🗑️
+
+### 🔥 Removed Non-Functional Knowledge Graph Service
+- **Deleted**: `knowledge_graph/` directory (2,839 lines of broken code)
+- **Cleaned**: Removed imports from `legal_intelligence/main.py`
+- **Dropped**: 6 SQLite tables (kg_nodes, kg_edges, kg_metadata, entity_relationships, relationship_cache, timeline_relationships)
+- **Updated**: Test files to remove knowledge graph tests
+- **Impact**: Minimal - service was never properly integrated or functional
+
+### 📊 Rationale
+- Database path issues prevented initialization
+- Never populated with real data (0 nodes, 21 test edges)
+- Redundant with existing Qdrant vector similarity search
+- Complex maintenance burden for no functional benefit
+
+### ✅ Alternative Solution
+- Use existing Qdrant similarity search for relationship discovery
+- Vector embeddings already provide implicit knowledge graph functionality
+- Consider NetworkX or Neo4j if explicit graph needed in future
+
 ## [2025-08-23] - Documentation Consolidation 📚
 
 ### 📉 CLAUDE.md Optimization (45% Reduction)

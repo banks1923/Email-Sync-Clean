@@ -29,7 +29,7 @@ class EmailSanitationReporter:
         self.quarantine_manager = EmailQuarantineManager(db_path)
         self.vector_service = VectorReconciliationService(db_path)
         
-    def generate_scan_report(self) -> Dict[str, Any]:
+    def generate_scan_report(self) -> dict[str, Any]:
         """
         Generate the exact JSON format specified in the deliverables.
         
@@ -70,7 +70,7 @@ class EmailSanitationReporter:
         
         return report
     
-    def generate_operation_report(self, operation_results: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_operation_report(self, operation_results: dict[str, Any]) -> dict[str, Any]:
         """
         Generate report after actual sanitation operations.
         
@@ -105,7 +105,7 @@ class EmailSanitationReporter:
         
         return report
     
-    def _generate_notes(self, scan_data: Dict, vector_status: Dict, quarantine_stats: Dict) -> str:
+    def _generate_notes(self, scan_data: dict, vector_status: dict, quarantine_stats: dict) -> str:
         """Generate notes section for scan report."""
         violations = scan_data['violations_by_email']
         total_emails = scan_data['scan_results']['total']
@@ -118,7 +118,7 @@ class EmailSanitationReporter:
                f"Current quarantine: {quarantine_stats.get('total_quarantined', 0)} emails. " + \
                f"Vector store has {vector_status.get('qdrant_vectors', 0)} vectors."
     
-    def _generate_operation_notes(self, operation_results: Dict[str, Any]) -> str:
+    def _generate_operation_notes(self, operation_results: dict[str, Any]) -> str:
         """Generate notes for operation report."""
         quarantined = operation_results.get("quarantined_rows", 0)
         kept = operation_results.get("kept_rows", 0)
@@ -128,7 +128,7 @@ class EmailSanitationReporter:
                f"Removed {vectors_deleted} vectors from Qdrant. " + \
                "Pre-embedding validation gate active."
     
-    def validate_report_schema(self, report: Dict[str, Any]) -> bool:
+    def validate_report_schema(self, report: dict[str, Any]) -> bool:
         """
         Validate that report matches required schema.
         
@@ -172,7 +172,7 @@ class EmailSanitationReporter:
         logger.info("Report schema validation passed")
         return True
     
-    def export_report(self, report: Dict[str, Any], output_file: str = None) -> str:
+    def export_report(self, report: dict[str, Any], output_file: str = None) -> str:
         """
         Export report to JSON file.
         
@@ -202,7 +202,7 @@ class EmailSanitationReporter:
         logger.info(f"Report exported to: {output_path}")
         return str(output_path)
     
-    def get_ci_validation_status(self) -> Dict[str, Any]:
+    def get_ci_validation_status(self) -> dict[str, Any]:
         """
         Get current CI validation status.
         
@@ -220,11 +220,11 @@ class EmailSanitationReporter:
             "validation_passed": not has_violations,
             "exit_code": 1 if has_violations else 0,
             "violations_found": len(violations),
-            "violation_types": list(set(
+            "violation_types": list({
                 violation 
                 for violation_list in violations.values() 
                 for violation in violation_list
-            )) if violations else [],
+            }) if violations else [],
             "message": f"Found {len(violations)} emails with violations" if has_violations else "All emails valid"
         }
 

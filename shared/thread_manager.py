@@ -17,12 +17,12 @@ class ThreadService:
     """
 
     def __init__(self):
-        self.reference_map: Dict[str, str] = {}
-        self.subject_threads: Dict[str, str] = {}
+        self.reference_map: dict[str, str] = {}
+        self.subject_threads: dict[str, str] = {}
         self.next_thread_id = 1
-        self._normalized_cache: Dict[str, str] = {}
+        self._normalized_cache: dict[str, str] = {}
 
-    def get_thread_id(self, email: Dict[str, Any]) -> str:
+    def get_thread_id(self, email: dict[str, Any]) -> str:
         """
         Determine thread ID for an email based on headers and subject.
         """
@@ -107,7 +107,7 @@ class ThreadService:
         return normalized
 
 
-def reconstruct_thread_timeline(emails: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def reconstruct_thread_timeline(emails: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Reconstruct chronological timeline of email thread with individual messages.
     """
@@ -171,10 +171,10 @@ def reconstruct_thread_timeline(emails: List[Dict[str, Any]]) -> List[Dict[str, 
 
 
 def deduplicate_messages(
-    messages: List[Dict[str, Any]], 
+    messages: list[dict[str, Any]], 
     similarity_threshold: float = 0.85,
     preserve_metadata: bool = True
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Remove duplicate messages while preserving the most complete version.
     
@@ -250,7 +250,7 @@ def _calculate_similarity(text1: str, text2: str) -> float:
     return len(intersection) / len(union) if union else 0.0
 
 
-def quoted_message_to_dict(message: 'QuotedMessage') -> Dict[str, Any]:
+def quoted_message_to_dict(message: 'QuotedMessage') -> dict[str, Any]:
     """Convert QuotedMessage object to dictionary for processing."""
     return {
         "content": message.content,
@@ -264,7 +264,7 @@ def quoted_message_to_dict(message: 'QuotedMessage') -> Dict[str, Any]:
         "thread_id": message.thread_id
     }
 
-def extract_thread_messages(thread_emails: List[Dict[str, Any]]) -> List[QuotedMessage]:
+def extract_thread_messages(thread_emails: list[dict[str, Any]]) -> list[QuotedMessage]:
     """
     Extract all individual messages from a thread of emails.
     
@@ -308,7 +308,7 @@ def extract_thread_messages(thread_emails: List[Dict[str, Any]]) -> List[QuotedM
     return all_messages
 
 
-def find_ignored_messages(thread_messages: List[QuotedMessage]) -> List[Dict[str, Any]]:
+def find_ignored_messages(thread_messages: list[QuotedMessage]) -> list[dict[str, Any]]:
     """
     Find messages in a thread that were never replied to.
     This helps identify selective reply patterns in harassment cases.

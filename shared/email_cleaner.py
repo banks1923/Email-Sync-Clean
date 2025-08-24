@@ -37,7 +37,7 @@ class EmailCleaner:
         ]
         self._compiled_signature_patterns = [re.compile(p, re.IGNORECASE | re.MULTILINE) for p in self.signature_patterns]
 
-    def clean(self, email_data: Dict[str, Any]) -> Dict[str, Any]:
+    def clean(self, email_data: dict[str, Any]) -> dict[str, Any]:
         """
         Clean an email dictionary, normalizing all text fields.
         
@@ -165,7 +165,7 @@ class EmailCleaner:
         
         return text
 
-    def _is_reply(self, email_data: Dict[str, Any]) -> bool:
+    def _is_reply(self, email_data: dict[str, Any]) -> bool:
         """Determine if email is a reply based on subject and headers."""
         subject = email_data.get("subject", "").lower()
         
@@ -181,7 +181,7 @@ class EmailCleaner:
         
         return False
 
-    def batch_clean(self, emails: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def batch_clean(self, emails: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Clean a batch of emails efficiently.
         
@@ -248,7 +248,7 @@ def compute_message_hash(message_content: str) -> str:
     return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
 
 
-def extract_email_addresses(text: str) -> List[str]:
+def extract_email_addresses(text: str) -> list[str]:
     """
     Extract email addresses from text.
     
@@ -277,7 +277,7 @@ def extract_email_addresses(text: str) -> List[str]:
     return emails
 
 
-def is_automated_email(email_data: Dict[str, Any]) -> bool:
+def is_automated_email(email_data: dict[str, Any]) -> bool:
     """
     Detect if email appears to be automated/template-based.
     Useful for identifying systematic harassment patterns.

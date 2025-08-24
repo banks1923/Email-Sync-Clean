@@ -12,7 +12,8 @@ Combines functionality from:
 
 import argparse
 import sys
-from typing import Any, Generator, List
+from typing import Any, List
+from collections.abc import Generator
 
 from loguru import logger
 
@@ -26,7 +27,7 @@ BATCH_SIZE = 500
 EMBED_BATCH_SIZE = 16
 ID_PAGE_SIZE = 1000
 
-def _chunked(seq: List[Any], size: int) -> Generator[List[Any], None, None]:
+def _chunked(seq: list[Any], size: int) -> Generator[list[Any], None, None]:
     for i in range(0, len(seq), size):
         yield seq[i:i + size]
 

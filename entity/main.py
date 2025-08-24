@@ -28,9 +28,9 @@ class EntityService:
     """
     
     # Type annotations for class attributes
-    extractor: Optional[BaseExtractor]
-    relationship_extractor: Optional[RelationshipExtractor]
-    normalizer: Optional[EntityNormalizer]
+    extractor: BaseExtractor | None
+    relationship_extractor: RelationshipExtractor | None
+    normalizer: EntityNormalizer | None
 
     def __init__(self, db_path: str = "data/emails.db") -> None:
         """

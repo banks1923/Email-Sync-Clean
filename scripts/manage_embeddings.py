@@ -17,7 +17,7 @@ from utilities.embeddings.service import EmbeddingService
 from utilities.vector_store.service import VectorStoreService
 
 
-def rebuild_missing_embeddings(limit: Optional[int] = None) -> int:
+def rebuild_missing_embeddings(limit: int | None = None) -> int:
     """Generate embeddings for content_unified entries that lack embeddings."""
     logger.info("🔄 Rebuilding missing embeddings...")
     

@@ -25,7 +25,7 @@ class SimpleUploadProcessor:
         self.quarantine_dir.mkdir(parents=True, exist_ok=True)
         self.db = SimpleDB()
 
-    def process_file(self, file_path: Path, source: str = "upload") -> Dict[str, Any]:
+    def process_file(self, file_path: Path, source: str = "upload") -> dict[str, Any]:
         """
         Process file directly to database. No intermediate directories.
         
@@ -111,7 +111,7 @@ class SimpleUploadProcessor:
                 "message": f"File quarantined due to error: {e}"
             }
 
-    def process_directory(self, dir_path: Path, limit: int = None) -> Dict[str, Any]:
+    def process_directory(self, dir_path: Path, limit: int = None) -> dict[str, Any]:
         """Process all supported files in a directory."""
         if not dir_path.exists() or not dir_path.is_dir():
             return {"success": False, "error": f"Directory not found: {dir_path}"}
@@ -152,7 +152,7 @@ class SimpleUploadProcessor:
         
         return results
 
-    def process_directory_recursive(self, dir_path: Path, extensions: list[str] = None) -> Dict[str, Any]:
+    def process_directory_recursive(self, dir_path: Path, extensions: list[str] = None) -> dict[str, Any]:
         """Process all supported files in a directory recursively."""
         if not dir_path.exists() or not dir_path.is_dir():
             return {"success": False, "error": f"Directory not found: {dir_path}"}

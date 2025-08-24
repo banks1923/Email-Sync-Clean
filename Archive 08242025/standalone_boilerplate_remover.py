@@ -15,8 +15,7 @@ import os
 import sys
 import argparse
 import json
-import re
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Dict, List, Any, Optional
 from pathlib import Path
 
 # Add current directory to path to import our boilerplate removal components
@@ -25,7 +24,6 @@ sys.path.append(str(Path(__file__).parent))
 # Check dependencies
 try:
     import pytesseract
-    from PIL import Image
     import pdf2image
     TESSERACT_AVAILABLE = True
 except ImportError as e:
@@ -34,9 +32,6 @@ except ImportError as e:
     TESSERACT_AVAILABLE = False
 
 try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
-    import numpy as np
     SKLEARN_AVAILABLE = True
 except ImportError:
     print("Warning: sklearn not available - similarity detection disabled")
@@ -77,7 +72,7 @@ class StandaloneLegalProcessor:
             replacement_mode=replacement_mode
         )
     
-    def process_pdf(self, pdf_path: str, output_dir: Optional[str] = None) -> Dict[str, Any]:
+    def process_pdf(self, pdf_path: str, output_dir: str | None = None) -> dict[str, Any]:
         """Process a PDF file with OCR and boilerplate removal"""
         
         print(f"Processing: {os.path.basename(pdf_path)}")
@@ -124,7 +119,7 @@ class StandaloneLegalProcessor:
             'preservation_log': result.preservation_log
         }
     
-    def process_multiple_pdfs(self, pdf_paths: List[str], output_dir: Optional[str] = None) -> Dict[str, Any]:
+    def process_multiple_pdfs(self, pdf_paths: list[str], output_dir: str | None = None) -> dict[str, Any]:
         """Process multiple PDFs with cross-document boilerplate analysis"""
         
         print(f"Processing {len(pdf_paths)} PDFs with batch analysis...")
@@ -283,7 +278,7 @@ class StandaloneLegalProcessor:
         with open(report_file, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, default=str)
     
-    def _generate_batch_stats(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _generate_batch_stats(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Generate batch processing statistics"""
         
         if not results:
@@ -305,7 +300,7 @@ class StandaloneLegalProcessor:
             'total_segments_removed': sum(r['processing_stats']['segments_removed'] for r in results)
         }
     
-    def _save_batch_report(self, batch_stats: Dict[str, Any], output_dir: str):
+    def _save_batch_report(self, batch_stats: dict[str, Any], output_dir: str):
         """Save batch processing report"""
         
         report_file = os.path.join(output_dir, "batch_processing_report.json")

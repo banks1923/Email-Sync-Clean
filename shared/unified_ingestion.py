@@ -11,7 +11,6 @@ Follows CLAUDE.md principles: Simple > Complex, Direct > Indirect.
 """
 
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
@@ -30,7 +29,7 @@ class UnifiedIngestionService:
         self, 
         directory: str = "data/Stoneman_dispute/user_data",
         extensions: list[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process documents from directory recursively through unified pipeline.
         
@@ -101,7 +100,7 @@ class UnifiedIngestionService:
         
         return processed_results
 
-    def ingest_emails(self, since: str = None) -> Dict[str, Any]:
+    def ingest_emails(self, since: str = None) -> dict[str, Any]:
         """
         Process emails via GmailService.
         
@@ -148,7 +147,7 @@ class UnifiedIngestionService:
         self, 
         document_directory: str = "data/Stoneman_dispute/user_data",
         email_since: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process both emails and documents.
         

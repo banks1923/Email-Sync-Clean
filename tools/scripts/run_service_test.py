@@ -51,7 +51,6 @@ class ServiceTestHarness:
             ("Entity Extraction", self.test_entity_extraction),
             ("Timeline", self.test_timeline),
             ("Summarization", self.test_summarization),
-            ("Knowledge Graph", self.test_knowledge_graph),
             ("Search Intelligence", self.test_search_intelligence),
             ("Legal Intelligence", self.test_legal_intelligence),
         ]
@@ -252,26 +251,6 @@ class ServiceTestHarness:
         
         return result.get("summary_type") is not None, details
     
-    def test_knowledge_graph(self) -> tuple[bool, dict]:
-        """Test knowledge graph service."""
-        try:
-            from knowledge_graph import KnowledgeGraphService
-
-            # Note: Has schema issues, so we just check import
-            details = {"status": "importable"}
-            
-            if self.mode == "deep":
-                try:
-                    kg = KnowledgeGraphService()
-                    stats = kg.get_graph_stats()
-                    details.update(stats)
-                except Exception as e:
-                    details["error"] = str(e)[:50]
-            
-            return True, details
-            
-        except Exception as e:
-            return False, {"error": str(e)[:50]}
     
     def test_search_intelligence(self) -> tuple[bool, dict]:
         """Test search intelligence service."""
@@ -325,7 +304,6 @@ def create_cli_entry_points():
         "summarization": "summarization.engine:main",
         "search": "search_intelligence.main:main",
         "legal": "legal_intelligence.main:main",
-        "knowledge": "knowledge_graph.main:main",
     }
     
     print("\nCLI Entry Points:")

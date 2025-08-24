@@ -185,7 +185,7 @@ class PipelineVerifier:
         issues = []
         
         try:
-            content_table = self._content_table()
+            self._content_table()
             
             # Check for documents table unique constraint
             indexes = self.db.fetch("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='documents'")

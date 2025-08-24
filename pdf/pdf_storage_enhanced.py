@@ -123,16 +123,17 @@ class EnhancedPDFStorage:
 
                 conn.commit()
 
-                # Also add to content table for unified access
+                # Also add to content_unified table for unified access
                 # Combine all chunks for the full document text
                 full_text = " ".join([chunk.get("text", "") for chunk in chunks])
-                content_id = self.db.add_content(
-                    content_type="pdf",
+                content_id = self.db.upsert_content(
+                    source_type="pdf",
+                    external_id=file_hash,  # Use file hash as unique external ID
+                    content_type="pdf",  # Required by method signature
                     title=file_name,
                     content=full_text,
-                    source_path=pdf_path,
                     metadata={
-                        "file_hash": file_hash,
+                        "source_path": pdf_path,
                         "extraction_method": extraction_method,
                         "ocr_confidence": ocr_confidence,
                         "legal_metadata": legal_metadata,

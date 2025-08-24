@@ -24,7 +24,7 @@ class EntityHandler:
     def __init__(self):
         self.processor = UnifiedEntityProcessor()
     
-    def extract_entities_unified(self, args) -> Dict[str, Any]:
+    def extract_entities_unified(self, args) -> dict[str, Any]:
         """Extract entities from unified content pipeline"""
         max_content = getattr(args, 'limit', None)
         missing_only = getattr(args, 'missing_only', False)
@@ -62,7 +62,7 @@ class EntityHandler:
             print(f"❌ Entity extraction failed: {e}")
             return {'success': False, 'error': str(e)}
     
-    def entity_status(self, args) -> Dict[str, Any]:
+    def entity_status(self, args) -> dict[str, Any]:
         """Show entity extraction status for unified content"""
         try:
             status = self.processor.get_processing_status()
@@ -183,7 +183,7 @@ class EntityHandler:
             return {'error': str(e)}
 
 
-def handle_entity_command(command: str, args) -> Dict[str, Any]:
+def handle_entity_command(command: str, args) -> dict[str, Any]:
     """Route entity commands to appropriate handlers"""
     handler = EntityHandler()
     

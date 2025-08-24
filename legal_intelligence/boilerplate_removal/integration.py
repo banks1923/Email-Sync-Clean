@@ -60,8 +60,8 @@ class LegalDocumentProcessor:
     
     def process_pdf_with_boilerplate_removal(self, 
                                            pdf_path: str,
-                                           output_dir: Optional[str] = None,
-                                           save_intermediates: bool = True) -> Dict[str, Any]:
+                                           output_dir: str | None = None,
+                                           save_intermediates: bool = True) -> dict[str, Any]:
         """
         Process a PDF with full OCR and boilerplate removal pipeline.
         
@@ -156,9 +156,9 @@ class LegalDocumentProcessor:
             }
     
     def process_multiple_pdfs(self, 
-                             pdf_paths: List[str],
-                             output_dir: Optional[str] = None,
-                             batch_analysis: bool = True) -> Dict[str, Any]:
+                             pdf_paths: list[str],
+                             output_dir: str | None = None,
+                             batch_analysis: bool = True) -> dict[str, Any]:
         """
         Process multiple PDFs with cross-document boilerplate analysis.
         
@@ -258,13 +258,12 @@ class LegalDocumentProcessor:
         
         return batch_results
     
-    def _extract_text_with_enhanced_ocr(self, pdf_path: str) -> Dict[str, Any]:
+    def _extract_text_with_enhanced_ocr(self, pdf_path: str) -> dict[str, Any]:
         """Extract text using the enhanced OCR pipeline"""
         
         try:
             # Use existing PDF processing pipeline
             from pdf2image import convert_from_path
-            from PIL import Image
             
             # Convert PDF to images
             pages = convert_from_path(pdf_path, dpi=self.config['ocr_dpi'])
@@ -320,7 +319,7 @@ class LegalDocumentProcessor:
             logger.error(f"Enhanced OCR failed for {pdf_path}: {e}")
             return {'success': False, 'error': str(e)}
     
-    def _save_processing_outputs(self, results: Dict[str, Any], output_dir: str):
+    def _save_processing_outputs(self, results: dict[str, Any], output_dir: str):
         """Save individual processing outputs"""
         
         pdf_path = results['pdf_path']
@@ -346,7 +345,7 @@ class LegalDocumentProcessor:
         
         logger.info(f"Saved processing outputs for {base_name} to {output_dir}")
     
-    def _save_batch_outputs(self, results: Dict[str, Any], output_dir: str):
+    def _save_batch_outputs(self, results: dict[str, Any], output_dir: str):
         """Save batch processing outputs"""
         
         import json
@@ -384,7 +383,7 @@ class LegalDocumentProcessor:
         else:
             return obj
     
-    def validate_setup(self) -> Dict[str, Any]:
+    def validate_setup(self) -> dict[str, Any]:
         """Validate complete setup"""
         
         validation = {
@@ -401,7 +400,7 @@ class LegalDocumentProcessor:
         
         return validation
     
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """Get processing statistics and capabilities"""
         
         return {

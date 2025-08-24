@@ -4,14 +4,12 @@ Comprehensive project graph generator for Email Sync Clean Backup system.
 Generates multiple visualization types using current project data.
 """
 
-import os
 import sys
 import json
 import sqlite3
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import seaborn as sns
 import networkx as nx
 from datetime import datetime
 
@@ -91,7 +89,7 @@ def analyze_service_dependencies():
         
         for py_file in py_files:
             try:
-                with open(py_file, 'r', encoding='utf-8') as f:
+                with open(py_file, encoding='utf-8') as f:
                     lines = f.readlines()
                     total_lines += len(lines)
                     

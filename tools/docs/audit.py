@@ -24,21 +24,21 @@ class ServiceLineCount:
 class FileExistenceCheck:
     documented_path: str
     exists: bool
-    actual_path: Optional[str] = None
+    actual_path: str | None = None
 
 
 @dataclass
 class TestPathMapping:
     documented_path: str
     exists: bool
-    actual_path: Optional[str] = None
+    actual_path: str | None = None
 
 
 @dataclass
 class AuditReport:
-    services: List[ServiceLineCount]
-    missing_docs: List[FileExistenceCheck]
-    test_paths: List[TestPathMapping]
+    services: list[ServiceLineCount]
+    missing_docs: list[FileExistenceCheck]
+    test_paths: list[TestPathMapping]
     total_service_lines: int
     total_code_lines: int
     audit_timestamp: str
@@ -89,7 +89,7 @@ class DocumentationAuditor:
     def count_lines_in_file(self, file_path: Path) -> tuple[int, int]:
         """Count total lines and code lines (excluding comments/blank) in a Python file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 lines = f.readlines()
             
             total_lines = len(lines)
@@ -106,7 +106,7 @@ class DocumentationAuditor:
             print(f"Warning: Could not read {file_path}: {e}", file=sys.stderr)
             return 0, 0
 
-    def audit_service_lines(self) -> List[ServiceLineCount]:
+    def audit_service_lines(self) -> list[ServiceLineCount]:
         """Audit line counts for each service using glob patterns."""
         services = []
         
@@ -143,7 +143,7 @@ class DocumentationAuditor:
         
         return services
 
-    def check_doc_existence(self) -> List[FileExistenceCheck]:
+    def check_doc_existence(self) -> list[FileExistenceCheck]:
         """Check if documented files actually exist."""
         checks = []
         
@@ -159,7 +159,7 @@ class DocumentationAuditor:
         
         return checks
 
-    def check_test_paths(self) -> List[TestPathMapping]:
+    def check_test_paths(self) -> list[TestPathMapping]:
         """Check if documented test paths exist."""
         mappings = []
         

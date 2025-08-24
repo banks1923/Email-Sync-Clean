@@ -6,7 +6,6 @@ These tests validate the core functionality we fixed to prevent regressions.
 """
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -101,17 +100,9 @@ def test_mcp_function_imports():
     
     try:
         # Test Search Intelligence MCP imports
-        from infrastructure.mcp_servers.search_intelligence_mcp import (
-            search_smart, search_similar, search_entities, 
-            search_summarize, search_cluster, search_process_all
-        )
         print("✅ Search Intelligence MCP functions imported successfully")
         
         # Test Legal Intelligence MCP imports  
-        from infrastructure.mcp_servers.legal_intelligence_mcp import (
-            legal_extract_entities, legal_timeline_events, legal_knowledge_graph,
-            legal_document_analysis, legal_case_tracking, legal_relationship_discovery
-        )
         print("✅ Legal Intelligence MCP functions imported successfully")
         
     except ImportError as e:

@@ -63,7 +63,7 @@ def format_service_table(services: list) -> str:
 def update_claude_md(audit_report: dict, file_path: Path) -> bool:
     """Update CLAUDE.md with accurate line counts and service information."""
     
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         content = f.read()
     
     # Extract service data from audit report
@@ -131,7 +131,7 @@ def update_readme_md(audit_report: dict, file_path: Path) -> bool:
     if not file_path.exists():
         return False
         
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         content = f.read()
     
     # Look for and update any "550 lines" or similar claims

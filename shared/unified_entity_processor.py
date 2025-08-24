@@ -17,7 +17,7 @@ Status: NEW - Addresses missing entity extraction in unified pipeline
 
 import time
 import uuid
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
 
 from loguru import logger
@@ -45,10 +45,10 @@ class UnifiedEntityProcessor:
     
     def process_content_entities(
         self, 
-        content_ids: List[str] = None, 
+        content_ids: list[str] = None, 
         batch_size: int = 50,
         max_content: int = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process entities from content_unified table with proper attribution.
         
@@ -144,7 +144,7 @@ class UnifiedEntityProcessor:
         
         return result
     
-    def _process_batch(self, entity_extractor, batch: List[Dict]) -> Dict[str, int]:
+    def _process_batch(self, entity_extractor, batch: list[dict]) -> dict[str, int]:
         """Process a batch of content records for entity extraction"""
         batch_stats = {
             'processed': 0,
@@ -215,7 +215,7 @@ class UnifiedEntityProcessor:
         
         return text.strip()
     
-    def _filter_quality_entities(self, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _filter_quality_entities(self, entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Enhanced quality filtering to remove gibberish entities"""
         import re
         
@@ -303,7 +303,7 @@ class UnifiedEntityProcessor:
         content_id: str, 
         source_id: str, 
         source_type: str,
-        entities: List[Dict[str, Any]]
+        entities: list[dict[str, Any]]
     ) -> int:
         """Store entity-to-content mappings in database"""
         if not entities:
@@ -339,7 +339,7 @@ class UnifiedEntityProcessor:
         
         return 0
     
-    def _build_entity_metadata(self, entity: Dict[str, Any], source_type: str) -> str:
+    def _build_entity_metadata(self, entity: dict[str, Any], source_type: str) -> str:
         """Build metadata JSON for entity mapping"""
         import json
         metadata = {
@@ -351,7 +351,7 @@ class UnifiedEntityProcessor:
         }
         return json.dumps(metadata)
     
-    def _get_content_type_breakdown(self, content_records: List[Dict]) -> Dict[str, int]:
+    def _get_content_type_breakdown(self, content_records: list[dict]) -> dict[str, int]:
         """Get breakdown of processed content by type"""
         breakdown = {}
         for record in content_records:
@@ -359,7 +359,7 @@ class UnifiedEntityProcessor:
             breakdown[source_type] = breakdown.get(source_type, 0) + 1
         return breakdown
     
-    def get_processing_status(self) -> Dict[str, Any]:
+    def get_processing_status(self) -> dict[str, Any]:
         """Get current entity processing status for unified content"""
         
         # Content with and without entity mappings
@@ -398,7 +398,7 @@ class UnifiedEntityProcessor:
             'timestamp': datetime.now().isoformat()
         }
     
-    def process_missing_entities_only(self, max_content: int = 100) -> Dict[str, Any]:
+    def process_missing_entities_only(self, max_content: int = 100) -> dict[str, Any]:
         """Process only content that doesn't have entity mappings yet"""
         
         # Find content without entity mappings

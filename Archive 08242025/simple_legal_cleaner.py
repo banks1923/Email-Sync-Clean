@@ -6,7 +6,7 @@ and adds legal-specific pattern matching on top.
 """
 
 import re
-from typing import List, Tuple
+from typing import Tuple
 
 # Try to import existing libraries
 try:
@@ -16,7 +16,6 @@ except ImportError:
     JUSTEXT_AVAILABLE = False
 
 try:
-    from boilerpipe.extract import Extractor
     BOILERPIPE_AVAILABLE = True
 except ImportError:
     BOILERPIPE_AVAILABLE = False
@@ -48,7 +47,7 @@ class SimpleLegalCleaner:
             for pattern in self.legal_boilerplate_patterns
         ]
     
-    def clean_legal_text(self, text: str, method: str = 'patterns') -> Tuple[str, dict]:
+    def clean_legal_text(self, text: str, method: str = 'patterns') -> tuple[str, dict]:
         """
         Clean legal text using different methods
         
@@ -67,7 +66,7 @@ class SimpleLegalCleaner:
         else:
             return self._clean_with_patterns(text)
     
-    def _clean_with_patterns(self, text: str) -> Tuple[str, dict]:
+    def _clean_with_patterns(self, text: str) -> tuple[str, dict]:
         """Clean using only legal patterns (our approach)"""
         
         original_length = len(text)
@@ -96,7 +95,7 @@ class SimpleLegalCleaner:
         
         return cleaned_text, stats
     
-    def _clean_with_justext(self, text: str) -> Tuple[str, dict]:
+    def _clean_with_justext(self, text: str) -> tuple[str, dict]:
         """Clean using jusText library"""
         
         # jusText expects HTML, so wrap plain text
@@ -132,7 +131,7 @@ class SimpleLegalCleaner:
             print(f"jusText failed: {e}")
             return self._clean_with_patterns(text)
     
-    def _clean_hybrid(self, text: str) -> Tuple[str, dict]:
+    def _clean_hybrid(self, text: str) -> tuple[str, dict]:
         """Clean using jusText + legal patterns"""
         
         # First pass: jusText

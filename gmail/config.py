@@ -16,6 +16,12 @@ class GmailConfig:
             "gaildcalhoun@gmail.com",
         ]
         self.max_results = 500  # Gmail API max per request
+        
+        # Dates to exclude from sync (format: YYYY/MM/DD)
+        self.excluded_dates = [
+            "2023/10/03",  # October 3rd, 2023
+            "2023/12/18",  # December 18th, 2023
+        ]
 
     def build_query(self) -> str:
         """Build Gmail API query string from configured sender filters.
@@ -29,6 +35,14 @@ class GmailConfig:
 
         # Add date restriction to exclude emails before 2023
         date_filter = "after:2022/12/31"
+        
+        # Add exclusions for specific dates
+        date_exclusions = []
+        for excluded_date in self.excluded_dates:
+            # Gmail doesn't support direct date exclusion, so we use before/after
+            # We'll handle this in the processing stage instead
+            pass
 
         # Return sender filter with date restriction
+        # Note: Specific date exclusions will be handled during processing
         return f"({sender_filter}) {date_filter}"

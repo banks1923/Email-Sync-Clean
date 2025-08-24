@@ -27,18 +27,18 @@ if PYDANTIC_AVAILABLE:
         project_root: Path = Field(default=Path("/Users/jim/Projects/Email-Sync-Clean-Backup"))
         
         # Optional API keys (loaded from environment)
-        anthropic_api_key: Optional[SecretStr] = Field(None, alias='ANTHROPIC_API_KEY')
-        openai_api_key: Optional[SecretStr] = Field(None, alias='OPENAI_API_KEY')
-        perplexity_api_key: Optional[SecretStr] = Field(None, alias='PERPLEXITY_API_KEY')
-        google_api_key: Optional[SecretStr] = Field(None, alias='GOOGLE_API_KEY')
-        mistral_api_key: Optional[SecretStr] = Field(None, alias='MISTRAL_API_KEY')
+        anthropic_api_key: SecretStr | None = Field(None, alias='ANTHROPIC_API_KEY')
+        openai_api_key: SecretStr | None = Field(None, alias='OPENAI_API_KEY')
+        perplexity_api_key: SecretStr | None = Field(None, alias='PERPLEXITY_API_KEY')
+        google_api_key: SecretStr | None = Field(None, alias='GOOGLE_API_KEY')
+        mistral_api_key: SecretStr | None = Field(None, alias='MISTRAL_API_KEY')
         
         class Config:
             env_file = "/Users/jim/Secrets/.env"
             env_file_encoding = 'utf-8'
             extra = 'ignore'  # Ignore extra environment variables
             
-        def get_mcp_servers(self) -> Dict[str, Dict[str, Any]]:
+        def get_mcp_servers(self) -> dict[str, dict[str, Any]]:
             """Generate MCP server configurations"""
             servers = {
                 "legal-intelligence": {
@@ -80,7 +80,7 @@ if PYDANTIC_AVAILABLE:
                 
             return servers
         
-        def get_claude_desktop_servers(self) -> Dict[str, Dict[str, Any]]:
+        def get_claude_desktop_servers(self) -> dict[str, dict[str, Any]]:
             """Generate Claude Desktop server configurations (different format)"""
             servers = {
                 "email-sync": {
@@ -121,7 +121,7 @@ if PYDANTIC_AVAILABLE:
                 
             return servers
         
-        def validate_config(self) -> Dict[str, str]:
+        def validate_config(self) -> dict[str, str]:
             """Validate configuration and return status"""
             status = {}
             status["project_root"] = "✅ Valid" if self.project_root.exists() else "❌ Missing"
@@ -140,7 +140,7 @@ if PYDANTIC_AVAILABLE:
             
             return status
         
-        def check_security(self) -> List[str]:
+        def check_security(self) -> list[str]:
             """Check for security issues"""
             warnings = []
             
@@ -166,7 +166,7 @@ else:
     class MCPConfig:
         project_root: Path = field(default_factory=lambda: Path("/Users/jim/Projects/Email-Sync-Clean-Backup"))
         
-        def get_mcp_servers(self) -> Dict[str, Dict[str, Any]]:
+        def get_mcp_servers(self) -> dict[str, dict[str, Any]]:
             return {
                 "legal-intelligence": {
                     "type": "stdio",
@@ -182,13 +182,13 @@ else:
                 }
             }
         
-        def get_claude_desktop_servers(self) -> Dict[str, Dict[str, Any]]:
+        def get_claude_desktop_servers(self) -> dict[str, dict[str, Any]]:
             return self.get_mcp_servers()
         
-        def validate_config(self) -> Dict[str, str]:
+        def validate_config(self) -> dict[str, str]:
             return {"status": "✅ Basic configuration (no validation)"}
         
-        def check_security(self) -> List[str]:
+        def check_security(self) -> list[str]:
             return ["⚠️ No security checks available without Pydantic"]
 
 

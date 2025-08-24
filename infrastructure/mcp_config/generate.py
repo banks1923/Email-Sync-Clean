@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from infrastructure.mcp_config.config import get_mcp_config
 
 
-def generate_mcp_json(output_path: Optional[Path] = None, dry_run: bool = False) -> None:
+def generate_mcp_json(output_path: Path | None = None, dry_run: bool = False) -> None:
     """Generate .mcp.json file for Claude Code"""
     config = get_mcp_config()
     servers = config.get_mcp_servers()
@@ -39,7 +39,7 @@ def generate_mcp_json(output_path: Optional[Path] = None, dry_run: bool = False)
     print(f"✅ MCP configuration written to: {output_path}")
 
 
-def generate_claude_desktop_config(output_path: Optional[Path] = None, dry_run: bool = False) -> None:
+def generate_claude_desktop_config(output_path: Path | None = None, dry_run: bool = False) -> None:
     """Generate Claude Desktop configuration"""
     config = get_mcp_config()
     servers = config.get_claude_desktop_servers()

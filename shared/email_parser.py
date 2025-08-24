@@ -28,17 +28,17 @@ COMPILED_PATTERNS = {
 class QuotedMessage:
     """Represents an individual message extracted from quoted content"""
     content: str
-    sender: Optional[str] = None
-    date: Optional[str] = None
-    subject: Optional[str] = None
+    sender: str | None = None
+    date: str | None = None
+    subject: str | None = None
     message_type: str = "reply"  # reply, forward, original
     depth: int = 0  # nesting level
-    raw_header: Optional[str] = None
-    email_id: Optional[str] = None  # Original email ID this came from
-    thread_id: Optional[str] = None  # Thread this belongs to
+    raw_header: str | None = None
+    email_id: str | None = None  # Original email ID this came from
+    thread_id: str | None = None  # Thread this belongs to
 
 
-def clean_text(text: str, max_length: Optional[int] = None) -> str:
+def clean_text(text: str, max_length: int | None = None) -> str:
     """
     Clean text by removing extra whitespace and optionally truncating.
     """
@@ -118,7 +118,7 @@ def extract_reply_content(email_body: str) -> str:
     return clean_text('\n'.join(reply_lines))
 
 
-def parse_conversation_chain(email_body: str) -> List[QuotedMessage]:
+def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
     """
     Advanced parsing to extract individual messages from conversation chains.
     This handles nested replies, forwards, and complex quote structures.
@@ -128,7 +128,7 @@ def parse_conversation_chain(email_body: str) -> List[QuotedMessage]:
 
     messages = []
     lines = email_body.split("\n")
-    current_message: Dict[str, Any] = {"content": [], "depth": 0}
+    current_message: dict[str, Any] = {"content": [], "depth": 0}
     
     # Enhanced patterns for different email clients
     header_patterns = [
@@ -235,7 +235,7 @@ def parse_conversation_chain(email_body: str) -> List[QuotedMessage]:
     return messages
 
 
-def _parse_message_header(header_lines: List[str]) -> tuple[Optional[str], Optional[str], Optional[str]]:
+def _parse_message_header(header_lines: list[str]) -> tuple[str | None, str | None, str | None]:
     """Parse message header to extract sender, date, subject."""
     sender = None
     date = None
@@ -252,7 +252,7 @@ def _parse_message_header(header_lines: List[str]) -> tuple[Optional[str], Optio
     return sender, date, subject
 
 
-def _count_header_lines(lines: List[str]) -> int:
+def _count_header_lines(lines: list[str]) -> int:
     """Count header-like lines to determine when header ends."""
     header_count = 0
     for line in lines:

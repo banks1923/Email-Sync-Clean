@@ -13,7 +13,6 @@ from loguru import logger
 from entity.main import EntityService
 
 # Service imports based on investigation
-from knowledge_graph import get_knowledge_graph_service, get_similarity_analyzer
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.timeline.main import TimelineService
@@ -37,8 +36,6 @@ class LegalIntelligenceService:
         # Initialize integrated services
         self.entity_service = EntityService()
         self.timeline_service = TimelineService()
-        self.knowledge_graph = get_knowledge_graph_service(db_path)
-        self.similarity_analyzer = get_similarity_analyzer(db_path, similarity_threshold=0.7)
         self.embedding_service = get_embedding_service()
 
         # Cache for analysis results
@@ -336,14 +333,6 @@ class LegalIntelligenceService:
             }
             nodes.append(node)
 
-            # Add to knowledge graph
-            self.knowledge_graph.add_node(
-                content_id=node["id"],
-                content_type="legal_document",
-                title=node["title"],
-                metadata=node["metadata"],
-            )
-
         # Find document similarities and create edges
         for i, doc1 in enumerate(documents):
             for doc2 in documents[i + 1 :]:
@@ -357,14 +346,6 @@ class LegalIntelligenceService:
                         "strength": similarity,
                     }
                     edges.append(edge)
-
-                    # Add to knowledge graph
-                    self.knowledge_graph.add_edge(
-                        source_content_id=edge["source"],
-                        target_content_id=edge["target"],
-                        relationship_type=edge["type"],
-                        strength=edge["strength"],
-                    )
 
         return {
             "success": True,

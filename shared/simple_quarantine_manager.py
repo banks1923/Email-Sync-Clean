@@ -21,7 +21,7 @@ class SimpleQuarantineManager:
         self.quarantine_dir = Path(quarantine_dir)
         self.quarantine_dir.mkdir(parents=True, exist_ok=True)
 
-    def quarantine_file(self, file_path: Path, error_msg: str, metadata: Dict = None) -> Dict[str, Any]:
+    def quarantine_file(self, file_path: Path, error_msg: str, metadata: dict = None) -> dict[str, Any]:
         """
         Quarantine a problematic file with error information.
         
@@ -72,13 +72,13 @@ class SimpleQuarantineManager:
                 "message": f"Could not quarantine {file_path.name}"
             }
 
-    def list_quarantined_files(self) -> List[Dict[str, Any]]:
+    def list_quarantined_files(self) -> list[dict[str, Any]]:
         """List all quarantined files with their error information."""
         quarantined_files = []
         
         for error_file in self.quarantine_dir.glob("*.error.json"):
             try:
-                with open(error_file, 'r') as f:
+                with open(error_file) as f:
                     error_info = json.load(f)
                 
                 # Find corresponding quarantined file
@@ -108,7 +108,7 @@ class SimpleQuarantineManager:
         quarantined_files.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
         return quarantined_files
 
-    def retry_quarantined_file(self, quarantine_path: Path) -> Dict[str, Any]:
+    def retry_quarantined_file(self, quarantine_path: Path) -> dict[str, Any]:
         """
         Attempt to retry processing a quarantined file.
         
@@ -167,7 +167,7 @@ class SimpleQuarantineManager:
                 "message": f"Exception during retry: {e}"
             }
 
-    def get_quarantine_stats(self) -> Dict[str, Any]:
+    def get_quarantine_stats(self) -> dict[str, Any]:
         """Get statistics about quarantined files."""
         quarantined_files = self.list_quarantined_files()
         
@@ -199,7 +199,7 @@ class SimpleQuarantineManager:
             "directory_exists": self.quarantine_dir.exists()
         }
 
-    def cleanup_old_quarantine(self, days_old: int = 30) -> Dict[str, Any]:
+    def cleanup_old_quarantine(self, days_old: int = 30) -> dict[str, Any]:
         """Clean up quarantine files older than specified days."""
         cutoff_timestamp = datetime.now().timestamp() - (days_old * 24 * 60 * 60)
         

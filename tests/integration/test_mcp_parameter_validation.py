@@ -3,7 +3,6 @@ Integration tests for MCP server parameter validation.
 
 Tests the actual MCP function calls to ensure parameter mismatches are caught.
 """
-import pytest
 from unittest.mock import Mock, patch
 import sys
 from pathlib import Path

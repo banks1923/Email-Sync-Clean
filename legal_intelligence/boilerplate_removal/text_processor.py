@@ -6,7 +6,7 @@ while preserving document structure and important legal content.
 """
 
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass
 from loguru import logger
 
@@ -18,9 +18,9 @@ class ProcessingResult:
     """Result of text processing operation"""
     original_text: str
     cleaned_text: str
-    removed_segments: List[BoilerplateSegment]
-    processing_stats: Dict[str, Any]
-    preservation_log: List[str]
+    removed_segments: list[BoilerplateSegment]
+    processing_stats: dict[str, Any]
+    preservation_log: list[str]
 
 
 class LegalTextProcessor:
@@ -88,8 +88,8 @@ class LegalTextProcessor:
     
     def process_document(self, 
                         text: str, 
-                        boilerplate_segments: List[BoilerplateSegment],
-                        document_metadata: Dict[str, Any] = None) -> ProcessingResult:
+                        boilerplate_segments: list[BoilerplateSegment],
+                        document_metadata: dict[str, Any] = None) -> ProcessingResult:
         """
         Process a document by removing boilerplate text.
         
@@ -104,7 +104,6 @@ class LegalTextProcessor:
         logger.info(f"Processing document with {len(boilerplate_segments)} boilerplate segments")
         
         preservation_log = []
-        removed_segments = []
         
         # Step 1: Identify content to preserve
         preserved_ranges = self._identify_preserved_content(text, preservation_log)
@@ -138,8 +137,8 @@ class LegalTextProcessor:
         return result
     
     def process_multiple_documents(self, 
-                                 documents: List[Dict[str, Any]], 
-                                 boilerplate_segments_list: List[List[BoilerplateSegment]]) -> List[ProcessingResult]:
+                                 documents: list[dict[str, Any]], 
+                                 boilerplate_segments_list: list[list[BoilerplateSegment]]) -> list[ProcessingResult]:
         """Process multiple documents in batch"""
         
         results = []
@@ -153,7 +152,7 @@ class LegalTextProcessor:
         
         return results
     
-    def _identify_preserved_content(self, text: str, log: List[str]) -> List[Tuple[int, int, str]]:
+    def _identify_preserved_content(self, text: str, log: list[str]) -> list[tuple[int, int, str]]:
         """Identify text ranges that should never be removed"""
         preserved_ranges = []
         
@@ -175,7 +174,7 @@ class LegalTextProcessor:
         
         return merged_ranges
     
-    def _merge_overlapping_ranges(self, ranges: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+    def _merge_overlapping_ranges(self, ranges: list[tuple[int, int, str]]) -> list[tuple[int, int, str]]:
         """Merge overlapping preservation ranges"""
         if not ranges:
             return []
@@ -199,9 +198,9 @@ class LegalTextProcessor:
         return merged
     
     def _filter_segments_for_removal(self, 
-                                    segments: List[BoilerplateSegment],
-                                    preserved_ranges: List[Tuple[int, int, str]],
-                                    log: List[str]) -> List[BoilerplateSegment]:
+                                    segments: list[BoilerplateSegment],
+                                    preserved_ranges: list[tuple[int, int, str]],
+                                    log: list[str]) -> list[BoilerplateSegment]:
         """Filter boilerplate segments that should be removed"""
         
         filtered = []
@@ -231,7 +230,7 @@ class LegalTextProcessor:
         
         return filtered
     
-    def _is_safe_to_remove(self, segment: BoilerplateSegment, log: List[str]) -> bool:
+    def _is_safe_to_remove(self, segment: BoilerplateSegment, log: list[str]) -> bool:
         """Additional safety checks before removing segment"""
         
         # Don't remove very short segments (might be important)
@@ -264,8 +263,8 @@ class LegalTextProcessor:
     
     def _apply_boilerplate_removal(self, 
                                   text: str,
-                                  segments: List[BoilerplateSegment],
-                                  log: List[str]) -> str:
+                                  segments: list[BoilerplateSegment],
+                                  log: list[str]) -> str:
         """Apply boilerplate removal based on replacement mode"""
         
         # Sort segments by position (reverse order to maintain indices)
@@ -328,7 +327,7 @@ class LegalTextProcessor:
         
         return f'\n{summary}\n' if self.preserve_structure else f'{summary} '
     
-    def _post_process_text(self, text: str, log: List[str]) -> str:
+    def _post_process_text(self, text: str, log: list[str]) -> str:
         """Post-processing cleanup of the text"""
         
         # Remove excessive whitespace
@@ -348,7 +347,7 @@ class LegalTextProcessor:
     def _generate_processing_stats(self, 
                                   original: str, 
                                   cleaned: str, 
-                                  removed_segments: List[BoilerplateSegment]) -> Dict[str, Any]:
+                                  removed_segments: list[BoilerplateSegment]) -> dict[str, Any]:
         """Generate processing statistics"""
         
         original_length = len(original)
@@ -379,7 +378,7 @@ class LegalTextProcessor:
         
         return stats
     
-    def generate_processing_report(self, results: List[ProcessingResult]) -> Dict[str, Any]:
+    def generate_processing_report(self, results: list[ProcessingResult]) -> dict[str, Any]:
         """Generate comprehensive processing report for multiple documents"""
         
         if not results:

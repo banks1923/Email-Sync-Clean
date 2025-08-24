@@ -73,11 +73,23 @@ temp/
 tmp/
 .tmp/
 
-# Google Drive temporary upload files  
+# Cloud storage sync artifacts (Google Drive, Dropbox, OneDrive, iCloud)
 *.tmp.driveupload/
 .tmp.driveupload*/
 .tmp.drivedownload/
 *.tmp.drivedownload/
+snapshots/
+**/snapshots/
+**/*upload/
+**/*download/
+*.driveupload
+*.drivedownload
+~$*
+.~*
+*conflicted*
+*_backup/
+*.sync
+.sync/
 
 # Test files
 test_*.db
@@ -167,3 +179,12 @@ bfg.jar
 # Task files
 # tasks.json
 # tasks/ 
+
+# macOS artifacts
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon?

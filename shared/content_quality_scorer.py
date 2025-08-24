@@ -4,8 +4,7 @@ Implements the quality scoring system with hard gates for OCR validation.
 """
 
 import re
-import math
-from typing import Dict, Tuple, Optional
+from typing import Tuple
 from enum import Enum
 from dataclasses import dataclass
 
@@ -230,7 +229,7 @@ class ContentQualityScorer:
         
         return round(quality_score, 3)
     
-    def classify_quality(self, quality_score: float) -> Tuple[str, str]:
+    def classify_quality(self, quality_score: float) -> tuple[str, str]:
         """
         Classify content quality based on score.
         Returns (status, description) tuple.

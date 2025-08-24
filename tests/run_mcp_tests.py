@@ -7,7 +7,6 @@ Runs unit and integration tests to validate query expansion and parameter handli
 import sys
 import subprocess
 from pathlib import Path
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

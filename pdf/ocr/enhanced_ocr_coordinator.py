@@ -14,7 +14,7 @@ Architecture: Wraps existing OCRCoordinator with quality gates and enhanced proc
 
 import time
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 from loguru import logger
 
@@ -72,7 +72,7 @@ class EnhancedOCRCoordinator:
         pdf_path: str, 
         force_ocr: bool = False,
         quality_gates_enabled: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Main enhanced OCR processing with quality gates and fail-fast.
         
@@ -258,9 +258,9 @@ class EnhancedOCRCoordinator:
     
     def _process_pages_with_enhanced_ocr(
         self, 
-        images: List, 
+        images: list, 
         quality_gates_enabled: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process all pages with enhanced dual-pass OCR.
         """
@@ -328,7 +328,7 @@ class EnhancedOCRCoordinator:
         text: str,
         page_count: int,
         existing_metrics: Any = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform final quality validation using ContentQualityScorer.
         """
@@ -370,10 +370,10 @@ class EnhancedOCRCoordinator:
         self,
         failure_type: str,
         error_message: str,
-        pipeline_metadata: Dict[str, Any],
-        processing_stages: List[Dict[str, Any]],
+        pipeline_metadata: dict[str, Any],
+        processing_stages: list[dict[str, Any]],
         exception: Exception = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Build standardized failure result with diagnostics.
         """
@@ -396,7 +396,7 @@ class EnhancedOCRCoordinator:
         logger.error(f"❌ Pipeline failure ({failure_type}): {error_message}")
         return failure_result
     
-    def validate_enhanced_setup(self) -> Dict[str, Any]:
+    def validate_enhanced_setup(self) -> dict[str, Any]:
         """
         Validate complete enhanced OCR setup.
         """
@@ -415,7 +415,7 @@ class EnhancedOCRCoordinator:
             )
         }
     
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """
         Get processing statistics for monitoring and diagnostics.
         """

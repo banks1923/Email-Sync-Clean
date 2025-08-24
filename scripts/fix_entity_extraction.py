@@ -41,7 +41,7 @@ class EntityExtractionFixer:
             'skipped': 0
         }
     
-    def analyze_current_state(self) -> Dict[str, Any]:
+    def analyze_current_state(self) -> dict[str, Any]:
         """Analyze current entity extraction state"""
         logger.info("🔍 Analyzing current entity extraction state...")
         
@@ -76,7 +76,7 @@ class EntityExtractionFixer:
         
         return state
     
-    def extract_entities_from_content(self, batch_size: int = 50) -> Dict[str, int]:
+    def extract_entities_from_content(self, batch_size: int = 50) -> dict[str, int]:
         """Extract entities from all content in content_unified table"""
         logger.info("🔬 Starting entity extraction from unified content...")
         
@@ -97,7 +97,7 @@ class EntityExtractionFixer:
         for i, record in enumerate(content_records):
             try:
                 content_id = record['id']
-                source_type = record['source_type']
+                record['source_type']
                 title = record['title'] or ''
                 body = record['body']
                 source_id = record['source_id']
@@ -134,7 +134,7 @@ class EntityExtractionFixer:
         logger.info(f"✅ Entity extraction complete: {processed} content records, {total_entities} entities")
         return {'processed': processed, 'entities': total_entities}
     
-    def _store_entity_mappings(self, content_id: str, source_id: str, entities: List[Dict[str, Any]]):
+    def _store_entity_mappings(self, content_id: str, source_id: str, entities: list[dict[str, Any]]):
         """Store entity-to-content mappings"""
         mappings = []
         
@@ -158,7 +158,7 @@ class EntityExtractionFixer:
             self.db.batch_insert('entity_content_mapping', columns, values)
             self.stats['entities_mapped'] += len(mappings)
     
-    def verify_extraction_quality(self) -> Dict[str, Any]:
+    def verify_extraction_quality(self) -> dict[str, Any]:
         """Verify the quality of entity extraction"""
         logger.info("🔍 Verifying entity extraction quality...")
         
@@ -234,7 +234,7 @@ class EntityExtractionFixer:
         
         return orphaned_entities
     
-    def run_complete_fix(self) -> Dict[str, Any]:
+    def run_complete_fix(self) -> dict[str, Any]:
         """Run complete entity extraction fix"""
         logger.info("🚀 Starting complete entity extraction fix...")
         start_time = time.time()

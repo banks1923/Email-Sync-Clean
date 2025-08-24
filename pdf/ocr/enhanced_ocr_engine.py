@@ -13,13 +13,13 @@ Architecture: Wraps existing OCREngine with enhanced processing capabilities
 """
 
 import time
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List
 from loguru import logger
 
 try:
     import cv2
     import numpy as np
-    from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+    from PIL import Image
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
@@ -71,7 +71,7 @@ class EnhancedOCREngine:
         image: Image.Image, 
         page_count: int = 1,
         force_enhanced: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Main dual-pass OCR extraction with quality gates.
         
@@ -170,7 +170,7 @@ class EnhancedOCREngine:
             'processing_time': time.time() - start_time
         }
     
-    def _detect_born_digital_text(self, image: Image.Image) -> Dict[str, Any]:
+    def _detect_born_digital_text(self, image: Image.Image) -> dict[str, Any]:
         """
         Fast detection of born-digital PDFs with genuine text layers.
         
@@ -214,7 +214,7 @@ class EnhancedOCREngine:
             logger.warning(f"Born-digital detection failed: {e}")
             return {'is_born_digital': False, 'error': str(e)}
     
-    def _enhanced_ocr_extraction(self, image: Image.Image, processing_log: List[str]) -> Dict[str, Any]:
+    def _enhanced_ocr_extraction(self, image: Image.Image, processing_log: list[str]) -> dict[str, Any]:
         """
         Enhanced OCR with comprehensive pre-processing normalization.
         
@@ -357,7 +357,7 @@ class EnhancedOCREngine:
         except Exception:
             return image
     
-    def _find_text_line_peaks(self, projection: np.ndarray) -> List[int]:
+    def _find_text_line_peaks(self, projection: np.ndarray) -> list[int]:
         """Find peaks in horizontal projection that indicate text lines."""
         # Simple peak detection
         peaks = []
@@ -371,7 +371,7 @@ class EnhancedOCREngine:
         
         return peaks
     
-    def _calculate_line_regularity(self, peaks: List[int]) -> float:
+    def _calculate_line_regularity(self, peaks: list[int]) -> float:
         """Calculate regularity of text line spacing."""
         if len(peaks) < 2:
             return 0.0
@@ -394,7 +394,7 @@ class EnhancedOCREngine:
         
         return float(regularity)
     
-    def validate_enhanced_setup(self) -> Dict[str, Any]:
+    def validate_enhanced_setup(self) -> dict[str, Any]:
         """Validate enhanced OCR setup and dependencies."""
         base_validation = self.base_engine.validate_ocr_setup()
         

@@ -399,7 +399,7 @@ class SearchIntelligenceService:
 
             # Extract entities using the correct method name
             content = doc.get("body", "") or doc.get("content", "")
-            title = doc.get("title", "")
+            doc.get("title", "")
             result = self.entity_service.extract_email_entities(doc_id, content)
             entities = result.get("entities", [])
 
