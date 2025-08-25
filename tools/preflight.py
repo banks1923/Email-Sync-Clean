@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Production Preflight Check System
+"""Production Preflight Check System.
 
 Validates all system components before production operations.
 Usage: python3 tools/preflight.py [--verbose]
@@ -17,7 +16,9 @@ from loguru import logger
 
 
 class PreflightChecker:
-    """Comprehensive system validation for production readiness."""
+    """
+    Comprehensive system validation for production readiness.
+    """
     
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
@@ -26,7 +27,9 @@ class PreflightChecker:
         self.warnings = 0
         
     def _print_check(self, name: str, status: bool, message: str = "", warning: bool = False):
-        """Print check result with consistent formatting."""
+        """
+        Print check result with consistent formatting.
+        """
         if warning:
             icon = "⚠️"
             self.warnings += 1
@@ -48,7 +51,9 @@ class PreflightChecker:
             logger.debug(f"Check '{name}' failed: {message}")
     
     def check_database_schema(self):
-        """Verify database has all required columns."""
+        """
+        Verify database has all required columns.
+        """
         print("\n=== Database Schema Checks ===")
         
         try:
@@ -104,7 +109,9 @@ class PreflightChecker:
             return False
     
     def check_simpledb_methods(self):
-        """Verify SimpleDB has all required batch methods."""
+        """
+        Verify SimpleDB has all required batch methods.
+        """
         print("\n=== SimpleDB Methods Checks ===")
         
         try:
@@ -152,7 +159,9 @@ class PreflightChecker:
             return False
     
     def check_services(self):
-        """Verify all services initialize correctly."""
+        """
+        Verify all services initialize correctly.
+        """
         print("\n=== Service Initialization Checks ===")
         
         services = [
@@ -182,7 +191,9 @@ class PreflightChecker:
         return all_services_ok
     
     def check_qdrant_connection(self):
-        """Verify Qdrant vector store is accessible."""
+        """
+        Verify Qdrant vector store is accessible.
+        """
         print("\n=== Qdrant Vector Store Checks ===")
         
         try:
@@ -218,7 +229,9 @@ class PreflightChecker:
             return False
     
     def check_embedding_service(self):
-        """Verify embedding service produces correct dimensions."""
+        """
+        Verify embedding service produces correct dimensions.
+        """
         print("\n=== Embedding Service Checks ===")
         
         try:
@@ -259,7 +272,9 @@ class PreflightChecker:
             return False
     
     def check_cli_tools(self):
-        """Verify CLI tools work without timeout."""
+        """
+        Verify CLI tools work without timeout.
+        """
         print("\n=== CLI Tools Checks ===")
         
         try:
@@ -284,7 +299,9 @@ class PreflightChecker:
             return False
     
     def check_vector_parity(self):
-        """Verify vector store is in sync with database."""
+        """
+        Verify vector store is in sync with database.
+        """
         print("\n=== Vector Parity Checks ===")
         
         try:
@@ -354,7 +371,9 @@ class PreflightChecker:
             return False
     
     def run_all_checks(self):
-        """Run comprehensive preflight checks."""
+        """
+        Run comprehensive preflight checks.
+        """
         print("=" * 60)
         print("🚀 PRODUCTION PREFLIGHT CHECK SYSTEM")
         print("=" * 60)

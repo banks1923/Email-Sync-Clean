@@ -8,7 +8,9 @@ from pathlib import Path
 
 
 def find_documentation_files() -> dict[str, list[tuple[str, str]]]:
-    """Find all documentation files in the project"""
+    """
+    Find all documentation files in the project.
+    """
     project_root = Path(__file__).parent.parent.parent
     doc_files = {
         "CLAUDE.md": [],
@@ -31,7 +33,9 @@ def find_documentation_files() -> dict[str, list[tuple[str, str]]]:
 
 
 def show_docs_overview():
-    """Display overview of all documentation files"""
+    """
+    Display overview of all documentation files.
+    """
     doc_files = find_documentation_files()
 
     print("📚 Email Sync Documentation Overview")
@@ -70,7 +74,9 @@ def show_docs_overview():
 
 
 def show_docs_content(doc_type: str = None, service: str = None):
-    """Display content of specific documentation files"""
+    """
+    Display content of specific documentation files.
+    """
     doc_files = find_documentation_files()
 
     if doc_type and doc_type.upper() not in ["CLAUDE", "README", "CHANGELOG"]:
@@ -133,7 +139,9 @@ def show_docs_content(doc_type: str = None, service: str = None):
 
 
 def show_docs_summary():
-    """Show condensed summary of all documentation"""
+    """
+    Show condensed summary of all documentation.
+    """
     doc_files = find_documentation_files()
 
     print("📋 Documentation Summary")
@@ -168,7 +176,9 @@ def show_docs_summary():
 
 
 def list_services_with_docs():
-    """List all services that have documentation"""
+    """
+    List all services that have documentation.
+    """
     doc_files = find_documentation_files()
     services = set()
 

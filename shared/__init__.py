@@ -1,8 +1,7 @@
-"""
-Shared utilities for Email Sync services
+"""Shared utilities for Email Sync services.
 
-Only truly shared components remain here.
-Service-specific utilities have been moved to their respective services.
+Only truly shared components remain here. Service-specific utilities
+have been moved to their respective services.
 """
 
 from .simple_db import SimpleDB

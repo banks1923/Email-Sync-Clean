@@ -5,14 +5,14 @@ Set up BigQuery dataset and tables for legal document processing.
 
 import os
 from google.cloud import bigquery
-from google.cloud.exceptions import Conflict
-import json
 
 # Set up credentials
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'
 
 def create_dataset_and_tables():
-    """Create BigQuery dataset and tables for legal documents."""
+    """
+    Create BigQuery dataset and tables for legal documents.
+    """
     
     client = bigquery.Client()
     project_id = client.project

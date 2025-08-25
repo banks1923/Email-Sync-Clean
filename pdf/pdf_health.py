@@ -1,5 +1,5 @@
 """
-PDF service health monitoring functionality
+PDF service health monitoring functionality.
 """
 
 from datetime import datetime
@@ -7,7 +7,9 @@ from typing import Any
 
 
 class PDFHealthManager:
-    """Manages health checking for PDF service"""
+    """
+    Manages health checking for PDF service.
+    """
 
     def __init__(self, processor, storage, validator, health_monitor, logger) -> None:
         self.processor = processor
@@ -17,7 +19,9 @@ class PDFHealthManager:
         self.logger = logger
 
     def perform_health_check(self) -> dict[str, Any]:
-        """Perform comprehensive health check for PDF service"""
+        """
+        Perform comprehensive health check for PDF service.
+        """
         try:
             health_metrics = self._gather_health_metrics()
             if not health_metrics["success"]:
@@ -30,7 +34,9 @@ class PDFHealthManager:
             return self._build_error_response(e, "Health check failed")
 
     def _gather_health_metrics(self) -> dict[str, Any]:
-        """Gather all health-related metrics"""
+        """
+        Gather all health-related metrics.
+        """
         # Check dependencies
         deps_check = self.processor.validate_dependencies()
         if not deps_check["success"]:
@@ -46,7 +52,9 @@ class PDFHealthManager:
         }
 
     def _evaluate_service_health(self, metrics: dict[str, Any]) -> bool:
-        """Evaluate overall service health from metrics"""
+        """
+        Evaluate overall service health from metrics.
+        """
         db_health = metrics["database"]
         pdf_stats = metrics["pdf_stats"]
         system_health = metrics["system"]
@@ -62,7 +70,9 @@ class PDFHealthManager:
         )
 
     def _build_health_response(self, metrics: dict[str, Any], healthy: bool) -> dict[str, Any]:
-        """Build health check response"""
+        """
+        Build health check response.
+        """
         # Extract database health to determine component status
         db_health = metrics["database"]
         system_health = metrics["system"]
@@ -92,7 +102,9 @@ class PDFHealthManager:
         }
 
     def _build_error_response(self, error: Exception, message: str) -> dict[str, Any]:
-        """Build error response for health check"""
+        """
+        Build error response for health check.
+        """
         self.logger.error(f"{message}: {str(error)}")
         return {
             "available": False,  # FIXED: Added missing key for error response

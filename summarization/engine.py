@@ -195,8 +195,9 @@ class TextRankSummarizer:
     def split_sentences(self, text: str) -> list[str]:
         """Split text into sentences with basic abbreviation protection.
 
-        We keep punctuation and avoid splitting on common abbreviations like "e.g.",
-        "i.e.", "U.S.", names ("Dr.", "Mr."), and legal shorthands ("Sec.", "No.").
+        We keep punctuation and avoid splitting on common abbreviations
+        like "e.g.", "i.e.", "U.S.", names ("Dr.", "Mr."), and legal
+        shorthands ("Sec.", "No.").
         """
         if not text:
             return []

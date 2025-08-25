@@ -1,4 +1,6 @@
-"""Test that vsearch CLI preserves user-facing output while adding logging."""
+"""
+Test that vsearch CLI preserves user-facing output while adding logging.
+"""
 
 import subprocess
 import sys
@@ -9,7 +11,9 @@ import pytest
 
 
 def test_cli_help_output_unchanged():
-    """Test that vsearch --help output is preserved for users."""
+    """
+    Test that vsearch --help output is preserved for users.
+    """
     vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if not vsearch_path.exists():
@@ -32,7 +36,9 @@ def test_cli_help_output_unchanged():
 
 
 def test_cli_search_output_format():
-    """Test that search results maintain user-friendly format."""
+    """
+    Test that search results maintain user-friendly format.
+    """
     vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if not vsearch_path.exists():
@@ -59,7 +65,9 @@ def test_cli_search_output_format():
 
 
 def test_cli_errors_go_to_stderr_not_stdout():
-    """Test that errors are properly separated from user output."""
+    """
+    Test that errors are properly separated from user output.
+    """
     vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if not vsearch_path.exists():
@@ -79,7 +87,9 @@ def test_cli_errors_go_to_stderr_not_stdout():
 
 
 def test_cli_info_command_output():
-    """Test that 'vsearch info' maintains its formatted output."""
+    """
+    Test that 'vsearch info' maintains its formatted output.
+    """
     vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if not vsearch_path.exists():
@@ -102,7 +112,9 @@ def test_cli_info_command_output():
 
 
 def test_cli_preserves_print_statements():
-    """Verify that user-facing print statements are still used, not replaced."""
+    """
+    Verify that user-facing print statements are still used, not replaced.
+    """
     vsearch_file = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if vsearch_file.exists():
@@ -119,7 +131,9 @@ def test_cli_preserves_print_statements():
 
 
 def test_no_debug_logs_in_production():
-    """Test that debug logs don't appear in normal usage."""
+    """
+    Test that debug logs don't appear in normal usage.
+    """
     vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 
     if not vsearch_path.exists():
@@ -147,7 +161,9 @@ def test_no_debug_logs_in_production():
 
 
 def test_cli_logging_goes_to_files():
-    """Test that CLI logging goes to files, not cluttering user output."""
+    """
+    Test that CLI logging goes to files, not cluttering user output.
+    """
     with tempfile.TemporaryDirectory() as tmp_dir:
         vsearch_path = Path(__file__).parent.parent / "scripts" / "vsearch"
 

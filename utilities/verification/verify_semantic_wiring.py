@@ -27,7 +27,9 @@ from utilities.vector_store import get_vector_store
 
 
 class SemanticWiringVerifier:
-    """Comprehensive semantic pipeline verification."""
+    """
+    Comprehensive semantic pipeline verification.
+    """
     
     def __init__(self):
         self.db = SimpleDB()
@@ -40,7 +42,9 @@ class SemanticWiringVerifier:
         }
         
     def verify_end_to_end(self) -> bool:
-        """1) Verify end-to-end in 60 seconds."""
+        """
+        1) Verify end-to-end in 60 seconds.
+        """
         print("\n🔍 1) END-TO-END VERIFICATION (60s target)")
         print("=" * 60)
         
@@ -112,7 +116,9 @@ class SemanticWiringVerifier:
         return all_good
         
     def spot_check_linkage(self) -> bool:
-        """2) Spot-check linkage (EID ↔ message_id ↔ content_id)."""
+        """
+        2) Spot-check linkage (EID ↔ message_id ↔ content_id).
+        """
         print("\n🔍 2) LINKAGE TRACEABILITY CHECK")
         print("=" * 60)
         
@@ -200,7 +206,9 @@ class SemanticWiringVerifier:
         return True
         
     def check_idempotency(self) -> bool:
-        """3) Check idempotency and batching."""
+        """
+        3) Check idempotency and batching.
+        """
         print("\n🔍 3) IDEMPOTENCY & BATCH PROCESSING")
         print("=" * 60)
         
@@ -256,7 +264,9 @@ class SemanticWiringVerifier:
         return True
         
     def check_performance(self) -> bool:
-        """4) Performance sanity checks."""
+        """
+        4) Performance sanity checks.
+        """
         print("\n🔍 4) PERFORMANCE BENCHMARKS")
         print("=" * 60)
         
@@ -320,7 +330,9 @@ class SemanticWiringVerifier:
         return True
         
     def check_failure_signals(self) -> bool:
-        """5) Check for known failure patterns."""
+        """
+        5) Check for known failure patterns.
+        """
         print("\n🔍 5) FAILURE SIGNAL DETECTION")
         print("=" * 60)
         
@@ -395,7 +407,9 @@ class SemanticWiringVerifier:
             return True
             
     def generate_recommendations(self):
-        """Generate recommendations based on findings."""
+        """
+        Generate recommendations based on findings.
+        """
         print("\n📋 RECOMMENDATIONS")
         print("=" * 60)
         
@@ -441,7 +455,9 @@ class SemanticWiringVerifier:
         self.results["recommendations"] = recs
         
     def save_report(self):
-        """Save verification report."""
+        """
+        Save verification report.
+        """
         report_path = Path("legal_evidence/verification_report.json")
         report_path.parent.mkdir(exist_ok=True)
         
@@ -451,7 +467,9 @@ class SemanticWiringVerifier:
         print(f"\n📄 Report saved to: {report_path}")
         
     def run_all_checks(self) -> bool:
-        """Run all verification checks."""
+        """
+        Run all verification checks.
+        """
         print("\n" + "=" * 60)
         print("SEMANTIC PIPELINE WIRING VERIFICATION")
         print("=" * 60)
@@ -486,7 +504,9 @@ class SemanticWiringVerifier:
 
 
 def eid_lookup(eid: str):
-    """EID-first lookup showing all linked semantic data."""
+    """
+    EID-first lookup showing all linked semantic data.
+    """
     db = SimpleDB()
     
     # Get email details

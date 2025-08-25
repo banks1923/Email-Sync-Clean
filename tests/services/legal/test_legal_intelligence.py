@@ -1,5 +1,4 @@
-"""
-Comprehensive tests for Legal Intelligence Module
+"""Comprehensive tests for Legal Intelligence Module.
 
 Tests all core functionality with mock data and real case patterns.
 """
@@ -17,10 +16,14 @@ from legal_intelligence import get_legal_intelligence_service
 
 
 class TestLegalIntelligenceService(unittest.TestCase):
-    """Test suite for Legal Intelligence Service."""
+    """
+    Test suite for Legal Intelligence Service.
+    """
 
     def setUp(self):
-        """Set up test environment."""
+        """
+        Set up test environment.
+        """
         # Create temporary database
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
@@ -59,7 +62,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
         ]
 
     def tearDown(self):
-        """Clean up test environment."""
+        """
+        Clean up test environment.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
@@ -74,7 +79,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
     def test_service_initialization(
         self, mock_embed, mock_sim, mock_kg, mock_timeline, mock_entity, mock_db
     ):
-        """Test that service initializes with all integrated services."""
+        """
+        Test that service initializes with all integrated services.
+        """
         service = get_legal_intelligence_service(self.db_path)
 
         # Verify all services were initialized
@@ -87,7 +94,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_process_case(self, mock_db_class):
-        """Test complete case processing."""
+        """
+        Test complete case processing.
+        """
         # Set up mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db
@@ -128,7 +137,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_analyze_document_patterns(self, mock_db_class):
-        """Test document pattern analysis."""
+        """
+        Test document pattern analysis.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -158,7 +169,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_predict_missing_documents(self, mock_db_class):
-        """Test missing document prediction."""
+        """
+        Test missing document prediction.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -187,7 +200,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_generate_case_timeline(self, mock_db_class):
-        """Test timeline generation."""
+        """
+        Test timeline generation.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -216,7 +231,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_build_relationship_graph(self, mock_db_class):
-        """Test relationship graph building."""
+        """
+        Test relationship graph building.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -256,7 +273,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_empty_case_handling(self, mock_db_class):
-        """Test handling of case with no documents."""
+        """
+        Test handling of case with no documents.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = []  # No documents
@@ -279,7 +298,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_document_type_identification(self, mock_db_class):
-        """Test identification of legal document types."""
+        """
+        Test identification of legal document types.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -305,7 +326,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_case_type_determination(self, mock_db_class):
-        """Test determination of case type from documents."""
+        """
+        Test determination of case type from documents.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
 
@@ -325,7 +348,9 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
     @patch("legal_intelligence.main.SimpleDB")
     def test_caching_mechanism(self, mock_db_class):
-        """Test that analysis results are cached."""
+        """
+        Test that analysis results are cached.
+        """
         mock_db = Mock()
         mock_db_class.return_value = mock_db
         mock_db.search_content.return_value = self.mock_case_documents
@@ -362,23 +387,31 @@ class TestLegalIntelligenceService(unittest.TestCase):
 
 
 class TestLegalIntelligenceIntegration(unittest.TestCase):
-    """Integration tests with real service connections."""
+    """
+    Integration tests with real service connections.
+    """
 
     def setUp(self):
-        """Set up integration test environment."""
+        """
+        Set up integration test environment.
+        """
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
         self.temp_db.close()
 
     def tearDown(self):
-        """Clean up."""
+        """
+        Clean up.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
             pass
 
     def test_real_service_initialization(self):
-        """Test that service can initialize with real dependencies."""
+        """
+        Test that service can initialize with real dependencies.
+        """
         try:
             service = get_legal_intelligence_service(self.db_path)
             self.assertIsNotNone(service)
@@ -395,7 +428,9 @@ class TestLegalIntelligenceIntegration(unittest.TestCase):
             print(f"Integration test skipped: {e}")
 
     def test_legal_document_patterns(self):
-        """Test that legal document patterns are properly defined."""
+        """
+        Test that legal document patterns are properly defined.
+        """
         service = get_legal_intelligence_service(self.db_path)
 
         # Verify standard patterns exist

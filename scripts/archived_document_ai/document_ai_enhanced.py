@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Enhanced Document AI processor with quality control and multiple output formats.
+"""Enhanced Document AI processor with quality control and multiple output
+formats.
 
 This script handles:
 - Poor quality documents with retry and enhancement
@@ -14,7 +15,6 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict
 from google.cloud import documentai_v1 as documentai
 
@@ -25,7 +25,9 @@ LOCATION = "us"
 
 @dataclass
 class DocumentResult:
-    """Structured output for processed documents."""
+    """
+    Structured output for processed documents.
+    """
     file_path: str
     file_name: str
     category: str
@@ -33,13 +35,15 @@ class DocumentResult:
     confidence_score: float
     page_count: int
     text: str
-    entities: Dict[str, List[str]]
-    form_fields: Dict[str, str]
-    warnings: List[str]
+    entities: dict[str, list[str]]
+    form_fields: dict[str, str]
+    warnings: list[str]
     processing_notes: str
 
 class EnhancedDocumentProcessor:
-    """Enhanced document processor with quality control."""
+    """
+    Enhanced document processor with quality control.
+    """
     
     def __init__(self):
         self.client = documentai.DocumentProcessorServiceClient()
@@ -47,7 +51,9 @@ class EnhancedDocumentProcessor:
         self.results = []
         
     def get_or_create_processor(self, processor_type: str) -> str:
-        """Get existing processor or create new one."""
+        """
+        Get existing processor or create new one.
+        """
         if processor_type in self.processors:
             return self.processors[processor_type]
             
@@ -71,7 +77,9 @@ class EnhancedDocumentProcessor:
         return processor.name
     
     def categorize_document(self, file_path: str) -> str:
-        """Categorize document based on path and filename."""
+        """
+        Categorize document based on path and filename.
+        """
         path_lower = str(file_path).lower()
         
         # Legal document categories
@@ -92,8 +100,10 @@ class EnhancedDocumentProcessor:
                 
         return 'uncategorized'
     
-    def assess_quality(self, document) -> Tuple[float, List[str]]:
-        """Assess document quality and return confidence score with warnings."""
+    def assess_quality(self, document) -> tuple[float, list[str]]:
+        """
+        Assess document quality and return confidence score with warnings.
+        """
         warnings = []
         confidence = 1.0
         
@@ -128,8 +138,10 @@ class EnhancedDocumentProcessor:
             
         return confidence, warnings
     
-    def process_with_retry(self, file_path: str, max_attempts: int = 2) -> Optional[DocumentResult]:
-        """Process document with retry logic for poor quality."""
+    def process_with_retry(self, file_path: str, max_attempts: int = 2) -> DocumentResult | None:
+        """
+        Process document with retry logic for poor quality.
+        """
         file_path = Path(file_path)
         category = self.categorize_document(file_path)
         
@@ -225,7 +237,9 @@ class EnhancedDocumentProcessor:
         return best_result
     
     def _get_text(self, element, document) -> str:
-        """Extract text from document element."""
+        """
+        Extract text from document element.
+        """
         if not element.text_anchor:
             return ""
         text = ""
@@ -236,7 +250,9 @@ class EnhancedDocumentProcessor:
         return text.strip()
     
     def save_results(self, output_dir: Path, format: str = "all"):
-        """Save results in various formats."""
+        """
+        Save results in various formats.
+        """
         output_dir.mkdir(parents=True, exist_ok=True)
         
         # Group by category
@@ -322,7 +338,9 @@ class EnhancedDocumentProcessor:
         print(f"   - Consolidated by category: {output_dir}/consolidated/")
 
 def main():
-    """Process documents with enhanced options."""
+    """
+    Process documents with enhanced options.
+    """
     if len(sys.argv) < 2:
         print("Usage: python3 scripts/document_ai_enhanced.py <directory> [output_dir] [format]")
         print("Formats: text, json, markdown, consolidated, all (default: all)")

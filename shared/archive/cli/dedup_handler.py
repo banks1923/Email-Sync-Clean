@@ -1,5 +1,5 @@
 """
-CLI handlers for deduplication commands
+CLI handlers for deduplication commands.
 """
 
 import json
@@ -21,9 +21,8 @@ def find_duplicates_command(
     show_groups: bool = False,
     output_json: bool = False
 ):
-    """
-    Find duplicate and near-duplicate content in the database
-    
+    """Find duplicate and near-duplicate content in the database.
+
     Args:
         content_type: Filter by content type (email, pdf, etc.)
         threshold: Similarity threshold (0.0-1.0)
@@ -110,12 +109,11 @@ def compare_documents_command(
     doc_id2: str,
     show_diff: bool = False
 ):
-    """
-    Compare similarity between two specific documents
-    
+    """Compare similarity between two specific documents.
+
     Args:
         doc_id1: First document ID
-        doc_id2: Second document ID  
+        doc_id2: Second document ID
         show_diff: Show detailed differences
     """
     console.print(f"[bold cyan]📊 Comparing documents {doc_id1} and {doc_id2}[/bold cyan]\n")
@@ -183,9 +181,8 @@ def deduplicate_database_command(
     dry_run: bool = True,
     content_type: str | None = None
 ):
-    """
-    Remove duplicate content from database
-    
+    """Remove duplicate content from database.
+
     Args:
         threshold: Similarity threshold for removal
         dry_run: Preview only, don't delete
@@ -298,7 +295,9 @@ def deduplicate_database_command(
 
 
 def build_duplicate_index_command():
-    """Build duplicate detection index for all content"""
+    """
+    Build duplicate detection index for all content.
+    """
     console.print("[bold cyan]🔨 Building duplicate detection index[/bold cyan]")
     
     try:

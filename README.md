@@ -4,28 +4,40 @@ AI-powered search system with Legal BERT semantic understanding for personal pro
 
 > **🎯 Clean Architecture Implementation** - Simplified from 2000+ lines to ~26,883 lines
 
-## 📊 Current Status (2025-08-21)
+## 📊 PRODUCTION BASELINE STATUS (2025-08-25) ✅
 
-✅ **SHA256 Chain Integrity**: All 585 documents properly linked (broken_chain_total = 0)  
-✅ **Notes Migration**: Notes service consolidated into document pipeline  
-✅ **Search Functionality**: Legal BERT semantic search with 8 embeddings indexed  
-✅ **System Health**: 100% chain integrity verified, all services operational  
-✅ **Backward Compatibility**: `tools/scripts/quick-note` wrapper for notes functionality  
+✅ **Gmail Sync v2.0**: 668 emails synced with message-level deduplication (23% efficiency)  
+✅ **Keyword Search**: Fully operational hybrid search system  
+✅ **Vector Service**: Qdrant connected with Legal BERT (1024D) ready for embeddings  
+✅ **Schema Compatibility**: All services aligned to v2.0 architecture  
+✅ **Debug Logging**: Enabled system-wide for troubleshooting  
+✅ **Database Health**: 302 unique messages from 393 occurrences, SQLite WAL mode optimized  
 
-## 🚀 Quick Start
+## 🚀 Quick Start - PRODUCTION READY
+
+### ✅ Validate Current Baseline (30 seconds)
+```bash
+# Quick system health check
+tools/scripts/vsearch info
+
+# Test keyword search (should return 5 lease-related results)
+tools/scripts/vsearch search "lease" --limit 5
+
+# Verify Gmail sync status
+export LOG_LEVEL=DEBUG && python3 -m gmail.main
+```
 
 ### Search Operations (Primary Use)
 ```bash
-# Search across all content with AI
+# Search across all content with keyword search (WORKING NOW)
 tools/scripts/vsearch search "contract terms"
 
-# NEW: Advanced search with filters (Task 6)
-tools/scripts/vsearch search "contract terms" --since "last month" --until "today"
-tools/scripts/vsearch search "contract terms" --type email --type pdf --limit 10
-tools/scripts/vsearch search "contract terms" --tag legal --tag urgent --tag-logic AND
+# Advanced search with filters
+tools/scripts/vsearch search "contract terms" --type email --limit 10
+tools/scripts/vsearch search "lease termination" --limit 5
 
-# System information
-tools/scripts/vsearch info
+# Enable semantic search (next step after baseline validation)
+tools/scripts/vsearch ingest --emails  # Generate embeddings for semantic search
 
 # View chronological timeline
 tools/scripts/vsearch timeline --types email -n 20

@@ -13,22 +13,30 @@ from zarchive.archive_manager import ArchiveManager, get_archive_manager
 
 
 class TestArchiveManager:
-    """Test suite for ArchiveManager."""
+    """
+    Test suite for ArchiveManager.
+    """
 
     @pytest.fixture
     def temp_archive_dir(self):
-        """Create temporary archive directory."""
+        """
+        Create temporary archive directory.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             yield Path(tmpdir)
 
     @pytest.fixture
     def archive_manager(self, temp_archive_dir):
-        """Create ArchiveManager with temp directory."""
+        """
+        Create ArchiveManager with temp directory.
+        """
         return ArchiveManager(str(temp_archive_dir))
 
     @pytest.fixture
     def sample_file(self):
-        """Create a sample file for testing."""
+        """
+        Create a sample file for testing.
+        """
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
             f.write("This is test content for archiving.")
             temp_path = Path(f.name)
@@ -38,7 +46,9 @@ class TestArchiveManager:
             temp_path.unlink()
 
     def test_initialization(self, temp_archive_dir):
-        """Test ArchiveManager initialization creates directories."""
+        """
+        Test ArchiveManager initialization creates directories.
+        """
         manager = ArchiveManager(str(temp_archive_dir))
         
         assert manager.archive_path.exists()
@@ -46,7 +56,9 @@ class TestArchiveManager:
         assert manager.yearly_archives.exists()
 
     def test_archive_single_file(self, archive_manager, sample_file):
-        """Test archiving a single file."""
+        """
+        Test archiving a single file.
+        """
         # Archive the file
         archive_path = archive_manager.archive_file(
             sample_file,
@@ -70,7 +82,9 @@ class TestArchiveManager:
             assert meta["custom_metadata"]["test"] == "data"
 
     def test_archive_batch(self, archive_manager):
-        """Test batch archiving multiple files."""
+        """
+        Test batch archiving multiple files.
+        """
         # Create multiple temp files
         temp_files = []
         for i in range(3):
@@ -106,7 +120,9 @@ class TestArchiveManager:
                     f.unlink()
 
     def test_retrieve_archived(self, archive_manager, sample_file):
-        """Test retrieving an archived file."""
+        """
+        Test retrieving an archived file.
+        """
         # First archive a file
         archive_path = archive_manager.archive_file(sample_file)
         archive_name = archive_path.name
@@ -122,7 +138,9 @@ class TestArchiveManager:
         assert extracted_file.read_text() == sample_file.read_text()
 
     def test_list_archives(self, archive_manager, sample_file):
-        """Test listing archives with filters."""
+        """
+        Test listing archives with filters.
+        """
         # Create archives with different case names
         archive_manager.archive_file(sample_file, case_name="CASE_A")
         archive_manager.archive_file(sample_file, case_name="CASE_B")
@@ -137,7 +155,9 @@ class TestArchiveManager:
         assert case_a_archives[0]["case_name"] == "CASE_A"
 
     def test_list_archives_date_filter(self, archive_manager, sample_file):
-        """Test listing archives with date filters."""
+        """
+        Test listing archives with date filters.
+        """
         # Archive a file
         archive_manager.archive_file(sample_file)
         
@@ -155,7 +175,9 @@ class TestArchiveManager:
         assert len(future_archives) == 0
 
     def test_promote_to_yearly(self, archive_manager, sample_file):
-        """Test promoting old monthly archives to yearly."""
+        """
+        Test promoting old monthly archives to yearly.
+        """
         # Create an archive
         archive_path = archive_manager.archive_file(sample_file)
         
@@ -172,7 +194,9 @@ class TestArchiveManager:
         assert yearly_archives[0].name == archive_path.name
 
     def test_cleanup_old_archives(self, archive_manager, sample_file):
-        """Test cleanup of old archives."""
+        """
+        Test cleanup of old archives.
+        """
         # Create an archive
         archive_manager.archive_file(sample_file)
         
@@ -189,7 +213,9 @@ class TestArchiveManager:
         assert len(all_archives) == 0
 
     def test_get_archive_stats(self, archive_manager, sample_file):
-        """Test getting archive statistics."""
+        """
+        Test getting archive statistics.
+        """
         # Create archives
         archive_manager.archive_file(sample_file, case_name="TEST1")
         archive_manager.archive_file(sample_file, case_name="TEST2")
@@ -214,24 +240,32 @@ class TestArchiveManager:
         assert "size_mb" in stats["total"]
 
     def test_archive_nonexistent_file(self, archive_manager):
-        """Test archiving a non-existent file raises error."""
+        """
+        Test archiving a non-existent file raises error.
+        """
         fake_path = Path("/nonexistent/file.txt")
         
         with pytest.raises(FileNotFoundError):
             archive_manager.archive_file(fake_path)
 
     def test_retrieve_nonexistent_archive(self, archive_manager):
-        """Test retrieving non-existent archive raises error."""
+        """
+        Test retrieving non-existent archive raises error.
+        """
         with pytest.raises(FileNotFoundError):
             archive_manager.retrieve_archived("nonexistent.zip")
 
     def test_empty_batch_archive(self, archive_manager):
-        """Test batch archiving with empty list raises error."""
+        """
+        Test batch archiving with empty list raises error.
+        """
         with pytest.raises(ValueError):
             archive_manager.archive_batch([])
 
     def test_factory_function(self, temp_archive_dir):
-        """Test the get_archive_manager factory function."""
+        """
+        Test the get_archive_manager factory function.
+        """
         manager = get_archive_manager(str(temp_archive_dir))
         assert isinstance(manager, ArchiveManager)
         assert manager.archive_path == temp_archive_dir

@@ -14,10 +14,14 @@ from .validator import PDFValidator
 
 
 class OCRCoordinator:
-    """Coordinates the complete OCR pipeline."""
+    """
+    Coordinates the complete OCR pipeline.
+    """
 
     def __init__(self, dpi: int = 300) -> None:
-        """Initialize OCR coordinator with all components."""
+        """
+        Initialize OCR coordinator with all components.
+        """
         self.loader = PDFLoader()
         self.validator = PDFValidator()
         self.rasterizer = PDFRasterizer(dpi=dpi)
@@ -25,8 +29,7 @@ class OCRCoordinator:
         self.postprocessor = OCRPostprocessor()
 
     def process_pdf_with_ocr(self, pdf_path: str, force_ocr: bool = False) -> dict[str, Any]:
-        """
-        Process PDF with OCR if needed.
+        """Process PDF with OCR if needed.
 
         Args:
             pdf_path: Path to PDF file
@@ -57,7 +60,9 @@ class OCRCoordinator:
         return self._extract_with_ocr(pdf_path)
 
     def _extract_with_ocr(self, pdf_path: str) -> dict[str, Any]:
-        """Extract text using OCR."""
+        """
+        Extract text using OCR.
+        """
         try:
             # Convert PDF to images
             raster_result = self.rasterizer.convert_pdf_to_images(pdf_path)
@@ -106,7 +111,9 @@ class OCRCoordinator:
             return {"success": False, "error": str(e), "method": "ocr"}
 
     def validate_setup(self) -> dict[str, Any]:
-        """Validate complete OCR setup."""
+        """
+        Validate complete OCR setup.
+        """
         return {
             "dependencies": self.validator.validate_dependencies(),
             "rasterizer": self.rasterizer.validate_settings(),

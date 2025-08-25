@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Unified service test harness for Email Sync system.
+"""Unified service test harness for Email Sync system.
+
 Provides smoke and deep testing for all services.
 """
 
@@ -23,12 +23,13 @@ logger.add(sys.stderr, level="WARNING")
 
 
 class ServiceTestHarness:
-    """Unified test harness for all services."""
+    """
+    Unified test harness for all services.
+    """
     
     def __init__(self, mode: str = "smoke"):
-        """
-        Initialize test harness.
-        
+        """Initialize test harness.
+
         Args:
             mode: "smoke" for quick tests, "deep" for thorough tests
         """
@@ -37,7 +38,9 @@ class ServiceTestHarness:
         self.fixture_dir = Path(__file__).parent.parent / "fixtures"
         
     def run_all_tests(self) -> dict[str, bool]:
-        """Run tests for all services."""
+        """
+        Run tests for all services.
+        """
         print(f"\n{'='*60}")
         print(f"Service Test Harness - {self.mode.upper()} Mode")
         print(f"Timestamp: {datetime.now().isoformat()}")
@@ -90,7 +93,9 @@ class ServiceTestHarness:
         return self.results
     
     def print_summary(self):
-        """Print test summary."""
+        """
+        Print test summary.
+        """
         print(f"\n{'='*60}")
         print("SUMMARY")
         print(f"{'='*60}")
@@ -109,7 +114,9 @@ class ServiceTestHarness:
     # Core infrastructure tests
     
     def test_database(self) -> tuple[bool, dict]:
-        """Test database connectivity and schema."""
+        """
+        Test database connectivity and schema.
+        """
         from shared.simple_db import SimpleDB
         
         db = SimpleDB()
@@ -133,7 +140,9 @@ class ServiceTestHarness:
         return details["tables"] > 0, details
     
     def test_vector_store(self) -> tuple[bool, dict]:
-        """Test vector store connectivity."""
+        """
+        Test vector store connectivity.
+        """
         try:
             import requests
 
@@ -172,7 +181,9 @@ class ServiceTestHarness:
             return False, {"error": str(e)}
     
     def test_embeddings(self) -> tuple[bool, dict]:
-        """Test embedding service."""
+        """
+        Test embedding service.
+        """
         from utilities.embeddings import get_embedding_service
         
         emb = get_embedding_service()
@@ -195,7 +206,9 @@ class ServiceTestHarness:
     # Service-specific tests
     
     def test_entity_extraction(self) -> tuple[bool, dict]:
-        """Test entity extraction service."""
+        """
+        Test entity extraction service.
+        """
         from entity.main import EntityService
         
         es = EntityService()
@@ -214,7 +227,9 @@ class ServiceTestHarness:
         return True, details
     
     def test_timeline(self) -> tuple[bool, dict]:
-        """Test timeline service."""
+        """
+        Test timeline service.
+        """
         from utilities.timeline import TimelineService
         
         ts = TimelineService()
@@ -232,7 +247,9 @@ class ServiceTestHarness:
         return True, details
     
     def test_summarization(self) -> tuple[bool, dict]:
-        """Test summarization service."""
+        """
+        Test summarization service.
+        """
         from summarization import get_document_summarizer
         
         summarizer = get_document_summarizer()
@@ -253,7 +270,9 @@ class ServiceTestHarness:
     
     
     def test_search_intelligence(self) -> tuple[bool, dict]:
-        """Test search intelligence service."""
+        """
+        Test search intelligence service.
+        """
         from search_intelligence import get_search_intelligence_service
         
         search = get_search_intelligence_service()
@@ -275,7 +294,9 @@ class ServiceTestHarness:
         return health.get("status") == "healthy", details
     
     def test_legal_intelligence(self) -> tuple[bool, dict]:
-        """Test legal intelligence service."""
+        """
+        Test legal intelligence service.
+        """
         try:
             from legal_intelligence import get_legal_intelligence_service
 
@@ -297,7 +318,9 @@ class ServiceTestHarness:
 
 
 def create_cli_entry_points():
-    """Create CLI entry points for each service."""
+    """
+    Create CLI entry points for each service.
+    """
     entry_points = {
         "timeline": "utilities.timeline:main",
         "entity": "entity.main:main",
@@ -312,7 +335,9 @@ def create_cli_entry_points():
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+    """
     parser = argparse.ArgumentParser(description="Service test harness")
     parser.add_argument(
         "--mode",

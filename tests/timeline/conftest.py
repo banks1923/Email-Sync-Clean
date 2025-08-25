@@ -1,6 +1,7 @@
-"""
-Test fixtures for Timeline service tests.
-Following TESTING_PROTOCOLS.md: Isolated databases, real data, minimal mocking.
+"""Test fixtures for Timeline service tests.
+
+Following TESTING_PROTOCOLS.md: Isolated databases, real data, minimal
+mocking.
 """
 
 import json
@@ -16,8 +17,8 @@ import pytest
 
 @pytest.fixture(scope="function")
 def isolated_timeline_db_path() -> Generator[str, None, None]:
-    """
-    Completely isolated test database per test function.
+    """Completely isolated test database per test function.
+
     Following TESTING_PROTOCOLS.md standards.
     """
     # Create unique database file for each test
@@ -39,8 +40,8 @@ def isolated_timeline_db_path() -> Generator[str, None, None]:
 
 @pytest.fixture(scope="function")
 def timeline_database_with_tables(isolated_timeline_db_path) -> str:
-    """
-    Create isolated database with timeline tables schema.
+    """Create isolated database with timeline tables schema.
+
     Following timeline service database schema.
     """
     conn = sqlite3.connect(isolated_timeline_db_path)
@@ -97,8 +98,8 @@ def timeline_database_with_tables(isolated_timeline_db_path) -> str:
 
 @pytest.fixture(scope="function")
 def database_with_emails_and_documents(timeline_database_with_tables) -> str:
-    """
-    Create test database with emails and documents tables for sync testing.
+    """Create test database with emails and documents tables for sync testing.
+
     Real document content patterns following TESTING_PROTOCOLS.md.
     """
     conn = sqlite3.connect(timeline_database_with_tables)
@@ -150,8 +151,8 @@ def database_with_emails_and_documents(timeline_database_with_tables) -> str:
 
 @pytest.fixture(scope="function")
 def sample_email_data() -> list[dict]:
-    """
-    Sample email data for testing timeline sync.
+    """Sample email data for testing timeline sync.
+
     Real email content patterns following TESTING_PROTOCOLS.md.
     """
     base_time = datetime.now()
@@ -216,8 +217,8 @@ def sample_email_data() -> list[dict]:
 
 @pytest.fixture(scope="function")
 def sample_document_data() -> list[dict]:
-    """
-    Sample document data for testing timeline sync.
+    """Sample document data for testing timeline sync.
+
     Real document content patterns following TESTING_PROTOCOLS.md.
     """
     base_time = datetime.now()
@@ -271,9 +272,11 @@ def sample_document_data() -> list[dict]:
 def populated_timeline_database(
     database_with_emails_and_documents, sample_email_data, sample_document_data
 ) -> str:
-    """
-    Test database pre-populated with emails and documents for timeline testing.
-    Provides realistic test data for validating timeline operations without mocks.
+    """Test database pre-populated with emails and documents for timeline
+    testing.
+
+    Provides realistic test data for validating timeline operations
+    without mocks.
     """
     conn = sqlite3.connect(database_with_emails_and_documents)
     cursor = conn.cursor()
@@ -332,8 +335,8 @@ def populated_timeline_database(
 
 @pytest.fixture(scope="function")
 def sample_timeline_events() -> list[dict]:
-    """
-    Sample timeline events for testing timeline database operations.
+    """Sample timeline events for testing timeline database operations.
+
     Real timeline data patterns following TESTING_PROTOCOLS.md.
     """
     base_time = datetime.now()
@@ -402,14 +405,16 @@ def sample_timeline_events() -> list[dict]:
 
 @pytest.fixture(scope="function")
 def timeline_error_scenarios(isolated_timeline_db_path):
-    """
-    Timeline error scenario testing fixtures.
+    """Timeline error scenario testing fixtures.
+
     Tests real database constraint violations and error conditions.
     """
     import sqlite3
 
     def create_invalid_timeline_data():
-        """Create scenario to test timeline error handling"""
+        """
+        Create scenario to test timeline error handling.
+        """
         conn = sqlite3.connect(isolated_timeline_db_path)
         cursor = conn.cursor()
 
@@ -451,8 +456,8 @@ def timeline_error_scenarios(isolated_timeline_db_path):
 
 @pytest.fixture(scope="function")
 def date_filtering_test_data() -> dict:
-    """
-    Test data for date filtering scenarios.
+    """Test data for date filtering scenarios.
+
     Provides events across different time periods for filtering tests.
     """
     base_time = datetime.now()

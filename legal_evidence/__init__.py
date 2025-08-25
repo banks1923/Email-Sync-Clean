@@ -1,7 +1,8 @@
 """Legal Evidence Tracking System for Email Documentation.
 
-This module provides tools for creating legally traceable references to emails,
-organizing them by threads, and generating evidence reports for legal proceedings.
+This module provides tools for creating legally traceable references to
+emails, organizing them by threads, and generating evidence reports for
+legal proceedings.
 """
 
 from .evidence_tracker import EvidenceTracker, get_evidence_tracker

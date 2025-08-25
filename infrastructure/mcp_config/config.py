@@ -1,12 +1,12 @@
-"""
-MCP Configuration with Pydantic Validation
+"""MCP Configuration with Pydantic Validation.
 
-Secure, centralized configuration for all MCP servers with environment-based
-API key loading. Follows CLAUDE.md principles: Simple > Complex, Working > Perfect.
+Secure, centralized configuration for all MCP servers with environment-
+based API key loading. Follows CLAUDE.md principles: Simple > Complex,
+Working > Perfect.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     from pydantic import Field, SecretStr
@@ -21,7 +21,9 @@ except ImportError:
 
 if PYDANTIC_AVAILABLE:
     class MCPConfig(BaseSettings):
-        """MCP Configuration with Pydantic validation"""
+        """
+        MCP Configuration with Pydantic validation.
+        """
         
         # Project paths
         project_root: Path = Field(default=Path("/Users/jim/Projects/Email-Sync-Clean-Backup"))
@@ -39,7 +41,9 @@ if PYDANTIC_AVAILABLE:
             extra = 'ignore'  # Ignore extra environment variables
             
         def get_mcp_servers(self) -> dict[str, dict[str, Any]]:
-            """Generate MCP server configurations"""
+            """
+            Generate MCP server configurations.
+            """
             servers = {
                 "legal-intelligence": {
                     "type": "stdio",
@@ -81,7 +85,9 @@ if PYDANTIC_AVAILABLE:
             return servers
         
         def get_claude_desktop_servers(self) -> dict[str, dict[str, Any]]:
-            """Generate Claude Desktop server configurations (different format)"""
+            """
+            Generate Claude Desktop server configurations (different format)
+            """
             servers = {
                 "email-sync": {
                     "command": "python3",
@@ -122,7 +128,9 @@ if PYDANTIC_AVAILABLE:
             return servers
         
         def validate_config(self) -> dict[str, str]:
-            """Validate configuration and return status"""
+            """
+            Validate configuration and return status.
+            """
             status = {}
             status["project_root"] = "✅ Valid" if self.project_root.exists() else "❌ Missing"
             status["legal_mcp"] = "✅ Found" if (self.project_root / "infrastructure/mcp_servers/legal_intelligence_mcp.py").exists() else "❌ Missing"
@@ -141,7 +149,9 @@ if PYDANTIC_AVAILABLE:
             return status
         
         def check_security(self) -> list[str]:
-            """Check for security issues"""
+            """
+            Check for security issues.
+            """
             warnings = []
             
             # Check if .mcp.json exists and is readable by others
@@ -193,7 +203,9 @@ else:
 
 
 def get_mcp_config() -> MCPConfig:
-    """Get MCP configuration with error handling"""
+    """
+    Get MCP configuration with error handling.
+    """
     try:
         return MCPConfig()
     except Exception as e:

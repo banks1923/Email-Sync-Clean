@@ -7,7 +7,9 @@ from typing import Any
 
 
 class OCRPostprocessor:
-    """Cleans and improves OCR output quality."""
+    """
+    Cleans and improves OCR output quality.
+    """
 
     def __init__(self) -> None:
         self.common_ocr_errors = {
@@ -19,8 +21,7 @@ class OCRPostprocessor:
         }
 
     def clean_ocr_text(self, text: str) -> str:
-        """
-        Clean OCR text output.
+        """Clean OCR text output.
 
         Args:
             text: Raw OCR text
@@ -52,8 +53,7 @@ class OCRPostprocessor:
         return text.strip()
 
     def merge_page_texts(self, page_texts: list[str]) -> str:
-        """
-        Merge texts from multiple pages intelligently.
+        """Merge texts from multiple pages intelligently.
 
         Args:
             page_texts: List of text from each page
@@ -84,8 +84,7 @@ class OCRPostprocessor:
         return "\n\n".join(merged_parts)
 
     def validate_ocr_quality(self, text: str, confidence: float) -> dict[str, Any]:
-        """
-        Validate OCR output quality.
+        """Validate OCR output quality.
 
         Args:
             text: OCR extracted text
@@ -130,8 +129,7 @@ class OCRPostprocessor:
         }
 
     def extract_metadata_hints(self, text: str) -> dict[str, Any]:
-        """
-        Extract metadata hints from OCR text.
+        """Extract metadata hints from OCR text.
 
         Args:
             text: OCR text to analyze

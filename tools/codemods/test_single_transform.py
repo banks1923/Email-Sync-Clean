@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Test configuration transformation on a single file."""
+"""
+Test configuration transformation on a single file.
+"""
 
 from pathlib import Path
 
@@ -7,7 +9,9 @@ import libcst as cst
 
 
 def test_single_file(file_path: str):
-    """Test transformation on a single file."""
+    """
+    Test transformation on a single file.
+    """
     
     path = Path(file_path)
     print(f"🧪 Testing transformation on {path}")

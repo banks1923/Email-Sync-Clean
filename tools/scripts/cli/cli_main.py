@@ -34,7 +34,9 @@ from tools.scripts.cli.upload_handler import (
 
 
 def setup_search_commands(subparsers):
-    """Setup search-related commands"""
+    """
+    Setup search-related commands.
+    """
     search_parser = subparsers.add_parser("search", help="Search emails by similarity")
     search_parser.add_argument("query", help="Search query")
     search_parser.add_argument(
@@ -57,7 +59,9 @@ def setup_search_commands(subparsers):
 
 
 def setup_process_commands(subparsers):
-    """Setup processing commands"""
+    """
+    Setup processing commands.
+    """
     process_parser = subparsers.add_parser("process", help="Generate embeddings for emails")
     process_parser.add_argument(
         "-n", "--limit", type=int, help="Number of emails to process (default: all unprocessed)"
@@ -78,7 +82,9 @@ def setup_process_commands(subparsers):
 
 
 def setup_upload_commands(subparsers):
-    """Setup upload and batch processing commands"""
+    """
+    Setup upload and batch processing commands.
+    """
     upload_parser = subparsers.add_parser("upload", help="Upload PDF file or directory")
     upload_parser.add_argument("path", help="PDF file path or directory path")
     upload_parser.add_argument(
@@ -93,13 +99,17 @@ def setup_upload_commands(subparsers):
 
 
 def setup_info_commands(subparsers):
-    """Setup info and statistics commands"""
+    """
+    Setup info and statistics commands.
+    """
     subparsers.add_parser("info", help="Show collection information")
     subparsers.add_parser("pdf-stats", help="Show PDF collection statistics")
 
 
 def setup_timeline_commands(subparsers):
-    """Setup timeline commands"""
+    """
+    Setup timeline commands.
+    """
     timeline_parser = subparsers.add_parser(
         "timeline", help="View chronological timeline of content"
     )
@@ -123,7 +133,9 @@ def setup_timeline_commands(subparsers):
 
 
 def setup_docs_commands(subparsers):
-    """Setup documentation commands"""
+    """
+    Setup documentation commands.
+    """
     docs_parser = subparsers.add_parser("docs", help="Show project documentation")
     docs_parser.add_argument(
         "--type",
@@ -138,7 +150,9 @@ def setup_docs_commands(subparsers):
 
 
 def _handle_docs(args):
-    """Handle docs command with various options"""
+    """
+    Handle docs command with various options.
+    """
     if args.services:
         return list_services_with_docs()
     elif args.summary:
@@ -150,7 +164,9 @@ def _handle_docs(args):
 
 
 def _handle_upload(args):
-    """Handle upload command with path validation"""
+    """
+    Handle upload command with path validation.
+    """
     if os.path.isfile(args.path):
         return upload_pdf(args.path, args.source)
     elif os.path.isdir(args.path):
@@ -161,7 +177,9 @@ def _handle_upload(args):
 
 
 def route_command(args):
-    """Route parsed arguments to appropriate handler"""
+    """
+    Route parsed arguments to appropriate handler.
+    """
     # Command dispatch table
     command_handlers = {
         "search": lambda: search_emails(args.query, args.limit, mode=getattr(args, 'mode', 'database')),
@@ -185,7 +203,9 @@ def route_command(args):
 
 
 def main():
-    """Main CLI entry point with modular command routing"""
+    """
+    Main CLI entry point with modular command routing.
+    """
     parser = argparse.ArgumentParser(description="🤖 AI-Powered Hybrid Email Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 

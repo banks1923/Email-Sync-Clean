@@ -1,8 +1,8 @@
-"""
-Simple Search Coordination Module
+"""Simple Search Coordination Module.
 
-Coordinates keyword + semantic search with graceful fallback.
-Direct implementation following CLAUDE.md principles: Simple > Complex, Working > Perfect.
+Coordinates keyword + semantic search with graceful fallback. Direct
+implementation following CLAUDE.md principles: Simple > Complex, Working
+> Perfect.
 """
 
 from typing import Any
@@ -22,14 +22,14 @@ def search(
     semantic_weight: float = 0.6,
 ) -> list[dict[str, Any]]:
     """Coordinate keyword + semantic search with RRF merging.
-    
+
     Args:
         query: Search query string
         limit: Maximum results to return
         filters: Optional filters (date, content_type, etc.)
         keyword_weight: Weight for keyword results in RRF (0-1)
         semantic_weight: Weight for semantic results in RRF (0-1)
-    
+
     Returns:
         Merged and ranked search results
     """
@@ -69,12 +69,12 @@ def semantic_search(
     filters: dict | None = None,
 ) -> list[dict[str, Any]]:
     """Perform semantic vector search.
-    
+
     Args:
         query: Search query string
         limit: Maximum results to return
         filters: Optional filters for vector search
-    
+
     Returns:
         List of semantically similar documents
     """
@@ -108,7 +108,7 @@ def semantic_search(
 
 def vector_store_available() -> bool:
     """Check if vector store is available and working.
-    
+
     Returns:
         True if vector store can be used, False otherwise
     """
@@ -125,7 +125,9 @@ def vector_store_available() -> bool:
 def _keyword_search(
     query: str, limit: int, filters: dict | None = None
 ) -> list[dict[str, Any]]:
-    """Perform keyword search using SimpleDB."""
+    """
+    Perform keyword search using SimpleDB.
+    """
     try:
         db = SimpleDB()
         results = db.search_content(query, limit=limit, filters=filters)
@@ -142,7 +144,9 @@ def _keyword_search(
 
 
 def _build_vector_filters(filters: dict) -> dict | None:
-    """Convert search filters to vector store format."""
+    """
+    Convert search filters to vector store format.
+    """
     if not filters:
         return None
     
@@ -160,7 +164,9 @@ def _build_vector_filters(filters: dict) -> dict | None:
 
 
 def _enrich_vector_results(vector_results: list[dict]) -> list[dict[str, Any]]:
-    """Enrich vector search results with database content."""
+    """
+    Enrich vector search results with database content.
+    """
     if not vector_results:
         return []
     
@@ -238,14 +244,14 @@ def _merge_results_rrf(
     k: int = 60,
 ) -> list[dict[str, Any]]:
     """Merge results using Reciprocal Rank Fusion (RRF).
-    
+
     Args:
         keyword_results: Results from keyword search
         semantic_results: Results from semantic search
         keyword_weight: Weight for keyword results
         semantic_weight: Weight for semantic results
         k: RRF parameter (typically 60)
-    
+
     Returns:
         Merged and ranked results
     """

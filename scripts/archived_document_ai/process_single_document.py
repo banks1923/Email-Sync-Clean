@@ -3,7 +3,7 @@
 
 Usage:
     python3 scripts/process_single_document.py <file_path> [processor_type]
-    
+
 Examples:
     python3 scripts/process_single_document.py document.pdf
     python3 scripts/process_single_document.py document.pdf FORM_PARSER_PROCESSOR
@@ -22,11 +22,11 @@ LOCATION = "us"
 
 def process_document(file_path, processor_type="OCR_PROCESSOR"):
     """Process a document with Document AI.
-    
+
     Args:
         file_path: Path to the document file
         processor_type: Type of Document AI processor to use
-        
+
     Returns:
         str: Extracted text or None if processing fails
     """
@@ -120,7 +120,9 @@ def process_document(file_path, processor_type="OCR_PROCESSOR"):
         return None
 
 def get_text(doc_element, document):
-    """Extract text from a document element."""
+    """
+    Extract text from a document element.
+    """
     response = ""
     if doc_element.text_anchor:
         for segment in doc_element.text_anchor.text_segments:

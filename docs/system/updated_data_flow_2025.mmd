@@ -1,0 +1,92 @@
+flowchart TB
+    subgraph "Input Sources"
+        GmailAPI[Gmail API<br/>Email Messages<br/>✅ Active]
+        PDFFiles[PDF Documents<br/>Legal Files<br/>✅ 100+ PDFs]
+        EmailParsing[Email Parsing<br/>Message Deduplication<br/>🆕 v2.0]
+    end
+    
+    subgraph "Core Services"
+        GmailService[Gmail Service<br/>gmail/main.py<br/>OAuth + API]
+        PDFService[PDF Service<br/>pdf/main.py<br/>OCR + Enhanced Processing]
+        EmailParser[Email Parser<br/>email_parsing/<br/>Message-level dedup]
+        EntityService[Entity Service<br/>entity/main.py<br/>Legal BERT NER]
+        SummarizationService[Summarization<br/>summarization/<br/>TF-IDF + TextRank]
+    end
+    
+    subgraph "Unified Storage Layer"
+        ContentUnified[(content_unified<br/>📊 645 records<br/>✅ Production Ready)]
+        IndividualMessages[(individual_messages<br/>🆕 Deduplicated Messages<br/>TEXT source_ids)]
+        MessageOccurrences[(message_occurrences<br/>📝 Audit Trail)]
+        Documents[(documents<br/>PDF Metadata)]
+        ConsolidatedEntities[(consolidated_entities<br/>Legal Entity Storage)]
+        
+        ContentUnified -.-> IndividualMessages
+        IndividualMessages --> MessageOccurrences
+    end
+    
+    subgraph "AI Processing Pipeline"
+        LegalBERT[Legal BERT<br/>pile-of-law/legalbert<br/>🤖 1024D Embeddings]
+        EntityExtraction[Entity Extraction<br/>PERSON, ORG, LEGAL_CONCEPT<br/>📈 95.3% Quality Score]
+        SemanticPipeline[Semantic Pipeline<br/>utilities/semantic_pipeline.py<br/>🔄 Orchestration]
+    end
+    
+    subgraph "Vector & Search"
+        Qdrant[(Qdrant Vector DB<br/>localhost:6333<br/>📡 Connected)]
+        SearchIntelligence[Search Intelligence<br/>search_intelligence/<br/>🔍 Smart Search + Clustering]
+        LegalIntelligence[Legal Intelligence<br/>legal_intelligence/<br/>⚖️ Case Analysis]
+    end
+    
+    subgraph "Infrastructure Services"
+        MCPServers[MCP Servers<br/>infrastructure/mcp_servers/<br/>🔌 Claude Integration]
+        DocumentPipeline[Document Pipeline<br/>infrastructure/documents/<br/>📄 Processing]
+        ServiceOrchestrator[Service Orchestrator<br/>infrastructure/pipelines/<br/>🎯 Coordination]
+    end
+    
+    subgraph "External Integration"
+        ClaudeDesktop[Claude Desktop<br/>🤝 MCP Integration<br/>12+ Tools]
+        VSearchCLI[VSearch CLI<br/>tools/scripts/<br/>🛠️ User Interface]
+    end
+    
+    %% Primary Data Flow
+    GmailAPI --> GmailService
+    PDFFiles --> PDFService
+    EmailParsing --> EmailParser
+    
+    GmailService --> ContentUnified
+    PDFService --> Documents
+    EmailParser --> IndividualMessages
+    
+    %% Processing Flow
+    ContentUnified --> EntityExtraction
+    ContentUnified --> SemanticPipeline
+    IndividualMessages --> ContentUnified
+    Documents --> ContentUnified
+    
+    EntityExtraction --> ConsolidatedEntities
+    SemanticPipeline --> LegalBERT
+    LegalBERT --> Qdrant
+    
+    %% Search & Intelligence
+    ContentUnified --> SearchIntelligence
+    Qdrant --> SearchIntelligence
+    ConsolidatedEntities --> LegalIntelligence
+    
+    %% Infrastructure Coordination
+    ServiceOrchestrator --> SemanticPipeline
+    DocumentPipeline --> PDFService
+    MCPServers --> SearchIntelligence
+    MCPServers --> LegalIntelligence
+    
+    %% External Access
+    SearchIntelligence --> ClaudeDesktop
+    LegalIntelligence --> ClaudeDesktop
+    VSearchCLI --> SearchIntelligence
+    VSearchCLI --> LegalIntelligence
+    
+    %% Styling
+    style ContentUnified fill:#ffd700,stroke:#333,stroke-width:3px
+    style IndividualMessages fill:#87ceeb,stroke:#333,stroke-width:2px
+    style Qdrant fill:#9370db,stroke:#fff,stroke-width:2px
+    style LegalBERT fill:#90ee90,stroke:#333,stroke-width:2px
+    style EmailParser fill:#ff6b6b,stroke:#333,stroke-width:2px
+    style MCPServers fill:#ff7f50,stroke:#333,stroke-width:2px

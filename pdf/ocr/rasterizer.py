@@ -15,11 +15,12 @@ except ImportError:
 
 
 class PDFRasterizer:
-    """Converts PDF pages to images for OCR processing."""
+    """
+    Converts PDF pages to images for OCR processing.
+    """
 
     def __init__(self, dpi: int = 300) -> None:
-        """
-        Initialize rasterizer with DPI setting.
+        """Initialize rasterizer with DPI setting.
 
         Args:
             dpi: Resolution for PDF to image conversion
@@ -30,8 +31,7 @@ class PDFRasterizer:
     def convert_pdf_to_images(
         self, pdf_path: str, first_page: int = None, last_page: int = None
     ) -> dict[str, Any]:
-        """
-        Convert PDF pages to images.
+        """Convert PDF pages to images.
 
         Args:
             pdf_path: Path to PDF file
@@ -61,12 +61,13 @@ class PDFRasterizer:
             return {"success": False, "error": str(e), "images": []}
 
     def convert_single_page(self, pdf_path: str, page_num: int) -> dict[str, Any]:
-        """Convert a single PDF page to image."""
+        """
+        Convert a single PDF page to image.
+        """
         return self.convert_pdf_to_images(pdf_path, page_num, page_num)
 
     def estimate_memory_usage(self, page_count: int) -> dict[str, Any]:
-        """
-        Estimate memory usage for conversion.
+        """Estimate memory usage for conversion.
 
         Args:
             page_count: Number of pages to convert
@@ -86,7 +87,9 @@ class PDFRasterizer:
         }
 
     def validate_settings(self) -> dict[str, Any]:
-        """Validate rasterizer settings."""
+        """
+        Validate rasterizer settings.
+        """
         warnings = []
 
         if self.dpi > 600:

@@ -1,5 +1,4 @@
-"""
-Shared Test Fixtures for Real Component Testing
+"""Shared Test Fixtures for Real Component Testing.
 
 Following PROJECT_PHILOSOPHY.md:
 - No mocks for internal components
@@ -17,10 +16,14 @@ from qdrant_client.models import Distance, PointStruct, VectorParams
 
 
 class TestEmbedder:
-    """Simple test embedder that returns consistent vectors."""
+    """
+    Simple test embedder that returns consistent vectors.
+    """
 
     def embed_text(self, text: str) -> dict[str, Any]:
-        """Return deterministic 1024D vector based on text."""
+        """
+        Return deterministic 1024D vector based on text.
+        """
         # Simple hash-based embedding for consistency
         base_value = sum(ord(c) for c in text) / (len(text) + 1) / 1000.0
         return {
@@ -31,7 +34,9 @@ class TestEmbedder:
         }
 
     def get_embeddings(self, texts: list[str], provider: str = "test") -> dict[str, Any]:
-        """Batch embedding for multiple texts."""
+        """
+        Batch embedding for multiple texts.
+        """
         embeddings = []
         for text in texts:
             result = self.embed_text(text)
@@ -44,7 +49,9 @@ class TestEmbedder:
 
 
 class TestDatabase:
-    """In-memory SQLite database for testing."""
+    """
+    In-memory SQLite database for testing.
+    """
 
     def __init__(self, db_path: str = ":memory:"):
         self.db_path = db_path
@@ -53,7 +60,9 @@ class TestDatabase:
         self._setup_schema()
 
     def _setup_schema(self):
-        """Create test database schema."""
+        """
+        Create test database schema.
+        """
         # Emails table
         self.conn.execute(
             """
@@ -103,7 +112,9 @@ class TestDatabase:
         self.conn.commit()
 
     def get_all_emails(self, limit: int = 100, offset: int = 0) -> dict[str, Any]:
-        """Get unprocessed emails."""
+        """
+        Get unprocessed emails.
+        """
         cursor = self.conn.execute(
             """
             SELECT message_id, subject, sender, recipient_to, datetime_utc, content
@@ -130,7 +141,9 @@ class TestDatabase:
         return {"success": True, "emails": emails}
 
     def get_email_by_id(self, message_id: str) -> dict[str, Any]:
-        """Get specific email by ID."""
+        """
+        Get specific email by ID.
+        """
         cursor = self.conn.execute(
             """
             SELECT subject, sender, recipient_to, content, datetime_utc
@@ -154,7 +167,9 @@ class TestDatabase:
         return {"success": False, "error": "Email not found"}
 
     def mark_email_processed(self, message_id: str) -> bool:
-        """Mark email as vector processed."""
+        """
+        Mark email as vector processed.
+        """
         self.conn.execute(
             "UPDATE emails SET vector_processed = 1 WHERE message_id = ?", (message_id,)
         )
@@ -162,7 +177,9 @@ class TestDatabase:
         return True
 
     def add_test_emails(self, emails: list[dict[str, str]]):
-        """Add test emails to database."""
+        """
+        Add test emails to database.
+        """
         for email in emails:
             self.conn.execute(
                 """
@@ -185,7 +202,9 @@ class TestDatabase:
     def add_content(
         self, content_type: str, title: str, content: str, metadata: dict = None
     ) -> dict[str, Any]:
-        """Add content (transcript, document) to database."""
+        """
+        Add content (transcript, document) to database.
+        """
         import json
         import uuid
 
@@ -206,7 +225,9 @@ class TestDatabase:
     def search_content(
         self, query: str, content_type: str = None, limit: int = 10
     ) -> dict[str, Any]:
-        """Simple keyword search in content."""
+        """
+        Simple keyword search in content.
+        """
         sql = """
             SELECT id, content_type, title, content, metadata
             FROM content
@@ -238,13 +259,17 @@ class TestDatabase:
         return {"success": True, "results": results}
 
     def close(self):
-        """Close database connection."""
+        """
+        Close database connection.
+        """
         if self.conn:
             self.conn.close()
 
 
 class TestQdrantOperations:
-    """Test Qdrant operations with in-memory client."""
+    """
+    Test Qdrant operations with in-memory client.
+    """
 
     def __init__(self, collection_name: str = "test_emails"):
         self.client = QdrantClient(":memory:")
@@ -253,7 +278,9 @@ class TestQdrantOperations:
         self.stored_vectors = {}  # Track for testing
 
     def _setup_collection(self):
-        """Create test collection with 1024D vectors."""
+        """
+        Create test collection with 1024D vectors.
+        """
         try:
             self.client.create_collection(
                 collection_name=self.collection_name,
@@ -264,7 +291,9 @@ class TestQdrantOperations:
             pass
 
     def check_vector_exists(self, message_id: str) -> dict[str, Any]:
-        """Check if vector exists in collection."""
+        """
+        Check if vector exists in collection.
+        """
         try:
             result = self.client.retrieve(collection_name=self.collection_name, ids=[message_id])
             exists = len(result) > 0
@@ -275,7 +304,9 @@ class TestQdrantOperations:
     def store_vector(
         self, message_id: str, vector: list[float], metadata: dict[str, Any]
     ) -> dict[str, Any]:
-        """Store vector with metadata."""
+        """
+        Store vector with metadata.
+        """
         try:
             point = PointStruct(id=message_id, vector=vector, payload=metadata)
 
@@ -289,7 +320,9 @@ class TestQdrantOperations:
             return {"success": False, "error": str(e)}
 
     def search_vectors(self, query_vector: list[float], limit: int = 5) -> dict[str, Any]:
-        """Search for similar vectors."""
+        """
+        Search for similar vectors.
+        """
         try:
             results = self.client.search(
                 collection_name=self.collection_name, query_vector=query_vector, limit=limit
@@ -304,19 +337,25 @@ class TestQdrantOperations:
             return {"success": False, "error": str(e), "matches": []}
 
     def delete_collection(self):
-        """Delete the collection for cleanup."""
+        """
+        Delete the collection for cleanup.
+        """
         with contextlib.suppress(Exception):
             self.client.delete_collection(self.collection_name)
 
 
 class TestGmailService:
-    """Minimal Gmail service for testing."""
+    """
+    Minimal Gmail service for testing.
+    """
 
     def __init__(self, db: TestDatabase):
         self.db = db
 
     def sync_emails(self, max_results: int = 50) -> dict[str, Any]:
-        """Simulate email sync by adding test emails."""
+        """
+        Simulate email sync by adding test emails.
+        """
         test_emails = [
             {
                 "message_id": f"gmail_{i}",
@@ -333,7 +372,9 @@ class TestGmailService:
 
 
 class TestVectorService:
-    """Minimal vector service for testing."""
+    """
+    Minimal vector service for testing.
+    """
 
     def __init__(self, embedder: TestEmbedder, qdrant: TestQdrantOperations, db: TestDatabase):
         self.embedder = embedder
@@ -342,7 +383,9 @@ class TestVectorService:
         self.validation_result = {"success": True}
 
     def process_emails(self, limit: int = 100) -> dict[str, Any]:
-        """Process unprocessed emails."""
+        """
+        Process unprocessed emails.
+        """
         result = self.db.get_all_emails(limit=limit)
         if not result["success"]:
             return {"success": False, "error": "Failed to get emails"}
@@ -388,7 +431,9 @@ class TestVectorService:
         }
 
     def search_similar(self, query: str, limit: int = 5) -> dict[str, Any]:
-        """Search for similar content."""
+        """
+        Search for similar content.
+        """
         # Generate query embedding
         embedding_result = self.embedder.embed_text(query)
         if not embedding_result["success"]:
@@ -407,13 +452,17 @@ class TestVectorService:
 # Pytest fixtures for easy use
 @pytest.fixture
 def test_embedder():
-    """Provide test embedder."""
+    """
+    Provide test embedder.
+    """
     return TestEmbedder()
 
 
 @pytest.fixture
 def test_db():
-    """Provide in-memory test database."""
+    """
+    Provide in-memory test database.
+    """
     db = TestDatabase()
     yield db
     db.close()
@@ -421,7 +470,9 @@ def test_db():
 
 @pytest.fixture
 def test_qdrant():
-    """Provide in-memory Qdrant client."""
+    """
+    Provide in-memory Qdrant client.
+    """
     qdrant = TestQdrantOperations()
     yield qdrant
     qdrant.delete_collection()
@@ -429,11 +480,15 @@ def test_qdrant():
 
 @pytest.fixture
 def test_gmail_service(test_db):
-    """Provide test Gmail service."""
+    """
+    Provide test Gmail service.
+    """
     return TestGmailService(test_db)
 
 
 @pytest.fixture
 def test_vector_service(test_embedder, test_qdrant, test_db):
-    """Provide test vector service."""
+    """
+    Provide test vector service.
+    """
     return TestVectorService(test_embedder, test_qdrant, test_db)

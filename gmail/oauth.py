@@ -14,7 +14,9 @@ SCOPES = [
 
 
 class GmailAuth:
-    """Handle OAuth2 authentication for Gmail API using secure keyring storage."""
+    """
+    Handle OAuth2 authentication for Gmail API using secure keyring storage.
+    """
 
     def __init__(self, credentials_file="credentials.json", token_file="token.json"):
         """Initialize Gmail authentication handler.

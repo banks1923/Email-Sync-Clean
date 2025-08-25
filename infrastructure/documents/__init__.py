@@ -1,5 +1,4 @@
-"""
-Multi-Format Document Processing System
+"""Multi-Format Document Processing System.
 
 Supports DOCX, TXT, MD, and PDF formats with full lifecycle management.
 Follows CLAUDE.md principles with simple, direct implementation.

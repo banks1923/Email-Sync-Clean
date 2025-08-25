@@ -1,4 +1,6 @@
-"""Comprehensive tests for snippet utilities."""
+"""
+Comprehensive tests for snippet utilities.
+"""
 
 import pytest
 
@@ -13,10 +15,14 @@ from shared.snippet_utils import (
 
 
 class TestExtractSnippet:
-    """Test snippet extraction functionality."""
+    """
+    Test snippet extraction functionality.
+    """
     
     def test_extract_snippet_basic(self):
-        """Test basic snippet extraction."""
+        """
+        Test basic snippet extraction.
+        """
         text = "The quick brown fox jumps over the lazy dog. This is a test sentence."
         query = "fox"
         snippet = extract_snippet(text, query, window_size=30)
@@ -25,24 +31,32 @@ class TestExtractSnippet:
         assert len(snippet) <= 60  # Window on both sides
         
     def test_extract_snippet_empty_text(self):
-        """Test snippet extraction with empty text."""
+        """
+        Test snippet extraction with empty text.
+        """
         snippet = extract_snippet("", "query", window_size=50)
         assert snippet == ""
         
     def test_extract_snippet_empty_query(self):
-        """Test snippet extraction with empty query."""
+        """
+        Test snippet extraction with empty query.
+        """
         text = "This is some text content."
         snippet = extract_snippet(text, "", window_size=20)
         assert snippet == "This is some text co"
         
     def test_extract_snippet_short_text(self):
-        """Test snippet extraction with text shorter than window."""
+        """
+        Test snippet extraction with text shorter than window.
+        """
         text = "Short text"
         snippet = extract_snippet(text, "text", window_size=50)
         assert snippet == "Short text"
         
     def test_extract_snippet_multiple_matches(self):
-        """Test snippet extraction with multiple query matches."""
+        """
+        Test snippet extraction with multiple query matches.
+        """
         text = "Python is great. I love Python programming. Python is versatile."
         snippet = extract_snippet(text, "Python", window_size=40)
         
@@ -51,14 +65,18 @@ class TestExtractSnippet:
         assert snippet.startswith("Python is great")
         
     def test_extract_snippet_case_insensitive(self):
-        """Test case-insensitive snippet extraction."""
+        """
+        Test case-insensitive snippet extraction.
+        """
         text = "The QUICK brown FOX jumps over the lazy dog."
         snippet = extract_snippet(text, "quick fox", window_size=30)
         
         assert "QUICK" in snippet or "FOX" in snippet
         
     def test_extract_snippet_with_ellipsis(self):
-        """Test snippet with ellipsis for truncated text."""
+        """
+        Test snippet with ellipsis for truncated text.
+        """
         text = "Start " + "word " * 50 + " end"
         snippet = extract_snippet(text, "word", window_size=20)
         
@@ -66,7 +84,9 @@ class TestExtractSnippet:
         assert "..." in snippet
         
     def test_extract_snippet_no_match(self):
-        """Test snippet when query not found."""
+        """
+        Test snippet when query not found.
+        """
         text = "This is a sample text without the search term."
         snippet = extract_snippet(text, "missing", window_size=30)
         
@@ -74,7 +94,9 @@ class TestExtractSnippet:
         assert snippet.startswith("This is a sample")
         
     def test_extract_snippet_whitespace_normalization(self):
-        """Test snippet with normalized whitespace."""
+        """
+        Test snippet with normalized whitespace.
+        """
         text = "This    has     extra     spaces     between     words."
         snippet = extract_snippet(text, "extra", window_size=30)
         
@@ -83,7 +105,9 @@ class TestExtractSnippet:
         assert "extra spaces" in snippet
         
     def test_extract_snippet_skip_short_terms(self):
-        """Test that very short query terms are skipped."""
+        """
+        Test that very short query terms are skipped.
+        """
         text = "The quick brown fox jumps over the lazy dog."
         snippet = extract_snippet(text, "a", window_size=30)
         
@@ -92,10 +116,14 @@ class TestExtractSnippet:
 
 
 class TestHighlightKeywords:
-    """Test keyword highlighting functionality."""
+    """
+    Test keyword highlighting functionality.
+    """
     
     def test_highlight_keywords_ansi(self):
-        """Test highlighting with ANSI color codes."""
+        """
+        Test highlighting with ANSI color codes.
+        """
         text = "The quick brown fox"
         highlighted = highlight_keywords(text, "quick", use_ansi=True)
         
@@ -104,14 +132,18 @@ class TestHighlightKeywords:
         assert "quick" in highlighted
         
     def test_highlight_keywords_brackets(self):
-        """Test highlighting with brackets."""
+        """
+        Test highlighting with brackets.
+        """
         text = "The quick brown fox"
         highlighted = highlight_keywords(text, "quick", use_ansi=False)
         
         assert "[quick]" in highlighted
         
     def test_highlight_multiple_keywords(self):
-        """Test highlighting multiple keywords."""
+        """
+        Test highlighting multiple keywords.
+        """
         text = "The quick brown fox jumps"
         highlighted = highlight_keywords(text, "quick fox", use_ansi=False)
         
@@ -119,7 +151,9 @@ class TestHighlightKeywords:
         assert "[fox]" in highlighted
         
     def test_highlight_case_insensitive(self):
-        """Test case-insensitive highlighting."""
+        """
+        Test case-insensitive highlighting.
+        """
         text = "The QUICK brown FOX"
         highlighted = highlight_keywords(text, "quick fox", use_ansi=False)
         
@@ -127,18 +161,24 @@ class TestHighlightKeywords:
         assert "[FOX]" in highlighted
         
     def test_highlight_empty_text(self):
-        """Test highlighting with empty text."""
+        """
+        Test highlighting with empty text.
+        """
         highlighted = highlight_keywords("", "query")
         assert highlighted == ""
         
     def test_highlight_empty_query(self):
-        """Test highlighting with empty query."""
+        """
+        Test highlighting with empty query.
+        """
         text = "Some text"
         highlighted = highlight_keywords(text, "")
         assert highlighted == text
         
     def test_highlight_word_boundaries(self):
-        """Test highlighting respects word boundaries."""
+        """
+        Test highlighting respects word boundaries.
+        """
         text = "The quickly quick quickest"
         highlighted = highlight_keywords(text, "quick", use_ansi=False)
         
@@ -148,7 +188,9 @@ class TestHighlightKeywords:
         assert "quickest" in highlighted  # Not highlighted
         
     def test_highlight_special_characters(self):
-        """Test highlighting with special regex characters."""
+        """
+        Test highlighting with special regex characters.
+        """
         text = "Price is $10.50 (plus tax)"
         highlighted = highlight_keywords(text, "$10.50", use_ansi=False)
         
@@ -156,7 +198,9 @@ class TestHighlightKeywords:
         assert "[$10.50]" in highlighted
         
     def test_highlight_skip_short_terms(self):
-        """Test that single character terms are skipped."""
+        """
+        Test that single character terms are skipped.
+        """
         text = "A quick brown fox"
         highlighted = highlight_keywords(text, "a", use_ansi=False)
         
@@ -165,10 +209,14 @@ class TestHighlightKeywords:
 
 
 class TestRankSnippets:
-    """Test snippet ranking functionality."""
+    """
+    Test snippet ranking functionality.
+    """
     
     def test_rank_snippets_basic(self):
-        """Test basic snippet ranking."""
+        """
+        Test basic snippet ranking.
+        """
         snippets = [
             "Python programming is fun",
             "Java programming tutorial",
@@ -183,12 +231,16 @@ class TestRankSnippets:
         assert ranked[0][1] > ranked[-1][1]  # First has higher score than last
         
     def test_rank_snippets_empty_list(self):
-        """Test ranking empty snippet list."""
+        """
+        Test ranking empty snippet list.
+        """
         ranked = rank_snippets([], "query")
         assert ranked == []
         
     def test_rank_snippets_empty_query(self):
-        """Test ranking with empty query."""
+        """
+        Test ranking with empty query.
+        """
         snippets = ["Text 1", "Text 2"]
         ranked = rank_snippets(snippets, "")
         
@@ -198,7 +250,9 @@ class TestRankSnippets:
             assert score == 1.0
             
     def test_rank_snippets_multiple_terms(self):
-        """Test ranking with multiple query terms."""
+        """
+        Test ranking with multiple query terms.
+        """
         snippets = [
             "Python and Java programming",
             "Only Python here",
@@ -213,7 +267,9 @@ class TestRankSnippets:
         assert ranked[0][1] > ranked[1][1]
         
     def test_rank_snippets_position_bonus(self):
-        """Test that earlier matches get position bonus."""
+        """
+        Test that earlier matches get position bonus.
+        """
         snippets = [
             "End of text has Python",
             "Python at the beginning"
@@ -226,10 +282,14 @@ class TestRankSnippets:
 
 
 class TestCalculateSnippetScore:
-    """Test snippet score calculation."""
+    """
+    Test snippet score calculation.
+    """
     
     def test_calculate_score_all_terms_match(self):
-        """Test score when all query terms match."""
+        """
+        Test score when all query terms match.
+        """
         query_terms = {"python", "programming"}
         snippet = "Python programming is great"
         
@@ -237,7 +297,9 @@ class TestCalculateSnippetScore:
         assert score > 0
         
     def test_calculate_score_partial_match(self):
-        """Test score with partial term match."""
+        """
+        Test score with partial term match.
+        """
         query_terms = {"python", "java", "programming"}
         snippet = "Python programming tutorial"
         
@@ -245,7 +307,9 @@ class TestCalculateSnippetScore:
         assert 0 < score < 1  # Partial match
         
     def test_calculate_score_no_match(self):
-        """Test score with no matching terms."""
+        """
+        Test score with no matching terms.
+        """
         query_terms = {"python", "java"}
         snippet = "JavaScript and TypeScript"
         
@@ -253,19 +317,25 @@ class TestCalculateSnippetScore:
         assert score == 0
         
     def test_calculate_score_empty_snippet(self):
-        """Test score with empty snippet."""
+        """
+        Test score with empty snippet.
+        """
         query_terms = {"python"}
         score = _calculate_snippet_score("", query_terms)
         assert score == 0
         
     def test_calculate_score_empty_query(self):
-        """Test score with empty query terms."""
+        """
+        Test score with empty query terms.
+        """
         snippet = "Some text"
         score = _calculate_snippet_score(snippet, set())
         assert score == 0
         
     def test_calculate_score_position_matters(self):
-        """Test that position affects score."""
+        """
+        Test that position affects score.
+        """
         query_terms = {"python"}
         snippet1 = "Python is first"
         snippet2 = "Last word is Python"
@@ -277,7 +347,9 @@ class TestCalculateSnippetScore:
         assert score1 > score2
         
     def test_calculate_score_length_penalty(self):
-        """Test that longer snippets get penalized."""
+        """
+        Test that longer snippets get penalized.
+        """
         query_terms = {"python"}
         short = "Python rocks"
         long = "Python " + "word " * 100 + "rocks"
@@ -290,10 +362,14 @@ class TestCalculateSnippetScore:
 
 
 class TestGetCachedSnippet:
-    """Test cached snippet extraction."""
+    """
+    Test cached snippet extraction.
+    """
     
     def test_get_cached_snippet_basic(self):
-        """Test basic cached snippet extraction."""
+        """
+        Test basic cached snippet extraction.
+        """
         text = "The quick brown fox jumps over the lazy dog."
         snippet1 = get_cached_snippet(text, "fox", 30)
         snippet2 = get_cached_snippet(text, "fox", 30)
@@ -302,12 +378,16 @@ class TestGetCachedSnippet:
         assert "fox" in snippet1
         
     def test_get_cached_snippet_empty(self):
-        """Test cached snippet with empty text."""
+        """
+        Test cached snippet with empty text.
+        """
         snippet = get_cached_snippet("", "query", 50)
         assert snippet == ""
         
     def test_get_cached_snippet_different_params(self):
-        """Test that different parameters create different results."""
+        """
+        Test that different parameters create different results.
+        """
         text = "The quick brown fox jumps over the lazy dog."
         
         snippet1 = get_cached_snippet(text, "fox", 20)
@@ -318,10 +398,14 @@ class TestGetCachedSnippet:
 
 
 class TestFormatSearchResult:
-    """Test search result formatting."""
+    """
+    Test search result formatting.
+    """
     
     def test_format_search_result_dict(self):
-        """Test formatting dictionary search result."""
+        """
+        Test formatting dictionary search result.
+        """
         content = {
             "content": "The quick brown fox jumps over the lazy dog.",
             "title": "Test Document"
@@ -335,7 +419,9 @@ class TestFormatSearchResult:
         assert "fox" in result["snippet"]
         
     def test_format_search_result_body_field(self):
-        """Test formatting with body field instead of content."""
+        """
+        Test formatting with body field instead of content.
+        """
         content = {
             "body": "Email body with search term.",
             "subject": "Test Email"
@@ -347,7 +433,9 @@ class TestFormatSearchResult:
         assert "search" in result["snippet"]
         
     def test_format_search_result_title_fallback(self):
-        """Test formatting falls back to title if no content/body."""
+        """
+        Test formatting falls back to title if no content/body.
+        """
         content = {
             "title": "Document with search term"
         }
@@ -358,7 +446,9 @@ class TestFormatSearchResult:
         assert "search" in result["snippet"]
         
     def test_format_search_result_string_content(self):
-        """Test formatting string content instead of dict."""
+        """
+        Test formatting string content instead of dict.
+        """
         content = "Plain text content with search term"
         
         result = format_search_result(content, "search", snippet_length=30)
@@ -369,7 +459,9 @@ class TestFormatSearchResult:
         assert result["content"] == content
         
     def test_format_search_result_empty_content(self):
-        """Test formatting empty content."""
+        """
+        Test formatting empty content.
+        """
         result = format_search_result({}, "query", snippet_length=30)
         assert result == {}
         
@@ -377,7 +469,9 @@ class TestFormatSearchResult:
         assert result2 is None
         
     def test_format_search_result_ansi_highlighting(self):
-        """Test that highlighted snippet includes ANSI codes."""
+        """
+        Test that highlighted snippet includes ANSI codes.
+        """
         content = {"content": "Text with keyword here"}
         result = format_search_result(content, "keyword", snippet_length=50)
         
@@ -385,7 +479,9 @@ class TestFormatSearchResult:
         assert "\033[93m" in result["highlighted_snippet"] or "[keyword]" in result["highlighted_snippet"]
         
     def test_format_search_result_preserves_original(self):
-        """Test that original content is preserved."""
+        """
+        Test that original content is preserved.
+        """
         content = {
             "content": "Original content",
             "id": 123,
@@ -402,10 +498,14 @@ class TestFormatSearchResult:
 
 @pytest.mark.integration
 class TestSnippetUtilsIntegration:
-    """Integration tests for snippet utilities."""
+    """
+    Integration tests for snippet utilities.
+    """
     
     def test_full_pipeline(self):
-        """Test complete snippet processing pipeline."""
+        """
+        Test complete snippet processing pipeline.
+        """
         # Sample search results
         results = [
             {
@@ -447,7 +547,9 @@ class TestSnippetUtilsIntegration:
                 assert "snippet_length" in result
                 
     def test_real_world_text(self):
-        """Test with realistic text content."""
+        """
+        Test with realistic text content.
+        """
         legal_text = """
         WHEREAS, the parties have entered into a mutual agreement dated January 1, 2024,
         for the provision of software development services; and WHEREAS, the Client requires
@@ -471,7 +573,9 @@ class TestSnippetUtilsIntegration:
         assert "[extended]" in highlighted
         
     def test_performance_large_text(self):
-        """Test performance with large text."""
+        """
+        Test performance with large text.
+        """
         # Create large text
         large_text = " ".join([f"Sentence {i} with some content." for i in range(1000)])
         large_text += " Important keyword appears here. "

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Benchmark script for SimpleDB optimizations.
+"""Benchmark script for SimpleDB optimizations.
+
 Compares performance with and without SQLite pragmas.
 """
 
@@ -23,7 +23,9 @@ from shared.simple_db import SimpleDB
 
 
 def bench_write(db: SimpleDB, num_docs: int = 10000) -> dict:
-    """Benchmark write performance."""
+    """
+    Benchmark write performance.
+    """
     times = []
     
     # Create test table
@@ -62,7 +64,9 @@ def bench_write(db: SimpleDB, num_docs: int = 10000) -> dict:
 
 
 def bench_read(db: SimpleDB, num_reads: int = 10000) -> dict:
-    """Benchmark read performance."""
+    """
+    Benchmark read performance.
+    """
     times = []
     
     # Random primary key lookups
@@ -84,7 +88,9 @@ def bench_read(db: SimpleDB, num_reads: int = 10000) -> dict:
 
 
 def run_benchmark():
-    """Run complete benchmark suite."""
+    """
+    Run complete benchmark suite.
+    """
     results = {
         "timestamp": datetime.now().isoformat(),
         "baseline": {},

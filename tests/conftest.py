@@ -1,5 +1,4 @@
-"""
-Centralized test configuration and fixtures for Email Sync testing strategy.
+"""Centralized test configuration and fixtures for Email Sync testing strategy.
 
 This follows the 6-phase testing plan with:
 1. Baseline coverage targets
@@ -31,7 +30,9 @@ from shared.simple_db import SimpleDB
 # =============================================================================
 
 def pytest_configure(config):
-    """Configure pytest for comprehensive testing strategy."""
+    """
+    Configure pytest for comprehensive testing strategy.
+    """
     # Set test environment variables
     os.environ["TESTING"] = "true"
     os.environ["LOG_LEVEL"] = "WARNING"  # Reduce log noise in tests
@@ -52,7 +53,9 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    """Auto-mark tests based on naming patterns and imports."""
+    """
+    Auto-mark tests based on naming patterns and imports.
+    """
     for item in items:
         # Mark CoverUp generated tests
         if "coverup" in item.nodeid:
@@ -77,7 +80,9 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.fixture
 def temp_db() -> Generator[str, None, None]:
-    """Create isolated temporary database for testing."""
+    """
+    Create isolated temporary database for testing.
+    """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
         db_path = tmp_file.name
     
@@ -90,7 +95,9 @@ def temp_db() -> Generator[str, None, None]:
 
 @pytest.fixture
 def simple_db(temp_db: str) -> SimpleDB:
-    """Create SimpleDB instance with temporary database and proper schema."""
+    """
+    Create SimpleDB instance with temporary database and proper schema.
+    """
     db = SimpleDB(db_path=temp_db)
     
     # Create the content table that SimpleDB expects but doesn't create
@@ -118,7 +125,9 @@ def simple_db(temp_db: str) -> SimpleDB:
 
 @pytest.fixture
 def populated_db(simple_db: SimpleDB) -> SimpleDB:
-    """SimpleDB with sample test data for integration tests."""
+    """
+    SimpleDB with sample test data for integration tests.
+    """
     # Add sample content
     simple_db.add_content(
         content_type="email",
@@ -143,7 +152,9 @@ def populated_db(simple_db: SimpleDB) -> SimpleDB:
 
 @pytest.fixture(scope="session")
 def vcr_config() -> dict[str, Any]:
-    """VCR configuration for HTTP recording/replay."""
+    """
+    VCR configuration for HTTP recording/replay.
+    """
     return {
         "cassette_library_dir": "tests/cassettes",
         "record_mode": "once",  # Record once, then replay
@@ -165,7 +176,9 @@ def vcr_config() -> dict[str, Any]:
 
 @pytest.fixture
 def gmail_api_mock():
-    """Mock Gmail API for testing without external dependencies."""
+    """
+    Mock Gmail API for testing without external dependencies.
+    """
     mock_service = Mock()
     mock_service.users.return_value.messages.return_value.list.return_value.execute.return_value = {
         "messages": [
@@ -196,14 +209,18 @@ def gmail_api_mock():
 
 @pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
-    """Create temporary directory for file-based tests."""
+    """
+    Create temporary directory for file-based tests.
+    """
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield Path(tmp_dir)
 
 
 @pytest.fixture
 def sample_pdf_files(temp_dir: Path) -> dict[str, Path]:
-    """Create sample PDF files for testing."""
+    """
+    Create sample PDF files for testing.
+    """
     files = {}
     
     # Simple text PDF (mock content)
@@ -226,7 +243,9 @@ def sample_pdf_files(temp_dir: Path) -> dict[str, Path]:
 
 @pytest.fixture
 def sample_text_files(temp_dir: Path) -> dict[str, Path]:
-    """Create sample text files for document processing tests."""
+    """
+    Create sample text files for document processing tests.
+    """
     files = {}
     
     # UTF-8 text file
@@ -253,7 +272,9 @@ def sample_text_files(temp_dir: Path) -> dict[str, Path]:
 
 @pytest.fixture
 def mock_embeddings():
-    """Mock embedding service for testing without model loading."""
+    """
+    Mock embedding service for testing without model loading.
+    """
     mock_service = Mock()
     mock_service.encode.return_value = [0.1] * 1024  # Mock 1024D vector
     mock_service.model_name = "mock-legal-bert"
@@ -263,7 +284,9 @@ def mock_embeddings():
 
 @pytest.fixture
 def mock_vector_store():
-    """Mock vector store for testing without Qdrant."""
+    """
+    Mock vector store for testing without Qdrant.
+    """
     mock_store = Mock()
     mock_store.upsert.return_value = True
     mock_store.search.return_value = [
@@ -280,7 +303,9 @@ def mock_vector_store():
 
 @pytest.fixture
 def performance_monitor():
-    """Monitor test performance and resource usage."""
+    """
+    Monitor test performance and resource usage.
+    """
     import time
 
     import psutil
@@ -310,7 +335,9 @@ def performance_monitor():
 
 @pytest.fixture
 def mutation_context():
-    """Context for mutation testing scenarios."""
+    """
+    Context for mutation testing scenarios.
+    """
     return {
         "mutant_id": os.getenv("MUTANT_ID"),
         "original_function": os.getenv("MUTANT_ORIGINAL"),
@@ -324,7 +351,9 @@ def mutation_context():
 # =============================================================================
 
 def create_sample_email_data() -> dict[str, Any]:
-    """Factory for creating sample email data."""
+    """
+    Factory for creating sample email data.
+    """
     return {
         "id": "test_email_001",
         "subject": "Test Email Subject",
@@ -338,7 +367,9 @@ def create_sample_email_data() -> dict[str, Any]:
 
 
 def create_sample_document_data() -> dict[str, Any]:
-    """Factory for creating sample document data."""
+    """
+    Factory for creating sample document data.
+    """
     return {
         "id": "test_doc_001",
         "title": "Test Document",
@@ -360,7 +391,9 @@ def create_sample_document_data() -> dict[str, Any]:
 
 @pytest.fixture(autouse=True)
 def cleanup_test_artifacts():
-    """Automatically clean up test artifacts after each test."""
+    """
+    Automatically clean up test artifacts after each test.
+    """
     yield
     
     # Clean up any temporary files that might have been created
@@ -376,7 +409,9 @@ def cleanup_test_artifacts():
 
 
 def pytest_runtest_teardown(item, nextitem):
-    """Validate test isolation after each test."""
+    """
+    Validate test isolation after each test.
+    """
     # Ensure no test data leaked into the main database
     if os.path.exists("emails.db"):
         conn = sqlite3.connect("emails.db")

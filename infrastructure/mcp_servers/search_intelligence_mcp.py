@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""
-Search Intelligence MCP Server
+"""Search Intelligence MCP Server.
 
-Unified Search Intelligence MCP server that provides comprehensive search and
-document intelligence capabilities including smart search, similarity analysis,
-entity extraction, summarization, clustering, and batch processing.
+Unified Search Intelligence MCP server that provides comprehensive
+search and document intelligence capabilities including smart search,
+similarity analysis, entity extraction, summarization, clustering, and
+batch processing.
 """
 
 import asyncio
@@ -42,7 +42,9 @@ except ImportError as e:
 def search_smart(
     query: str, limit: int = 10, use_expansion: bool = True, content_type: str | None = None
 ) -> str:
-    """Smart search with query preprocessing and expansion"""
+    """
+    Smart search with query preprocessing and expansion.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -98,7 +100,9 @@ def search_smart(
 
 
 def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) -> str:
-    """Find documents similar to a given document"""
+    """
+    Find documents similar to a given document.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -147,7 +151,9 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
 def search_entities(
     document_id: str | None = None, text: str | None = None, cache_results: bool = True
 ) -> str:
-    """Extract entities from a document or text"""
+    """
+    Extract entities from a document or text.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -230,7 +236,9 @@ def search_summarize(
     max_sentences: int = 3,
     max_keywords: int = 10,
 ) -> str:
-    """Summarize a document or text"""
+    """
+    Summarize a document or text.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -293,7 +301,9 @@ def search_summarize(
 
 
 def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: int = 2) -> str:
-    """Cluster similar documents"""
+    """
+    Cluster similar documents.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -356,7 +366,9 @@ def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: i
 
 
 def search_process_all(operation: str, content_type: str | None = None, limit: int = 100) -> str:
-    """Batch process documents with specified operation"""
+    """
+    Batch process documents with specified operation.
+    """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
@@ -439,14 +451,18 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
 
 
 class SearchIntelligenceMCPServer:
-    """Search Intelligence MCP Server"""
+    """
+    Search Intelligence MCP Server.
+    """
 
     def __init__(self):
         self.server = Server("search-intelligence")
         self.setup_tools()
 
     def setup_tools(self):
-        """Register search intelligence tools"""
+        """
+        Register search intelligence tools.
+        """
 
         @self.server.list_tools()
         async def handle_list_tools():
@@ -663,7 +679,9 @@ class SearchIntelligenceMCPServer:
 
 
 async def main():
-    """Run the search intelligence server"""
+    """
+    Run the search intelligence server.
+    """
     server = SearchIntelligenceMCPServer()
 
     async with stdio_server() as (read_stream, write_stream):

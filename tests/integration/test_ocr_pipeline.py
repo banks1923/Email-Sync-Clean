@@ -1,6 +1,7 @@
-"""
-Integration tests for the complete OCR pipeline.
-Tests the full workflow from PDF input to text extraction and vector embeddings.
+"""Integration tests for the complete OCR pipeline.
+
+Tests the full workflow from PDF input to text extraction and vector
+embeddings.
 """
 
 import os
@@ -18,10 +19,14 @@ if project_root not in sys.path:
 
 
 class TestOCRPipelineIntegration:
-    """Test complete OCR pipeline integration."""
+    """
+    Test complete OCR pipeline integration.
+    """
 
     def test_ocr_coordinator_full_pipeline(self):
-        """Test OCR coordinator with real PDF processing."""
+        """
+        Test OCR coordinator with real PDF processing.
+        """
         coordinator = OCRCoordinator(dpi=400)
 
         # Validate setup
@@ -44,7 +49,9 @@ class TestOCRPipelineIntegration:
             assert "metadata" in result
 
     def test_page_by_page_processor(self):
-        """Test batch processing for large PDFs."""
+        """
+        Test batch processing for large PDFs.
+        """
         processor = PageByPageProcessor(batch_size=2, max_memory_mb=500)
 
         # Verify initialization
@@ -70,7 +77,9 @@ class TestOCRPipelineIntegration:
             assert "confidence" in result
 
     def test_pdf_validator(self):
-        """Test PDF validation and OCR detection."""
+        """
+        Test PDF validation and OCR detection.
+        """
         validator = PDFValidator()
 
         # Check dependencies
@@ -98,7 +107,9 @@ class TestOCRPipelineIntegration:
                     assert result["use_ocr"] is False or result["confidence"] < 0.5
 
     def test_pdf_service_integration(self):
-        """Test PDFService with OCR integration."""
+        """
+        Test PDFService with OCR integration.
+        """
         service = get_pdf_service()
 
         # Check health
@@ -123,7 +134,9 @@ class TestOCRPipelineIntegration:
                 assert result["chunks_processed"] >= 0
 
     def test_ocr_quality_improvements(self):
-        """Test that quality improvements are working."""
+        """
+        Test that quality improvements are working.
+        """
         from pdf.ocr.ocr_engine import OCREngine
 
         engine = OCREngine()
@@ -155,7 +168,9 @@ class TestOCRPipelineIntegration:
             pass
 
     def test_generator_mode(self):
-        """Test streaming mode for memory efficiency."""
+        """
+        Test streaming mode for memory efficiency.
+        """
         processor = PageByPageProcessor()
 
         multi_page_pdf = os.path.join(
@@ -181,7 +196,9 @@ class TestOCRPipelineIntegration:
             assert pages_processed >= 1  # At least one page processed
 
     def test_error_handling(self):
-        """Test error handling in OCR pipeline."""
+        """
+        Test error handling in OCR pipeline.
+        """
         coordinator = OCRCoordinator()
 
         # Test with non-existent file
@@ -201,7 +218,9 @@ class TestOCRPipelineIntegration:
             os.unlink(tmp_path)
 
     def test_confidence_scoring(self):
-        """Test OCR confidence scoring and quality metrics."""
+        """
+        Test OCR confidence scoring and quality metrics.
+        """
         from pdf.ocr.postprocessor import OCRPostprocessor
 
         postprocessor = OCRPostprocessor()

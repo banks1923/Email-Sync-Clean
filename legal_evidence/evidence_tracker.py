@@ -17,15 +17,21 @@ from shared.simple_db import SimpleDB
 
 
 class EvidenceTracker:
-    """Track emails with legal Evidence IDs (EIDs) for court references."""
+    """
+    Track emails with legal Evidence IDs (EIDs) for court references.
+    """
     
     def __init__(self, db_path: str = "data/emails.db"):
-        """Initialize with database connection."""
+        """
+        Initialize with database connection.
+        """
         self.db = SimpleDB(db_path)
         self._ensure_schema()
         
     def _ensure_schema(self):
-        """Add legal tracking columns to emails table if needed."""
+        """
+        Add legal tracking columns to emails table if needed.
+        """
         # Add EID and thread_id columns if they don't exist
         try:
             self.db.execute("""
@@ -53,7 +59,7 @@ class EvidenceTracker:
     
     def generate_eid(self, message_id: str, datetime_utc: str) -> str:
         """Generate unique Evidence ID for email.
-        
+
         Format: EID-YYYY-NNNN where NNNN is a unique number for that year.
         """
         # Extract year from datetime
@@ -81,7 +87,9 @@ class EvidenceTracker:
         return f"EID-{year}-{next_num:04d}"
     
     def assign_eids(self, limit: int | None = None) -> dict[str, Any]:
-        """Assign EIDs to all emails that don't have them yet."""
+        """
+        Assign EIDs to all emails that don't have them yet.
+        """
         # Get emails without EIDs
         query = """
             SELECT id, message_id, datetime_utc, thread_id 
@@ -115,7 +123,9 @@ class EvidenceTracker:
         }
     
     def assign_thread_ids(self) -> dict[str, Any]:
-        """Group emails by thread based on subject similarity."""
+        """
+        Group emails by thread based on subject similarity.
+        """
         # Get all emails
         cursor = self.db.execute("""
             SELECT id, subject, datetime_utc, sender
@@ -156,7 +166,9 @@ class EvidenceTracker:
         }
     
     def get_email_evidence(self, eid: str) -> dict[str, Any] | None:
-        """Get email evidence by EID."""
+        """
+        Get email evidence by EID.
+        """
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, recipient_to,
                    datetime_utc, thread_id, content
@@ -170,7 +182,9 @@ class EvidenceTracker:
         return None
     
     def get_thread_emails(self, thread_id: str) -> list[dict[str, Any]]:
-        """Get all emails in a thread, ordered chronologically."""
+        """
+        Get all emails in a thread, ordered chronologically.
+        """
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, recipient_to,
                    datetime_utc, content
@@ -182,7 +196,9 @@ class EvidenceTracker:
         return [dict(row) for row in cursor.fetchall()]
     
     def search_by_pattern(self, pattern: str, limit: int = 100) -> list[dict[str, Any]]:
-        """Search emails for specific patterns (for legal discovery)."""
+        """
+        Search emails for specific patterns (for legal discovery).
+        """
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, datetime_utc,
                    thread_id, content
@@ -195,7 +211,9 @@ class EvidenceTracker:
         return [dict(row) for row in cursor.fetchall()]
     
     def get_evidence_summary(self) -> dict[str, Any]:
-        """Get summary statistics for evidence tracking."""
+        """
+        Get summary statistics for evidence tracking.
+        """
         stats = {}
         
         # Total emails with EIDs
@@ -223,5 +241,7 @@ class EvidenceTracker:
 
 # Simple factory function
 def get_evidence_tracker(db_path: str = "data/emails.db") -> EvidenceTracker:
-    """Get evidence tracker instance."""
+    """
+    Get evidence tracker instance.
+    """
     return EvidenceTracker(db_path)

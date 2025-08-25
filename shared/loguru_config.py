@@ -1,5 +1,5 @@
-"""
-Centralized loguru configuration for Email Sync system.
+"""Centralized loguru configuration for Email Sync system.
+
 Production-safe with environment detection and sensitive data filtering.
 """
 
@@ -21,7 +21,9 @@ SENSITIVE_PATTERNS = [
 
 
 def filter_sensitive(record):
-    """Filter sensitive data from log messages."""
+    """
+    Filter sensitive data from log messages.
+    """
     message = record["message"]
     for pattern in SENSITIVE_PATTERNS:
         message = re.sub(pattern, "***REDACTED***", message, flags=re.IGNORECASE)
@@ -37,8 +39,7 @@ def setup_logging(
     enable_json: bool = False,
     use_loguru: bool = None,  # Toggle for gradual migration
 ):
-    """
-    Configure loguru for the application with production safety.
+    """Configure loguru for the application with production safety.
 
     Environment Variables:
     - LOG_LEVEL: Set logging level (DEBUG, INFO, WARNING, ERROR)
@@ -135,10 +136,14 @@ def setup_logging(
 
 # Backward compatibility
 def get_logger(name: str = __name__):
-    """Get a logger instance (backward compatibility)."""
+    """
+    Get a logger instance (backward compatibility).
+    """
     return logger.bind(module=name)
 
 
 def setup_service_logging(service_name: str, log_level: str = "INFO"):
-    """Backward compatibility wrapper for existing code."""
+    """
+    Backward compatibility wrapper for existing code.
+    """
     return setup_logging(service_name, log_level)

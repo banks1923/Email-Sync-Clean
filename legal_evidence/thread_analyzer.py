@@ -12,14 +12,20 @@ from shared.simple_db import SimpleDB
 
 
 class ThreadAnalyzer:
-    """Analyze email threads for patterns and legal significance."""
+    """
+    Analyze email threads for patterns and legal significance.
+    """
     
     def __init__(self, db_path: str = "data/emails.db"):
-        """Initialize with database connection."""
+        """
+        Initialize with database connection.
+        """
         self.db = SimpleDB(db_path)
         
     def get_thread_summary(self, thread_id: str) -> dict[str, Any]:
-        """Get comprehensive summary of a thread."""
+        """
+        Get comprehensive summary of a thread.
+        """
         # Get all emails in thread
         cursor = self.db.execute("""
             SELECT eid, message_id, subject, sender, recipient_to,
@@ -62,7 +68,9 @@ class ThreadAnalyzer:
         }
     
     def find_disputed_topics(self, keywords: list[str]) -> dict[str, list[dict]]:
-        """Find threads containing disputed topics based on keywords."""
+        """
+        Find threads containing disputed topics based on keywords.
+        """
         disputed_threads = defaultdict(list)
         
         for keyword in keywords:
@@ -96,7 +104,9 @@ class ThreadAnalyzer:
         return dict(disputed_threads)
     
     def analyze_communication_patterns(self, sender: str | None = None) -> dict[str, Any]:
-        """Analyze communication patterns for specific sender or all."""
+        """
+        Analyze communication patterns for specific sender or all.
+        """
         query = """
             SELECT sender, recipient_to, datetime_utc, thread_id, subject
             FROM emails
@@ -161,7 +171,9 @@ class ThreadAnalyzer:
         }
     
     def get_chronological_narrative(self, thread_id: str) -> str:
-        """Generate chronological narrative of thread for legal documents."""
+        """
+        Generate chronological narrative of thread for legal documents.
+        """
         summary = self.get_thread_summary(thread_id)
         
         if 'error' in summary:
@@ -193,7 +205,9 @@ class ThreadAnalyzer:
         return "\n".join(narrative)
     
     def find_contradictions(self, thread_id: str, topics: list[str]) -> list[dict[str, Any]]:
-        """Find potential contradictions in a thread about specific topics."""
+        """
+        Find potential contradictions in a thread about specific topics.
+        """
         cursor = self.db.execute("""
             SELECT eid, sender, datetime_utc, content
             FROM emails
@@ -251,5 +265,7 @@ class ThreadAnalyzer:
 
 # Simple factory function
 def get_thread_analyzer(db_path: str = "data/emails.db") -> ThreadAnalyzer:
-    """Get thread analyzer instance."""
+    """
+    Get thread analyzer instance.
+    """
     return ThreadAnalyzer(db_path)

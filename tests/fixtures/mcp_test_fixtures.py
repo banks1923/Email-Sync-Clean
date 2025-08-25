@@ -1,5 +1,4 @@
-"""
-Test fixtures for MCP server testing.
+"""Test fixtures for MCP server testing.
 
 Provides reusable test data and mock configurations.
 """
@@ -15,7 +14,9 @@ sys.path.insert(0, str(project_root))
 
 @pytest.fixture
 def mock_search_service():
-    """Mock SearchIntelligenceService with common test data."""
+    """
+    Mock SearchIntelligenceService with common test data.
+    """
     service = Mock()
     
     # Default search results
@@ -91,7 +92,9 @@ def mock_search_service():
 
 @pytest.fixture  
 def mock_legal_service():
-    """Mock LegalIntelligenceService with common test data."""
+    """
+    Mock LegalIntelligenceService with common test data.
+    """
     service = Mock()
     
     # Entity extraction
@@ -210,7 +213,9 @@ def mock_legal_service():
 
 @pytest.fixture
 def mock_simple_db():
-    """Mock SimpleDB with test data."""
+    """
+    Mock SimpleDB with test data.
+    """
     db = Mock()
     
     # Content retrieval
@@ -250,7 +255,9 @@ def mock_simple_db():
 
 @pytest.fixture
 def mock_document_summarizer():
-    """Mock DocumentSummarizer with test data."""
+    """
+    Mock DocumentSummarizer with test data.
+    """
     summarizer = Mock()
     
     summarizer.extract_summary.return_value = {

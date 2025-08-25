@@ -1,6 +1,7 @@
-"""
-Date parsing utilities for flexible search filters.
-Handles relative dates like 'last week', 'this month', and absolute dates.
+"""Date parsing utilities for flexible search filters.
+
+Handles relative dates like 'last week', 'this month', and absolute
+dates.
 """
 
 import re
@@ -8,7 +9,9 @@ from datetime import datetime, timedelta
 
 
 def parse_relative_date(date_str: str) -> datetime | None:
-    """Parse relative dates like 'last week', 'this month', '3 days ago'."""
+    """
+    Parse relative dates like 'last week', 'this month', '3 days ago'.
+    """
     if not date_str:
         return None
 
@@ -80,8 +83,7 @@ def parse_relative_date(date_str: str) -> datetime | None:
 
 
 def parse_date_filter(date_input: str) -> datetime | None:
-    """
-    Parse various date formats for filtering.
+    """Parse various date formats for filtering.
 
     Args:
         date_input: Date string in various formats
@@ -120,8 +122,7 @@ def parse_date_filter(date_input: str) -> datetime | None:
 def get_date_range(
     since: str = None, until: str = None
 ) -> tuple[datetime | None, datetime | None]:
-    """
-    Get date range for filtering.
+    """Get date range for filtering.
 
     Args:
         since: Start date string
@@ -141,12 +142,11 @@ def get_date_range(
 
 
 def parse_date_from_filename(filename: str) -> datetime | None:
-    """
-    Extract date from filename using common patterns.
-    
+    """Extract date from filename using common patterns.
+
     Args:
         filename: Name of file to parse
-        
+
     Returns:
         datetime object if date found, None otherwise
     """

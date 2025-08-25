@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Integration tests for MCP servers
-Tests the Legal Intelligence and Search Intelligence MCP servers
+Integration tests for MCP servers Tests the Legal Intelligence and Search
+Intelligence MCP servers.
 """
 
 import json
@@ -26,11 +26,15 @@ from infrastructure.mcp_servers.legal_intelligence_mcp import (
 
 
 class TestLegalIntelligenceMCP:
-    """Test Legal Intelligence MCP Server functions"""
+    """
+    Test Legal Intelligence MCP Server functions.
+    """
 
     @pytest.fixture
     def mock_legal_service(self):
-        """Mock LegalIntelligenceService"""
+        """
+        Mock LegalIntelligenceService.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.LegalIntelligenceService") as mock:
             service = Mock()
             mock.return_value = service
@@ -38,7 +42,9 @@ class TestLegalIntelligenceMCP:
 
     @pytest.fixture
     def mock_entity_service(self):
-        """Mock EntityService"""
+        """
+        Mock EntityService.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.EntityService") as mock:
             service = Mock()
             mock.return_value = service
@@ -46,14 +52,18 @@ class TestLegalIntelligenceMCP:
 
     @pytest.fixture
     def mock_simple_db(self):
-        """Mock SimpleDB"""
+        """
+        Mock SimpleDB.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.SimpleDB") as mock:
             db = Mock()
             mock.return_value = db
             yield db
 
     def test_legal_extract_entities_success(self, mock_entity_service):
-        """Test successful entity extraction"""
+        """
+        Test successful entity extraction.
+        """
         # Setup mock response
         mock_entity_service.extract_email_entities.return_value = {
             "success": True,
@@ -74,7 +84,9 @@ class TestLegalIntelligenceMCP:
         assert "Statistics" in result
 
     def test_legal_timeline_events_success(self, mock_legal_service):
-        """Test timeline generation"""
+        """
+        Test timeline generation.
+        """
         # Setup mock response
         mock_legal_service._get_case_documents.return_value = [
             {"content_id": "1", "title": "Complaint", "datetime_utc": "2024-01-01"}
@@ -103,7 +115,9 @@ class TestLegalIntelligenceMCP:
         assert "Chronological Events" in result
 
     def test_legal_knowledge_graph_success(self, mock_legal_service):
-        """Test knowledge graph building"""
+        """
+        Test knowledge graph building.
+        """
         # Setup mock response
         mock_legal_service._get_case_documents.return_value = [
             {"content_id": "1", "title": "Doc1"},
@@ -130,7 +144,9 @@ class TestLegalIntelligenceMCP:
         assert "Document Nodes" in result
 
     def test_legal_document_analysis_comprehensive(self, mock_legal_service):
-        """Test comprehensive document analysis"""
+        """
+        Test comprehensive document analysis.
+        """
         # Setup mock response
         mock_legal_service._get_case_documents.return_value = [
             {"content_id": "1", "title": "Complaint", "content": "Legal complaint text"}
@@ -168,7 +184,9 @@ class TestLegalIntelligenceMCP:
         assert "Timeline Summary" in result
 
     def test_legal_case_tracking_status(self, mock_legal_service):
-        """Test case status tracking"""
+        """
+        Test case status tracking.
+        """
         # Setup mock response
         mock_legal_service._get_case_documents.return_value = [
             {
@@ -190,7 +208,9 @@ class TestLegalIntelligenceMCP:
         assert "Recent Activity" in result
 
     def test_legal_relationship_discovery(self, mock_legal_service, mock_simple_db):
-        """Test relationship discovery"""
+        """
+        Test relationship discovery.
+        """
         # Setup mock response
         mock_legal_service._get_case_documents.return_value = [
             {"content_id": "1", "title": "Doc1", "content": "Content 1"}
@@ -222,25 +242,33 @@ class TestLegalIntelligenceMCP:
         assert "Document Relationships" in result
 
     def test_error_handling_no_services(self):
-        """Test error handling when services unavailable"""
+        """
+        Test error handling when services unavailable.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.SERVICES_AVAILABLE", False):
             result = legal_extract_entities("test content")
             assert "not available" in result.lower()
 
 
 class TestSearchIntelligenceMCPIntegration:
-    """Test Search Intelligence MCP integration"""
+    """
+    Test Search Intelligence MCP integration.
+    """
 
     @pytest.fixture
     def mock_search_intelligence(self):
-        """Mock SearchIntelligenceService"""
+        """
+        Mock SearchIntelligenceService.
+        """
         with patch("search_intelligence.main.SearchIntelligenceService") as mock:
             service = Mock()
             mock.return_value = service
             yield service
 
     def test_smart_search_integration(self, mock_search_intelligence):
-        """Test smart search with preprocessing"""
+        """
+        Test smart search with preprocessing.
+        """
         # Setup mock
         mock_search_intelligence.smart_search_with_preprocessing.return_value = [
             {
@@ -263,7 +291,9 @@ class TestSearchIntelligenceMCPIntegration:
         assert result is True
 
     def test_similarity_analysis_integration(self, mock_search_intelligence):
-        """Test document similarity analysis"""
+        """
+        Test document similarity analysis.
+        """
         # Setup mock
         mock_search_intelligence.analyze_document_similarity.return_value = [
             {"content_id": "2", "title": "Similar Doc", "similarity_score": 0.85}
@@ -278,7 +308,9 @@ class TestSearchIntelligenceMCPIntegration:
         assert result is True
 
     def test_clustering_integration(self, mock_search_intelligence):
-        """Test content clustering"""
+        """
+        Test content clustering.
+        """
         # Setup mock
         mock_search_intelligence.cluster_similar_content.return_value = [
             {
@@ -302,10 +334,14 @@ class TestSearchIntelligenceMCPIntegration:
 
 
 class TestMCPServerIntegration:
-    """Test MCP server configuration and initialization"""
+    """
+    Test MCP server configuration and initialization.
+    """
 
     def test_mcp_config_exists(self):
-        """Test that .mcp.json exists and is valid"""
+        """
+        Test that .mcp.json exists and is valid.
+        """
         mcp_config_path = Path(__file__).parent.parent / ".mcp.json"
         assert mcp_config_path.exists(), ".mcp.json configuration file not found"
 
@@ -324,7 +360,9 @@ class TestMCPServerIntegration:
         assert "legal_intelligence_mcp.py" in legal_config["args"][-1]
 
     def test_mcp_server_files_exist(self):
-        """Test that MCP server files exist"""
+        """
+        Test that MCP server files exist.
+        """
         mcp_dir = Path(__file__).parent.parent / "mcp_servers"
 
         # Check critical MCP server files

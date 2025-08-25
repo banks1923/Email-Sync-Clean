@@ -791,10 +791,10 @@ class LegalIntelligenceService:
 
 def get_legal_intelligence_service(db_path: str = "data/emails.db") -> LegalIntelligenceService:
     """Factory function to create LegalIntelligenceService instance.
-    
+
     Args:
         db_path: Path to the database file
-        
+
     Returns:
         LegalIntelligenceService instance
     """

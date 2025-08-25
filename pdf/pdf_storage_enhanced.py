@@ -1,6 +1,6 @@
 """
-Enhanced PDF storage with legal metadata support
-Stores OCR confidence and legal metadata alongside document chunks
+Enhanced PDF storage with legal metadata support Stores OCR confidence and
+legal metadata alongside document chunks.
 """
 
 import hashlib
@@ -12,14 +12,18 @@ from shared.simple_db import SimpleDB
 
 
 class EnhancedPDFStorage:
-    """Enhanced PDF storage with metadata support"""
+    """
+    Enhanced PDF storage with metadata support.
+    """
 
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         self.db = SimpleDB(db_path)
 
     def _get_db(self):
-        """Get database instance, recreating if path changed"""
+        """
+        Get database instance, recreating if path changed.
+        """
         if hasattr(self, "_last_db_path") and self._last_db_path != self.db_path:
             import os
 
@@ -33,7 +37,9 @@ class EnhancedPDFStorage:
         return self.db
 
     def hash_file(self, file_path: str) -> str:
-        """Generate SHA256 hash of file for deduplication"""
+        """
+        Generate SHA256 hash of file for deduplication.
+        """
         hasher = hashlib.sha256()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -41,7 +47,9 @@ class EnhancedPDFStorage:
         return hasher.hexdigest()
 
     def is_duplicate(self, file_hash: str) -> bool:
-        """Check if file hash already exists in database"""
+        """
+        Check if file hash already exists in database.
+        """
         try:
             import sqlite3
 
@@ -64,7 +72,9 @@ class EnhancedPDFStorage:
         legal_metadata: dict = None,
         source: str = "upload",
     ) -> dict[str, Any]:
-        """Store PDF chunks with OCR and legal metadata"""
+        """
+        Store PDF chunks with OCR and legal metadata.
+        """
         try:
             file_name = os.path.basename(pdf_path)
             file_size = os.path.getsize(pdf_path)
@@ -147,7 +157,9 @@ class EnhancedPDFStorage:
             return {"success": False, "error": f"Database storage failed: {str(e)}"}
 
     def get_enhanced_pdf_stats(self) -> dict[str, Any]:
-        """Get enhanced PDF statistics including OCR and legal metadata"""
+        """
+        Get enhanced PDF statistics including OCR and legal metadata.
+        """
         try:
             import sqlite3
 
@@ -209,7 +221,9 @@ class EnhancedPDFStorage:
             return {"success": False, "error": f"Stats error: {str(e)}"}
 
     def _collect_document_stats(self, cursor) -> dict[str, Any]:
-        """Collect document statistics from database"""
+        """
+        Collect document statistics from database.
+        """
         cursor.execute(
             "SELECT COUNT(DISTINCT file_hash) FROM documents WHERE content_type = 'document'"
         )
@@ -253,7 +267,9 @@ class EnhancedPDFStorage:
         )
 
     def find_pdf_files(self, directory: str) -> list[str]:
-        """Find all PDF files in directory recursively"""
+        """
+        Find all PDF files in directory recursively.
+        """
         pdf_files = []
         for root, dirs, files in os.walk(directory):
             for file in files:

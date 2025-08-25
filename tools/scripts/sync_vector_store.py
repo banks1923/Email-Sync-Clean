@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""
-Vector Store Synchronization Script
-Removes orphaned vectors from Qdrant that no longer have corresponding content in the database.
-This ensures the vector store stays synchronized with the cleaned database.
+"""Vector Store Synchronization Script Removes orphaned vectors from Qdrant
+that no longer have corresponding content in the database. This ensures the
+vector store stays synchronized with the cleaned database.
 
 Usage: python scripts/sync_vector_store.py [--dry-run]
 """
@@ -23,7 +22,9 @@ from utilities.vector_store import get_vector_store
 
 
 def get_orphaned_vectors(db) -> dict:
-    """Find vectors that don't have corresponding content in database"""
+    """
+    Find vectors that don't have corresponding content in database.
+    """
     try:
         # Get all content IDs from database
         content_records = db.fetch("SELECT id FROM content_unified")
@@ -74,7 +75,9 @@ def get_orphaned_vectors(db) -> dict:
 
 
 def remove_orphaned_vectors(vector_store, orphaned_vector_ids: list, dry_run: bool = False) -> dict:
-    """Remove orphaned vectors from vector store"""
+    """
+    Remove orphaned vectors from vector store.
+    """
     if not orphaned_vector_ids:
         return {"removed": 0, "errors": 0}
 
@@ -106,7 +109,9 @@ def remove_orphaned_vectors(vector_store, orphaned_vector_ids: list, dry_run: bo
 
 
 def verify_synchronization(vector_store, db) -> dict:
-    """Verify that vector store is now synchronized with database"""
+    """
+    Verify that vector store is now synchronized with database.
+    """
     try:
         vector_store = get_vector_store()
         vector_count = vector_store.count()
@@ -132,7 +137,9 @@ def verify_synchronization(vector_store, db) -> dict:
 
 
 def main():
-    """Run the vector store synchronization"""
+    """
+    Run the vector store synchronization.
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Synchronize vector store with cleaned database")

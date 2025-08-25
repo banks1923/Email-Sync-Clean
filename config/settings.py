@@ -11,7 +11,9 @@ from pydantic_settings import BaseSettings
 
 
 class DatabaseSettings(BaseSettings):
-    """Database configuration."""
+    """
+    Database configuration.
+    """
 
     # Main database path (moved to system_data)
     emails_db_path: str = Field(default="data/system_data/emails.db", env="EMAILS_DB_PATH")
@@ -24,14 +26,18 @@ class DatabaseSettings(BaseSettings):
     @field_validator("emails_db_path", "content_db_path")
     @classmethod
     def validate_db_paths(cls, v):
-        """Ensure database directories exist."""
+        """
+        Ensure database directories exist.
+        """
         path = Path(v)
         path.parent.mkdir(parents=True, exist_ok=True)
         return str(path)
 
 
 class GmailSettings(BaseSettings):
-    """Gmail API configuration."""
+    """
+    Gmail API configuration.
+    """
 
     credentials_path: str = Field(default=".config/credentials.json", env="GMAIL_CREDENTIALS_PATH")
     token_path: str = Field(default=".config/token.json", env="GMAIL_TOKEN_PATH")
@@ -57,7 +63,9 @@ class GmailSettings(BaseSettings):
 
 
 class EntitySettings(BaseSettings):
-    """Entity extraction configuration."""
+    """
+    Entity extraction configuration.
+    """
 
     spacy_model: str = Field(default="en_core_web_sm", env="ENTITY_SPACY_MODEL")
     batch_size: int = Field(default=100, env="ENTITY_BATCH_SIZE")
@@ -98,7 +106,9 @@ class EntitySettings(BaseSettings):
 
 
 class VectorSettings(BaseSettings):
-    """Vector store and embeddings configuration."""
+    """
+    Vector store and embeddings configuration.
+    """
 
     # Qdrant connection
     qdrant_host: str = Field(default="localhost", env="QDRANT_HOST")
@@ -116,7 +126,9 @@ class VectorSettings(BaseSettings):
 
 
 class APISettings(BaseSettings):
-    """External API configuration."""
+    """
+    External API configuration.
+    """
 
     # OpenAI (for transcription)
     openai_api_key: str | None = Field(default=None, env="OPENAI_API_KEY")
@@ -128,7 +140,9 @@ class APISettings(BaseSettings):
 
 
 class PathSettings(BaseSettings):
-    """File and directory paths."""
+    """
+    File and directory paths.
+    """
 
     # Data directories
     data_root: str = Field(default="data", env="DATA_ROOT")
@@ -149,13 +163,17 @@ class PathSettings(BaseSettings):
     )
     @classmethod
     def ensure_directories_exist(cls, v):
-        """Create directories if they don't exist."""
+        """
+        Create directories if they don't exist.
+        """
         Path(v).mkdir(parents=True, exist_ok=True)
         return v
 
 
 class LoggingSettings(BaseSettings):
-    """Logging configuration."""
+    """
+    Logging configuration.
+    """
 
     level: str = Field(default="INFO", env="LOG_LEVEL")
     format_string: str = Field(
@@ -168,7 +186,9 @@ class LoggingSettings(BaseSettings):
 
 
 class SystemSettings(BaseSettings):
-    """System-related files configuration."""
+    """
+    System-related files configuration.
+    """
 
     # Sequential thinking storage
     sequential_thinking_dir: str = Field(default="data/system_data/sequential_thinking", env="SEQUENTIAL_THINKING_DIR")
@@ -183,13 +203,17 @@ class SystemSettings(BaseSettings):
     @field_validator("sequential_thinking_dir", "cache_dir", "temp_dir", "locks_dir")
     @classmethod
     def ensure_system_directories_exist(cls, v):
-        """Create system directories if they don't exist."""
+        """
+        Create system directories if they don't exist.
+        """
         Path(v).mkdir(parents=True, exist_ok=True)
         return v
 
 
 class Settings(BaseSettings):
-    """Main application settings combining all subsystems."""
+    """
+    Main application settings combining all subsystems.
+    """
 
     # Environment
     environment: str = Field(default="development", env="ENVIRONMENT")
@@ -213,7 +237,9 @@ class Settings(BaseSettings):
 
 
 class SemanticSettings(BaseSettings):
-    """Semantic enrichment pipeline configuration."""
+    """
+    Semantic enrichment pipeline configuration.
+    """
     
     # Master switch for semantic processing on ingestion
     semantics_on_ingest: bool = Field(default=True, env="SEMANTICS_ON_INGEST")
@@ -241,5 +267,7 @@ semantic_settings = SemanticSettings()
 
 
 def get_db_path() -> str:
-    """Get the database path from settings or environment."""
+    """
+    Get the database path from settings or environment.
+    """
     return settings.database.emails_db_path

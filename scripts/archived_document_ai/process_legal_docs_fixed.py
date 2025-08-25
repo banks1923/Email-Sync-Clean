@@ -10,7 +10,6 @@ import hashlib
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
 import time
 from dataclasses import dataclass
 
@@ -72,7 +71,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProcessingMetrics:
-    """Track processing metrics for logging."""
+    """
+    Track processing metrics for logging.
+    """
     doc_id: str
     filename: str
     processor: str
@@ -93,7 +94,9 @@ class DocumentAIProcessor:
     """Process documents with Google Document AI - Production version."""
     
     def __init__(self):
-        """Initialize with pre-existing processor IDs."""
+        """
+        Initialize with pre-existing processor IDs.
+        """
         
         # Validate processor IDs
         if not FORM_PROCESSOR_ID or not OCR_PROCESSOR_ID:
@@ -124,7 +127,9 @@ class DocumentAIProcessor:
         logger.info(f"   OCR Processor: {self.ocr_processor}")
     
     def _ensure_bigquery_tables(self):
-        """Ensure BigQuery dataset and tables exist."""
+        """
+        Ensure BigQuery dataset and tables exist.
+        """
         
         # Create dataset if needed
         dataset = bigquery.Dataset(BQ_DATASET)
@@ -168,7 +173,9 @@ class DocumentAIProcessor:
                 logger.error(f"Table creation error for {table_id}: {e}")
     
     def determine_processor_type(self, file_path: Path) -> str:
-        """Determine which processor to use based on filename patterns."""
+        """
+        Determine which processor to use based on filename patterns.
+        """
         
         filename_lower = file_path.name.lower()
         
@@ -185,8 +192,10 @@ class DocumentAIProcessor:
         return 'OCR'
     
     @retry.Retry(predicate=retry.if_exception_type(api_exceptions.ResourceExhausted))
-    def process_document(self, file_path: Path) -> Dict:
-        """Process a single document with retry logic."""
+    def process_document(self, file_path: Path) -> dict:
+        """
+        Process a single document with retry logic.
+        """
         
         processor_type = self.determine_processor_type(file_path)
         metrics = ProcessingMetrics(
@@ -313,8 +322,10 @@ class DocumentAIProcessor:
         
         return results
     
-    def _extract_entities(self, text: str) -> Dict:
-        """Extract legal entities from text."""
+    def _extract_entities(self, text: str) -> dict:
+        """
+        Extract legal entities from text.
+        """
         
         if not text:
             return {}
@@ -364,8 +375,10 @@ class DocumentAIProcessor:
         
         return entities
     
-    def _classify_evidence(self, text: str, file_path: Path) -> Dict:
-        """Classify evidence relevance."""
+    def _classify_evidence(self, text: str, file_path: Path) -> dict:
+        """
+        Classify evidence relevance.
+        """
         
         if not text:
             return {}
@@ -392,8 +405,10 @@ class DocumentAIProcessor:
         
         return classification
     
-    def save_to_bigquery(self, batch: List[Dict]):
-        """Save batch to BigQuery using stage+merge pattern."""
+    def save_to_bigquery(self, batch: list[dict]):
+        """
+        Save batch to BigQuery using stage+merge pattern.
+        """
         
         if not batch:
             return
@@ -488,7 +503,9 @@ class DocumentAIProcessor:
             logger.error(f"BigQuery error: {e}")
     
     def _determine_doc_type(self, filename: str) -> str:
-        """Determine document type from filename."""
+        """
+        Determine document type from filename.
+        """
         
         filename_lower = filename.lower()
         
@@ -506,7 +523,9 @@ class DocumentAIProcessor:
             return 'other'
     
     def process_all_documents(self):
-        """Process all PDF documents with proper batching."""
+        """
+        Process all PDF documents with proper batching.
+        """
         
         # Find all PDFs
         pdf_files = list(BASE_DIR.rglob("*.pdf"))
@@ -572,7 +591,9 @@ class DocumentAIProcessor:
         self._generate_summary(results, low_confidence_files, failed_files, pdf_files)
     
     def _generate_summary(self, results, low_confidence_files, failed_files, pdf_files):
-        """Generate and save processing summary."""
+        """
+        Generate and save processing summary.
+        """
         
         print("\n" + "=" * 60)
         print("📊 PROCESSING SUMMARY")

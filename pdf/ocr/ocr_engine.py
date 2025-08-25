@@ -24,7 +24,9 @@ except ImportError:
 
 
 class OCREngine:
-    """Performs OCR on images with enhancement capabilities."""
+    """
+    Performs OCR on images with enhancement capabilities.
+    """
 
     def __init__(self) -> None:
         self.available = TESSERACT_AVAILABLE
@@ -62,7 +64,9 @@ class OCREngine:
             return image  # Return original on error
 
     def _enhance_with_cv2(self, image: Image.Image) -> Image.Image:
-        """Apply advanced CV2 enhancements."""
+        """
+        Apply advanced CV2 enhancements.
+        """
         try:
             # Convert PIL to numpy array
             img_array = np.array(image)
@@ -86,7 +90,9 @@ class OCREngine:
             return image
 
     def _get_skew_angle(self, image: np.ndarray) -> float:
-        """Detect text skew angle."""
+        """
+        Detect text skew angle.
+        """
         try:
             coords = np.column_stack(np.where(image > 0))
             angle = cv2.minAreaRect(coords)[-1]
@@ -99,7 +105,9 @@ class OCREngine:
             return 0.0
 
     def _rotate_image(self, image: np.ndarray, angle: float) -> np.ndarray:
-        """Rotate image to correct skew."""
+        """
+        Rotate image to correct skew.
+        """
         try:
             (h, w) = image.shape[:2]
             center = (w // 2, h // 2)
@@ -112,8 +120,7 @@ class OCREngine:
             return image
 
     def extract_text_from_image(self, image: Image.Image, enhance: bool = True) -> dict[str, Any]:
-        """
-        Extract text from image using OCR.
+        """Extract text from image using OCR.
 
         Args:
             image: PIL Image to process
@@ -168,7 +175,9 @@ class OCREngine:
             return {"success": False, "error": str(e), "text": "", "confidence": 0.0}
 
     def validate_ocr_setup(self) -> dict[str, Any]:
-        """Validate OCR setup and dependencies."""
+        """
+        Validate OCR setup and dependencies.
+        """
         result = {
             "tesseract_available": self.available,
             "cv2_available": self.cv2_available,

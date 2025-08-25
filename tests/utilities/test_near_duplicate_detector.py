@@ -1,4 +1,6 @@
-"""Comprehensive tests for NearDuplicateDetector."""
+"""
+Comprehensive tests for NearDuplicateDetector.
+"""
 
 import numpy as np
 import pytest
@@ -12,10 +14,14 @@ from utilities.deduplication.near_duplicate_detector import (
 
 
 class TestMinHasher:
-    """Test MinHasher functionality."""
+    """
+    Test MinHasher functionality.
+    """
     
     def test_initialization(self):
-        """Test MinHasher initialization."""
+        """
+        Test MinHasher initialization.
+        """
         hasher = MinHasher(num_perm=64, seed=42)
         assert hasher.num_perm == 64
         assert hasher.seed == 42
@@ -23,7 +29,9 @@ class TestMinHasher:
         assert hasher.prime > 0
         
     def test_generate_permutations(self):
-        """Test permutation generation."""
+        """
+        Test permutation generation.
+        """
         hasher = MinHasher(num_perm=32)
         perms = hasher.permutations
         
@@ -33,7 +41,9 @@ class TestMinHasher:
             assert 0 <= b < hasher.prime
             
     def test_shingle_text_basic(self):
-        """Test text shingling."""
+        """
+        Test text shingling.
+        """
         hasher = MinHasher()
         text = "The quick brown fox"
         shingles = hasher._shingle_text(text, k=3)
@@ -43,7 +53,9 @@ class TestMinHasher:
         # Text normalized to lowercase without punctuation
         
     def test_shingle_text_normalization(self):
-        """Test text normalization in shingling."""
+        """
+        Test text normalization in shingling.
+        """
         hasher = MinHasher()
         text1 = "Hello,  World!"
         text2 = "hello world"
@@ -55,7 +67,9 @@ class TestMinHasher:
         assert len(shingles1.intersection(shingles2)) > 0
         
     def test_compute_signature_normal(self):
-        """Test signature computation."""
+        """
+        Test signature computation.
+        """
         hasher = MinHasher(num_perm=64)
         text = "This is a test document with enough content"
         signature = hasher.compute_signature(text)
@@ -65,7 +79,9 @@ class TestMinHasher:
         assert signature.dtype == np.uint32
         
     def test_compute_signature_empty(self):
-        """Test signature for empty text."""
+        """
+        Test signature for empty text.
+        """
         hasher = MinHasher(num_perm=32)
         
         # Empty string
@@ -79,7 +95,9 @@ class TestMinHasher:
         assert np.all(sig2 == 0)
         
     def test_compute_signature_deterministic(self):
-        """Test that signatures are deterministic."""
+        """
+        Test that signatures are deterministic.
+        """
         hasher1 = MinHasher(num_perm=64, seed=42)
         hasher2 = MinHasher(num_perm=64, seed=42)
         
@@ -90,7 +108,9 @@ class TestMinHasher:
         assert np.array_equal(sig1, sig2)
         
     def test_jaccard_similarity_identical(self):
-        """Test Jaccard similarity for identical signatures."""
+        """
+        Test Jaccard similarity for identical signatures.
+        """
         hasher = MinHasher()
         sig = np.array([1, 2, 3, 4, 5])
         
@@ -98,7 +118,9 @@ class TestMinHasher:
         assert similarity == 1.0
         
     def test_jaccard_similarity_different(self):
-        """Test Jaccard similarity for different signatures."""
+        """
+        Test Jaccard similarity for different signatures.
+        """
         hasher = MinHasher()
         sig1 = np.array([1, 2, 3, 4, 5])
         sig2 = np.array([6, 7, 8, 9, 10])
@@ -107,7 +129,9 @@ class TestMinHasher:
         assert similarity == 0.0
         
     def test_jaccard_similarity_partial(self):
-        """Test Jaccard similarity for partially matching signatures."""
+        """
+        Test Jaccard similarity for partially matching signatures.
+        """
         hasher = MinHasher()
         sig1 = np.array([1, 2, 3, 4, 5])
         sig2 = np.array([1, 2, 8, 9, 10])
@@ -117,7 +141,9 @@ class TestMinHasher:
         assert similarity == 0.4  # 2 matches out of 5
         
     def test_jaccard_similarity_length_mismatch(self):
-        """Test Jaccard similarity with mismatched lengths."""
+        """
+        Test Jaccard similarity with mismatched lengths.
+        """
         hasher = MinHasher()
         sig1 = np.array([1, 2, 3])
         sig2 = np.array([1, 2, 3, 4, 5])
@@ -127,10 +153,14 @@ class TestMinHasher:
 
 
 class TestLSHIndex:
-    """Test LSHIndex functionality."""
+    """
+    Test LSHIndex functionality.
+    """
     
     def test_initialization(self):
-        """Test LSH index initialization."""
+        """
+        Test LSH index initialization.
+        """
         index = LSHIndex(num_bands=8, band_size=4)
         assert index.num_bands == 8
         assert index.band_size == 4
@@ -138,7 +168,9 @@ class TestLSHIndex:
         assert len(index.signatures) == 0
         
     def test_add_document(self):
-        """Test adding document to index."""
+        """
+        Test adding document to index.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         signature = np.random.randint(0, 1000, 32, dtype=np.uint32)
         
@@ -149,7 +181,9 @@ class TestLSHIndex:
         assert len(index.buckets) > 0
         
     def test_add_multiple_documents(self):
-        """Test adding multiple documents."""
+        """
+        Test adding multiple documents.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         
         for i in range(5):
@@ -159,7 +193,9 @@ class TestLSHIndex:
         assert len(index.signatures) == 5
         
     def test_find_similar_exact_match(self):
-        """Test finding exact match."""
+        """
+        Test finding exact match.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         signature = np.random.randint(0, 1000, 32, dtype=np.uint32)
         
@@ -171,7 +207,9 @@ class TestLSHIndex:
         assert results[0][1] == 1.0
         
     def test_find_similar_no_match(self):
-        """Test finding with no matches."""
+        """
+        Test finding with no matches.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         sig1 = np.ones(32, dtype=np.uint32)
         sig2 = np.zeros(32, dtype=np.uint32)
@@ -182,7 +220,9 @@ class TestLSHIndex:
         assert len(results) == 0
         
     def test_find_similar_threshold(self):
-        """Test similarity threshold filtering."""
+        """
+        Test similarity threshold filtering.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         
         # Add documents with varying similarity
@@ -199,7 +239,9 @@ class TestLSHIndex:
         assert results[0][0] == "doc1"
         
     def test_find_similar_sorting(self):
-        """Test that results are sorted by similarity."""
+        """
+        Test that results are sorted by similarity.
+        """
         index = LSHIndex(num_bands=4, band_size=8)
         
         base_sig = np.arange(32, dtype=np.uint32)
@@ -219,10 +261,14 @@ class TestLSHIndex:
 
 
 class TestNearDuplicateDetector:
-    """Test NearDuplicateDetector functionality."""
+    """
+    Test NearDuplicateDetector functionality.
+    """
     
     def test_initialization(self):
-        """Test detector initialization."""
+        """
+        Test detector initialization.
+        """
         detector = NearDuplicateDetector(threshold=0.7, num_perm=64)
         assert detector.threshold == 0.7
         assert detector.minhasher.num_perm == 64
@@ -230,7 +276,9 @@ class TestNearDuplicateDetector:
         assert len(detector.processed_docs) == 0
         
     def test_add_document(self):
-        """Test adding document to detector."""
+        """
+        Test adding document to detector.
+        """
         detector = NearDuplicateDetector()
         
         detector.add_document(
@@ -245,7 +293,9 @@ class TestNearDuplicateDetector:
         assert "content_preview" in detector.processed_docs["doc1"]
         
     def test_add_document_no_metadata(self):
-        """Test adding document without metadata."""
+        """
+        Test adding document without metadata.
+        """
         detector = NearDuplicateDetector()
         
         detector.add_document("doc1", "Content without metadata")
@@ -254,7 +304,9 @@ class TestNearDuplicateDetector:
         assert detector.processed_docs["doc1"]["metadata"] == {}
         
     def test_check_duplicate_exact(self):
-        """Test checking exact duplicate."""
+        """
+        Test checking exact duplicate.
+        """
         detector = NearDuplicateDetector(threshold=0.8)
         
         content = "This is the exact same content"
@@ -269,7 +321,9 @@ class TestNearDuplicateDetector:
         assert results[0]["is_near_duplicate"]
         
     def test_check_duplicate_near(self):
-        """Test checking near duplicate."""
+        """
+        Test checking near duplicate.
+        """
         detector = NearDuplicateDetector(threshold=0.7)
         
         content1 = "The quick brown fox jumps over the lazy dog"
@@ -283,7 +337,9 @@ class TestNearDuplicateDetector:
             assert 0.7 <= results[0]["similarity"] < 1.0
             
     def test_check_duplicate_not_similar(self):
-        """Test checking non-duplicate."""
+        """
+        Test checking non-duplicate.
+        """
         detector = NearDuplicateDetector(threshold=0.8)
         
         detector.add_document("doc1", "Python programming language")
@@ -292,7 +348,9 @@ class TestNearDuplicateDetector:
         assert len(results) == 0
         
     def test_find_all_duplicates(self):
-        """Test finding all duplicate groups."""
+        """
+        Test finding all duplicate groups.
+        """
         detector = NearDuplicateDetector(threshold=0.8)
         
         # Add duplicate groups
@@ -307,7 +365,9 @@ class TestNearDuplicateDetector:
         assert len(groups) >= 0  # Depends on similarity threshold
         
     def test_batch_deduplicate(self):
-        """Test batch deduplication."""
+        """
+        Test batch deduplication.
+        """
         detector = NearDuplicateDetector(threshold=0.9)
         
         documents = [
@@ -326,7 +386,9 @@ class TestNearDuplicateDetector:
         assert "groups" in stats
         
     def test_batch_deduplicate_with_metadata(self):
-        """Test batch deduplication with metadata."""
+        """
+        Test batch deduplication with metadata.
+        """
         detector = NearDuplicateDetector(threshold=0.9)
         
         documents = [
@@ -351,7 +413,9 @@ class TestNearDuplicateDetector:
             assert "metadata" in detector.processed_docs[doc_id]
             
     def test_batch_deduplicate_auto_id(self):
-        """Test batch deduplication with auto-generated IDs."""
+        """
+        Test batch deduplication with auto-generated IDs.
+        """
         detector = NearDuplicateDetector()
         
         documents = [
@@ -365,7 +429,9 @@ class TestNearDuplicateDetector:
         assert len(detector.processed_docs) == 2
         
     def test_get_similarity(self):
-        """Test direct similarity calculation."""
+        """
+        Test direct similarity calculation.
+        """
         detector = NearDuplicateDetector()
         
         content1 = "The quick brown fox"
@@ -381,7 +447,9 @@ class TestNearDuplicateDetector:
         assert 0 <= sim2 <= 1
         
     def test_get_duplicate_detector_singleton(self):
-        """Test singleton pattern for detector."""
+        """
+        Test singleton pattern for detector.
+        """
         detector1 = get_duplicate_detector(threshold=0.8)
         detector2 = get_duplicate_detector(threshold=0.8)
         
@@ -398,10 +466,14 @@ class TestNearDuplicateDetector:
 
 @pytest.mark.integration
 class TestNearDuplicateIntegration:
-    """Integration tests for near-duplicate detection."""
+    """
+    Integration tests for near-duplicate detection.
+    """
     
     def test_real_world_documents(self):
-        """Test with realistic document examples."""
+        """
+        Test with realistic document examples.
+        """
         detector = NearDuplicateDetector(threshold=0.75)
         
         # Email variations
@@ -449,7 +521,9 @@ class TestNearDuplicateIntegration:
         # Email1 and email2 might be grouped together
         
     def test_performance_many_documents(self):
-        """Test performance with many documents."""
+        """
+        Test performance with many documents.
+        """
         detector = NearDuplicateDetector(threshold=0.8, num_perm=64)
         
         # Add 100 documents
@@ -473,7 +547,9 @@ class TestNearDuplicateIntegration:
         assert len(groups) >= 1
         
     def test_edge_cases(self):
-        """Test edge cases."""
+        """
+        Test edge cases.
+        """
         detector = NearDuplicateDetector()
         
         # Very short content

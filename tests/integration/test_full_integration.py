@@ -16,7 +16,9 @@ from shared.simple_db import SimpleDB
 
 
 def test_full_integration():
-    """Test full email processing pipeline with advanced parsing."""
+    """
+    Test full email processing pipeline with advanced parsing.
+    """
     
     print("🧪 Full Integration Test - Advanced Email Processing")
     print("=" * 60)

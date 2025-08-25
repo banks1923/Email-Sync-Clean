@@ -1,12 +1,11 @@
-"""
-Simplified Legal Boilerplate Remover using existing libraries + legal patterns
+"""Simplified Legal Boilerplate Remover using existing libraries + legal
+patterns.
 
-This approach uses established boilerplate removal libraries as a foundation
-and adds legal-specific pattern matching on top.
+This approach uses established boilerplate removal libraries as a
+foundation and adds legal-specific pattern matching on top.
 """
 
 import re
-from typing import Tuple
 
 # Try to import existing libraries
 try:
@@ -22,7 +21,9 @@ except ImportError:
 
 
 class SimpleLegalCleaner:
-    """Simple legal document cleaner using existing libraries + legal patterns"""
+    """
+    Simple legal document cleaner using existing libraries + legal patterns.
+    """
     
     def __init__(self):
         # Legal boilerplate patterns (simplified from our full version)
@@ -48,13 +49,12 @@ class SimpleLegalCleaner:
         ]
     
     def clean_legal_text(self, text: str, method: str = 'patterns') -> tuple[str, dict]:
-        """
-        Clean legal text using different methods
-        
+        """Clean legal text using different methods.
+
         Args:
             text: Input text to clean
             method: 'patterns', 'justext', 'hybrid'
-            
+
         Returns:
             (cleaned_text, stats)
         """
@@ -67,7 +67,9 @@ class SimpleLegalCleaner:
             return self._clean_with_patterns(text)
     
     def _clean_with_patterns(self, text: str) -> tuple[str, dict]:
-        """Clean using only legal patterns (our approach)"""
+        """
+        Clean using only legal patterns (our approach)
+        """
         
         original_length = len(text)
         cleaned_text = text
@@ -96,7 +98,9 @@ class SimpleLegalCleaner:
         return cleaned_text, stats
     
     def _clean_with_justext(self, text: str) -> tuple[str, dict]:
-        """Clean using jusText library"""
+        """
+        Clean using jusText library.
+        """
         
         # jusText expects HTML, so wrap plain text
         html_text = f"<html><body><p>{text.replace(chr(10), '</p><p>')}</p></body></html>"
@@ -132,7 +136,9 @@ class SimpleLegalCleaner:
             return self._clean_with_patterns(text)
     
     def _clean_hybrid(self, text: str) -> tuple[str, dict]:
-        """Clean using jusText + legal patterns"""
+        """
+        Clean using jusText + legal patterns.
+        """
         
         # First pass: jusText
         cleaned_text, justext_stats = self._clean_with_justext(text)
@@ -153,7 +159,9 @@ class SimpleLegalCleaner:
 
 
 def compare_methods(text: str):
-    """Compare different cleaning methods on the same text"""
+    """
+    Compare different cleaning methods on the same text.
+    """
     
     cleaner = SimpleLegalCleaner()
     

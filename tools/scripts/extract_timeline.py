@@ -19,7 +19,9 @@ from utilities.timeline import TimelineService
 
 
 def extract_timeline_from_database(min_confidence: str = "MEDIUM") -> dict:
-    """Extract timeline events from database content."""
+    """
+    Extract timeline events from database content.
+    """
     
     # Get timeline service
     service = TimelineService()
@@ -55,7 +57,9 @@ def extract_timeline_from_database(min_confidence: str = "MEDIUM") -> dict:
 
 
 def generate_markdown_timeline(events: list, output_path: str) -> str:
-    """Generate markdown timeline from events."""
+    """
+    Generate markdown timeline from events.
+    """
     
     lines = []
     lines.append("# Timeline of Events")
@@ -89,7 +93,9 @@ def generate_markdown_timeline(events: list, output_path: str) -> str:
 
 
 def main():
-    """Main timeline extraction function."""
+    """
+    Main timeline extraction function.
+    """
     parser = argparse.ArgumentParser(
         description="Extract timeline from database content",
         formatter_class=argparse.RawDescriptionHelpFormatter,

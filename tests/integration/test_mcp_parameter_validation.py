@@ -1,7 +1,7 @@
-"""
-Integration tests for MCP server parameter validation.
+"""Integration tests for MCP server parameter validation.
 
-Tests the actual MCP function calls to ensure parameter mismatches are caught.
+Tests the actual MCP function calls to ensure parameter mismatches are
+caught.
 """
 from unittest.mock import Mock, patch
 import sys
@@ -13,11 +13,16 @@ sys.path.insert(0, str(project_root))
 
 
 class TestSearchIntelligenceMCPParameters:
-    """Test Search Intelligence MCP parameter validation."""
+    """
+    Test Search Intelligence MCP parameter validation.
+    """
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service')
     def test_search_entities_parameter_mapping(self, mock_get_service):
-        """Test search_entities correctly maps document_id to doc_id (REGRESSION TEST)."""
+        """
+        Test search_entities correctly maps document_id to doc_id (REGRESSION
+        TEST).
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
         
         # Mock the service and its method
@@ -42,7 +47,9 @@ class TestSearchIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service')
     def test_search_similar_parameter_mapping(self, mock_get_service):
-        """Test search_similar correctly maps document_id to doc_id."""
+        """
+        Test search_similar correctly maps document_id to doc_id.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_similar
         
         # Mock the service
@@ -73,7 +80,9 @@ class TestSearchIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service')
     def test_search_smart_parameter_validation(self, mock_get_service):
-        """Test search_smart parameter validation and query expansion."""
+        """
+        Test search_smart parameter validation and query expansion.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
         
         # Mock the service
@@ -113,7 +122,9 @@ class TestSearchIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service')
     def test_search_smart_no_expansion(self, mock_get_service):
-        """Test search_smart without query expansion."""
+        """
+        Test search_smart without query expansion.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
         
         mock_service = Mock()
@@ -130,7 +141,9 @@ class TestSearchIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.SimpleDB')
     def test_search_summarize_parameter_validation(self, mock_db_class):
-        """Test search_summarize parameter validation."""
+        """
+        Test search_summarize parameter validation.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_summarize
         
         # Mock database and summarizer
@@ -176,11 +189,15 @@ class TestSearchIntelligenceMCPParameters:
 
 
 class TestLegalIntelligenceMCPParameters:
-    """Test Legal Intelligence MCP parameter validation."""
+    """
+    Test Legal Intelligence MCP parameter validation.
+    """
 
     @patch('infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service')
     def test_legal_extract_entities_parameter_validation(self, mock_get_service):
-        """Test legal entity extraction parameter validation."""
+        """
+        Test legal entity extraction parameter validation.
+        """
         from infrastructure.mcp_servers.legal_intelligence_mcp import legal_extract_entities
         
         # Mock the service
@@ -212,7 +229,9 @@ class TestLegalIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service')
     def test_legal_timeline_events_parameter_validation(self, mock_get_service):
-        """Test legal timeline parameter validation."""
+        """
+        Test legal timeline parameter validation.
+        """
         from infrastructure.mcp_servers.legal_intelligence_mcp import legal_timeline_events
         
         mock_service = Mock()
@@ -249,7 +268,9 @@ class TestLegalIntelligenceMCPParameters:
 
     @patch('infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service')
     def test_legal_knowledge_graph_parameter_validation(self, mock_get_service):
-        """Test legal knowledge graph parameter validation."""
+        """
+        Test legal knowledge graph parameter validation.
+        """
         from infrastructure.mcp_servers.legal_intelligence_mcp import legal_knowledge_graph
         
         mock_service = Mock()
@@ -276,10 +297,14 @@ class TestLegalIntelligenceMCPParameters:
 
 
 class TestMCPErrorHandling:
-    """Test MCP error handling for invalid parameters."""
+    """
+    Test MCP error handling for invalid parameters.
+    """
 
     def test_search_entities_missing_parameters(self):
-        """Test search_entities with missing required parameters."""
+        """
+        Test search_entities with missing required parameters.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
         
         # Should handle missing both document_id and text
@@ -288,7 +313,9 @@ class TestMCPErrorHandling:
 
     @patch('infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service')
     def test_search_entities_service_error_handling(self, mock_get_service):
-        """Test search_entities error handling when service fails."""
+        """
+        Test search_entities error handling when service fails.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
         
         # Mock service to raise exception
@@ -303,7 +330,9 @@ class TestMCPErrorHandling:
         assert "Service error" in result
 
     def test_search_process_all_invalid_operation(self):
-        """Test search_process_all with invalid operation."""
+        """
+        Test search_process_all with invalid operation.
+        """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_process_all
         
         result = search_process_all(operation="invalid_operation")

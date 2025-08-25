@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""
-Unified Entity Processor
+"""Unified Entity Processor.
 
 Integrates entity extraction into the unified content pipeline.
 Processes all content in content_unified table and extracts entities with proper attribution.
 
 Key Features:
-- Processes all content types (emails, PDFs, documents) 
+- Processes all content types (emails, PDFs, documents)
 - Creates entity_content_mapping for proper attribution
 - Updates consolidated entities with source links
 - Batch processing for performance
@@ -17,7 +16,7 @@ Status: NEW - Addresses missing entity extraction in unified pipeline
 
 import time
 import uuid
-from typing import Dict, List, Any
+from typing import Any
 from datetime import datetime
 
 from loguru import logger
@@ -25,14 +24,18 @@ from .simple_db import SimpleDB
 
 
 class UnifiedEntityProcessor:
-    """Extract and map entities from unified content with proper attribution"""
+    """
+    Extract and map entities from unified content with proper attribution.
+    """
     
     def __init__(self):
         self.db = SimpleDB()
         self._entity_service = None  # Lazy load to avoid circular imports
         
     def _get_entity_service(self):
-        """Lazy load entity extractor to avoid import cycles"""
+        """
+        Lazy load entity extractor to avoid import cycles.
+        """
         if self._entity_service is None:
             try:
                 from entity.extractors.extractor_factory import ExtractorFactory
@@ -49,14 +52,13 @@ class UnifiedEntityProcessor:
         batch_size: int = 50,
         max_content: int = None
     ) -> dict[str, Any]:
-        """
-        Process entities from content_unified table with proper attribution.
-        
+        """Process entities from content_unified table with proper attribution.
+
         Args:
             content_ids: Specific content IDs to process (None = all)
             batch_size: Number of content items to process per batch
             max_content: Maximum content items to process (None = all)
-            
+
         Returns:
             Processing statistics and results
         """
@@ -145,7 +147,9 @@ class UnifiedEntityProcessor:
         return result
     
     def _process_batch(self, entity_extractor, batch: list[dict]) -> dict[str, int]:
-        """Process a batch of content records for entity extraction"""
+        """
+        Process a batch of content records for entity extraction.
+        """
         batch_stats = {
             'processed': 0,
             'entities_extracted': 0,
@@ -201,7 +205,9 @@ class UnifiedEntityProcessor:
         return batch_stats
     
     def _clean_html_artifacts(self, text: str) -> str:
-        """Clean HTML artifacts and entities from text before entity extraction"""
+        """
+        Clean HTML artifacts and entities from text before entity extraction.
+        """
         import re
         
         # Remove HTML entities like &nbsp;, &amp;, etc.
@@ -216,7 +222,9 @@ class UnifiedEntityProcessor:
         return text.strip()
     
     def _filter_quality_entities(self, entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Enhanced quality filtering to remove gibberish entities"""
+        """
+        Enhanced quality filtering to remove gibberish entities.
+        """
         import re
         
         filtered = []
@@ -305,7 +313,9 @@ class UnifiedEntityProcessor:
         source_type: str,
         entities: list[dict[str, Any]]
     ) -> int:
-        """Store entity-to-content mappings in database"""
+        """
+        Store entity-to-content mappings in database.
+        """
         if not entities:
             return 0
         
@@ -340,7 +350,9 @@ class UnifiedEntityProcessor:
         return 0
     
     def _build_entity_metadata(self, entity: dict[str, Any], source_type: str) -> str:
-        """Build metadata JSON for entity mapping"""
+        """
+        Build metadata JSON for entity mapping.
+        """
         import json
         metadata = {
             'start_char': entity.get('start', 0),
@@ -352,7 +364,9 @@ class UnifiedEntityProcessor:
         return json.dumps(metadata)
     
     def _get_content_type_breakdown(self, content_records: list[dict]) -> dict[str, int]:
-        """Get breakdown of processed content by type"""
+        """
+        Get breakdown of processed content by type.
+        """
         breakdown = {}
         for record in content_records:
             source_type = record['source_type']
@@ -360,7 +374,9 @@ class UnifiedEntityProcessor:
         return breakdown
     
     def get_processing_status(self) -> dict[str, Any]:
-        """Get current entity processing status for unified content"""
+        """
+        Get current entity processing status for unified content.
+        """
         
         # Content with and without entity mappings
         content_stats = self.db.fetch("""
@@ -399,7 +415,9 @@ class UnifiedEntityProcessor:
         }
     
     def process_missing_entities_only(self, max_content: int = 100) -> dict[str, Any]:
-        """Process only content that doesn't have entity mappings yet"""
+        """
+        Process only content that doesn't have entity mappings yet.
+        """
         
         # Find content without entity mappings
         content_without_entities = self.db.fetch("""

@@ -26,10 +26,14 @@ from qdrant_client.models import (
 
 
 class VectorStore:
-    """Simple vector storage with Qdrant."""
+    """
+    Simple vector storage with Qdrant.
+    """
 
     def __init__(self, host: str = "localhost", port: int = 6333, collection: str = "emails", dimensions: int = 1024):
-        """Initialize connection to Qdrant."""
+        """
+        Initialize connection to Qdrant.
+        """
         self.host = host
         self.port = port
         self.collection = collection
@@ -38,7 +42,9 @@ class VectorStore:
         self._connect()
 
     def _connect(self):
-        """Connect to Qdrant with retry logic."""
+        """
+        Connect to Qdrant with retry logic.
+        """
         for attempt in range(2):
             try:
                 self.client = QdrantClient(host=self.host, port=self.port, timeout=10.0)
@@ -54,7 +60,9 @@ class VectorStore:
                     raise
 
     def _ensure_collection(self):
-        """Create collection if it doesn't exist, validate dimensions."""
+        """
+        Create collection if it doesn't exist, validate dimensions.
+        """
         try:
             info = self.client.get_collection(self.collection)
             # Validate dimensions match
@@ -74,7 +82,9 @@ class VectorStore:
                 raise
 
     def upsert(self, vector: list[float], payload: dict[str, Any] = None, id: str = None) -> str:
-        """Store vector with metadata."""
+        """
+        Store vector with metadata.
+        """
         if len(vector) != self.dimensions:
             raise ValueError(f"Vector size {len(vector)} != {self.dimensions}")
             
@@ -90,7 +100,9 @@ class VectorStore:
     def _original_batch_upsert(
         self, vectors: list[list[float]], payloads: list[dict] = None, ids: list[str] = None
     ):
-        """Original batch insert vectors method."""
+        """
+        Original batch insert vectors method.
+        """
         if ids is None:
             ids = [str(uuid.uuid4()) for _ in vectors]
         if payloads is None:
@@ -113,7 +125,9 @@ class VectorStore:
     def search(self, vector: list[float], limit: int = 10, filter: dict = None, 
                score_threshold: float | None = None, with_payload: bool = True, 
                with_vectors: bool = False, vector_name: str | None = None) -> list[dict]:
-        """Search for similar vectors with enhanced options."""
+        """
+        Search for similar vectors with enhanced options.
+        """
         search_params = {
             "collection_name": self.collection, 
             "query_vector": vector, 
@@ -142,7 +156,9 @@ class VectorStore:
                  "vector": getattr(hit, "vector", None) if with_vectors else None} for hit in results]
 
     def _build_filter(self, filter_dict: dict) -> Filter | None:
-        """Build Qdrant filter from dict with enhanced support."""
+        """
+        Build Qdrant filter from dict with enhanced support.
+        """
         if not filter_dict:
             return None
 
@@ -177,7 +193,9 @@ class VectorStore:
         return None
 
     def _build_structured_filter(self, filter_dict: dict) -> Filter:
-        """Build structured filter from must/should/must_not format."""
+        """
+        Build structured filter from must/should/must_not format.
+        """
         filter_params = {}
         
         for filter_type in ["must", "should", "must_not"]:
@@ -196,7 +214,9 @@ class VectorStore:
         return Filter(**filter_params)
 
     def get(self, id: str) -> dict | None:
-        """Get vector by ID."""
+        """
+        Get vector by ID.
+        """
         try:
             points = self.client.retrieve(
                 collection_name=self.collection, ids=[id], with_vectors=True
@@ -208,12 +228,14 @@ class VectorStore:
             return None
 
     def delete(self, id: str):
-        """Delete vector by ID."""
+        """
+        Delete vector by ID.
+        """
         self.client.delete(collection_name=self.collection, points_selector=PointIdsList(points=[id]))
     
     def delete_vector(self, id: str, collection: str | None = None):
         """Delete vector by ID with optional collection override.
-        
+
         Args:
             id: Vector ID to delete
             collection: Optional collection name (uses instance collection if not provided)
@@ -233,16 +255,22 @@ class VectorStore:
             self.delete(id)
 
     def delete_many(self, ids: list[str]):
-        """Delete multiple vectors."""
+        """
+        Delete multiple vectors.
+        """
         self.client.delete(collection_name=self.collection, points_selector=PointIdsList(points=ids))
 
     def count(self) -> int:
-        """Get total number of vectors."""
+        """
+        Get total number of vectors.
+        """
         info = self.client.get_collection(self.collection)
         return getattr(info, "points_count", None) or getattr(info, "vectors_count", 0)
 
     def clear(self):
-        """Delete all vectors in collection."""
+        """
+        Delete all vectors in collection.
+        """
         self.client.delete_collection(self.collection)
         self._ensure_collection()
     
@@ -252,7 +280,9 @@ class VectorStore:
         return self.upsert(vector=embedding, payload=metadata, id=email_id)
     
     def add_vector(self, id: str, embedding: list[float], metadata: dict[str, Any], collection: str | None = None) -> str:
-        """Add vector with optional collection override."""
+        """
+        Add vector with optional collection override.
+        """
         if collection and collection != self.collection:
             # Create new store instance for different collection
             temp_store = VectorStore(
@@ -291,7 +321,9 @@ class VectorStore:
         return self._original_batch_upsert(vectors=vectors, payloads=payloads, ids=ids)
     
     def _batch_upsert_points(self, points: list[dict]) -> list[str]:
-        """Internal batch upsert for points format."""
+        """
+        Internal batch upsert for points format.
+        """
         vectors = []
         payloads = []
         ids = []
@@ -316,7 +348,9 @@ class VectorStore:
         return ids
     
     def list_all_ids(self, collection: str | None = None) -> list[str]:
-        """List all vector IDs in collection."""
+        """
+        List all vector IDs in collection.
+        """
         target_collection = collection or self.collection
         all_ids = []
         for page_ids in self.iter_ids(collection=target_collection):
@@ -324,7 +358,9 @@ class VectorStore:
         return all_ids
     
     def iter_ids(self, collection: str | None = None, page_size: int = 1000) -> Generator[list[str], None, None]:
-        """Iterate through vector IDs in pages to avoid loading all at once."""
+        """
+        Iterate through vector IDs in pages to avoid loading all at once.
+        """
         target_collection = collection or self.collection
         next_page = None
         
@@ -351,7 +387,9 @@ class VectorStore:
                 break
     
     def health(self) -> bool:
-        """Check if Qdrant is healthy and accessible."""
+        """
+        Check if Qdrant is healthy and accessible.
+        """
         try:
             self.client.get_collections()
             return True
@@ -361,10 +399,10 @@ class VectorStore:
     
     def get_collection_stats(self, collection: str | None = None) -> dict:
         """Get collection statistics (normalized).
-        
+
         Args:
             collection: Optional collection name (uses instance collection if not provided)
-        
+
         Returns dict with points_count and compatibility aliases.
         """
         target_collection = collection or self.collection
@@ -406,7 +444,9 @@ _vector_store: VectorStore | None = None
 
 
 def get_vector_store(collection: str = "emails") -> VectorStore:
-    """Get or create singleton vector store."""
+    """
+    Get or create singleton vector store.
+    """
     global _vector_store
     if _vector_store is None or _vector_store.collection != collection:
         _vector_store = VectorStore(collection=collection)

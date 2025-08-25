@@ -1,6 +1,6 @@
 """
-Transactional and Idempotent PDF Writer
-Ensures atomic writes with SHA256 deduplication and proper retry handling
+Transactional and Idempotent PDF Writer Ensures atomic writes with SHA256
+deduplication and proper retry handling.
 """
 
 import hashlib
@@ -13,15 +13,21 @@ from loguru import logger
 
 
 class IdempotentPDFWriter:
-    """Handles transactional, idempotent PDF writes with SHA256 deduplication"""
+    """
+    Handles transactional, idempotent PDF writes with SHA256 deduplication.
+    """
     
     def __init__(self, db_path: str = None):
-        """Initialize with database path from environment or default"""
+        """
+        Initialize with database path from environment or default.
+        """
         from config.settings import DatabaseSettings
         self.db_path = db_path or DatabaseSettings().emails_db_path
         
     def compute_sha256(self, file_path: str) -> str:
-        """Compute SHA256 hash of file contents"""
+        """
+        Compute SHA256 hash of file contents.
+        """
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for byte_block in iter(lambda: f.read(65536), b""):
@@ -29,7 +35,9 @@ class IdempotentPDFWriter:
         return sha256_hash.hexdigest()
     
     def check_existing(self, sha256: str) -> dict[str, Any] | None:
-        """Check if document with this SHA256 already exists"""
+        """
+        Check if document with this SHA256 already exists.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -54,9 +62,8 @@ class IdempotentPDFWriter:
         chunks: list,
         metadata: dict[str, Any]
     ) -> dict[str, Any]:
-        """
-        Transactionally write PDF data with rollback on failure
-        
+        """Transactionally write PDF data with rollback on failure.
+
         Returns:
             {"success": bool, "status": str, "error": str|None, "exit_code": int}
             Exit codes: 0=success, 2=permanent_fail, 3=schema_error, 4=transient_fail
@@ -189,7 +196,9 @@ class IdempotentPDFWriter:
             conn.close()
     
     def _mark_failed(self, sha256: str, error: str, is_permanent: bool = False):
-        """Mark a document as failed with retry information"""
+        """
+        Mark a document as failed with retry information.
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -222,12 +231,10 @@ class IdempotentPDFWriter:
 
 # Integration helper for PDFService
 def make_pdf_write_idempotent(pdf_service_instance):
-    """
-    Monkey-patch or wrap PDFService to use idempotent writer
-    
-    Usage in PDFService.__init__:
-        from pdf.pdf_idempotent_writer import make_pdf_write_idempotent
-        make_pdf_write_idempotent(self)
+    """Monkey-patch or wrap PDFService to use idempotent writer.
+
+    Usage in PDFService.__init__:     from pdf.pdf_idempotent_writer
+    import make_pdf_write_idempotent     make_pdf_write_idempotent(self)
     """
     writer = IdempotentPDFWriter()
     
@@ -235,7 +242,9 @@ def make_pdf_write_idempotent(pdf_service_instance):
     original_process = pdf_service_instance._process_pdf_internal
     
     def wrapped_process(pdf_path: str, file_hash: str, source: str) -> dict[str, Any]:
-        """Wrapped version with idempotent writes"""
+        """
+        Wrapped version with idempotent writes.
+        """
         # First, do the extraction
         result = original_process(pdf_path, file_hash, source)
         

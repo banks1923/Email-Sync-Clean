@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Search Intelligence CLI Command Handlers
-Implements all intelligence commands for the vsearch CLI
+Search Intelligence CLI Command Handlers Implements all intelligence commands
+for the vsearch CLI.
 """
 
 import json
@@ -24,7 +24,9 @@ except ImportError as e:
 def smart_search_command(
     query: str, limit: int = 10, use_expansion: bool = True, json_output: bool = False
 ):
-    """Execute intelligent search with preprocessing and expansion"""
+    """
+    Execute intelligent search with preprocessing and expansion.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -54,7 +56,9 @@ def smart_search_command(
 def similarity_command(
     doc_id: str, limit: int = 10, threshold: float = 0.7, json_output: bool = False
 ):
-    """Find documents similar to the specified document"""
+    """
+    Find documents similar to the specified document.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -85,7 +89,9 @@ def cluster_command(
     min_samples: int = 2,
     json_output: bool = False,
 ):
-    """Cluster similar content using DBSCAN"""
+    """
+    Cluster similar content using DBSCAN.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -119,7 +125,9 @@ def cluster_command(
 def duplicates_command(
     content_type: str | None = None, threshold: float = 0.95, json_output: bool = False
 ):
-    """Detect duplicate documents using hash and semantic similarity"""
+    """
+    Detect duplicate documents using hash and semantic similarity.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -148,7 +156,9 @@ def duplicates_command(
 
 
 def entities_command(doc_id: str, force_refresh: bool = False, json_output: bool = False):
-    """Extract and cache entities from a document"""
+    """
+    Extract and cache entities from a document.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -180,7 +190,9 @@ def intel_summarize_command(
     use_cache: bool = True,
     json_output: bool = False,
 ):
-    """Auto-summarize a document with intelligence features"""
+    """
+    Auto-summarize a document with intelligence features.
+    """
     if not INTELLIGENCE_AVAILABLE:
         print("❌ Search Intelligence service not available")
         return False
@@ -210,7 +222,9 @@ def intel_summarize_command(
 
 # Display helper functions
 def _display_search_results(results: list[dict[str, Any]], title: str):
-    """Display search results in a formatted way"""
+    """
+    Display search results in a formatted way.
+    """
     print(f"\n=== {title} Results ===")
 
     if not results:
@@ -242,7 +256,9 @@ def _display_search_results(results: list[dict[str, Any]], title: str):
 
 
 def _display_similarity_results(results: list[dict[str, Any]], source_doc_id: str):
-    """Display similarity analysis results"""
+    """
+    Display similarity analysis results.
+    """
     print(f"\n=== Similar Documents to {source_doc_id} ===")
 
     if not results:
@@ -267,7 +283,9 @@ def _display_similarity_results(results: list[dict[str, Any]], source_doc_id: st
 
 
 def _display_cluster_results(results: list[dict[str, Any]]):
-    """Display clustering results"""
+    """
+    Display clustering results.
+    """
     print("\n=== Content Clustering Results ===")
 
     if not results:
@@ -306,7 +324,9 @@ def _display_cluster_results(results: list[dict[str, Any]]):
 
 
 def _display_duplicate_results(results: list[dict[str, Any]]):
-    """Display duplicate detection results"""
+    """
+    Display duplicate detection results.
+    """
     print("\n=== Duplicate Detection Results ===")
 
     if not results:
@@ -347,7 +367,9 @@ def _display_duplicate_results(results: list[dict[str, Any]]):
 
 
 def _display_entity_results(results: dict[str, Any], doc_id: str):
-    """Display entity extraction results"""
+    """
+    Display entity extraction results.
+    """
     print(f"\n=== Entity Extraction for {doc_id} ===")
 
     entities = results.get("entities", {})
@@ -382,7 +404,9 @@ def _display_entity_results(results: dict[str, Any], doc_id: str):
 
 
 def _display_summary_results(results: dict[str, Any], doc_id: str):
-    """Display document summary results"""
+    """
+    Display document summary results.
+    """
     print(f"\n=== Document Summary for {doc_id} ===")
 
     summary_text = results.get("summary_text", "")

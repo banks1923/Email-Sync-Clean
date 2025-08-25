@@ -1,5 +1,4 @@
-"""
-File Naming Convention System
+"""File Naming Convention System.
 
 Handles standardized naming across document lifecycle stages.
 """
@@ -10,15 +9,21 @@ from pathlib import Path
 
 
 class NamingConvention:
-    """Manages naming conventions for different lifecycle stages."""
+    """
+    Manages naming conventions for different lifecycle stages.
+    """
 
     def __init__(self):
-        """Initialize naming convention system."""
+        """
+        Initialize naming convention system.
+        """
         self.doc_counter = 0
         self._load_counter()
 
     def _load_counter(self):
-        """Load document counter from persistent storage."""
+        """
+        Load document counter from persistent storage.
+        """
         counter_file = Path("data/.doc_counter")
         if counter_file.exists():
             try:
@@ -27,7 +32,9 @@ class NamingConvention:
                 self.doc_counter = 0
 
     def _save_counter(self):
-        """Save document counter to persistent storage."""
+        """
+        Save document counter to persistent storage.
+        """
         counter_file = Path("data/.doc_counter")
         counter_file.parent.mkdir(exist_ok=True)
         counter_file.write_text(str(self.doc_counter))
@@ -121,8 +128,7 @@ class NamingConvention:
         return f"{timestamp}_{error}_{original_path.name}"
 
     def _clean_string(self, text: str) -> str:
-        """
-        Clean string for use in filenames.
+        """Clean string for use in filenames.
 
         Args:
             text: Input text to clean
@@ -142,8 +148,7 @@ class NamingConvention:
         return cleaned.upper()
 
     def extract_metadata_from_name(self, filename: str, stage: str) -> dict:
-        """
-        Extract metadata from filename based on stage.
+        """Extract metadata from filename based on stage.
 
         Args:
             filename: File name to parse
@@ -182,8 +187,7 @@ class NamingConvention:
         return metadata
 
     def validate_name(self, filename: str, stage: str) -> bool:
-        """
-        Validate if filename follows convention for given stage.
+        """Validate if filename follows convention for given stage.
 
         Args:
             filename: Filename to validate

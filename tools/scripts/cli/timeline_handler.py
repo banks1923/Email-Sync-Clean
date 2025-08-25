@@ -12,7 +12,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 def show_timeline(start_date=None, end_date=None, event_types=None, limit=20):
-    """Show chronological timeline of content"""
+    """
+    Show chronological timeline of content.
+    """
     print("📅 Content Timeline")
     print("=" * 40)
 

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-Documentation Truth Alignment & Drift Guard
-Audits documentation claims against reality and outputs JSON report.
+Documentation Truth Alignment & Drift Guard Audits documentation claims against
+reality and outputs JSON report.
 """
 
 import json
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import List, Optional
 
 
 @dataclass
@@ -87,7 +86,10 @@ class DocumentationAuditor:
         ]
 
     def count_lines_in_file(self, file_path: Path) -> tuple[int, int]:
-        """Count total lines and code lines (excluding comments/blank) in a Python file."""
+        """
+        Count total lines and code lines (excluding comments/blank) in a Python
+        file.
+        """
         try:
             with open(file_path, encoding='utf-8') as f:
                 lines = f.readlines()
@@ -107,7 +109,9 @@ class DocumentationAuditor:
             return 0, 0
 
     def audit_service_lines(self) -> list[ServiceLineCount]:
-        """Audit line counts for each service using glob patterns."""
+        """
+        Audit line counts for each service using glob patterns.
+        """
         services = []
         
         for service_name, glob_pattern in self.service_globs.items():
@@ -144,7 +148,9 @@ class DocumentationAuditor:
         return services
 
     def check_doc_existence(self) -> list[FileExistenceCheck]:
-        """Check if documented files actually exist."""
+        """
+        Check if documented files actually exist.
+        """
         checks = []
         
         for doc_path in self.expected_docs:
@@ -160,7 +166,9 @@ class DocumentationAuditor:
         return checks
 
     def check_test_paths(self) -> list[TestPathMapping]:
-        """Check if documented test paths exist."""
+        """
+        Check if documented test paths exist.
+        """
         mappings = []
         
         for test_path in self.expected_test_paths:
@@ -188,7 +196,9 @@ class DocumentationAuditor:
         return mappings
 
     def generate_report(self) -> AuditReport:
-        """Generate complete audit report."""
+        """
+        Generate complete audit report.
+        """
         import datetime
         
         services = self.audit_service_lines()
@@ -208,12 +218,16 @@ class DocumentationAuditor:
         )
 
     def output_json(self) -> str:
-        """Generate JSON audit report."""
+        """
+        Generate JSON audit report.
+        """
         report = self.generate_report()
         return json.dumps(asdict(report), indent=2)
 
     def output_summary(self) -> str:
-        """Generate human-readable summary."""
+        """
+        Generate human-readable summary.
+        """
         report = self.generate_report()
         
         lines = [
@@ -269,7 +283,9 @@ class DocumentationAuditor:
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+    """
     import argparse
     
     parser = argparse.ArgumentParser(description="Audit documentation against reality")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Integration Tests for Semantic Search Migration
-Tests the new search coordination module and CLI integration.
+Integration Tests for Semantic Search Migration Tests the new search
+coordination module and CLI integration.
 """
 
 import sys
@@ -19,10 +19,14 @@ from shared.simple_db import SimpleDB
 
 
 class TestSemanticSearchIntegration:
-    """Test suite for semantic search migration"""
+    """
+    Test suite for semantic search migration.
+    """
 
     def test_vector_store_availability(self):
-        """Test that vector store is available and has expected content"""
+        """
+        Test that vector store is available and has expected content.
+        """
         assert vector_store_available(), "Vector store should be available"
         
         from utilities.vector_store import get_vector_store
@@ -32,7 +36,9 @@ class TestSemanticSearchIntegration:
         print(f"✅ Vector store has {count} vectors")
 
     def test_search_coordination_module(self):
-        """Test the new search coordination module directly"""
+        """
+        Test the new search coordination module directly.
+        """
         # Test semantic search
         semantic_results = semantic_search("contract", limit=3)
         assert isinstance(semantic_results, list), "Semantic search should return list"
@@ -49,7 +55,9 @@ class TestSemanticSearchIntegration:
         print("✅ Search coordination module working")
 
     def test_cli_search_modes(self):
-        """Test CLI search modes work correctly"""
+        """
+        Test CLI search modes work correctly.
+        """
         # Import by adding the tools/scripts directory to path
         import os
         import subprocess
@@ -66,7 +74,9 @@ class TestSemanticSearchIntegration:
         print("✅ CLI search modes working")
 
     def test_backward_compatibility(self):
-        """Test SearchIntelligenceService still works"""
+        """
+        Test SearchIntelligenceService still works.
+        """
         service = get_search_intelligence_service()
         
         # Test unified_search method
@@ -80,7 +90,9 @@ class TestSemanticSearchIntegration:
         print("✅ SearchIntelligenceService backward compatibility working")
 
     def test_performance_characteristics(self):
-        """Test performance is within expected bounds"""
+        """
+        Test performance is within expected bounds.
+        """
         query = "contract agreement"
         
         # Test keyword performance (should be very fast)
@@ -105,7 +117,9 @@ class TestSemanticSearchIntegration:
         print(f"✅ Performance OK: K={keyword_time:.3f}s, S={semantic_time:.3f}s, H={hybrid_time:.3f}s")
 
     def test_edge_cases(self):
-        """Test edge cases and error handling"""
+        """
+        Test edge cases and error handling.
+        """
         # Empty query
         results = search("", limit=3)
         assert isinstance(results, list), "Empty query should return list"
@@ -121,7 +135,9 @@ class TestSemanticSearchIntegration:
         print("✅ Edge cases handled correctly")
 
     def test_rrf_merging(self):
-        """Test that RRF merging produces expected results"""
+        """
+        Test that RRF merging produces expected results.
+        """
         query = "contract"
         
         # Get individual results
@@ -144,7 +160,9 @@ class TestSemanticSearchIntegration:
         print("✅ RRF merging working correctly")
 
     def test_search_intelligence_migration_compatibility(self):
-        """Test that intelligence handlers still work with new search"""
+        """
+        Test that intelligence handlers still work with new search.
+        """
         # Test that intelligence commands would work
         try:
             from tools.scripts.cli.intelligence_handler import smart_search_command
@@ -156,7 +174,9 @@ class TestSemanticSearchIntegration:
             pytest.skip("Intelligence handlers not available")
 
     def test_legal_handler_compatibility(self):
-        """Test that legal handlers still work"""
+        """
+        Test that legal handlers still work.
+        """
         try:
             from search_intelligence import basic_search as search_legal
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Legal Intelligence CLI Handler
-Provides CLI commands for legal case analysis, timeline generation,
-relationship mapping, and document intelligence.
+Legal Intelligence CLI Handler Provides CLI commands for legal case analysis,
+timeline generation, relationship mapping, and document intelligence.
 """
 
 import json
@@ -20,8 +19,7 @@ from legal_intelligence.main import LegalIntelligenceService
 
 
 def process_legal_case(case_id: str, output_format: str = "text") -> None:
-    """
-    Process a legal case and extract comprehensive intelligence.
+    """Process a legal case and extract comprehensive intelligence.
 
     Args:
         case_id: Case identifier or search pattern
@@ -76,8 +74,7 @@ def process_legal_case(case_id: str, output_format: str = "text") -> None:
 
 
 def generate_legal_timeline(case_id: str, output_file: str | None = None) -> None:
-    """
-    Generate a chronological timeline for a legal case.
+    """Generate a chronological timeline for a legal case.
 
     Args:
         case_id: Case identifier or search pattern
@@ -128,8 +125,7 @@ def generate_legal_timeline(case_id: str, output_file: str | None = None) -> Non
 
 
 def build_legal_graph(case_id: str, max_depth: int = 3) -> None:
-    """
-    Build and display a relationship graph for a legal case.
+    """Build and display a relationship graph for a legal case.
 
     Args:
         case_id: Case identifier or search pattern
@@ -189,8 +185,7 @@ def build_legal_graph(case_id: str, max_depth: int = 3) -> None:
 
 
 def search_legal(query: str, case_id: str | None = None, limit: int = 10) -> None:
-    """
-    Perform legal-specific search with entity awareness.
+    """Perform legal-specific search with entity awareness.
 
     Args:
         query: Search query
@@ -262,8 +257,7 @@ def search_legal(query: str, case_id: str | None = None, limit: int = 10) -> Non
 
 
 def predict_missing_documents(case_id: str, confidence_threshold: float = 0.6) -> None:
-    """
-    Predict potentially missing documents in a legal case.
+    """Predict potentially missing documents in a legal case.
 
     Args:
         case_id: Case identifier or search pattern
@@ -326,8 +320,7 @@ def predict_missing_documents(case_id: str, confidence_threshold: float = 0.6) -
 
 
 def summarize_legal_docs(case_id: str, max_docs: int = 10) -> None:
-    """
-    Generate summaries for legal documents in a case.
+    """Generate summaries for legal documents in a case.
 
     Args:
         case_id: Case identifier or search pattern

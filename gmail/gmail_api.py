@@ -14,7 +14,9 @@ from .oauth import GmailAuth
 
 
 class GmailAPI:
-    """Gmail API wrapper with timeout handling and message parsing."""
+    """
+    Gmail API wrapper with timeout handling and message parsing.
+    """
 
     def __init__(self, timeout: int = 30) -> None:
         """Initialize Gmail API client with authentication.
@@ -43,7 +45,9 @@ class GmailAPI:
         return {"success": True, "message": "Connected to Gmail API"}
 
     def _execute_with_timeout(self, request):
-        """Execute a Gmail API request with timeout handling"""
+        """
+        Execute a Gmail API request with timeout handling.
+        """
         old_timeout = socket.getdefaulttimeout()
         try:
             socket.setdefaulttimeout(self.timeout)
@@ -138,11 +142,15 @@ class GmailAPI:
         }
 
     def _decode_body_data(self, data):
-        """Decode base64 body data to UTF-8 string"""
+        """
+        Decode base64 body data to UTF-8 string.
+        """
         return base64.urlsafe_b64decode(data).decode("utf-8")
 
     def _extract_content_from_part(self, part, text_content, html_content):
-        """Extract content from a single email part"""
+        """
+        Extract content from a single email part.
+        """
         mime_type = part.get("mimeType", "")
 
         # Extract text/plain content (preferred)
@@ -158,7 +166,9 @@ class GmailAPI:
         return text_content, html_content
 
     def _extract_from_parts(self, parts):
-        """Recursively extract content from email parts"""
+        """
+        Recursively extract content from email parts.
+        """
         text_content = ""
         html_content = ""
 
@@ -179,7 +189,9 @@ class GmailAPI:
         return text_content, html_content
 
     def _extract_content(self, payload):
-        """Extract email content from payload"""
+        """
+        Extract email content from payload.
+        """
         content = ""
 
         if "parts" in payload:
@@ -194,7 +206,10 @@ class GmailAPI:
         return content
 
     def _parse_date(self, date_str):
-        """Parse email date header and return ISO string format for validation compatibility"""
+        """
+        Parse email date header and return ISO string format for validation
+        compatibility.
+        """
         try:
             from email.utils import parsedate_to_datetime
 
@@ -209,7 +224,9 @@ class GmailAPI:
     # History API Methods for Incremental Sync
     @retry_network
     def get_profile(self) -> dict:
-        """Get user's email profile including current history ID"""
+        """
+        Get user's email profile including current history ID.
+        """
         if not self.service:
             connect_result = self.connect()
             if not connect_result["success"]:
@@ -233,8 +250,7 @@ class GmailAPI:
 
     @retry_network
     def get_history(self, start_history_id: str, max_results: int = 100) -> dict:
-        """
-        Get changes since a given history ID using Gmail History API.
+        """Get changes since a given history ID using Gmail History API.
 
         Args:
             start_history_id: The history ID to start from
@@ -303,8 +319,7 @@ class GmailAPI:
             )
 
     def extract_message_ids_from_history(self, history_records: list[dict]) -> list[str]:
-        """
-        Extract message IDs from history records that need to be fetched.
+        """Extract message IDs from history records that need to be fetched.
 
         Args:
             history_records: List of history records from get_history()
@@ -328,8 +343,7 @@ class GmailAPI:
         return list(message_ids)
 
     def get_attachments(self, message_id: str, message_data: dict | None = None) -> dict:
-        """
-        Get attachment metadata for a message.
+        """Get attachment metadata for a message.
 
         Args:
             message_id: The message ID
@@ -347,7 +361,9 @@ class GmailAPI:
         attachments = []
 
         def extract_attachments_from_parts(parts) -> None:
-            """Recursively extract attachment info from message parts"""
+            """
+            Recursively extract attachment info from message parts.
+            """
             for part in parts:
                 if "parts" in part:
                     # Recurse into nested parts

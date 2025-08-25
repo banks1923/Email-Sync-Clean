@@ -1,7 +1,7 @@
 """Lockfile and reproducibility tests.
 
-Ensures dependency locking for reproducible builds.
-Part of Phase 0 Decision Tests.
+Ensures dependency locking for reproducible builds. Part of Phase 0
+Decision Tests.
 """
 
 import subprocess
@@ -11,7 +11,9 @@ import pytest
 
 
 def test_lockfiles_exist():
-    """Verify lockfiles for all Python versions."""
+    """
+    Verify lockfiles for all Python versions.
+    """
     # For now, check if we can create them
     # In production, these would already exist
 
@@ -43,7 +45,9 @@ def test_lockfiles_exist():
 
 
 def test_requirements_consistency():
-    """Verify requirements.txt is consistent."""
+    """
+    Verify requirements.txt is consistent.
+    """
     req_file = Path("requirements.txt")
 
     assert req_file.exists(), "requirements.txt must exist"
@@ -70,7 +74,9 @@ def test_requirements_consistency():
 
 
 def test_install_uses_hashes(monkeypatch):
-    """Verify pip install uses hash verification."""
+    """
+    Verify pip install uses hash verification.
+    """
     import subprocess
 
     # Mock subprocess.run to check arguments
@@ -98,7 +104,9 @@ def test_install_uses_hashes(monkeypatch):
 
 
 def test_no_conflicting_dependencies():
-    """Check for conflicting dependency versions."""
+    """
+    Check for conflicting dependency versions.
+    """
     req_file = Path("requirements.txt")
     dev_req_file = Path("requirements-dev.txt")
 

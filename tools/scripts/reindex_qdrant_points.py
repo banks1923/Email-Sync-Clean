@@ -4,7 +4,7 @@
 Fixes invalid point ID formats that cause upsert failures.
 This script:
 1. Scrolls through existing points
-2. Re-upserts with normalized UUIDs 
+2. Re-upserts with normalized UUIDs
 3. Deletes old points with invalid IDs
 4. Preserves all payload data for traceability
 """
@@ -22,7 +22,9 @@ from qdrant_client.models import PointStruct
 
 
 def normalize_point_id(content_id: str = None, message_id: str = None) -> str:
-    """Generate a deterministic UUID for Qdrant point ID."""
+    """
+    Generate a deterministic UUID for Qdrant point ID.
+    """
     # Same namespace as used in semantic_pipeline.py
     NAMESPACE = uuid.UUID("00000000-0000-0000-0000-00000000E1D0")
     
@@ -34,7 +36,9 @@ def normalize_point_id(content_id: str = None, message_id: str = None) -> str:
 
 
 def reindex_collection(collection_name: str = 'emails', batch_size: int = 100, dry_run: bool = False):
-    """Reindex all points in a collection with valid UUIDs."""
+    """
+    Reindex all points in a collection with valid UUIDs.
+    """
     print(f"🔄 {'[DRY RUN] ' if dry_run else ''}Reindexing Qdrant collection: {collection_name}")
     
     try:
@@ -162,7 +166,9 @@ def reindex_collection(collection_name: str = 'emails', batch_size: int = 100, d
 
 
 def verify_point_ids(collection_name: str = 'emails', sample_size: int = 10):
-    """Verify that point IDs are now valid UUIDs."""
+    """
+    Verify that point IDs are now valid UUIDs.
+    """
     print(f"\n🔍 Verifying point IDs in collection: {collection_name}")
     
     try:

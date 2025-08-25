@@ -1,4 +1,6 @@
-"""Comprehensive tests for EmbeddingService."""
+"""
+Comprehensive tests for EmbeddingService.
+"""
 
 from unittest.mock import MagicMock, patch
 
@@ -10,12 +12,16 @@ from utilities.embeddings.embedding_service import EmbeddingService, get_embeddi
 
 
 class TestEmbeddingService:
-    """Test EmbeddingService functionality."""
+    """
+    Test EmbeddingService functionality.
+    """
     
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_initialization(self, mock_tokenizer, mock_model):
-        """Test service initialization."""
+        """
+        Test service initialization.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -33,7 +39,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_custom_model_name(self, mock_tokenizer, mock_model):
-        """Test initialization with custom model name."""
+        """
+        Test initialization with custom model name.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -45,14 +53,18 @@ class TestEmbeddingService:
         mock_model.from_pretrained.assert_called_once_with(custom_model)
         
     def test_get_device_mps(self):
-        """Test device selection for MPS (Apple Silicon)."""
+        """
+        Test device selection for MPS (Apple Silicon).
+        """
         with patch('torch.backends.mps.is_available', return_value=True):
             service = EmbeddingService.__new__(EmbeddingService)
             device = service._get_device()
             assert device == "mps"
             
     def test_get_device_cuda(self):
-        """Test device selection for CUDA."""
+        """
+        Test device selection for CUDA.
+        """
         with patch('torch.backends.mps.is_available', return_value=False):
             with patch('torch.cuda.is_available', return_value=True):
                 service = EmbeddingService.__new__(EmbeddingService)
@@ -60,7 +72,9 @@ class TestEmbeddingService:
                 assert device == "cuda"
                 
     def test_get_device_cpu(self):
-        """Test device selection fallback to CPU."""
+        """
+        Test device selection fallback to CPU.
+        """
         with patch('torch.backends.mps.is_available', return_value=False):
             with patch('torch.cuda.is_available', return_value=False):
                 service = EmbeddingService.__new__(EmbeddingService)
@@ -70,7 +84,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_load_model_error(self, mock_tokenizer, mock_model):
-        """Test model loading error handling."""
+        """
+        Test model loading error handling.
+        """
         mock_tokenizer.from_pretrained.side_effect = Exception("Model not found")
         
         with pytest.raises(Exception) as exc_info:
@@ -81,7 +97,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_encode_normal_text(self, mock_tokenizer, mock_model):
-        """Test encoding normal text."""
+        """
+        Test encoding normal text.
+        """
         # Setup mocks
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
@@ -111,7 +129,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_encode_empty_text(self, mock_tokenizer, mock_model):
-        """Test encoding empty text."""
+        """
+        Test encoding empty text.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -138,7 +158,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_encode_long_text(self, mock_tokenizer, mock_model):
-        """Test encoding text that exceeds max length."""
+        """
+        Test encoding text that exceeds max length.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -177,7 +199,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_batch_encode(self, mock_tokenizer, mock_model):
-        """Test batch encoding of multiple texts."""
+        """
+        Test batch encoding of multiple texts.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -209,7 +233,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_batch_encode_with_empty(self, mock_tokenizer, mock_model):
-        """Test batch encoding with empty texts."""
+        """
+        Test batch encoding with empty texts.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -244,7 +270,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_batch_encode_large_batch(self, mock_tokenizer, mock_model):
-        """Test batch encoding with batch size limit."""
+        """
+        Test batch encoding with batch size limit.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -282,7 +310,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_get_dimensions(self, mock_tokenizer, mock_model):
-        """Test getting embedding dimensions."""
+        """
+        Test getting embedding dimensions.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -294,7 +324,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_model_eval_mode(self, mock_tokenizer, mock_model):
-        """Test that model is set to eval mode."""
+        """
+        Test that model is set to eval mode.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -309,7 +341,9 @@ class TestEmbeddingService:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_model_to_device(self, mock_tokenizer, mock_model):
-        """Test that model is moved to correct device."""
+        """
+        Test that model is moved to correct device.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -325,12 +359,16 @@ class TestEmbeddingService:
 
 
 class TestEmbeddingServiceSingleton:
-    """Test singleton pattern for embedding service."""
+    """
+    Test singleton pattern for embedding service.
+    """
     
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_get_embedding_service_singleton(self, mock_tokenizer, mock_model):
-        """Test that get_embedding_service returns singleton."""
+        """
+        Test that get_embedding_service returns singleton.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -348,7 +386,9 @@ class TestEmbeddingServiceSingleton:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_get_embedding_service_custom_model(self, mock_tokenizer, mock_model):
-        """Test get_embedding_service with custom model."""
+        """
+        Test get_embedding_service with custom model.
+        """
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         mock_model.from_pretrained.return_value = MagicMock()
         
@@ -365,7 +405,9 @@ class TestEmbeddingServiceSingleton:
 
 @pytest.mark.integration
 class TestEmbeddingServiceIntegration:
-    """Integration tests for EmbeddingService."""
+    """
+    Integration tests for EmbeddingService.
+    """
     
     @pytest.mark.skipif(
         not torch.cuda.is_available() and not torch.backends.mps.is_available(),
@@ -374,7 +416,9 @@ class TestEmbeddingServiceIntegration:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_gpu_memory_management(self, mock_tokenizer, mock_model):
-        """Test GPU memory is properly managed."""
+        """
+        Test GPU memory is properly managed.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         
@@ -408,7 +452,9 @@ class TestEmbeddingServiceIntegration:
     @patch('utilities.embeddings.embedding_service.AutoModel')
     @patch('utilities.embeddings.embedding_service.AutoTokenizer')
     def test_concurrent_encoding(self, mock_tokenizer, mock_model):
-        """Test thread safety of encoding."""
+        """
+        Test thread safety of encoding.
+        """
         mock_tokenizer_instance = MagicMock()
         mock_model_instance = MagicMock()
         

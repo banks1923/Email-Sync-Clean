@@ -18,7 +18,9 @@ from loguru import logger
 
 
 class AlertSeverity(Enum):
-    """Alert severity levels"""
+    """
+    Alert severity levels.
+    """
 
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -28,7 +30,9 @@ class AlertSeverity(Enum):
 
 @dataclass
 class DatabaseAlert:
-    """Database alert data structure"""
+    """
+    Database alert data structure.
+    """
 
     timestamp: datetime
     severity: AlertSeverity
@@ -40,8 +44,7 @@ class DatabaseAlert:
 
 
 class DatabaseErrorRecovery:
-    """
-    Production-ready database error recovery and alerting system
+    """Production-ready database error recovery and alerting system.
 
     Features:
     - Automatic connection retry with exponential backoff
@@ -52,8 +55,7 @@ class DatabaseErrorRecovery:
     """
 
     def __init__(self, db_path: str, backup_dir: str = "backups") -> None:
-        """
-        Initialize database error recovery system
+        """Initialize database error recovery system.
 
         Args:
             db_path: Path to SQLite database file
@@ -88,8 +90,7 @@ class DatabaseErrorRecovery:
     def execute_with_retry(
         self, operation: Callable[[], Any], operation_name: str, critical: bool = False
     ) -> dict[str, Any]:
-        """
-        Execute database operation with automatic retry and error recovery
+        """Execute database operation with automatic retry and error recovery.
 
         Args:
             operation: Function to execute
@@ -177,8 +178,7 @@ class DatabaseErrorRecovery:
         return error_result
 
     def create_backup(self, backup_name: str | None = None) -> dict[str, Any]:
-        """
-        Create database backup with optional custom name
+        """Create database backup with optional custom name.
 
         Args:
             backup_name: Optional custom backup name
@@ -229,8 +229,7 @@ class DatabaseErrorRecovery:
     def restore_from_backup(
         self, backup_path: str, create_current_backup: bool = True
     ) -> dict[str, Any]:
-        """
-        Restore database from backup
+        """Restore database from backup.
 
         Args:
             backup_path: Path to backup file
@@ -294,8 +293,7 @@ class DatabaseErrorRecovery:
             return {"success": False, "error": error_msg}
 
     def get_degraded_mode_response(self, operation_name: str) -> dict[str, Any]:
-        """
-        Provide graceful degradation response when database is unavailable
+        """Provide graceful degradation response when database is unavailable.
 
         Args:
             operation_name: Name of the operation that failed
@@ -315,11 +313,15 @@ class DatabaseErrorRecovery:
         }
 
     def add_alert_callback(self, callback: Callable[[DatabaseAlert], None]) -> None:
-        """Add callback function for alert notifications"""
+        """
+        Add callback function for alert notifications.
+        """
         self.alert_callbacks.append(callback)
 
     def get_recovery_status(self) -> dict[str, Any]:
-        """Get current recovery system status"""
+        """
+        Get current recovery system status.
+        """
         return {
             "circuit_breaker": {
                 "open": self.circuit_open,
@@ -348,7 +350,9 @@ class DatabaseErrorRecovery:
         }
 
     def _is_circuit_open(self) -> bool:
-        """Check if circuit breaker is open"""
+        """
+        Check if circuit breaker is open.
+        """
         if not self.circuit_open:
             return False
 
@@ -364,7 +368,9 @@ class DatabaseErrorRecovery:
         return True
 
     def _record_failure(self) -> None:
-        """Record a database operation failure"""
+        """
+        Record a database operation failure.
+        """
         with self._lock:
             self.failure_count += 1
             self.last_failure_time = datetime.now()
@@ -387,7 +393,9 @@ class DatabaseErrorRecovery:
                 )
 
     def _reset_circuit_breaker(self) -> None:
-        """Reset circuit breaker state after successful operation"""
+        """
+        Reset circuit breaker state after successful operation.
+        """
         if self.failure_count > 0 or self.circuit_open:
             with self._lock:
                 was_open = self.circuit_open
@@ -404,7 +412,9 @@ class DatabaseErrorRecovery:
                     )
 
     def _get_circuit_recovery_time(self) -> int:
-        """Get remaining time until circuit breaker recovery attempt"""
+        """
+        Get remaining time until circuit breaker recovery attempt.
+        """
         if not self.circuit_open:
             return 0
 
@@ -413,7 +423,9 @@ class DatabaseErrorRecovery:
         return int(remaining)
 
     def _handle_database_locked_error(self, operation_name: str, attempt: int) -> None:
-        """Handle database locked errors"""
+        """
+        Handle database locked errors.
+        """
         logger.warning(f"Database locked during {operation_name} (attempt {attempt + 1})")
 
         if attempt == 0:  # First attempt
@@ -424,7 +436,9 @@ class DatabaseErrorRecovery:
             )
 
     def _handle_missing_table_error(self, operation_name: str, error: Exception) -> None:
-        """Handle missing table errors"""
+        """
+        Handle missing table errors.
+        """
         logger.error(f"Missing table error in {operation_name}: {str(error)}")
 
         self._send_alert(
@@ -434,7 +448,9 @@ class DatabaseErrorRecovery:
         )
 
     def _handle_disk_io_error(self, operation_name: str, error: Exception, critical: bool) -> None:
-        """Handle disk I/O errors"""
+        """
+        Handle disk I/O errors.
+        """
         logger.error(f"Disk I/O error in {operation_name}: {str(error)}")
 
         severity = AlertSeverity.CRITICAL if critical else AlertSeverity.HIGH
@@ -449,7 +465,9 @@ class DatabaseErrorRecovery:
         message: str,
         metadata: dict | None = None,
     ) -> None:
-        """Send alert through configured callbacks"""
+        """
+        Send alert through configured callbacks.
+        """
         alert = DatabaseAlert(
             timestamp=datetime.now(),
             severity=severity,
@@ -479,7 +497,9 @@ class DatabaseErrorRecovery:
         )
 
     def _cleanup_old_backups(self) -> None:
-        """Remove backups older than retention period"""
+        """
+        Remove backups older than retention period.
+        """
         try:
             cutoff_date = datetime.now() - timedelta(days=self.backup_retention_days)
 
@@ -496,7 +516,9 @@ class DatabaseErrorRecovery:
             logger.warning(f"Failed to cleanup old backups: {str(e)}")
 
     def _verify_backup_integrity(self, backup_path: str) -> bool:
-        """Verify backup file integrity"""
+        """
+        Verify backup file integrity.
+        """
         try:
             with sqlite3.connect(backup_path) as conn:
                 conn.execute("PRAGMA integrity_check")
@@ -505,7 +527,9 @@ class DatabaseErrorRecovery:
             return False
 
     def _verify_database_integrity(self, db_path: str) -> bool:
-        """Verify database integrity"""
+        """
+        Verify database integrity.
+        """
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.execute("PRAGMA integrity_check")
@@ -515,7 +539,9 @@ class DatabaseErrorRecovery:
             return False
 
     def _list_available_backups(self) -> list[dict[str, Any]]:
-        """List available backup files"""
+        """
+        List available backup files.
+        """
         backups = []
 
         try:

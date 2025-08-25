@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Check document vectors using the vector service
+Check document vectors using the vector service.
 """
 
 import sys
@@ -13,7 +13,9 @@ from search_intelligence import get_search_intelligence_service as get_search_se
 
 
 def check_document_vectors():
-    """Check document vectors in the system"""
+    """
+    Check document vectors in the system.
+    """
 
     print("Checking document vectors...")
     print("-" * 60)

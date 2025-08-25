@@ -1,5 +1,4 @@
-"""
-Tests for Legal Intelligence MCP Server
+"""Tests for Legal Intelligence MCP Server.
 
 Tests the unified legal intelligence MCP server including all 6 tools:
 - legal_extract_entities
@@ -33,10 +32,14 @@ from infrastructure.mcp_servers.legal_intelligence_mcp import (
 
 
 class TestLegalExtractEntities:
-    """Test legal entity extraction functionality"""
+    """
+    Test legal entity extraction functionality.
+    """
 
     def test_extract_entities_basic(self):
-        """Test basic entity extraction"""
+        """
+        Test basic entity extraction.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -71,7 +74,9 @@ class TestLegalExtractEntities:
             assert "Total entities: 3" in result
 
     def test_extract_entities_error_handling(self):
-        """Test entity extraction error handling"""
+        """
+        Test entity extraction error handling.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -90,17 +95,23 @@ class TestLegalExtractEntities:
             assert "Entity extraction failed" in result
 
     def test_extract_entities_no_services(self):
-        """Test behavior when services are not available"""
+        """
+        Test behavior when services are not available.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.SERVICES_AVAILABLE", False):
             result = legal_extract_entities("test content")
             assert "Legal intelligence services not available" in result
 
 
 class TestLegalTimelineEvents:
-    """Test legal timeline generation functionality"""
+    """
+    Test legal timeline generation functionality.
+    """
 
     def test_timeline_events_basic(self):
-        """Test basic timeline generation"""
+        """
+        Test basic timeline generation.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -150,7 +161,9 @@ class TestLegalTimelineEvents:
             assert "2024-01-15" in result
 
     def test_timeline_events_with_date_filter(self):
-        """Test timeline generation with date filtering"""
+        """
+        Test timeline generation with date filtering.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -175,7 +188,9 @@ class TestLegalTimelineEvents:
             assert "Later event" in result
 
     def test_timeline_events_error(self):
-        """Test timeline generation error handling"""
+        """
+        Test timeline generation error handling.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -194,10 +209,14 @@ class TestLegalTimelineEvents:
 
 
 class TestLegalKnowledgeGraph:
-    """Test legal knowledge graph functionality"""
+    """
+    Test legal knowledge graph functionality.
+    """
 
     def test_knowledge_graph_basic(self):
-        """Test basic knowledge graph generation"""
+        """
+        Test basic knowledge graph generation.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -239,7 +258,9 @@ class TestLegalKnowledgeGraph:
             assert "Answer" in result
 
     def test_knowledge_graph_without_relationships(self):
-        """Test knowledge graph without relationship details"""
+        """
+        Test knowledge graph without relationship details.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -263,10 +284,14 @@ class TestLegalKnowledgeGraph:
 
 
 class TestLegalDocumentAnalysis:
-    """Test legal document analysis functionality"""
+    """
+    Test legal document analysis functionality.
+    """
 
     def test_document_analysis_comprehensive(self):
-        """Test comprehensive document analysis"""
+        """
+        Test comprehensive document analysis.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -319,7 +344,9 @@ class TestLegalDocumentAnalysis:
             assert "Answer: 80% confidence" in result
 
     def test_document_analysis_patterns(self):
-        """Test pattern-specific document analysis"""
+        """
+        Test pattern-specific document analysis.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -347,10 +374,14 @@ class TestLegalDocumentAnalysis:
 
 
 class TestLegalCaseTracking:
-    """Test legal case tracking functionality"""
+    """
+    Test legal case tracking functionality.
+    """
 
     def test_case_tracking_status(self):
-        """Test case status tracking"""
+        """
+        Test case status tracking.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -379,7 +410,9 @@ class TestLegalCaseTracking:
             assert "Initial Complaint" in result
 
     def test_case_tracking_missing(self):
-        """Test missing document tracking"""
+        """
+        Test missing document tracking.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -411,7 +444,9 @@ class TestLegalCaseTracking:
             assert "Expected response not found" in result
 
     def test_case_tracking_deadlines(self):
-        """Test deadline tracking"""
+        """
+        Test deadline tracking.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -435,10 +470,14 @@ class TestLegalCaseTracking:
 
 
 class TestLegalRelationshipDiscovery:
-    """Test legal relationship discovery functionality"""
+    """
+    Test legal relationship discovery functionality.
+    """
 
     def test_relationship_discovery_basic(self):
-        """Test basic relationship discovery"""
+        """
+        Test basic relationship discovery.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -482,7 +521,9 @@ class TestLegalRelationshipDiscovery:
                 assert "ABC Corp" in result
 
     def test_relationship_discovery_with_focus(self):
-        """Test relationship discovery with entity focus"""
+        """
+        Test relationship discovery with entity focus.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -515,18 +556,24 @@ class TestLegalRelationshipDiscovery:
 
 
 class TestLegalIntelligenceServer:
-    """Test the MCP server class"""
+    """
+    Test the MCP server class.
+    """
 
     @pytest.mark.asyncio
     async def test_server_initialization(self):
-        """Test server initializes correctly"""
+        """
+        Test server initializes correctly.
+        """
         server = LegalIntelligenceServer()
         assert server.server is not None
         assert server.server.name == "legal-intelligence-server"
 
     @pytest.mark.asyncio
     async def test_list_tools(self):
-        """Test tool registration"""
+        """
+        Test tool registration.
+        """
         server = LegalIntelligenceServer()
 
         # Get the list_tools handler
@@ -556,7 +603,9 @@ class TestLegalIntelligenceServer:
 
     @pytest.mark.asyncio
     async def test_call_tool_unknown(self):
-        """Test calling unknown tool"""
+        """
+        Test calling unknown tool.
+        """
         server = LegalIntelligenceServer()
 
         # Get the call_tool handler
@@ -574,7 +623,9 @@ class TestLegalIntelligenceServer:
 
     @pytest.mark.asyncio
     async def test_call_tool_with_error(self):
-        """Test tool call error handling"""
+        """
+        Test tool call error handling.
+        """
         server = LegalIntelligenceServer()
 
         # Get the call_tool handler
@@ -591,10 +642,14 @@ class TestLegalIntelligenceServer:
 
 
 class TestIntegration:
-    """Integration tests for the legal intelligence MCP server"""
+    """
+    Integration tests for the legal intelligence MCP server.
+    """
 
     def test_end_to_end_entity_extraction(self):
-        """Test complete entity extraction workflow"""
+        """
+        Test complete entity extraction workflow.
+        """
         if not SERVICES_AVAILABLE:
             pytest.skip("Legal intelligence services not available")
 
@@ -635,7 +690,9 @@ class TestIntegration:
                 assert "Total entities: 5" in result
 
     def test_services_not_available_graceful_degradation(self):
-        """Test graceful degradation when services are not available"""
+        """
+        Test graceful degradation when services are not available.
+        """
         with patch("mcp_servers.legal_intelligence_mcp.SERVICES_AVAILABLE", False):
             # Test all functions handle service unavailability gracefully
             functions_to_test = [

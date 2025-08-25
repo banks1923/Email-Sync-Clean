@@ -4,20 +4,20 @@
 Tests all aspects of semantic enrichment during email ingestion.
 """
 
+import unittest
 import json
 import os
-import unittest
-from datetime import datetime
-from unittest.mock import Mock, patch
-
+import tempfile
+from datetime import datetime, timedelta
+from unittest.mock import Mock, patch, MagicMock
 import numpy as np
 
 # Set up test environment
 os.environ['SEMANTICS_ON_INGEST'] = 'true'
 
 from config.settings import semantic_settings
-from shared.simple_db import SimpleDB
 from utilities.semantic_pipeline import SemanticPipeline, get_semantic_pipeline
+from shared.simple_db import SimpleDB
 
 
 class TestSemanticPipeline(unittest.TestCase):
@@ -337,7 +337,7 @@ class TestSemanticPipeline(unittest.TestCase):
         }
         
         message_ids = ['msg_001']
-        self.pipeline.run_for_messages(
+        result1 = self.pipeline.run_for_messages(
             message_ids=message_ids,
             steps=['entities']
         )
@@ -398,7 +398,7 @@ class TestSemanticIntegration(unittest.TestCase):
     def test_gmail_semantic_hook(self, mock_db_class, mock_get_pipeline):
         """Test that Gmail service calls semantic pipeline on ingest."""
         from gmail.main import GmailService
-
+        
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db
@@ -446,7 +446,7 @@ class TestSemanticIntegration(unittest.TestCase):
             with patch.object(service, 'store_email') as mock_store:
                 mock_store.return_value = 'stored_msg_id'
                 
-                service.sync_emails(max_results=5)
+                result = service.sync_emails(max_results=5)
                 
                 # Verify semantic pipeline was called
                 mock_get_pipeline.assert_called_once()
@@ -465,7 +465,7 @@ class TestBackfillScript(unittest.TestCase):
     def test_backfill_basic(self, mock_db_class, mock_get_pipeline):
         """Test basic backfill operation."""
         from scripts.backfill_semantic import backfill_semantic
-
+        
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db
@@ -502,7 +502,7 @@ class TestBackfillScript(unittest.TestCase):
     def test_backfill_with_date_filter(self, mock_db_class, mock_get_pipeline):
         """Test backfill with date filtering."""
         from scripts.backfill_semantic import backfill_semantic
-
+        
         # Setup mocks
         mock_db = Mock()
         mock_db_class.return_value = mock_db

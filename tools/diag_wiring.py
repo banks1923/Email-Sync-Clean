@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""
-Repo-wide smoke test that validates wiring & efficiency from user perspective.
-Checks embeddings, Qdrant vector store, DB/WAL, maintenance batching, and search UX.
+"""Repo-wide smoke test that validates wiring & efficiency from user
+perspective.
+
+Checks embeddings, Qdrant vector store, DB/WAL, maintenance batching,
+and search UX.
 """
 
 import os
@@ -36,7 +38,9 @@ TEST_QUERIES = ["invoice", "schedule", "legal"]
 
 
 def measure_timing(func, *args, **kwargs) -> tuple[Any, float]:
-    """Measure function execution time."""
+    """
+    Measure function execution time.
+    """
     start = time.perf_counter()
     result = func(*args, **kwargs)
     elapsed_ms = (time.perf_counter() - start) * 1000
@@ -44,7 +48,9 @@ def measure_timing(func, *args, **kwargs) -> tuple[Any, float]:
 
 
 def check_alignment() -> tuple[bool, dict]:
-    """Check Qdrant connection, collection, and dimension alignment."""
+    """
+    Check Qdrant connection, collection, and dimension alignment.
+    """
     try:
         from utilities.vector_store import get_vector_store
         
@@ -78,7 +84,9 @@ def check_alignment() -> tuple[bool, dict]:
 
 
 def check_embeddings() -> tuple[bool, dict]:
-    """Check embedding service device, batch size, and throughput."""
+    """
+    Check embedding service device, batch size, and throughput.
+    """
     try:
         from utilities.embeddings import get_embedding_service
         
@@ -146,7 +154,9 @@ def check_embeddings() -> tuple[bool, dict]:
 
 
 def check_vectors() -> tuple[bool, dict]:
-    """Check vector store batch_upsert, iter_ids, and upsert throughput."""
+    """
+    Check vector store batch_upsert, iter_ids, and upsert throughput.
+    """
     try:
         from utilities.embeddings import get_embedding_service
         from utilities.vector_store import get_vector_store
@@ -204,7 +214,9 @@ def check_vectors() -> tuple[bool, dict]:
 
 
 def check_search_ux() -> tuple[bool, dict]:
-    """Check search UX with 3 canned queries, measure p95 latency and scores."""
+    """
+    Check search UX with 3 canned queries, measure p95 latency and scores.
+    """
     try:
         from utilities.embeddings import get_embedding_service
         from utilities.vector_store import get_vector_store
@@ -328,12 +340,16 @@ def check_reconcile_scan() -> tuple[bool, dict]:
 
 
 def format_status(success: bool) -> str:
-    """Format status as ✅ or ❌."""
+    """
+    Format status as ✅ or ❌.
+    """
     return "✅" if success else "❌"
 
 
 def run_diagnostics() -> int:
-    """Run all diagnostic checks and return exit code."""
+    """
+    Run all diagnostic checks and return exit code.
+    """
     print(f"REPO: {REPO_NAME}")
     print(f"QDRANT: {QDRANT_HOST}:{QDRANT_PORT} | collection={DEFAULT_COLLECTION}")
     

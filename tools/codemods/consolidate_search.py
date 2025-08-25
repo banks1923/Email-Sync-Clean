@@ -8,7 +8,9 @@ from pathlib import Path
 
 
 def update_imports_in_file(file_path: Path, old_import: str, new_import: str):
-    """Update import statements in a file."""
+    """
+    Update import statements in a file.
+    """
 
     try:
         with open(file_path) as f:
@@ -30,7 +32,9 @@ def update_imports_in_file(file_path: Path, old_import: str, new_import: str):
 
 
 def consolidate_search():
-    """Consolidate search directories."""
+    """
+    Consolidate search directories.
+    """
 
     print("🔀 Consolidating search directories")
     print("=" * 50)

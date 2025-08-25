@@ -13,17 +13,23 @@ except ImportError:
 
 
 class PDFValidator:
-    """Validates PDFs and determines processing requirements."""
+    """
+    Validates PDFs and determines processing requirements.
+    """
 
     def __init__(self) -> None:
         self.dependencies_valid = self._check_dependencies()
 
     def _check_dependencies(self) -> bool:
-        """Check if required dependencies are available."""
+        """
+        Check if required dependencies are available.
+        """
         return PyPDF2 is not None
 
     def validate_dependencies(self) -> dict[str, Any]:
-        """Validate all required dependencies using existing OCR module flags."""
+        """
+        Validate all required dependencies using existing OCR module flags.
+        """
         # Import availability flags from actual OCR modules
         try:
             from .ocr_engine import CV2_AVAILABLE, TESSERACT_AVAILABLE
@@ -43,8 +49,7 @@ class PDFValidator:
         return result
 
     def is_scanned_pdf(self, pdf_path: str) -> tuple[bool, float]:
-        """
-        Determine if PDF is scanned by checking text content.
+        """Determine if PDF is scanned by checking text content.
 
         Returns:
             Tuple[bool, float]: (is_scanned, confidence)
@@ -93,7 +98,9 @@ class PDFValidator:
             return True, 0.5  # Assume scanned on error
 
     def should_use_ocr(self, pdf_path: str, force_ocr: bool = False) -> dict[str, Any]:
-        """Determine if OCR should be used for PDF processing."""
+        """
+        Determine if OCR should be used for PDF processing.
+        """
         if force_ocr:
             return {
                 "success": True,

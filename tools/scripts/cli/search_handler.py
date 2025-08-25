@@ -94,7 +94,9 @@ def search_emails(query, limit=5, hybrid=True, mode="database"):
 
 
 def search_multi_content(query, limit=5):
-    """Search across PDFs and transcriptions only (excluding emails)"""
+    """
+    Search across PDFs and transcriptions only (excluding emails)
+    """
     print(f"🤖 Multi-Content Search for: '{query}'")
     print("🔍 Searching PDFs and transcriptions...")
     locator = get_locator()
@@ -148,7 +150,9 @@ def search_multi_content(query, limit=5):
 
 
 def display_unified_results(results, search_type, limit=None):
-    """Display unified search results with content type indicators"""
+    """
+    Display unified search results with content type indicators.
+    """
     if limit:
         results = results[:limit]
 
@@ -165,7 +169,9 @@ def display_unified_results(results, search_type, limit=None):
 
 
 def _display_single_unified_result(result, index):
-    """Display a single unified search result"""
+    """
+    Display a single unified search result.
+    """
     content_type = result.get("type", "unknown")
     score = result.get("score", 1.0)
     title = result.get("title", "No title")
@@ -194,7 +200,9 @@ def _display_single_unified_result(result, index):
 
 
 def display_unified_search_results(results, search_type, limit=None):
-    """Display unified search results from search intelligence service"""
+    """
+    Display unified search results from search intelligence service.
+    """
     if limit:
         results = results[:limit]
     
@@ -231,7 +239,9 @@ def display_unified_search_results(results, search_type, limit=None):
             break
 
 def display_results(emails, search_type, limit=None):
-    """Display search results with consistent formatting"""
+    """
+    Display search results with consistent formatting.
+    """
     if limit:
         emails = emails[:limit]
 

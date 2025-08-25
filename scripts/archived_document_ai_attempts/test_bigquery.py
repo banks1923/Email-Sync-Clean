@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Test BigQuery connection and setup."""
+"""
+Test BigQuery connection and setup.
+"""
 
 import os
 from google.cloud import bigquery
@@ -10,7 +12,9 @@ import uuid
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'
 
 def test_bigquery():
-    """Test BigQuery connection and tables."""
+    """
+    Test BigQuery connection and tables.
+    """
     
     # Initialize client
     client = bigquery.Client(project='modular-command-466820-p2')

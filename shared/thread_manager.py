@@ -1,12 +1,12 @@
 """
-Thread Management and Timeline Reconstruction
-Handles email threading, deduplication, and chronological ordering
+Thread Management and Timeline Reconstruction Handles email threading,
+deduplication, and chronological ordering.
 """
 
 import hashlib
 import re
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from .email_parser import QuotedMessage
 
@@ -82,7 +82,9 @@ class ThreadService:
         return thread_id
 
     def _normalize_subject(self, subject: str) -> str:
-        """Normalize email subject by removing prefixes like Re:, Fwd:, etc."""
+        """
+        Normalize email subject by removing prefixes like Re:, Fwd:, etc.
+        """
         if not subject:
             return ""
         if subject in self._normalized_cache:
@@ -109,7 +111,8 @@ class ThreadService:
 
 def reconstruct_thread_timeline(emails: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Reconstruct chronological timeline of email thread with individual messages.
+    Reconstruct chronological timeline of email thread with individual
+    messages.
     """
     timeline = []
     
@@ -175,14 +178,13 @@ def deduplicate_messages(
     similarity_threshold: float = 0.85,
     preserve_metadata: bool = True
 ) -> list[dict[str, Any]]:
-    """
-    Remove duplicate messages while preserving the most complete version.
-    
+    """Remove duplicate messages while preserving the most complete version.
+
     Args:
         messages: List of message dictionaries
         similarity_threshold: Minimum similarity to consider duplicates (0.0-1.0)
         preserve_metadata: Keep message with most metadata when deduplicating
-    
+
     Returns:
         Deduplicated list of messages
     """
@@ -230,8 +232,8 @@ def deduplicate_messages(
 
 
 def _calculate_similarity(text1: str, text2: str) -> float:
-    """
-    Calculate similarity between two texts using simple word overlap.
+    """Calculate similarity between two texts using simple word overlap.
+
     Returns value between 0.0 and 1.0.
     """
     if not text1 or not text2:
@@ -251,7 +253,9 @@ def _calculate_similarity(text1: str, text2: str) -> float:
 
 
 def quoted_message_to_dict(message: 'QuotedMessage') -> dict[str, Any]:
-    """Convert QuotedMessage object to dictionary for processing."""
+    """
+    Convert QuotedMessage object to dictionary for processing.
+    """
     return {
         "content": message.content,
         "sender": message.sender,
@@ -265,12 +269,11 @@ def quoted_message_to_dict(message: 'QuotedMessage') -> dict[str, Any]:
     }
 
 def extract_thread_messages(thread_emails: list[dict[str, Any]]) -> list[QuotedMessage]:
-    """
-    Extract all individual messages from a thread of emails.
-    
+    """Extract all individual messages from a thread of emails.
+
     Args:
         thread_emails: List of email dictionaries from same thread
-        
+
     Returns:
         List of individual QuotedMessage objects
     """
@@ -309,8 +312,8 @@ def extract_thread_messages(thread_emails: list[dict[str, Any]]) -> list[QuotedM
 
 
 def find_ignored_messages(thread_messages: list[QuotedMessage]) -> list[dict[str, Any]]:
-    """
-    Find messages in a thread that were never replied to.
+    """Find messages in a thread that were never replied to.
+
     This helps identify selective reply patterns in harassment cases.
     """
     ignored = []

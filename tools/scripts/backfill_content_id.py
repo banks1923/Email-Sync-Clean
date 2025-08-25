@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""
-Backfill content_id in Qdrant vector payloads.
-This fixes the issue where semantic search returns 0 results because
-the payload doesn't have content_id for database lookups.
+"""Backfill content_id in Qdrant vector payloads.
+
+This fixes the issue where semantic search returns 0 results because the
+payload doesn't have content_id for database lookups.
 """
 
 import sqlite3
@@ -14,7 +14,9 @@ from config.settings import settings
 
 
 def map_original_hash_to_content_id(orig_hash: str) -> str | None:
-    """Map original_hash to content_id from emails table."""
+    """
+    Map original_hash to content_id from emails table.
+    """
     try:
         conn = sqlite3.connect(settings.database.emails_db_path)
         cursor = conn.execute(
@@ -34,7 +36,9 @@ def map_original_hash_to_content_id(orig_hash: str) -> str | None:
 
 
 def main():
-    """Backfill content_id in all Qdrant points."""
+    """
+    Backfill content_id in all Qdrant points.
+    """
     q = QdrantClient(host="localhost", port=6333)
     coll = "emails"
     offset = None

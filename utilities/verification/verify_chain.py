@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Chain Integrity Verification Script
+"""Chain Integrity Verification Script.
 
 Validates the documents → content_unified → embeddings chain integrity.
 Reports broken links and data quality issues.
@@ -14,7 +13,9 @@ from pathlib import Path
 
 
 def check_chain_integrity(db_path):
-    """Check the integrity of the document processing chain"""
+    """
+    Check the integrity of the document processing chain.
+    """
     
     # Open in read-only mode for safety
     uri = f"file:{db_path}?mode=ro"
@@ -171,7 +172,9 @@ def check_chain_integrity(db_path):
 
 
 def print_verification_report(results):
-    """Print a human-readable verification report"""
+    """
+    Print a human-readable verification report.
+    """
     
     print("Document Chain Integrity Verification")
     print("=" * 50)
@@ -277,7 +280,9 @@ def print_verification_report(results):
 
 
 def main():
-    """Main verification entry point"""
+    """
+    Main verification entry point.
+    """
     
     # Use environment variable or default path
     db_path = os.getenv("APP_DB_PATH", "data/emails.db")

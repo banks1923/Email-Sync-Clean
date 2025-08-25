@@ -1,6 +1,7 @@
 """Timeline Service for Email and Document Management.
 
-Provides chronological view and navigation of emails, documents, and related content.
+Provides chronological view and navigation of emails, documents, and
+related content.
 """
 
 from typing import Any
@@ -12,7 +13,9 @@ from config.settings import get_db_path
 
 
 class TimelineService:
-    """Timeline management for chronological content navigation."""
+    """
+    Timeline management for chronological content navigation.
+    """
 
     def __init__(self, db_path: str = None):
         # Use centralized config if no path provided
@@ -24,7 +27,9 @@ class TimelineService:
         self._ensure_timeline_tables()
 
     def _ensure_timeline_tables(self):
-        """Create timeline-specific tables."""
+        """
+        Create timeline-specific tables.
+        """
         timeline_events_schema = """
         CREATE TABLE IF NOT EXISTS timeline_events (
             event_id TEXT PRIMARY KEY,
@@ -68,7 +73,9 @@ class TimelineService:
             logger.error(f"Error creating timeline tables: {e}")
 
     def sync_emails_to_timeline(self, limit: int = 100) -> dict[str, Any]:
-        """Sync recent emails to timeline events."""
+        """
+        Sync recent emails to timeline events.
+        """
         try:
             # Get emails from the emails table
             email_query = """
@@ -104,7 +111,9 @@ class TimelineService:
             return {"success": False, "error": str(e)}
 
     def sync_documents_to_timeline(self, limit: int = 50) -> dict[str, Any]:
-        """Sync recent documents to timeline events."""
+        """
+        Sync recent documents to timeline events.
+        """
         try:
             doc_query = """
                 SELECT chunk_id, file_name, processed_time, char_count
@@ -145,7 +154,9 @@ class TimelineService:
         event_types: list[str] | None = None,
         limit: int = 50,
     ) -> dict[str, Any]:
-        """Get chronological timeline view with filtering."""
+        """
+        Get chronological timeline view with filtering.
+        """
         try:
             from .database import TimelineDatabase
 
@@ -187,7 +198,9 @@ class TimelineService:
         source_type: str | None = None,
         importance_score: int = 0,
     ) -> dict[str, Any]:
-        """Create timeline event using database operations."""
+        """
+        Create timeline event using database operations.
+        """
         try:
             from .database import TimelineDatabase
 
@@ -210,10 +223,10 @@ class TimelineService:
 
 def get_timeline_service(db_path: str = None) -> TimelineService:
     """Factory function to create TimelineService instance.
-    
+
     Args:
         db_path: Path to the database file
-        
+
     Returns:
         TimelineService instance
     """

@@ -1,6 +1,7 @@
-"""
-Integration test for PDF upload to summary generation flow.
-Verifies end-to-end processing from PDF upload through summarization to database storage.
+"""Integration test for PDF upload to summary generation flow.
+
+Verifies end-to-end processing from PDF upload through summarization to
+database storage.
 """
 
 import sys
@@ -21,10 +22,14 @@ from tests.integration.test_helpers import (
 
 
 class TestPDFToSummaryFlow(unittest.TestCase):
-    """Test complete flow from PDF upload to summary in database."""
+    """
+    Test complete flow from PDF upload to summary in database.
+    """
 
     def setUp(self):
-        """Set up test environment."""
+        """
+        Set up test environment.
+        """
         # Create test database
         self.db, self.db_path = create_test_database()
 
@@ -38,11 +43,15 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.cleanup_paths = [self.db_path]
 
     def tearDown(self):
-        """Clean up test artifacts."""
+        """
+        Clean up test artifacts.
+        """
         cleanup_test_files(self.cleanup_paths)
 
     def test_pdf_upload_creates_content_record(self):
-        """Test that uploading a PDF creates a content record."""
+        """
+        Test that uploading a PDF creates a content record.
+        """
         # Upload PDF without pipeline
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
 
@@ -69,7 +78,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.assertGreater(content["char_count"], 0)
 
     def test_pdf_upload_creates_summary(self):
-        """Test that uploading a PDF generates a summary."""
+        """
+        Test that uploading a PDF generates a summary.
+        """
         # Upload PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -92,7 +103,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.assertIn(summary["summary_type"], ["tfidf", "textrank", "combined"])
 
     def test_pdf_summary_contains_keywords(self):
-        """Test that PDF summary contains TF-IDF keywords."""
+        """
+        Test that PDF summary contains TF-IDF keywords.
+        """
         # Upload PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -114,7 +127,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
             self.assertLessEqual(score, 1.0)
 
     def test_pdf_summary_contains_sentences(self):
-        """Test that PDF summary contains TextRank sentences."""
+        """
+        Test that PDF summary contains TextRank sentences.
+        """
         # Upload PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -134,7 +149,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
             self.assertGreater(len(sentence), 10, f"Sentence too short: {sentence}")
 
     def test_pdf_creates_document_record(self):
-        """Test that PDF upload creates a document record."""
+        """
+        Test that PDF upload creates a document record.
+        """
         # Upload PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
 
@@ -156,7 +173,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.assertIn(first_chunk["extraction_method"], ["pdfplumber", "pypdf", "pypdf2", "ocr"])
 
     def test_multiple_pdf_uploads_create_unique_summaries(self):
-        """Test that multiple uploads handle deduplication correctly."""
+        """
+        Test that multiple uploads handle deduplication correctly.
+        """
         # Upload same PDF twice
         result1 = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         result2 = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
@@ -174,7 +193,9 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         self.assertIsNotNone(summary1)
 
     def test_pdf_summary_matches_content(self):
-        """Test that summary is relevant to PDF content."""
+        """
+        Test that summary is relevant to PDF content.
+        """
         # Upload a contract PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")

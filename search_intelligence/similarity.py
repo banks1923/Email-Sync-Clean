@@ -1,8 +1,7 @@
-"""
-Document Similarity and Clustering Module
+"""Document Similarity and Clustering Module.
 
-Provides document similarity analysis and clustering capabilities
-using Legal BERT embeddings and DBSCAN clustering.
+Provides document similarity analysis and clustering capabilities using
+Legal BERT embeddings and DBSCAN clustering.
 """
 
 from collections import defaultdict
@@ -21,10 +20,14 @@ from utilities.vector_store import get_vector_store
 
 
 class DocumentSimilarityAnalyzer:
-    """Analyze document similarity using embeddings."""
+    """
+    Analyze document similarity using embeddings.
+    """
 
     def __init__(self, collection: str = "emails"):
-        """Initialize similarity analyzer."""
+        """
+        Initialize similarity analyzer.
+        """
         self.logger = logger
         self.collection = collection
         self.embedding_service = get_embedding_service()
@@ -34,8 +37,7 @@ class DocumentSimilarityAnalyzer:
     def find_similar_documents(
         self, doc_id: str, limit: int = 10, threshold: float = 0.7
     ) -> list[dict]:
-        """
-        Find documents similar to a given document.
+        """Find documents similar to a given document.
 
         Args:
             doc_id: Source document ID
@@ -75,8 +77,7 @@ class DocumentSimilarityAnalyzer:
             return []
 
     def compute_pairwise_similarity(self, doc_ids: list[str]) -> np.ndarray:
-        """
-        Compute pairwise similarity matrix for documents.
+        """Compute pairwise similarity matrix for documents.
 
         Args:
             doc_ids: List of document IDs
@@ -103,7 +104,9 @@ class DocumentSimilarityAnalyzer:
         return similarity_matrix, valid_ids
 
     def _get_document_vector(self, doc_id: str) -> np.ndarray | None:
-        """Get or generate document vector."""
+        """
+        Get or generate document vector.
+        """
         try:
             # Try to get from vector store
             result = self.vector_store.get(doc_id)
@@ -135,7 +138,9 @@ class DocumentSimilarityAnalyzer:
             return None
 
     def _get_document_content(self, doc_id: str) -> dict | None:
-        """Get document content from database."""
+        """
+        Get document content from database.
+        """
         # Try content table first
         result = self.db.fetch_one("SELECT * FROM content_unified WHERE id = ?", (doc_id,))
         if result:
@@ -157,7 +162,9 @@ class DocumentSimilarityAnalyzer:
         return result
 
     def _extract_text(self, doc: dict) -> str:
-        """Extract text from document."""
+        """
+        Extract text from document.
+        """
         return (
             doc.get("body", "")
             or doc.get("text_content", "")
@@ -167,10 +174,14 @@ class DocumentSimilarityAnalyzer:
 
 
 class DocumentClusterer:
-    """Cluster documents using DBSCAN with similarity threshold."""
+    """
+    Cluster documents using DBSCAN with similarity threshold.
+    """
 
     def __init__(self, similarity_analyzer: DocumentSimilarityAnalyzer = None):
-        """Initialize clusterer."""
+        """
+        Initialize clusterer.
+        """
         self.logger = logger
         self.analyzer = similarity_analyzer or DocumentSimilarityAnalyzer()
         self.db = SimpleDB()
@@ -178,8 +189,7 @@ class DocumentClusterer:
     def cluster_documents(
         self, doc_ids: list[str], threshold: float = 0.7, min_samples: int = 2
     ) -> dict[int, list[str]]:
-        """
-        Cluster documents using DBSCAN.
+        """Cluster documents using DBSCAN.
 
         Args:
             doc_ids: List of document IDs to cluster
@@ -233,8 +243,7 @@ class DocumentClusterer:
     def find_content_clusters(
         self, content_type: str = None, limit: int = 100, threshold: float = 0.7
     ) -> list[dict]:
-        """
-        Find clusters in content of specific type.
+        """Find clusters in content of specific type.
 
         Args:
             content_type: Type of content (email, document, etc)
@@ -285,8 +294,7 @@ class DocumentClusterer:
             return []
 
     def store_cluster_relationships(self, clusters: dict[int, list[str]], ttl_seconds: int = 86400):
-        """
-        Store cluster relationships in database.
+        """Store cluster relationships in database.
 
         Args:
             clusters: Dict mapping cluster ID to document IDs
@@ -322,8 +330,7 @@ def cluster_similar_content(
     min_samples: int = 2,
     store_relationships: bool = True,
 ) -> list[dict]:
-    """
-    Convenience function to cluster similar content.
+    """Convenience function to cluster similar content.
 
     Args:
         threshold: Similarity threshold (0-1)

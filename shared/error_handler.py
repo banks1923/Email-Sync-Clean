@@ -1,5 +1,5 @@
-"""
-Simple, centralized error handling for Email Sync System.
+"""Simple, centralized error handling for Email Sync System.
+
 No complex hierarchies - just practical error handling that works.
 """
 
@@ -22,8 +22,7 @@ class ErrorHandler:
         category: str = "service_error",
         logger_instance: Any = None,
     ) -> dict[str, Any]:
-        """
-        Handle an error and return standard response format.
+        """Handle an error and return standard response format.
 
         Args:
             error: The exception that occurred
@@ -51,8 +50,7 @@ class ErrorHandler:
 
     @staticmethod
     def format_user_message(error_response: dict[str, Any]) -> str:
-        """
-        Convert error response to user-friendly message.
+        """Convert error response to user-friendly message.
 
         Args:
             error_response: Standard error response dict
@@ -89,8 +87,7 @@ class ErrorHandler:
 
     @staticmethod
     def get_recovery_suggestion(error_response: dict[str, Any]) -> str | None:
-        """
-        Suggest how to fix the error.
+        """Suggest how to fix the error.
 
         Args:
             error_response: Standard error response dict

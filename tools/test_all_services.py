@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Comprehensive service health check and testing script.
+"""Comprehensive service health check and testing script.
+
 Tests all major services in the Email Sync system.
 """
 
@@ -15,7 +15,9 @@ logger.add(sys.stderr, level="WARNING")
 
 
 def test_timeline_service():
-    """Test timeline service functionality."""
+    """
+    Test timeline service functionality.
+    """
     print("\n=== Testing Timeline Service ===")
     try:
         from utilities.timeline import TimelineService
@@ -37,7 +39,9 @@ def test_timeline_service():
 
 
 def test_entity_service():
-    """Test entity extraction service."""
+    """
+    Test entity extraction service.
+    """
     print("\n=== Testing Entity Service ===")
     try:
         from entity.main import EntityService
@@ -59,7 +63,9 @@ def test_entity_service():
 
 
 def test_summarization_service():
-    """Test summarization service."""
+    """
+    Test summarization service.
+    """
     print("\n=== Testing Summarization Service ===")
     try:
         from summarization import get_document_summarizer
@@ -79,7 +85,9 @@ def test_summarization_service():
 
 
 def test_search_intelligence():
-    """Test search intelligence service."""
+    """
+    Test search intelligence service.
+    """
     print("\n=== Testing Search Intelligence ===")
     try:
         from search_intelligence import get_search_intelligence_service
@@ -101,7 +109,9 @@ def test_search_intelligence():
 
 
 def test_vector_store():
-    """Test vector store functionality."""
+    """
+    Test vector store functionality.
+    """
     print("\n=== Testing Vector Store ===")
     try:
         from utilities.vector_store import get_vector_store
@@ -122,7 +132,9 @@ def test_vector_store():
 
 
 def test_embeddings():
-    """Test embedding service."""
+    """
+    Test embedding service.
+    """
     print("\n=== Testing Embedding Service ===")
     try:
         from utilities.embeddings import get_embedding_service
@@ -141,7 +153,9 @@ def test_embeddings():
 
 
 def test_database():
-    """Test database connectivity."""
+    """
+    Test database connectivity.
+    """
     print("\n=== Testing Database ===")
     try:
         from shared.simple_db import SimpleDB
@@ -165,7 +179,9 @@ def test_database():
 
 
 def main():
-    """Run all service tests."""
+    """
+    Run all service tests.
+    """
     print("=" * 50)
     print("Email Sync System - Service Health Check")
     print(f"Timestamp: {datetime.now().isoformat()}")

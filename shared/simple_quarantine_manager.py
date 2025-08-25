@@ -9,27 +9,29 @@ import json
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
 
 class SimpleQuarantineManager:
-    """Simple quarantine management. Copy files, log errors, enable recovery."""
+    """Simple quarantine management.
+
+    Copy files, log errors, enable recovery.
+    """
 
     def __init__(self, quarantine_dir: str = "data/system_data/quarantine"):
         self.quarantine_dir = Path(quarantine_dir)
         self.quarantine_dir.mkdir(parents=True, exist_ok=True)
 
     def quarantine_file(self, file_path: Path, error_msg: str, metadata: dict = None) -> dict[str, Any]:
-        """
-        Quarantine a problematic file with error information.
-        
+        """Quarantine a problematic file with error information.
+
         Args:
             file_path: Path to file that failed processing
             error_msg: Error message explaining the failure
             metadata: Optional metadata about the failure
-            
+
         Returns:
             Quarantine result with paths and error info
         """
@@ -73,7 +75,9 @@ class SimpleQuarantineManager:
             }
 
     def list_quarantined_files(self) -> list[dict[str, Any]]:
-        """List all quarantined files with their error information."""
+        """
+        List all quarantined files with their error information.
+        """
         quarantined_files = []
         
         for error_file in self.quarantine_dir.glob("*.error.json"):
@@ -109,12 +113,11 @@ class SimpleQuarantineManager:
         return quarantined_files
 
     def retry_quarantined_file(self, quarantine_path: Path) -> dict[str, Any]:
-        """
-        Attempt to retry processing a quarantined file.
-        
+        """Attempt to retry processing a quarantined file.
+
         Args:
             quarantine_path: Path to quarantined file
-            
+
         Returns:
             Retry result information
         """
@@ -168,7 +171,9 @@ class SimpleQuarantineManager:
             }
 
     def get_quarantine_stats(self) -> dict[str, Any]:
-        """Get statistics about quarantined files."""
+        """
+        Get statistics about quarantined files.
+        """
         quarantined_files = self.list_quarantined_files()
         
         total_files = len(quarantined_files)
@@ -200,7 +205,9 @@ class SimpleQuarantineManager:
         }
 
     def cleanup_old_quarantine(self, days_old: int = 30) -> dict[str, Any]:
-        """Clean up quarantine files older than specified days."""
+        """
+        Clean up quarantine files older than specified days.
+        """
         cutoff_timestamp = datetime.now().timestamp() - (days_old * 24 * 60 * 60)
         
         cleaned_files = []
@@ -230,5 +237,7 @@ class SimpleQuarantineManager:
 
 
 def get_quarantine_manager() -> SimpleQuarantineManager:
-    """Get quarantine manager instance."""
+    """
+    Get quarantine manager instance.
+    """
     return SimpleQuarantineManager()

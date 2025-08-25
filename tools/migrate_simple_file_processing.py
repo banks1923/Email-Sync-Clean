@@ -16,7 +16,9 @@ from shared.simple_db import SimpleDB
 
 
 def cleanup_database_tables():
-    """Remove unused database tables from complex file management system."""
+    """
+    Remove unused database tables from complex file management system.
+    """
     logger.info("Starting database cleanup for simple file processing migration")
     
     db = SimpleDB()
@@ -61,7 +63,9 @@ def cleanup_database_tables():
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+    """
     cleanup_database_tables()
     print("✅ Database migration completed - complex file management tables removed")
 

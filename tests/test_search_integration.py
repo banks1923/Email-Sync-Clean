@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Test script for search system markdown compatibility"""
+"""
+Test script for search system markdown compatibility.
+"""
 
 import sys
 from pathlib import Path
@@ -8,7 +10,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 def test_search_intelligence():
-    """Test the search intelligence service with markdown support"""
+    """
+    Test the search intelligence service with markdown support.
+    """
     print("=" * 50)
     print("Testing Search Intelligence Markdown Integration")
     print("=" * 50)
@@ -68,7 +72,9 @@ def test_search_intelligence():
     return True
 
 def test_cli_integration():
-    """Test CLI integration"""
+    """
+    Test CLI integration.
+    """
     print("\n" + "=" * 50)
     print("Testing CLI Integration")
     print("=" * 50)

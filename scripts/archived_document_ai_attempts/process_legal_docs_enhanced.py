@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""
-Enhanced Document AI processor with comprehensive fixes for 95-100% ingestion success.
+"""Enhanced Document AI processor with comprehensive fixes for 95-100%
+ingestion success.
+
 Implements: pre-screening, PDF splitting, coverage metrics, stage->merge pattern, and operational guardrails.
 """
 
@@ -12,9 +13,7 @@ import time
 import sqlite3
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 
 from google.cloud import documentai_v1 as documentai
 from google.cloud import bigquery
@@ -88,11 +87,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProcessingState:
-    """Track document processing state for resume support."""
+    """
+    Track document processing state for resume support.
+    """
     doc_id: str
     filename: str
     status: str  # pending, processing, success, failed
-    chunks: List[str] = None
+    chunks: list[str] = None
     attempts: int = 0
     last_error: str = ""
     created_at: datetime = None
@@ -108,16 +109,22 @@ class ProcessingState:
 
 
 class StateManager:
-    """Manage processing state for resume support."""
+    """
+    Manage processing state for resume support.
+    """
     
     def __init__(self, db_path: Path = STATE_DB):
-        """Initialize state database."""
+        """
+        Initialize state database.
+        """
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
     
     def _init_db(self):
-        """Initialize state database."""
+        """
+        Initialize state database.
+        """
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS processing_state (
@@ -133,8 +140,10 @@ class StateManager:
             """)
             conn.commit()
     
-    def get_state(self, doc_id: str) -> Optional[ProcessingState]:
-        """Get processing state for a document."""
+    def get_state(self, doc_id: str) -> ProcessingState | None:
+        """
+        Get processing state for a document.
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
                 "SELECT * FROM processing_state WHERE doc_id = ?",
@@ -155,7 +164,9 @@ class StateManager:
         return None
     
     def update_state(self, state: ProcessingState):
-        """Update processing state."""
+        """
+        Update processing state.
+        """
         state.updated_at = datetime.utcnow()
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
@@ -174,8 +185,10 @@ class StateManager:
             ))
             conn.commit()
     
-    def get_pending_and_failed(self) -> List[ProcessingState]:
-        """Get documents that need processing."""
+    def get_pending_and_failed(self) -> list[ProcessingState]:
+        """
+        Get documents that need processing.
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
                 SELECT * FROM processing_state 
@@ -200,11 +213,15 @@ class StateManager:
 
 
 class PDFSplitter:
-    """Handle PDF splitting for large documents."""
+    """
+    Handle PDF splitting for large documents.
+    """
     
     @staticmethod
-    def get_pdf_info(path: Path) -> Tuple[int, float]:
-        """Get PDF page count and file size in MB."""
+    def get_pdf_info(path: Path) -> tuple[int, float]:
+        """
+        Get PDF page count and file size in MB.
+        """
         size_mb = path.stat().st_size / (1024 * 1024)
         try:
             reader = PdfReader(str(path))
@@ -216,12 +233,16 @@ class PDFSplitter:
     
     @staticmethod
     def calculate_hash(content: bytes) -> str:
-        """Calculate SHA256 hash of content."""
+        """
+        Calculate SHA256 hash of content.
+        """
         return hashlib.sha256(content).hexdigest()
     
     @classmethod
-    def split_pdf(cls, path: Path, chunk_size: int = CHUNK_SIZE) -> List[Path]:
-        """Split PDF into compliant chunks."""
+    def split_pdf(cls, path: Path, chunk_size: int = CHUNK_SIZE) -> list[Path]:
+        """
+        Split PDF into compliant chunks.
+        """
         CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
         
         try:
@@ -284,8 +305,10 @@ class PDFSplitter:
             return [path]  # Return original on error
     
     @classmethod
-    def route_pdf(cls, path: Path, imageless: bool = False) -> List[Path]:
-        """Route PDF based on size/page limits."""
+    def route_pdf(cls, path: Path, imageless: bool = False) -> list[Path]:
+        """
+        Route PDF based on size/page limits.
+        """
         pages, size_mb = cls.get_pdf_info(path)
         
         # The actual API limit is 15 pages in normal mode, not 30!
@@ -300,10 +323,14 @@ class PDFSplitter:
 
 
 class EnhancedDocumentAIProcessor:
-    """Enhanced Document AI processor with all production fixes."""
+    """
+    Enhanced Document AI processor with all production fixes.
+    """
     
     def __init__(self):
-        """Initialize processor with fixed IDs."""
+        """
+        Initialize processor with fixed IDs.
+        """
         
         # Validate processor IDs
         if not FORM_PROCESSOR_ID or not OCR_PROCESSOR_ID:
@@ -337,7 +364,9 @@ class EnhancedDocumentAIProcessor:
         logger.info("✅ Enhanced Document AI processor initialized")
     
     def _ensure_bigquery_tables(self):
-        """Create BigQuery dataset and tables with proper schema."""
+        """
+        Create BigQuery dataset and tables with proper schema.
+        """
         
         # Create dataset
         dataset = bigquery.Dataset(BQ_DATASET)
@@ -381,13 +410,17 @@ class EnhancedDocumentAIProcessor:
                 logger.error(f"Table creation error for {table_id}: {e}")
     
     def calculate_coverage(self, text: str, page_count: int) -> float:
-        """Calculate text coverage metric."""
+        """
+        Calculate text coverage metric.
+        """
         if page_count <= 0:
             return 0.0
         return len(text) / page_count
     
-    def choose_best_output(self, primary: Dict, fallback: Dict) -> Dict:
-        """Choose output based on coverage and quality."""
+    def choose_best_output(self, primary: dict, fallback: dict) -> dict:
+        """
+        Choose output based on coverage and quality.
+        """
         pages = primary.get('page_count', 1)
         
         primary_coverage = self.calculate_coverage(
@@ -413,8 +446,10 @@ class EnhancedDocumentAIProcessor:
         multiplier=2,
         deadline=300
     )
-    def process_document_chunk(self, file_path: Path, is_chunk: bool = False) -> Dict:
-        """Process a single document or chunk with comprehensive error handling."""
+    def process_document_chunk(self, file_path: Path, is_chunk: bool = False) -> dict:
+        """
+        Process a single document or chunk with comprehensive error handling.
+        """
         
         start_time = time.time()
         
@@ -601,7 +636,9 @@ class EnhancedDocumentAIProcessor:
         return results
     
     def _calculate_confidence(self, document) -> float:
-        """Calculate document confidence score."""
+        """
+        Calculate document confidence score.
+        """
         confidence_scores = []
         
         if document.pages:
@@ -613,7 +650,9 @@ class EnhancedDocumentAIProcessor:
         return sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.85
     
     def determine_processor_type(self, file_path: Path) -> str:
-        """Determine processor type from filename."""
+        """
+        Determine processor type from filename.
+        """
         filename_lower = file_path.name.lower()
         
         form_patterns = [
@@ -629,13 +668,17 @@ class EnhancedDocumentAIProcessor:
         return 'OCR'
     
     def _is_discovery_document(self, file_path: Path) -> bool:
-        """Check if document is a discovery document needing Contract Parser."""
+        """
+        Check if document is a discovery document needing Contract Parser.
+        """
         filename_lower = file_path.name.lower()
         discovery_patterns = ['discovery', 'rfa', 'rog', 'rfp', 'interrogator', 'request for']
         return any(pattern in filename_lower for pattern in discovery_patterns)
     
-    def choose_best_from_multiple(self, results: List[Dict]) -> Dict:
-        """Choose best result from multiple processors."""
+    def choose_best_from_multiple(self, results: list[dict]) -> dict:
+        """
+        Choose best result from multiple processors.
+        """
         if not results:
             return {}
         
@@ -659,8 +702,10 @@ class EnhancedDocumentAIProcessor:
         logger.info(f"Selected {best_result['processor']} with score {best_score:.3f}")
         return best_result
     
-    def _extract_entities(self, text: str) -> Dict:
-        """Extract legal entities from text with enhanced patterns."""
+    def _extract_entities(self, text: str) -> dict:
+        """
+        Extract legal entities from text with enhanced patterns.
+        """
         if not text:
             return {}
         
@@ -790,8 +835,10 @@ class EnhancedDocumentAIProcessor:
         
         return entities
     
-    def _classify_evidence(self, text: str, file_path: Path) -> Dict:
-        """Classify document evidence relevance with detailed scoring."""
+    def _classify_evidence(self, text: str, file_path: Path) -> dict:
+        """
+        Classify document evidence relevance with detailed scoring.
+        """
         if not text:
             return {}
         
@@ -910,8 +957,10 @@ class EnhancedDocumentAIProcessor:
         
         return evidence
     
-    def shape_bq_row(self, result: Dict) -> Dict:
-        """Shape result into BigQuery row with proper types."""
+    def shape_bq_row(self, result: dict) -> dict:
+        """
+        Shape result into BigQuery row with proper types.
+        """
         
         # Save full text to file
         full_text_path = FULL_TEXT_DIR / f"{result['document_id']}.txt"
@@ -964,7 +1013,9 @@ class EnhancedDocumentAIProcessor:
         }
     
     def _determine_doc_type(self, filename: str) -> str:
-        """Determine document type from filename."""
+        """
+        Determine document type from filename.
+        """
         filename_lower = filename.lower()
         
         if 'notice' in filename_lower:
@@ -985,7 +1036,9 @@ class EnhancedDocumentAIProcessor:
             return 'other'
     
     def flush_batch_to_bq(self, force=False):
-        """Flush batch buffer to BigQuery using stage->merge pattern."""
+        """
+        Flush batch buffer to BigQuery using stage->merge pattern.
+        """
         
         # Only flush if we have a full batch or forced
         if not force and len(self.batch_buffer) < BATCH_SIZE:
@@ -1048,8 +1101,10 @@ class EnhancedDocumentAIProcessor:
         except Exception as e:
             logger.error(f"BigQuery flush error: {e}")
     
-    def process_document_with_splitting(self, file_path: Path) -> List[Dict]:
-        """Process document with automatic splitting if needed."""
+    def process_document_with_splitting(self, file_path: Path) -> list[dict]:
+        """
+        Process document with automatic splitting if needed.
+        """
         
         # Check if we need to split
         chunks = PDFSplitter.route_pdf(file_path)
@@ -1082,7 +1137,9 @@ class EnhancedDocumentAIProcessor:
         return results
     
     def process_all_documents(self):
-        """Process all documents with resume support and proper batching."""
+        """
+        Process all documents with resume support and proper batching.
+        """
         
         # Find all PDFs across all subdirectories, excluding processed and chunks
         pdf_files = []
@@ -1176,8 +1233,10 @@ class EnhancedDocumentAIProcessor:
         # Generate summary
         self._generate_summary(successful, failed, pdf_files)
     
-    def _generate_summary(self, successful: List[Dict], failed: List[str], all_files: List[Path]):
-        """Generate processing summary with detailed metrics."""
+    def _generate_summary(self, successful: list[dict], failed: list[str], all_files: list[Path]):
+        """
+        Generate processing summary with detailed metrics.
+        """
         
         print("\n" + "=" * 60)
         print("📊 PROCESSING SUMMARY")
@@ -1238,7 +1297,9 @@ class EnhancedDocumentAIProcessor:
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+    """
     print("🚀 ENHANCED DOCUMENT AI PROCESSOR")
     print("=" * 60)
     print(f"Configuration:")

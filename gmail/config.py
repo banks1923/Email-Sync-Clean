@@ -1,8 +1,12 @@
 class GmailConfig:
-    """Configuration for Gmail service with sender filters and API settings."""
+    """
+    Configuration for Gmail service with sender filters and API settings.
+    """
 
     def __init__(self) -> None:
-        """Initialize Gmail configuration with preferred senders and limits."""
+        """
+        Initialize Gmail configuration with preferred senders and limits.
+        """
         self.preferred_senders = [
             "jenbarreda@yahoo.com",
             "518stoneman@gmail.com",
@@ -37,7 +41,6 @@ class GmailConfig:
         date_filter = "after:2022/12/31"
         
         # Add exclusions for specific dates
-        date_exclusions = []
         for excluded_date in self.excluded_dates:
             # Gmail doesn't support direct date exclusion, so we use before/after
             # We'll handle this in the processing stage instead

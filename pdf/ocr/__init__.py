@@ -1,4 +1,6 @@
-"""OCR module for PDF processing."""
+"""
+OCR module for PDF processing.
+"""
 
 from .loader import PDFLoader
 from .ocr_coordinator import OCRCoordinator

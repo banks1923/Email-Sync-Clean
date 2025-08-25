@@ -1,5 +1,5 @@
-"""
-File operations utility for document processing.
+"""File operations utility for document processing.
+
 Encapsulates file system operations for better testability.
 """
 
@@ -10,16 +10,17 @@ from loguru import logger
 
 
 class FileOperations:
-    """Encapsulated file operations for dependency injection."""
+    """
+    Encapsulated file operations for dependency injection.
+    """
     
     def move_file(self, source: Path, destination: Path) -> bool:
-        """
-        Move file from source to destination.
-        
+        """Move file from source to destination.
+
         Args:
             source: Source file path
             destination: Destination file path
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -34,13 +35,12 @@ class FileOperations:
             return False
     
     def copy_file(self, source: Path, destination: Path) -> bool:
-        """
-        Copy file from source to destination.
-        
+        """Copy file from source to destination.
+
         Args:
             source: Source file path
             destination: Destination file path
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -55,12 +55,11 @@ class FileOperations:
             return False
     
     def delete_file(self, path: Path) -> bool:
-        """
-        Delete file at specified path.
-        
+        """Delete file at specified path.
+
         Args:
             path: File path to delete
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -74,12 +73,11 @@ class FileOperations:
             return False
     
     def create_directory(self, path: Path) -> bool:
-        """
-        Create directory with all parent directories.
-        
+        """Create directory with all parent directories.
+
         Args:
             path: Directory path to create
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -92,12 +90,11 @@ class FileOperations:
             return False
     
     def sanitize_path(self, path_str: str) -> str:
-        """
-        Sanitize path string for cross-platform compatibility.
-        
+        """Sanitize path string for cross-platform compatibility.
+
         Args:
             path_str: Raw path string
-            
+
         Returns:
             Sanitized path string
         """
@@ -118,15 +115,21 @@ class FileOperations:
         return sanitized
     
     def file_exists(self, path: Path) -> bool:
-        """Check if file exists."""
+        """
+        Check if file exists.
+        """
         return path.exists() and path.is_file()
     
     def directory_exists(self, path: Path) -> bool:
-        """Check if directory exists."""
+        """
+        Check if directory exists.
+        """
         return path.exists() and path.is_dir()
     
     def get_file_size(self, path: Path) -> int | None:
-        """Get file size in bytes."""
+        """
+        Get file size in bytes.
+        """
         try:
             return path.stat().st_size if path.exists() else None
         except Exception as e:

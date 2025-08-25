@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Test Google Document AI authentication and connection."""
+"""
+Test Google Document AI authentication and connection.
+"""
 
 from google.cloud import documentai_v1 as documentai
 import os
 
 def test_document_ai_auth():
-    """Test Document AI authentication with service account credentials."""
+    """
+    Test Document AI authentication with service account credentials.
+    """
     
     # Use service account
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     
     # Install required package if not present
     try:
-        import google.cloud.documentai
+        pass
     except ImportError:
         print("Installing google-cloud-documentai...")
         os.system("pip install google-cloud-documentai")

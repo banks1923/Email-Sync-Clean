@@ -1,5 +1,4 @@
-"""
-Comprehensive tests for SimpleDB following CoverUp methodology.
+"""Comprehensive tests for SimpleDB following CoverUp methodology.
 
 This test file aims for 80%+ coverage of SimpleDB functionality by systematically
 testing all public methods, error conditions, and edge cases.
@@ -28,10 +27,14 @@ from shared.simple_db import SimpleDB
 
 @pytest.mark.unit
 class TestSimpleDBInitialization:
-    """Test SimpleDB initialization and schema creation."""
+    """
+    Test SimpleDB initialization and schema creation.
+    """
     
     def test_init_default_database(self, temp_db):
-        """Test initialization with default database path behavior."""
+        """
+        Test initialization with default database path behavior.
+        """
         # Test that default path is set correctly
         db = SimpleDB(db_path=temp_db)  # Use temp_db to avoid contaminating main database
         # Verify it has a database path
@@ -44,13 +47,17 @@ class TestSimpleDBInitialization:
         assert default_db.db_path == "emails.db"
         
     def test_init_custom_database(self, temp_db):
-        """Test initialization with custom database path."""
+        """
+        Test initialization with custom database path.
+        """
         db = SimpleDB(db_path=temp_db)
         assert db.db_path == temp_db
         assert os.path.exists(temp_db)
         
     def test_schema_creation(self, temp_db):
-        """Test that all required tables are created."""
+        """
+        Test that all required tables are created.
+        """
         db = SimpleDB(db_path=temp_db)
         
         # Create the content table (SimpleDB doesn't auto-create this)
@@ -93,7 +100,9 @@ class TestSimpleDBInitialization:
             assert cursor.fetchone() is not None
 
     def test_init_with_existing_database(self, temp_db):
-        """Test initialization with existing database preserves data."""
+        """
+        Test initialization with existing database preserves data.
+        """
         # Create first instance and add data
         db1 = SimpleDB(db_path=temp_db)
         # Create the content table first
@@ -122,7 +131,9 @@ class TestSimpleDBInitialization:
         assert content["title"] == "Test"
 
     def test_init_with_invalid_path(self):
-        """Test initialization with invalid database path."""
+        """
+        Test initialization with invalid database path.
+        """
         invalid_path = "/invalid/path/test.db"
         # SimpleDB constructor doesn't validate paths, so test database operations instead
         db = SimpleDB(db_path=invalid_path)
@@ -133,10 +144,14 @@ class TestSimpleDBInitialization:
 
 @pytest.mark.unit
 class TestContentOperations:
-    """Test basic content CRUD operations."""
+    """
+    Test basic content CRUD operations.
+    """
     
     def test_add_content_basic(self, simple_db):
-        """Test adding basic content."""
+        """
+        Test adding basic content.
+        """
         content_id = simple_db.add_content(
             content_type="email",
             title="Test Email",
@@ -148,7 +163,9 @@ class TestContentOperations:
         assert len(content_id) > 0
         
     def test_add_content_all_fields(self, simple_db):
-        """Test adding content with all optional fields."""
+        """
+        Test adding content with all optional fields.
+        """
         metadata = {
             "sender": "test@example.com",
             "date": "2024-01-01",
@@ -171,7 +188,9 @@ class TestContentOperations:
         assert content["char_count"] == 18  # "Legal content here" = 18 chars
 
     def test_add_content_empty_values(self, simple_db):
-        """Test adding content with empty/null values."""
+        """
+        Test adding content with empty/null values.
+        """
         content_id = simple_db.add_content(
             content_type="",
             title="",
@@ -185,7 +204,9 @@ class TestContentOperations:
         assert content["content"] == ""
 
     def test_get_content_existing(self, populated_db):
-        """Test retrieving existing content."""
+        """
+        Test retrieving existing content.
+        """
         # Get content added by populated_db fixture
         with sqlite3.connect(populated_db.db_path) as conn:
             cursor = conn.cursor()
@@ -199,12 +220,16 @@ class TestContentOperations:
         assert "content" in content
 
     def test_get_content_nonexistent(self, simple_db):
-        """Test retrieving non-existent content."""
+        """
+        Test retrieving non-existent content.
+        """
         content = simple_db.get_content("nonexistent_id")
         assert content is None
 
     def test_get_content_invalid_id(self, simple_db):
-        """Test retrieving content with invalid ID format."""
+        """
+        Test retrieving content with invalid ID format.
+        """
         content = simple_db.get_content("")
         assert content is None
         
@@ -212,7 +237,9 @@ class TestContentOperations:
         assert content is None
 
     def test_update_content(self, simple_db):
-        """Test updating existing content."""
+        """
+        Test updating existing content.
+        """
         # Add initial content
         content_id = simple_db.add_content("email", "Original", "Original content", {})
         
@@ -232,12 +259,16 @@ class TestContentOperations:
         assert content["content"] == "Updated content"
 
     def test_update_nonexistent_content(self, simple_db):
-        """Test updating non-existent content."""
+        """
+        Test updating non-existent content.
+        """
         success = simple_db.update_content("nonexistent", title="Test")
         assert success is False
 
     def test_delete_content(self, simple_db):
-        """Test deleting content."""
+        """
+        Test deleting content.
+        """
         # Add content
         content_id = simple_db.add_content("email", "To Delete", "Content", {})
         
@@ -252,17 +283,23 @@ class TestContentOperations:
         assert simple_db.get_content(content_id) is None
 
     def test_delete_nonexistent_content(self, simple_db):
-        """Test deleting non-existent content."""
+        """
+        Test deleting non-existent content.
+        """
         success = simple_db.delete_content("nonexistent")
         assert success is False
 
 
 @pytest.mark.unit
 class TestSearchFunctionality:
-    """Test search operations and filtering."""
+    """
+    Test search operations and filtering.
+    """
     
     def test_search_content_basic(self, populated_db):
-        """Test basic content search."""
+        """
+        Test basic content search.
+        """
         results = populated_db.search_content("legal", limit=10)
         assert isinstance(results, list)
         assert len(results) > 0
@@ -274,13 +311,17 @@ class TestSearchFunctionality:
             assert "content" in result
 
     def test_search_content_no_results(self, populated_db):
-        """Test search with no matching results."""
+        """
+        Test search with no matching results.
+        """
         results = populated_db.search_content("nonexistent_term", limit=10)
         assert isinstance(results, list)
         assert len(results) == 0
 
     def test_search_content_with_filters(self, simple_db):
-        """Test search with various filters."""
+        """
+        Test search with various filters.
+        """
         # Add test content with different types and dates
         simple_db.add_content("email", "Email 1", "Content", 
                             {"date": "2024-01-01", "tags": ["work"]})
@@ -298,7 +339,9 @@ class TestSearchFunctionality:
         # Should only return PDF from Jan 15
 
     def test_search_content_limit(self, simple_db):
-        """Test search result limiting."""
+        """
+        Test search result limiting.
+        """
         # Add multiple items
         for i in range(5):
             simple_db.add_content("email", f"Email {i}", "test content", {})
@@ -307,7 +350,9 @@ class TestSearchFunctionality:
         assert len(results) <= 3
 
     def test_search_content_empty_query(self, populated_db):
-        """Test search with empty query."""
+        """
+        Test search with empty query.
+        """
         results = populated_db.search_content("", limit=10)
         assert isinstance(results, list)
         # Should return all content when query is empty
@@ -324,10 +369,14 @@ class TestSearchFunctionality:
 
 @pytest.mark.unit
 class TestSummaryOperations:
-    """Test document summary operations."""
+    """
+    Test document summary operations.
+    """
     
     def test_add_document_summary(self, simple_db):
-        """Test adding document summary."""
+        """
+        Test adding document summary.
+        """
         content_id = simple_db.add_content("pdf", "Test Doc", "Content", {})
         
         summary_id = simple_db.add_document_summary(
@@ -348,7 +397,9 @@ class TestSummaryOperations:
             assert row is not None
 
     def test_get_document_summary(self, simple_db):
-        """Test retrieving document summary."""
+        """
+        Test retrieving document summary.
+        """
         content_id = simple_db.add_content("pdf", "Test Doc", "Content", {})
         summary_id = simple_db.add_document_summary(
             document_id=content_id,
@@ -362,7 +413,9 @@ class TestSummaryOperations:
         assert summary["summary_type"] == "combined"
 
     def test_get_summaries_for_document(self, simple_db):
-        """Test getting all summaries for a document."""
+        """
+        Test getting all summaries for a document.
+        """
         content_id = simple_db.add_content("pdf", "Test Doc", "Content", {})
         
         # Add multiple summaries
@@ -377,10 +430,14 @@ class TestSummaryOperations:
 
 @pytest.mark.unit
 class TestIntelligenceOperations:
-    """Test document intelligence operations."""
+    """
+    Test document intelligence operations.
+    """
     
     def test_add_document_intelligence(self, simple_db):
-        """Test adding document intelligence data."""
+        """
+        Test adding document intelligence data.
+        """
         content_id = simple_db.add_content("email", "Test Email", "Content", {})
         
         intel_id = simple_db.add_document_intelligence(
@@ -393,7 +450,9 @@ class TestIntelligenceOperations:
         assert intel_id is not None
 
     def test_get_document_intelligence(self, simple_db):
-        """Test retrieving document intelligence."""
+        """
+        Test retrieving document intelligence.
+        """
         content_id = simple_db.add_content("pdf", "Legal Doc", "Content", {})
         intel_id = simple_db.add_document_intelligence(
             content_id, "sentiment", {"sentiment": "positive"}, 0.9
@@ -405,7 +464,9 @@ class TestIntelligenceOperations:
         assert intelligence["confidence_score"] == 0.9
 
     def test_get_intelligence_for_document(self, simple_db):
-        """Test getting all intelligence for a document."""
+        """
+        Test getting all intelligence for a document.
+        """
         content_id = simple_db.add_content("pdf", "Test Doc", "Content", {})
         
         # Add multiple intelligence entries
@@ -418,10 +479,14 @@ class TestIntelligenceOperations:
 
 @pytest.mark.unit
 class TestBatchOperations:
-    """Test batch processing operations."""
+    """
+    Test batch processing operations.
+    """
     
     def test_batch_insert_basic(self, simple_db):
-        """Test basic batch insert functionality."""
+        """
+        Test basic batch insert functionality.
+        """
         table_name = "content"
         columns = ["content_id", "content_type", "title", "content"]
         data_list = [
@@ -438,7 +503,9 @@ class TestBatchOperations:
         assert "time_seconds" in stats
 
     def test_batch_insert_with_duplicates(self, simple_db):
-        """Test batch insert with duplicate handling."""
+        """
+        Test batch insert with duplicate handling.
+        """
         # First insert
         table_name = "content"
         columns = ["content_id", "content_type", "title", "content"]
@@ -452,7 +519,9 @@ class TestBatchOperations:
         assert stats2["ignored"] == 1
 
     def test_batch_insert_large_dataset(self, simple_db):
-        """Test batch insert with large dataset."""
+        """
+        Test batch insert with large dataset.
+        """
         table_name = "content"
         columns = ["content_id", "content_type", "title", "content"]
         
@@ -467,7 +536,9 @@ class TestBatchOperations:
         assert stats["time_seconds"] > 0
 
     def test_batch_add_content(self, simple_db):
-        """Test batch content addition."""
+        """
+        Test batch content addition.
+        """
         content_list = [
             {"content_type": "email", "title": "Email 1", "content": "Content 1"},
             {"content_type": "pdf", "title": "PDF 1", "content": "Content 2"},
@@ -483,11 +554,15 @@ class TestBatchOperations:
 
 @pytest.mark.unit
 class TestErrorHandling:
-    """Test error conditions and edge cases."""
+    """
+    Test error conditions and edge cases.
+    """
     
     @pytest.mark.skip(reason="SimpleDB doesn't connect on initialization - lazy connection")
     def test_database_connection_error(self):
-        """Test handling of database connection errors."""
+        """
+        Test handling of database connection errors.
+        """
         # Try to use invalid database path
         with patch('sqlite3.connect') as mock_connect:
             mock_connect.side_effect = sqlite3.Error("Connection failed")
@@ -496,7 +571,9 @@ class TestErrorHandling:
                 SimpleDB(db_path="invalid.db")
 
     def test_sql_injection_protection(self, simple_db):
-        """Test protection against SQL injection."""
+        """
+        Test protection against SQL injection.
+        """
         malicious_query = "'; DROP TABLE content; --"
         
         # This should not cause any damage
@@ -510,7 +587,9 @@ class TestErrorHandling:
             assert cursor.fetchone() is not None
 
     def test_invalid_json_metadata(self, simple_db):
-        """Test handling of invalid JSON in metadata."""
+        """
+        Test handling of invalid JSON in metadata.
+        """
         # This should be handled gracefully
         simple_db.add_content(
             "email", "Test", "Content", 
@@ -519,7 +598,9 @@ class TestErrorHandling:
         # Should still work, metadata might be stored as string or handled gracefully
 
     def test_unicode_content(self, simple_db):
-        """Test handling of Unicode content."""
+        """
+        Test handling of Unicode content.
+        """
         content_id = simple_db.add_content(
             "email",
             "Unicode Test 📧",
@@ -532,7 +613,9 @@ class TestErrorHandling:
         assert "🚀" in content["content"]
 
     def test_very_large_content(self, simple_db):
-        """Test handling of very large content."""
+        """
+        Test handling of very large content.
+        """
         large_content = "x" * 1000000  # 1MB of content
         
         content_id = simple_db.add_content(
@@ -543,7 +626,9 @@ class TestErrorHandling:
         assert len(retrieved["content"]) == 1000000
 
     def test_concurrent_access(self, simple_db):
-        """Test concurrent database access."""
+        """
+        Test concurrent database access.
+        """
         import threading
         
         results = []
@@ -576,10 +661,14 @@ class TestErrorHandling:
 
 @pytest.mark.unit
 class TestStatisticsAndReporting:
-    """Test statistics and reporting functionality."""
+    """
+    Test statistics and reporting functionality.
+    """
     
     def test_get_content_stats_empty(self, simple_db):
-        """Test statistics on empty database."""
+        """
+        Test statistics on empty database.
+        """
         stats = simple_db.get_content_stats()
         
         assert stats["total_content"] == 0
@@ -587,7 +676,9 @@ class TestStatisticsAndReporting:
         assert stats["total_characters"] == 0
 
     def test_get_content_stats_populated(self, simple_db):
-        """Test statistics on populated database."""
+        """
+        Test statistics on populated database.
+        """
         # Add test content
         simple_db.add_content("email", "Email 1", "Content 1", {})
         simple_db.add_content("email", "Email 2", "Content 2", {})
@@ -601,7 +692,9 @@ class TestStatisticsAndReporting:
         assert stats["total_characters"] > 0
 
     def test_database_size_reporting(self, simple_db):
-        """Test database size reporting."""
+        """
+        Test database size reporting.
+        """
         # Add some content
         for i in range(10):
             simple_db.add_content("email", f"Email {i}", "x" * 1000, {})
@@ -611,11 +704,15 @@ class TestStatisticsAndReporting:
 
 
 class TestPerformance:
-    """Test performance characteristics."""
+    """
+    Test performance characteristics.
+    """
     
     @pytest.mark.slow
     def test_large_batch_performance(self, simple_db):
-        """Test performance with large batch operations."""
+        """
+        Test performance with large batch operations.
+        """
         import time
 
         # Generate large dataset
@@ -634,7 +731,9 @@ class TestPerformance:
 
     @pytest.mark.slow
     def test_search_performance(self, simple_db):
-        """Test search performance with large dataset."""
+        """
+        Test search performance with large dataset.
+        """
         import time
 
         # Add test data
@@ -657,7 +756,9 @@ class TestPerformance:
 # Property-based testing with Hypothesis
 @pytest.mark.skip(reason="Hypothesis doesn't support function-scoped fixtures")
 class TestPropertyBased:
-    """Property-based tests using Hypothesis."""
+    """
+    Property-based tests using Hypothesis.
+    """
     
     @given(
         content_type=st.text(min_size=1, max_size=50),

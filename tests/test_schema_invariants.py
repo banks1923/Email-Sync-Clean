@@ -1,6 +1,5 @@
 """
-Schema Invariant Tests
-Pins critical system behaviors to prevent regressions.
+Schema Invariant Tests Pins critical system behaviors to prevent regressions.
 """
 
 import os
@@ -14,10 +13,14 @@ from utilities.vector_store import get_vector_store
 
 
 class TestSchemaInvariants(unittest.TestCase):
-    """Test schema invariants and critical system behaviors."""
+    """
+    Test schema invariants and critical system behaviors.
+    """
 
     def test_sql_no_content_id_strings(self):
-        """Ensure no content_id references exist in SQL strings."""
+        """
+        Ensure no content_id references exist in SQL strings.
+        """
         # Scan codebase for prohibited content_id usage in SQL
         violations = []
         
@@ -67,7 +70,9 @@ class TestSchemaInvariants(unittest.TestCase):
                         "\\n".join(violations))
 
     def test_upsert_idempotent_business_key(self):
-        """Test that UPSERT operations with same business key return same ID."""
+        """
+        Test that UPSERT operations with same business key return same ID.
+        """
         # Use main database but with test prefix to avoid conflicts
         db = SimpleDB()
         
@@ -112,7 +117,9 @@ class TestSchemaInvariants(unittest.TestCase):
                 pass
 
     def test_qdrant_id_consistency(self):
-        """Test that Qdrant point IDs match content table IDs."""
+        """
+        Test that Qdrant point IDs match content table IDs.
+        """
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
             db_path = tmp_file.name
         
@@ -155,7 +162,9 @@ class TestSchemaInvariants(unittest.TestCase):
                 pass
 
     def test_fk_integrity(self):
-        """Test that database has no foreign key constraint violations."""
+        """
+        Test that database has no foreign key constraint violations.
+        """
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
             db_path = tmp_file.name
         
@@ -177,7 +186,9 @@ class TestSchemaInvariants(unittest.TestCase):
             os.unlink(db_path)
 
     def test_business_key_constraint_enforced(self):
-        """Test that business key uniqueness is enforced."""
+        """
+        Test that business key uniqueness is enforced.
+        """
         db = SimpleDB()
         
         # Clean up any existing test data first
@@ -211,7 +222,9 @@ class TestSchemaInvariants(unittest.TestCase):
                 pass
 
     def test_deterministic_uuid_namespace(self):
-        """Test that UUID generation uses consistent namespace."""
+        """
+        Test that UUID generation uses consistent namespace.
+        """
         import uuid
 
         # Expected namespace from business key implementation

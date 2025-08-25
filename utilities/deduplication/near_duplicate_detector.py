@@ -1,6 +1,6 @@
 """
-Near-duplicate detection using MinHash and LSH
-Finds similar content even with minor variations
+Near-duplicate detection using MinHash and LSH Finds similar content even with
+minor variations.
 """
 
 import hashlib
@@ -12,12 +12,13 @@ from loguru import logger
 
 
 class MinHasher:
-    """MinHash implementation for similarity detection"""
+    """
+    MinHash implementation for similarity detection.
+    """
     
     def __init__(self, num_perm: int = 128, seed: int = 42):
-        """
-        Initialize MinHasher
-        
+        """Initialize MinHasher.
+
         Args:
             num_perm: Number of permutation functions (higher = more accurate but slower)
             seed: Random seed for reproducibility
@@ -30,7 +31,9 @@ class MinHasher:
         self.permutations = self._generate_permutations()
         
     def _generate_permutations(self) -> list[tuple[int, int]]:
-        """Generate permutation functions for MinHash"""
+        """
+        Generate permutation functions for MinHash.
+        """
         # Use large prime for modulo
         self.prime = 4294967311  # Next prime after 2^32
         
@@ -43,13 +46,12 @@ class MinHasher:
         return permutations
         
     def _shingle_text(self, text: str, k: int = 3) -> set[int]:
-        """
-        Convert text to k-shingles (k-grams)
-        
+        """Convert text to k-shingles (k-grams)
+
         Args:
             text: Input text
             k: Size of shingles (3 = trigrams)
-            
+
         Returns:
             Set of shingle hashes
         """
@@ -69,12 +71,11 @@ class MinHasher:
         return shingles
         
     def compute_signature(self, text: str) -> np.ndarray:
-        """
-        Compute MinHash signature for text
-        
+        """Compute MinHash signature for text.
+
         Args:
             text: Input text
-            
+
         Returns:
             MinHash signature vector
         """
@@ -98,12 +99,11 @@ class MinHasher:
         return signature
         
     def jaccard_similarity(self, sig1: np.ndarray, sig2: np.ndarray) -> float:
-        """
-        Estimate Jaccard similarity from signatures
-        
+        """Estimate Jaccard similarity from signatures.
+
         Args:
             sig1, sig2: MinHash signatures
-            
+
         Returns:
             Estimated Jaccard similarity (0-1)
         """
@@ -114,12 +114,13 @@ class MinHasher:
 
 
 class LSHIndex:
-    """Locality-Sensitive Hashing for fast similarity search"""
+    """
+    Locality-Sensitive Hashing for fast similarity search.
+    """
     
     def __init__(self, num_bands: int = 16, band_size: int = 8):
-        """
-        Initialize LSH index
-        
+        """Initialize LSH index.
+
         Args:
             num_bands: Number of bands to split signature
             band_size: Size of each band
@@ -130,9 +131,8 @@ class LSHIndex:
         self.signatures = {}
         
     def add(self, doc_id: str, signature: np.ndarray):
-        """
-        Add document to LSH index
-        
+        """Add document to LSH index.
+
         Args:
             doc_id: Document identifier
             signature: MinHash signature
@@ -153,13 +153,12 @@ class LSHIndex:
             self.buckets[bucket_id].append(doc_id)
             
     def find_similar(self, signature: np.ndarray, threshold: float = 0.5) -> list[tuple[str, float]]:
-        """
-        Find documents similar to given signature
-        
+        """Find documents similar to given signature.
+
         Args:
             signature: Query signature
             threshold: Minimum similarity threshold
-            
+
         Returns:
             List of (doc_id, similarity) tuples
         """
@@ -194,12 +193,13 @@ class LSHIndex:
 
 
 class NearDuplicateDetector:
-    """Main service for near-duplicate detection"""
+    """
+    Main service for near-duplicate detection.
+    """
     
     def __init__(self, threshold: float = 0.8, num_perm: int = 128):
-        """
-        Initialize detector
-        
+        """Initialize detector.
+
         Args:
             threshold: Similarity threshold for duplicates (0.8 = 80% similar)
             num_perm: Number of hash functions (accuracy vs speed tradeoff)
@@ -213,9 +213,8 @@ class NearDuplicateDetector:
         self.processed_docs = {}
         
     def add_document(self, doc_id: str, content: str, metadata: dict = None):
-        """
-        Add document to duplicate detection index
-        
+        """Add document to duplicate detection index.
+
         Args:
             doc_id: Unique document identifier
             content: Document text content
@@ -231,12 +230,11 @@ class NearDuplicateDetector:
         logger.debug(f"Added document {doc_id} to duplicate index")
         
     def check_duplicate(self, content: str) -> list[dict]:
-        """
-        Check if content is duplicate/near-duplicate of existing documents
-        
+        """Check if content is duplicate/near-duplicate of existing documents.
+
         Args:
             content: Content to check
-            
+
         Returns:
             List of similar documents with similarity scores
         """
@@ -258,9 +256,8 @@ class NearDuplicateDetector:
         return results
         
     def find_all_duplicates(self) -> dict[str, list[str]]:
-        """
-        Find all duplicate groups in the index
-        
+        """Find all duplicate groups in the index.
+
         Returns:
             Dictionary mapping representative doc to list of duplicates
         """
@@ -286,12 +283,11 @@ class NearDuplicateDetector:
         return duplicate_groups
         
     def batch_deduplicate(self, documents: list[dict]) -> dict:
-        """
-        Process batch of documents and identify duplicates
-        
+        """Process batch of documents and identify duplicates.
+
         Args:
             documents: List of dicts with 'id' and 'content' keys
-            
+
         Returns:
             Dict with duplicate groups and statistics
         """
@@ -346,12 +342,11 @@ class NearDuplicateDetector:
         return stats
         
     def get_similarity(self, content1: str, content2: str) -> float:
-        """
-        Calculate similarity between two pieces of content
-        
+        """Calculate similarity between two pieces of content.
+
         Args:
             content1, content2: Text content to compare
-            
+
         Returns:
             Similarity score (0-1)
         """
@@ -364,7 +359,9 @@ class NearDuplicateDetector:
 _detector: NearDuplicateDetector | None = None
 
 def get_duplicate_detector(threshold: float = 0.8) -> NearDuplicateDetector:
-    """Get or create singleton duplicate detector"""
+    """
+    Get or create singleton duplicate detector.
+    """
     global _detector
     if _detector is None or _detector.threshold != threshold:
         _detector = NearDuplicateDetector(threshold=threshold)
@@ -372,7 +369,9 @@ def get_duplicate_detector(threshold: float = 0.8) -> NearDuplicateDetector:
 
 
 def test_duplicate_detection():
-    """Test the duplicate detection system"""
+    """
+    Test the duplicate detection system.
+    """
     detector = NearDuplicateDetector(threshold=0.7)
     
     # Test documents with varying similarity

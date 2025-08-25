@@ -15,7 +15,9 @@ from tools.scripts.cli.service_locator import get_locator
 
 
 def process_emails(limit=None):
-    """Process emails to generate AI embeddings for semantic search"""
+    """
+    Process emails to generate AI embeddings for semantic search.
+    """
     print("🤖 Processing emails for AI-powered semantic search...")
     locator = get_locator()
 
@@ -47,7 +49,9 @@ def process_emails(limit=None):
 
 
 def embed_content(content_type="transcript", limit=None):
-    """Generate embeddings for specific content types"""
+    """
+    Generate embeddings for specific content types.
+    """
     content_icons = {"transcript": "🎙️", "transcription": "🎙️", "pdf": "📄", "document": "📄"}
     icon = content_icons.get(content_type, "📄")
     locator = get_locator()

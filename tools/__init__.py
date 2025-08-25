@@ -1,1 +1,3 @@
-"""Tools and CLI utilities for Email Sync system."""
+"""
+Tools and CLI utilities for Email Sync system.
+"""

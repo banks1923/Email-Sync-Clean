@@ -1,5 +1,5 @@
 """
-PDF text extraction and chunking functionality
+PDF text extraction and chunking functionality.
 """
 
 from typing import Any
@@ -13,7 +13,9 @@ except ImportError:
 
 
 class PDFProcessor:
-    """Handles PDF text extraction and chunking operations"""
+    """
+    Handles PDF text extraction and chunking operations.
+    """
 
     def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100) -> None:
         self.chunk_size = chunk_size
@@ -21,7 +23,9 @@ class PDFProcessor:
         # Logger is now imported globally from loguru
 
     def validate_dependencies(self) -> dict[str, Any]:
-        """Validate required dependencies"""
+        """
+        Validate required dependencies.
+        """
         if PyPDF2 is None:
             return {
                 "success": False,
@@ -30,7 +34,9 @@ class PDFProcessor:
         return {"success": True}
 
     def extract_text_from_pdf(self, pdf_path: str) -> dict[str, Any]:
-        """Extract text from PDF using PyPDF2"""
+        """
+        Extract text from PDF using PyPDF2.
+        """
         try:
             text_content = []
 
@@ -58,7 +64,9 @@ class PDFProcessor:
             return {"success": False, "error": f"Text extraction failed: {str(e)}"}
 
     def chunk_text(self, text: str) -> list[str]:
-        """Chunk text into smaller pieces for processing"""
+        """
+        Chunk text into smaller pieces for processing.
+        """
         if not text or not text.strip():
             return []
 
@@ -78,7 +86,9 @@ class PDFProcessor:
         return chunks
 
     def _find_chunk_end(self, text: str, start: int) -> int:
-        """Find optimal end position for current chunk"""
+        """
+        Find optimal end position for current chunk.
+        """
         end = start + self.chunk_size
 
         if end >= len(text):
@@ -96,26 +106,34 @@ class PDFProcessor:
         return self._find_word_break(text, start, end)
 
     def _find_sentence_break(self, text: str, start: int, end: int) -> int:
-        """Find sentence ending within chunk range"""
+        """
+        Find sentence ending within chunk range.
+        """
         sentence_end = text.rfind(". ", start, end)
         if sentence_end > start + self.chunk_size // 2:
             return sentence_end + 2
         return -1
 
     def _find_paragraph_break(self, text: str, start: int, end: int) -> int:
-        """Find paragraph break within chunk range"""
+        """
+        Find paragraph break within chunk range.
+        """
         para_end = text.rfind("\n\n", start, end)
         if para_end > start + self.chunk_size // 2:
             return para_end + 2
         return -1
 
     def _find_word_break(self, text: str, start: int, end: int) -> int:
-        """Find word boundary within chunk range"""
+        """
+        Find word boundary within chunk range.
+        """
         word_end = text.rfind(" ", start, end)
         if word_end > start + self.chunk_size // 2:
             return word_end + 1
         return end
 
     def _calculate_next_start(self, start: int, end: int) -> int:
-        """Calculate next chunk start position with overlap"""
+        """
+        Calculate next chunk start position with overlap.
+        """
         return max(start + 1, end - self.chunk_overlap)

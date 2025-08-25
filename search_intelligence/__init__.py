@@ -1,8 +1,7 @@
-"""
-Search Intelligence Module
+"""Search Intelligence Module.
 
-Unified search intelligence layer that consolidates search, entity extraction,
-and document intelligence capabilities.
+Unified search intelligence layer that consolidates search, entity
+extraction, and document intelligence capabilities.
 """
 
 
@@ -11,7 +10,9 @@ _search_intelligence_service = None
 
 
 def get_search_intelligence_service():
-    """Get singleton instance of SearchIntelligenceService"""
+    """
+    Get singleton instance of SearchIntelligenceService.
+    """
     global _search_intelligence_service
     if _search_intelligence_service is None:
         from .main import SearchIntelligenceService

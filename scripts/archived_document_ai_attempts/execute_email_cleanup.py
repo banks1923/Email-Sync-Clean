@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""
-Execute Email Cleanup
-Removes duplicate email thread records while preserving individual messages.
+"""Execute Email Cleanup Removes duplicate email thread records while
+preserving individual messages.
+
 SAFE: Keeps 426 email_message records, removes 416 email thread records.
 """
 
-import sqlite3
 from pathlib import Path
 import sys
 import time
@@ -17,7 +16,9 @@ from shared.simple_db import SimpleDB
 from loguru import logger
 
 def execute_cleanup():
-    """Execute the email cleanup operation."""
+    """
+    Execute the email cleanup operation.
+    """
     db = SimpleDB()
     
     print("🧹 Starting Email Cleanup Operation")
@@ -106,7 +107,9 @@ def execute_cleanup():
         return False
 
 def verify_cleanup_success():
-    """Verify the cleanup was successful."""
+    """
+    Verify the cleanup was successful.
+    """
     db = SimpleDB()
     
     print("\n🔍 Verification:")
@@ -152,7 +155,9 @@ def verify_cleanup_success():
     return success
 
 def main():
-    """Execute cleanup with verification."""
+    """
+    Execute cleanup with verification.
+    """
     print("🚀 Email Database Cleanup")
     print("Removing duplicate email threads, preserving individual messages")
     print("=" * 60)

@@ -29,7 +29,9 @@ from scripts.batch_process_documents import batch_process
 from scripts.test_document_ai_connection import test_document_ai_auth
 
 def list_processors():
-    """List available Document AI processors."""
+    """
+    List available Document AI processors.
+    """
     from google.cloud import documentai_v1 as documentai
     
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'

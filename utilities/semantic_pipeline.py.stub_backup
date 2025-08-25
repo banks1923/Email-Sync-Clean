@@ -1,0 +1,36 @@
+"""Stub semantic pipeline for Gmail sync compatibility.
+
+This provides the minimum interface needed for Gmail sync without
+breaking.
+"""
+
+from loguru import logger
+
+
+class SemanticPipeline:
+    """
+    Minimal semantic pipeline for Gmail sync compatibility.
+    """
+    
+    def __init__(self, db, embedding_service=None, vector_store=None, entity_service=None):
+        self.db = db
+        logger.info("Semantic pipeline stub initialized")
+    
+    def run_for_messages(self, message_ids, steps=None):
+        """
+        Stub method that does nothing but returns success.
+        """
+        logger.info(f"Semantic pipeline stub: skipping processing for {len(message_ids)} messages")
+        return {
+            "success": True,
+            "step_results": {
+                "stub": f"Skipped semantic processing for {len(message_ids)} messages"
+            }
+        }
+
+
+def get_semantic_pipeline(db, embedding_service=None, vector_store=None, entity_service=None):
+    """
+    Factory function to create semantic pipeline.
+    """
+    return SemanticPipeline(db, embedding_service, vector_store, entity_service)

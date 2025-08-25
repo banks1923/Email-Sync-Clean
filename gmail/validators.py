@@ -1,5 +1,5 @@
 """
-Common input validators for the Email Sync System
+Common input validators for the Email Sync System.
 """
 
 import re
@@ -7,7 +7,9 @@ from datetime import datetime
 
 
 class EmailValidator:
-    """Validate email addresses and email-related inputs with intelligent parsing"""
+    """
+    Validate email addresses and email-related inputs with intelligent parsing.
+    """
 
     # More permissive email regex - accepts real Gmail emails with apostrophes, international chars, etc.
     # Prioritizes accepting valid emails over rejecting edge cases
@@ -48,7 +50,7 @@ class EmailValidator:
 
     @staticmethod
     def validate_email_address(email: str, auto_extract: bool = True) -> dict:
-        """Validate email address format with intelligent parsing
+        """Validate email address format with intelligent parsing.
 
         Args:
             email: Email address or header to validate
@@ -93,7 +95,7 @@ class EmailValidator:
 
     @staticmethod
     def validate_email_header(header_value: str) -> dict:
-        """Validate email header with full RFC 5322 support
+        """Validate email header with full RFC 5322 support.
 
         Returns both validation result and parsed components
         """
@@ -117,7 +119,9 @@ class EmailValidator:
 
     @staticmethod
     def validate_email_size(size: int | str) -> dict:
-        """Validate email size"""
+        """
+        Validate email size.
+        """
         try:
             size_int = int(size) if isinstance(size, str) else size
 
@@ -136,14 +140,18 @@ class EmailValidator:
 
 
 class DateValidator:
-    """Validate date inputs"""
+    """
+    Validate date inputs.
+    """
 
     # ISO 8601 date format
     ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
     @staticmethod
     def validate_iso_datetime(date_str: str) -> dict:
-        """Validate ISO format datetime string"""
+        """
+        Validate ISO format datetime string.
+        """
         if not date_str:
             return {"success": False, "error": "Date string cannot be empty"}
 
@@ -168,7 +176,9 @@ class DateValidator:
 
     @staticmethod
     def validate_date_range(start: str, end: str) -> dict:
-        """Validate a date range"""
+        """
+        Validate a date range.
+        """
         start_result = DateValidator.validate_iso_datetime(start)
         if not start_result["success"]:
             return {"success": False, "error": f"Invalid start date: {start_result['error']}"}
@@ -184,11 +194,15 @@ class DateValidator:
 
 
 class InputSanitizer:
-    """Sanitize various inputs to prevent injection attacks"""
+    """
+    Sanitize various inputs to prevent injection attacks.
+    """
 
     @staticmethod
     def sanitize_search_query(query: str, max_length: int = 1000) -> dict:
-        """Sanitize search query input"""
+        """
+        Sanitize search query input.
+        """
         if not query:
             return {"success": False, "error": "Search query cannot be empty"}
 
@@ -215,7 +229,9 @@ class InputSanitizer:
 
     @staticmethod
     def sanitize_filename(filename: str) -> dict:
-        """Sanitize filename to prevent path traversal"""
+        """
+        Sanitize filename to prevent path traversal.
+        """
         if not filename:
             return {"success": False, "error": "Filename cannot be empty"}
 
@@ -239,14 +255,18 @@ class InputSanitizer:
 
 
 class LimitValidator:
-    """Validate limit parameters for queries"""
+    """
+    Validate limit parameters for queries.
+    """
 
     MAX_QUERY_LIMIT = 10000
     DEFAULT_LIMIT = 100
 
     @staticmethod
     def validate_query_limit(limit: int | str | None) -> dict:
-        """Validate query limit parameter"""
+        """
+        Validate query limit parameter.
+        """
         if limit is None:
             return {"success": True, "limit": LimitValidator.DEFAULT_LIMIT}
 

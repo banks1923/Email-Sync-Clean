@@ -1,5 +1,4 @@
-"""
-Markdown document processor for MD files.
+"""Markdown document processor for MD files.
 
 Handles Markdown files with YAML frontmatter support.
 """
@@ -15,16 +14,19 @@ from .base_processor import BaseProcessor
 
 
 class MarkdownProcessor(BaseProcessor):
-    """Processes Markdown documents with frontmatter support."""
+    """
+    Processes Markdown documents with frontmatter support.
+    """
 
     def __init__(self):
-        """Initialize markdown processor."""
+        """
+        Initialize markdown processor.
+        """
         super().__init__()
         self.format_type = "md"
 
     def extract_text(self, file_path: Path) -> str:
-        """
-        Extract text from Markdown file.
+        """Extract text from Markdown file.
 
         Args:
             file_path: Path to markdown file
@@ -49,8 +51,7 @@ class MarkdownProcessor(BaseProcessor):
             raise
 
     def _parse_frontmatter(self, content: str) -> tuple[dict | None, str]:
-        """
-        Parse YAML frontmatter from markdown content.
+        """Parse YAML frontmatter from markdown content.
 
         Args:
             content: Full markdown content
@@ -75,8 +76,7 @@ class MarkdownProcessor(BaseProcessor):
         return None, content
 
     def extract_metadata(self, file_path: Path) -> dict[str, Any]:
-        """
-        Extract metadata from markdown file including frontmatter.
+        """Extract metadata from markdown file including frontmatter.
 
         Args:
             file_path: Path to markdown file
@@ -111,8 +111,7 @@ class MarkdownProcessor(BaseProcessor):
         return metadata
 
     def _analyze_structure(self, content: str) -> dict[str, Any]:
-        """
-        Analyze markdown document structure.
+        """Analyze markdown document structure.
 
         Args:
             content: Markdown content
@@ -162,8 +161,7 @@ class MarkdownProcessor(BaseProcessor):
         return {"structure": structure}
 
     def process_to_plain_text(self, content: str) -> str:
-        """
-        Convert markdown to plain text.
+        """Convert markdown to plain text.
 
         Args:
             content: Markdown content
@@ -208,8 +206,7 @@ class MarkdownProcessor(BaseProcessor):
         return text.strip()
 
     def extract_links(self, content: str) -> list:
-        """
-        Extract all links from markdown.
+        """Extract all links from markdown.
 
         Args:
             content: Markdown content
@@ -222,8 +219,7 @@ class MarkdownProcessor(BaseProcessor):
         return links
 
     def extract_headings(self, content: str) -> list:
-        """
-        Extract document outline from headings.
+        """Extract document outline from headings.
 
         Args:
             content: Markdown content

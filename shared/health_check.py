@@ -1,5 +1,5 @@
-"""
-Simple health check for all services.
+"""Simple health check for all services.
+
 Just check if things are up - no complex metrics.
 """
 
@@ -21,7 +21,9 @@ class HealthCheck:
         self.db_path = db_path
 
     def check_database(self) -> dict[str, Any]:
-        """Check if database is accessible."""
+        """
+        Check if database is accessible.
+        """
         try:
             # Try a simple query
             with sqlite3.connect(self.db_path) as conn:
@@ -50,7 +52,10 @@ class HealthCheck:
             return {"healthy": False, "service": "database", "error": str(e)}
 
     def check_qdrant(self) -> dict[str, Any]:
-        """Check if Qdrant vector service is available by testing basic connectivity."""
+        """
+        Check if Qdrant vector service is available by testing basic
+        connectivity.
+        """
         try:
             # Basic connectivity test without importing higher-layer modules
             import requests
@@ -75,7 +80,9 @@ class HealthCheck:
             }
 
     def check_gmail(self) -> dict[str, Any]:
-        """Check if Gmail API credentials exist."""
+        """
+        Check if Gmail API credentials exist.
+        """
         try:
             # Just check if credentials file exists
             creds_path = settings.gmail.credentials_path
@@ -96,7 +103,9 @@ class HealthCheck:
             return {"healthy": False, "service": "gmail", "error": str(e)}
 
     def check_models(self) -> dict[str, Any]:
-        """Check if AI models are available at a basic level."""
+        """
+        Check if AI models are available at a basic level.
+        """
         try:
             # Check for basic model dependencies without importing higher-layer modules
             models_status = {}
@@ -124,7 +133,9 @@ class HealthCheck:
             return {"healthy": False, "service": "models", "error": str(e)}
 
     def check_all(self) -> dict[str, Any]:
-        """Run all health checks."""
+        """
+        Run all health checks.
+        """
         results = {"overall_health": True, "services": {}}
 
         # Check each service
@@ -153,6 +164,8 @@ class HealthCheck:
 
 
 def run_health_check() -> dict[str, Any]:
-    """Convenience function to run full health check."""
+    """
+    Convenience function to run full health check.
+    """
     checker = HealthCheck()
     return checker.check_all()

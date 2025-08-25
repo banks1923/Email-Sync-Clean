@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Process legal documents with Google Document AI using dual processors.
+"""Process legal documents with Google Document AI using dual processors.
+
 Using correct processor types: FORM_PARSER_PROCESSOR and OCR_PROCESSOR
 """
 
@@ -9,13 +9,11 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 import time
 
 from google.cloud import documentai_v1 as documentai
 from google.cloud import bigquery
 from google.api_core.client_options import ClientOptions
-from tqdm import tqdm
 
 # Set up credentials
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'
@@ -35,10 +33,14 @@ MIN_CONFIDENCE = 0.7
 DUAL_PROCESS = True  # Run both processors
 
 class DocumentAIProcessor:
-    """Process documents with Google Document AI."""
+    """
+    Process documents with Google Document AI.
+    """
     
     def __init__(self):
-        """Initialize Document AI client."""
+        """
+        Initialize Document AI client.
+        """
         self.client = documentai.DocumentProcessorServiceClient(
             client_options=ClientOptions(api_endpoint=f"{LOCATION}-documentai.googleapis.com")
         )
@@ -70,7 +72,9 @@ class DocumentAIProcessor:
         print(f"✅ Initialized Document AI processors")
     
     def _get_or_create_processor(self, processor_type: str) -> str:
-        """Get existing processor or create new one."""
+        """
+        Get existing processor or create new one.
+        """
         parent = f"projects/{PROJECT_ID}/locations/{LOCATION}"
         
         # List existing processors
@@ -104,7 +108,9 @@ class DocumentAIProcessor:
             return None
     
     def determine_processor_type(self, file_path: Path) -> str:
-        """Determine which processor to use based on filename patterns."""
+        """
+        Determine which processor to use based on filename patterns.
+        """
         
         filename_lower = file_path.name.lower()
         
@@ -132,8 +138,10 @@ class DocumentAIProcessor:
         # Default to OCR for unknown types
         return 'OCR'
     
-    def process_document_simple(self, file_path: Path) -> Dict:
-        """Process document using appropriate processor based on document type."""
+    def process_document_simple(self, file_path: Path) -> dict:
+        """
+        Process document using appropriate processor based on document type.
+        """
         
         # Determine processor type
         processor_type = self.determine_processor_type(file_path)
@@ -258,8 +266,10 @@ class DocumentAIProcessor:
         
         return results
     
-    def _extract_entities(self, text: str) -> Dict:
-        """Extract legal entities from text."""
+    def _extract_entities(self, text: str) -> dict:
+        """
+        Extract legal entities from text.
+        """
         
         entities = {
             'people': [],
@@ -330,8 +340,10 @@ class DocumentAIProcessor:
         
         return entities
     
-    def _classify_evidence(self, text: str, file_path: Path) -> Dict:
-        """Classify evidence relevance for legal claims."""
+    def _classify_evidence(self, text: str, file_path: Path) -> dict:
+        """
+        Classify evidence relevance for legal claims.
+        """
         
         classification = {
             'habitability': 0.0,
@@ -392,8 +404,10 @@ class DocumentAIProcessor:
         
         return classification
     
-    def save_to_bigquery(self, results: List[Dict]):
-        """Save processing results to BigQuery."""
+    def save_to_bigquery(self, results: list[dict]):
+        """
+        Save processing results to BigQuery.
+        """
         
         dataset_id = f"{PROJECT_ID}.stoneman_case"
         table_id = f"{dataset_id}.documents"
@@ -453,7 +467,9 @@ class DocumentAIProcessor:
                     json.dump(result, f, indent=2, default=str)
     
     def _determine_doc_type(self, filename: str) -> str:
-        """Determine document type from filename."""
+        """
+        Determine document type from filename.
+        """
         
         filename_lower = filename.lower()
         
@@ -473,7 +489,9 @@ class DocumentAIProcessor:
             return 'other'
     
     def process_all_documents(self):
-        """Process all PDF documents in the directory."""
+        """
+        Process all PDF documents in the directory.
+        """
         
         # Find all PDFs
         pdf_files = list(BASE_DIR.rglob("*.pdf"))

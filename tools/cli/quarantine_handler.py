@@ -1,6 +1,6 @@
 """
-Quarantine Recovery CLI Handler
-Manages failed documents with retry logic and purging
+Quarantine Recovery CLI Handler Manages failed documents with retry logic and
+purging.
 """
 
 import sqlite3
@@ -10,7 +10,9 @@ from typing import Any
 
 
 class QuarantineHandler:
-    """Handles quarantine operations for failed documents"""
+    """
+    Handles quarantine operations for failed documents.
+    """
     
     def __init__(self):
         from config.settings import DatabaseSettings
@@ -18,7 +20,9 @@ class QuarantineHandler:
         self.quarantine_dir = Path("data/quarantine")
     
     def list_quarantined(self, limit: int = 50) -> list[dict[str, Any]]:
-        """List documents in quarantine"""
+        """
+        List documents in quarantine.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -51,7 +55,9 @@ class QuarantineHandler:
         return results
     
     def retry_document(self, sha256_prefix: str) -> dict[str, Any]:
-        """Retry processing a quarantined document"""
+        """
+        Retry processing a quarantined document.
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -118,7 +124,9 @@ class QuarantineHandler:
             return {"success": False, "error": f"Failed to initialize PDF service: {e}"}
     
     def purge_quarantined(self, older_than_days: int = 30, permanent_only: bool = True) -> dict[str, Any]:
-        """Purge old quarantined documents"""
+        """
+        Purge old quarantined documents.
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -153,7 +161,9 @@ class QuarantineHandler:
         }
     
     def get_stats(self) -> dict[str, Any]:
-        """Get quarantine statistics"""
+        """
+        Get quarantine statistics.
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -182,7 +192,9 @@ class QuarantineHandler:
 
 
 def add_quarantine_commands(subparsers):
-    """Add quarantine commands to vsearch CLI"""
+    """
+    Add quarantine commands to vsearch CLI.
+    """
     quarantine_parser = subparsers.add_parser('quarantine', help='Manage quarantined documents')
     quarantine_subparsers = quarantine_parser.add_subparsers(dest='quarantine_command')
     
@@ -204,7 +216,9 @@ def add_quarantine_commands(subparsers):
 
 
 def handle_quarantine_command(args):
-    """Handle quarantine commands"""
+    """
+    Handle quarantine commands.
+    """
     handler = QuarantineHandler()
     
     if args.quarantine_command == 'list':

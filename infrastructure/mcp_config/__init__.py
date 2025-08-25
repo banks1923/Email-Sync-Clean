@@ -1,5 +1,4 @@
-"""
-MCP Configuration Infrastructure
+"""MCP Configuration Infrastructure.
 
 Provides centralized, secure MCP server configuration using Pydantic.
 Follows CLAUDE.md principles: Simple > Complex, Working > Perfect.

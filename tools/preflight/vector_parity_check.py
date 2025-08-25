@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Vector Parity Preflight
+"""Vector Parity Preflight.
 
 Checks:
 - Qdrant connectivity and collection existence
@@ -41,7 +40,9 @@ def _bool(env, default=False):
 
 
 def count_db_eligible(db_path: str) -> int:
-    """Count eligible content in the database."""
+    """
+    Count eligible content in the database.
+    """
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     # Count content that has embeddings (already processed)
@@ -56,7 +57,9 @@ def count_db_eligible(db_path: str) -> int:
 
 
 def qdrant_client():
-    """Create Qdrant client based on environment variables."""
+    """
+    Create Qdrant client based on environment variables.
+    """
     # Lazy import so script works even if qdrant-client isn't installed in some envs.
     try:
         from qdrant_client import QdrantClient
@@ -76,7 +79,9 @@ def qdrant_client():
 
 
 def qdrant_stats(client, collection: str):
-    """Get Qdrant collection statistics."""
+    """
+    Get Qdrant collection statistics.
+    """
     info = {"health": "red", "collection_exists": False, "point_count": 0, "dimension": None}
     try:
         # Health check

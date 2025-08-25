@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Schema Compliance Checker
-Prevents regression of schema migration changes.
+"""Schema Compliance Checker Prevents regression of schema migration changes.
 
 This tool can be run locally or in CI to ensure:
 1. No content_id references in SQL strings
@@ -16,7 +14,9 @@ from pathlib import Path
 
 
 def check_content_id_usage() -> list[tuple[str, int, str]]:
-    """Check for prohibited content_id usage in SQL strings."""
+    """
+    Check for prohibited content_id usage in SQL strings.
+    """
     violations = []
     
     # More precise SQL patterns - must be in actual SQL context
@@ -63,7 +63,9 @@ def check_content_id_usage() -> list[tuple[str, int, str]]:
     return violations
 
 def check_business_key_patterns() -> list[str]:
-    """Check that business key patterns are maintained."""
+    """
+    Check that business key patterns are maintained.
+    """
     issues = []
     
     # Check SimpleDB has upsert_content method
@@ -88,7 +90,9 @@ def check_business_key_patterns() -> list[str]:
     return issues
 
 def check_uuid_consistency() -> list[tuple[str, str]]:
-    """Check for consistent deterministic UUID usage."""
+    """
+    Check for consistent deterministic UUID usage.
+    """
     violations = []
     expected_namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
     
@@ -112,7 +116,9 @@ def check_uuid_consistency() -> list[tuple[str, str]]:
     return violations
 
 def run_libcst_idempotency_check() -> tuple[bool, str]:
-    """Check if LibCST codemod is idempotent (makes no changes)."""
+    """
+    Check if LibCST codemod is idempotent (makes no changes).
+    """
     codemod_path = Path('tools/codemods/replace_content_id_sql.py')
     
     if not codemod_path.exists():
@@ -147,7 +153,9 @@ def run_libcst_idempotency_check() -> tuple[bool, str]:
         return False, f"Failed to run LibCST check: {e}"
 
 def main():
-    """Run all compliance checks."""
+    """
+    Run all compliance checks.
+    """
     print("🔍 Running schema compliance checks...\n")
     
     all_passed = True

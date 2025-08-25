@@ -10,10 +10,14 @@ from loguru import logger
 
 
 class PDFLoader:
-    """Handles PDF file operations and loading."""
+    """
+    Handles PDF file operations and loading.
+    """
 
     def hash_file(self, file_path: str) -> str:
-        """Generate SHA256 hash of file for deduplication."""
+        """
+        Generate SHA256 hash of file for deduplication.
+        """
         hasher = hashlib.sha256()
         with open(file_path, "rb") as f:
             while chunk := f.read(8192):
@@ -21,7 +25,9 @@ class PDFLoader:
         return hasher.hexdigest()
 
     def find_pdf_files(self, directory: str, recursive: bool = True) -> list[str]:
-        """Find all PDF files in directory."""
+        """
+        Find all PDF files in directory.
+        """
         pdf_files: list[str] = []
         path = Path(directory)
 
@@ -39,7 +45,9 @@ class PDFLoader:
         return sorted(pdf_files)
 
     def validate_pdf_file(self, pdf_path: str) -> dict[str, Any]:
-        """Validate PDF file exists and is readable."""
+        """
+        Validate PDF file exists and is readable.
+        """
         try:
             path = Path(pdf_path)
 
@@ -70,7 +78,9 @@ class PDFLoader:
             return {"success": False, "error": str(e)}
 
     def get_pdf_info(self, pdf_path: str) -> dict[str, Any]:
-        """Get basic PDF file information."""
+        """
+        Get basic PDF file information.
+        """
         try:
             path = Path(pdf_path)
             stat = path.stat()

@@ -6,7 +6,7 @@ Clean implementation following CLAUDE.md principles: Simple > Complex
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Compile regex patterns once for performance
 COMPILED_PATTERNS = {
@@ -26,7 +26,9 @@ COMPILED_PATTERNS = {
 
 @dataclass
 class QuotedMessage:
-    """Represents an individual message extracted from quoted content"""
+    """
+    Represents an individual message extracted from quoted content.
+    """
     content: str
     sender: str | None = None
     date: str | None = None
@@ -59,7 +61,9 @@ def clean_text(text: str, max_length: int | None = None) -> str:
 
 
 def extract_domain(email: str) -> str:
-    """Extract domain from email address."""
+    """
+    Extract domain from email address.
+    """
     if "@" in email:
         return email.split("@")[1].lower()
     return ""
@@ -67,7 +71,9 @@ def extract_domain(email: str) -> str:
 
 @lru_cache(maxsize=1000)
 def normalize_email(email: str) -> str:
-    """Normalize email address for comparison with caching."""
+    """
+    Normalize email address for comparison with caching.
+    """
     if not email:
         return ""
     
@@ -80,8 +86,8 @@ def normalize_email(email: str) -> str:
 
 
 def extract_reply_content(email_body: str) -> str:
-    """
-    Extract the new content from a reply, removing quoted text.
+    """Extract the new content from a reply, removing quoted text.
+
     Simple implementation focusing on common patterns.
     """
     if not email_body:
@@ -119,8 +125,9 @@ def extract_reply_content(email_body: str) -> str:
 
 
 def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
-    """
-    Advanced parsing to extract individual messages from conversation chains.
+    """Advanced parsing to extract individual messages from conversation
+    chains.
+
     This handles nested replies, forwards, and complex quote structures.
     """
     if not email_body:
@@ -236,7 +243,9 @@ def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
 
 
 def _parse_message_header(header_lines: list[str]) -> tuple[str | None, str | None, str | None]:
-    """Parse message header to extract sender, date, subject."""
+    """
+    Parse message header to extract sender, date, subject.
+    """
     sender = None
     date = None
     subject = None
@@ -253,7 +262,9 @@ def _parse_message_header(header_lines: list[str]) -> tuple[str | None, str | No
 
 
 def _count_header_lines(lines: list[str]) -> int:
-    """Count header-like lines to determine when header ends."""
+    """
+    Count header-like lines to determine when header ends.
+    """
     header_count = 0
     for line in lines:
         if any(line.startswith(prefix) for prefix in ["From:", "To:", "Sent:", "Date:", "Subject:", "Cc:", "Bcc:"]):
@@ -262,7 +273,9 @@ def _count_header_lines(lines: list[str]) -> int:
 
 
 def _is_signature_line(line: str) -> bool:
-    """Determine if a line looks like part of an email signature."""
+    """
+    Determine if a line looks like part of an email signature.
+    """
     line = line.strip()
     if len(line) < 3:
         return False

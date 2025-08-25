@@ -1,5 +1,4 @@
-"""
-PDF Service Module
+"""PDF Service Module.
 
 Simple PDF upload and processing service that preserves service independence
 while leveraging existing infrastructure for PDF ingestion and vector search.
@@ -16,7 +15,9 @@ from .wiring import build_pdf_service
 
 
 def get_pdf_service():
-    """Factory function for PDFService with proper dependency wiring."""
+    """
+    Factory function for PDFService with proper dependency wiring.
+    """
     return build_pdf_service()
 
 

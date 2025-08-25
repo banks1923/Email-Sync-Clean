@@ -9,7 +9,9 @@ from legal_evidence import get_evidence_tracker, get_report_generator, get_threa
 
 
 def assign_eids_command(limit: int | None = None):
-    """Assign Evidence IDs (EIDs) to all emails."""
+    """
+    Assign Evidence IDs (EIDs) to all emails.
+    """
     print("📋 Assigning Evidence IDs to emails...")
     
     tracker = get_evidence_tracker()
@@ -25,7 +27,9 @@ def assign_eids_command(limit: int | None = None):
         
         
 def assign_threads_command():
-    """Group emails into threads for conversation tracking."""
+    """
+    Group emails into threads for conversation tracking.
+    """
     print("🔗 Grouping emails into conversation threads...")
     
     tracker = get_evidence_tracker()
@@ -39,7 +43,9 @@ def assign_threads_command():
         
 
 def lookup_command(eid: str | None = None, thread: str | None = None):
-    """Look up specific evidence by EID or thread."""
+    """
+    Look up specific evidence by EID or thread.
+    """
     tracker = get_evidence_tracker()
     
     if eid:
@@ -95,7 +101,9 @@ def report_command(output_dir: str = "legal_evidence_export",
                   keywords: list[str] | None = None,
                   threads: list[str] | None = None,
                   mode: str = "both"):
-    """Generate legal evidence reports."""
+    """
+    Generate legal evidence reports.
+    """
     print("📄 Generating legal evidence reports...")
     
     generator = get_report_generator()
@@ -136,7 +144,9 @@ def report_command(output_dir: str = "legal_evidence_export",
                 
 
 def search_pattern_command(pattern: str, limit: int = 100):
-    """Search for specific patterns in emails (for discovery)."""
+    """
+    Search for specific patterns in emails (for discovery).
+    """
     print(f"🔍 Searching for pattern: '{pattern}'")
     
     tracker = get_evidence_tracker()
@@ -169,7 +179,9 @@ def search_pattern_command(pattern: str, limit: int = 100):
         
 
 def analyze_thread_command(thread_id: str, output_format: str = "text"):
-    """Analyze a specific thread for patterns and contradictions."""
+    """
+    Analyze a specific thread for patterns and contradictions.
+    """
     print(f"🔬 Analyzing thread: {thread_id}")
     
     analyzer = get_thread_analyzer()
@@ -190,7 +202,9 @@ def analyze_thread_command(thread_id: str, output_format: str = "text"):
         
         
 def status_command():
-    """Show evidence tracking status."""
+    """
+    Show evidence tracking status.
+    """
     tracker = get_evidence_tracker()
     stats = tracker.get_evidence_summary()
     

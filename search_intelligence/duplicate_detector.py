@@ -1,8 +1,7 @@
-"""
-Duplicate Detection Module
+"""Duplicate Detection Module.
 
-Provides hash-based and semantic duplicate detection for documents.
-Uses SHA-256 for exact duplicates and cosine similarity for near-duplicates.
+Provides hash-based and semantic duplicate detection for documents. Uses
+SHA-256 for exact duplicates and cosine similarity for near-duplicates.
 """
 
 import hashlib
@@ -21,10 +20,14 @@ from utilities.vector_store import get_vector_store
 
 
 class DuplicateDetector:
-    """Detect duplicate and near-duplicate documents."""
+    """
+    Detect duplicate and near-duplicate documents.
+    """
 
     def __init__(self, collection: str = "emails"):
-        """Initialize duplicate detector."""
+        """
+        Initialize duplicate detector.
+        """
         self.logger = logger
         self.collection = collection
         self.embedding_service = get_embedding_service()
@@ -41,8 +44,7 @@ class DuplicateDetector:
         similarity_threshold: float = 0.95,
         check_semantic: bool = True,
     ) -> dict:
-        """
-        Detect duplicate documents using hash and semantic similarity.
+        """Detect duplicate documents using hash and semantic similarity.
 
         Args:
             doc_ids: Optional list of document IDs to check
@@ -106,7 +108,9 @@ class DuplicateDetector:
     def _get_documents_to_check(
         self, doc_ids: list[str] = None, content_type: str = None
     ) -> list[dict]:
-        """Get documents to check for duplicates."""
+        """
+        Get documents to check for duplicates.
+        """
         try:
             if doc_ids:
                 # Get specific documents
@@ -140,7 +144,9 @@ class DuplicateDetector:
             return []
 
     def _get_document(self, doc_id: str) -> dict | None:
-        """Get single document."""
+        """
+        Get single document.
+        """
         result = self.db.fetch_one("SELECT * FROM content_unified WHERE id = ?", (doc_id,))
         if result:
             return result
@@ -163,7 +169,9 @@ class DuplicateDetector:
         return result
 
     def _detect_exact_duplicates(self, documents: list[dict]) -> list[dict]:
-        """Detect exact duplicates using SHA-256 hashing."""
+        """
+        Detect exact duplicates using SHA-256 hashing.
+        """
         hash_groups = defaultdict(list)
 
         for doc in documents:
@@ -188,7 +196,9 @@ class DuplicateDetector:
         return duplicate_groups
 
     def _compute_document_hash(self, doc: dict) -> str:
-        """Compute SHA-256 hash of document content."""
+        """
+        Compute SHA-256 hash of document content.
+        """
         doc_id = doc.get("id")
 
         # Check cache
@@ -219,7 +229,9 @@ class DuplicateDetector:
     def _detect_semantic_duplicates(
         self, documents: list[dict], threshold: float, exact_groups: list[dict]
     ) -> list[dict]:
-        """Detect near-duplicates using semantic similarity."""
+        """
+        Detect near-duplicates using semantic similarity.
+        """
         # Get documents not in exact duplicate groups
         exact_duplicate_ids = set()
         for group in exact_groups:
@@ -266,7 +278,9 @@ class DuplicateDetector:
         return duplicate_groups
 
     def _get_document_embedding(self, doc: dict) -> np.ndarray | None:
-        """Get or generate embedding for document."""
+        """
+        Get or generate embedding for document.
+        """
         doc_id = doc["id"]
 
         try:
@@ -299,7 +313,9 @@ class DuplicateDetector:
             return None
 
     def _group_similar_documents(self, similar_pairs: list[tuple[str, str, float]]) -> list[dict]:
-        """Group similar document pairs into clusters."""
+        """
+        Group similar document pairs into clusters.
+        """
         # Build adjacency list
         graph = defaultdict(set)
         similarity_scores = {}
@@ -356,8 +372,7 @@ class DuplicateDetector:
         return groups
 
     def remove_duplicates(self, duplicate_groups: list[dict], keep_strategy: str = "first") -> dict:
-        """
-        Remove duplicate documents based on strategy.
+        """Remove duplicate documents based on strategy.
 
         Args:
             duplicate_groups: List of duplicate groups from detect_duplicates
@@ -427,7 +442,9 @@ class DuplicateDetector:
         }
 
     def find_duplicate_emails(self) -> dict:
-        """Specialized method to find duplicate emails."""
+        """
+        Specialized method to find duplicate emails.
+        """
         # Get all emails
         emails = self.db.fetch(
             """
@@ -458,8 +475,7 @@ class DuplicateDetector:
 
 
 def detect_all_duplicates(content_type: str = None, similarity_threshold: float = 0.95) -> dict:
-    """
-    Convenience function to detect all duplicates.
+    """Convenience function to detect all duplicates.
 
     Args:
         content_type: Optional content type filter

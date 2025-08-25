@@ -1,5 +1,5 @@
-"""
-Shared utilities for integration tests.
+"""Shared utilities for integration tests.
+
 Provides database setup, file management, and verification helpers.
 """
 
@@ -17,8 +17,7 @@ from shared.simple_db import SimpleDB
 
 
 def create_test_database(db_path: str | None = None) -> tuple[SimpleDB, str]:
-    """
-    Create a temporary database with all required tables.
+    """Create a temporary database with all required tables.
 
     Returns:
         tuple: (SimpleDB instance, database path)
@@ -101,8 +100,7 @@ def create_test_database(db_path: str | None = None) -> tuple[SimpleDB, str]:
 
 
 def cleanup_test_files(paths: list[str]) -> None:
-    """
-    Remove test artifacts from filesystem.
+    """Remove test artifacts from filesystem.
 
     Args:
         paths: List of file/directory paths to remove
@@ -118,8 +116,7 @@ def cleanup_test_files(paths: list[str]) -> None:
 
 
 def setup_data_directories(base_path: str) -> dict[str, str]:
-    """
-    Create data pipeline directory structure for testing.
+    """Create data pipeline directory structure for testing.
 
     Args:
         base_path: Base directory for data pipeline
@@ -142,8 +139,7 @@ def setup_data_directories(base_path: str) -> dict[str, str]:
 
 
 def wait_for_processing(check_func, timeout: int = 30, interval: float = 0.5) -> bool:
-    """
-    Wait for async processing to complete.
+    """Wait for async processing to complete.
 
     Args:
         check_func: Function that returns True when processing is complete
@@ -166,8 +162,7 @@ def wait_for_processing(check_func, timeout: int = 30, interval: float = 0.5) ->
 def verify_summary_quality(
     summary: dict[str, Any], min_keywords: int = 3, min_sentences: int = 1
 ) -> bool:
-    """
-    Check if summary meets minimum quality requirements.
+    """Check if summary meets minimum quality requirements.
 
     Args:
         summary: Summary dictionary from database
@@ -198,8 +193,7 @@ def verify_summary_quality(
 
 
 def create_test_email_data() -> dict[str, Any]:
-    """
-    Create realistic test email data with legal content.
+    """Create realistic test email data with legal content.
 
     Returns:
         dict: Email data suitable for testing
@@ -244,8 +238,7 @@ def create_test_email_data() -> dict[str, Any]:
 
 
 def verify_file_in_directory(directory: str, filename_pattern: str) -> bool:
-    """
-    Check if a file matching the pattern exists in directory.
+    """Check if a file matching the pattern exists in directory.
 
     Args:
         directory: Directory path to check
@@ -265,8 +258,7 @@ def verify_file_in_directory(directory: str, filename_pattern: str) -> bool:
 
 
 def get_test_pdf_path() -> str:
-    """
-    Get path to a test PDF file.
+    """Get path to a test PDF file.
 
     Returns:
         str: Full path to test PDF
@@ -281,8 +273,7 @@ def get_test_pdf_path() -> str:
 
 
 def verify_database_record(db: SimpleDB, table: str, where_clause: str, params: tuple = ()) -> bool:
-    """
-    Check if a record exists in database.
+    """Check if a record exists in database.
 
     Args:
         db: SimpleDB instance
@@ -299,8 +290,7 @@ def verify_database_record(db: SimpleDB, table: str, where_clause: str, params: 
 
 
 def get_summary_for_document(db: SimpleDB, document_id: str) -> dict | None:
-    """
-    Get summary data for a document.
+    """Get summary data for a document.
 
     Args:
         db: SimpleDB instance

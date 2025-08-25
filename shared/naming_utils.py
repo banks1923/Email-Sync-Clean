@@ -1,8 +1,8 @@
-"""
-Markdown File Naming Utilities
+"""Markdown File Naming Utilities.
 
-Provides cross-platform filename generation, slugification, and validation
-for analog database markdown files. Follows CLAUDE.md principles.
+Provides cross-platform filename generation, slugification, and
+validation for analog database markdown files. Follows CLAUDE.md
+principles.
 """
 
 import hashlib
@@ -15,7 +15,9 @@ from loguru import logger
 
 
 class MarkdownNamingUtils:
-    """Core utilities for markdown file naming with cross-platform compatibility."""
+    """
+    Core utilities for markdown file naming with cross-platform compatibility.
+    """
 
     # Reserved names that cannot be used on Windows
     RESERVED_NAMES = {
@@ -50,12 +52,13 @@ class MarkdownNamingUtils:
     MAX_FILENAME_LENGTH = 200  # Leave room for extensions and collision resolution
 
     def __init__(self):
-        """Initialize naming utilities."""
+        """
+        Initialize naming utilities.
+        """
         self.logger = logger.bind(service="naming_utils")
 
     def slugify(self, text: str, max_length: int | None = None) -> str:
-        """
-        Convert text to URL-safe slug format for filenames.
+        """Convert text to URL-safe slug format for filenames.
 
         Args:
             text: Input text to slugify
@@ -99,8 +102,7 @@ class MarkdownNamingUtils:
         return text
 
     def sanitize_filename(self, filename: str) -> str:
-        """
-        Sanitize filename for cross-platform compatibility.
+        """Sanitize filename for cross-platform compatibility.
 
         Args:
             filename: Raw filename to sanitize
@@ -134,8 +136,7 @@ class MarkdownNamingUtils:
         return filename
 
     def truncate_filename(self, filename: str, max_length: int | None = None) -> str:
-        """
-        Truncate filename while preserving extension.
+        """Truncate filename while preserving extension.
 
         Args:
             filename: Filename to truncate
@@ -254,8 +255,7 @@ class MarkdownNamingUtils:
         return filename
 
     def extract_date_from_filename(self, filename: str) -> datetime | None:
-        """
-        Extract date from filename if it follows date-prefixed convention.
+        """Extract date from filename if it follows date-prefixed convention.
 
         Args:
             filename: Filename to parse
@@ -276,8 +276,7 @@ class MarkdownNamingUtils:
         return None
 
     def is_valid_markdown_filename(self, filename: str) -> bool:
-        """
-        Check if filename is valid for markdown files.
+        """Check if filename is valid for markdown files.
 
         Args:
             filename: Filename to validate
@@ -312,8 +311,7 @@ class MarkdownNamingUtils:
         return True
 
     def check_collision(self, filepath: Path) -> bool:
-        """
-        Check if a file already exists at the given path.
+        """Check if a file already exists at the given path.
 
         Args:
             filepath: Path to check for collision
@@ -326,8 +324,7 @@ class MarkdownNamingUtils:
     def generate_unique_filename(
         self, base_path: Path, filename: str, strategy: str = "counter"
     ) -> str:
-        """
-        Generate unique filename by resolving collisions.
+        """Generate unique filename by resolving collisions.
 
         Args:
             base_path: Directory where file will be placed
@@ -358,7 +355,9 @@ class MarkdownNamingUtils:
             return self._resolve_with_counter(base_path, stem, suffix)
 
     def _resolve_with_counter(self, base_path: Path, stem: str, suffix: str) -> str:
-        """Resolve collision by appending counter (_1, _2, etc.)."""
+        """
+        Resolve collision by appending counter (_1, _2, etc.).
+        """
         counter = 1
         max_attempts = 1000  # Prevent infinite loops
 
@@ -373,7 +372,9 @@ class MarkdownNamingUtils:
         return self._resolve_with_timestamp(base_path, stem, suffix)
 
     def _resolve_with_timestamp(self, base_path: Path, stem: str, suffix: str) -> str:
-        """Resolve collision by appending timestamp."""
+        """
+        Resolve collision by appending timestamp.
+        """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         new_filename = f"{stem}_{timestamp}{suffix}"
 
@@ -386,7 +387,9 @@ class MarkdownNamingUtils:
         return new_filename
 
     def _resolve_with_hash(self, base_path: Path, stem: str, suffix: str) -> str:
-        """Resolve collision by appending content hash (if available)."""
+        """
+        Resolve collision by appending content hash (if available).
+        """
         # Generate a short hash from stem + current time for uniqueness
         content = f"{stem}_{datetime.now().isoformat()}"
         hash_digest = hashlib.md5(content.encode()).hexdigest()[:8]
@@ -398,8 +401,7 @@ class MarkdownNamingUtils:
     def resolve_thread_collision(
         self, base_path: Path, subject: str, thread_id: str = "", participants: list[str] = None
     ) -> str:
-        """
-        Special collision resolution for email threads with same subject.
+        """Special collision resolution for email threads with same subject.
 
         Args:
             base_path: Directory where file will be placed
@@ -440,8 +442,7 @@ class MarkdownNamingUtils:
     def find_similar_filenames(
         self, base_path: Path, filename: str, threshold: float = 0.8
     ) -> list[str]:
-        """
-        Find existing files with similar names (potential duplicates).
+        """Find existing files with similar names (potential duplicates).
 
         Args:
             base_path: Directory to search in
@@ -472,8 +473,8 @@ class MarkdownNamingUtils:
         return similar_files
 
     def _calculate_similarity(self, str1: str, str2: str) -> float:
-        """
-        Calculate simple similarity between two strings using Levenshtein-like approach.
+        """Calculate simple similarity between two strings using Levenshtein-
+        like approach.
 
         Args:
             str1: First string
@@ -502,16 +503,19 @@ class MarkdownNamingUtils:
 
 
 class CollisionResolver:
-    """Dedicated class for handling filename collisions and duplicates."""
+    """
+    Dedicated class for handling filename collisions and duplicates.
+    """
 
     def __init__(self, naming_utils: MarkdownNamingUtils | None = None):
-        """Initialize collision resolver."""
+        """
+        Initialize collision resolver.
+        """
         self.naming_utils = naming_utils or MarkdownNamingUtils()
         self.logger = logger.bind(service="collision_resolver")
 
     def resolve_collision(self, target_path: Path, strategy: str = "counter") -> Path:
-        """
-        Resolve filename collision and return unique path.
+        """Resolve filename collision and return unique path.
 
         Args:
             target_path: Desired file path
@@ -533,8 +537,7 @@ class CollisionResolver:
     def check_potential_duplicates(
         self, target_path: Path, similarity_threshold: float = 0.8
     ) -> list[Path]:
-        """
-        Check for potential duplicate files based on name similarity.
+        """Check for potential duplicate files based on name similarity.
 
         Args:
             target_path: Path to check for duplicates
@@ -550,8 +553,7 @@ class CollisionResolver:
         return [target_path.parent / name for name in similar_names]
 
     def suggest_resolution_strategies(self, collision_path: Path) -> list[str]:
-        """
-        Suggest resolution strategies for a collision.
+        """Suggest resolution strategies for a collision.
 
         Args:
             collision_path: Path that has collision
@@ -575,7 +577,9 @@ class CollisionResolver:
 
 
 class FilenameValidator:
-    """Cross-platform filename validation utilities."""
+    """
+    Cross-platform filename validation utilities.
+    """
 
     # Platform-specific illegal characters
     WINDOWS_ILLEGAL = r'[<>:"/\\|?*\x00-\x1f]'
@@ -615,12 +619,13 @@ class FilenameValidator:
     MACOS_MAX_FILENAME = 255
 
     def __init__(self):
-        """Initialize filename validator."""
+        """
+        Initialize filename validator.
+        """
         self.logger = logger.bind(service="filename_validator")
 
     def validate_filename(self, filename: str, target_platform: str = "all") -> dict:
-        """
-        Validate filename against platform-specific restrictions.
+        """Validate filename against platform-specific restrictions.
 
         Args:
             filename: Filename to validate
@@ -649,7 +654,9 @@ class FilenameValidator:
         return result
 
     def _validate_windows(self, filename: str, result: dict):
-        """Validate filename for Windows compatibility."""
+        """
+        Validate filename for Windows compatibility.
+        """
         # Check illegal characters
         if re.search(self.WINDOWS_ILLEGAL, filename):
             result["valid"] = False
@@ -682,7 +689,9 @@ class FilenameValidator:
             )
 
     def _validate_macos(self, filename: str, result: dict):
-        """Validate filename for macOS compatibility."""
+        """
+        Validate filename for macOS compatibility.
+        """
         # Check illegal characters (mainly colon)
         if re.search(self.MACOS_ILLEGAL, filename):
             result["valid"] = False
@@ -700,7 +709,9 @@ class FilenameValidator:
             result["warnings"].append("Files starting with '.' are hidden on macOS/Linux")
 
     def _validate_linux(self, filename: str, result: dict):
-        """Validate filename for Linux compatibility."""
+        """
+        Validate filename for Linux compatibility.
+        """
         # Check illegal characters (mainly null and forward slash)
         if re.search(self.LINUX_ILLEGAL, filename):
             result["valid"] = False
@@ -714,8 +725,7 @@ class FilenameValidator:
             )
 
     def validate_path_length(self, filepath: str, target_platform: str = "all") -> dict:
-        """
-        Validate full path length restrictions.
+        """Validate full path length restrictions.
 
         Args:
             filepath: Full file path to validate
@@ -743,8 +753,7 @@ class FilenameValidator:
         return result
 
     def validate_characters(self, filename: str) -> dict:
-        """
-        Validate specific character usage in filename.
+        """Validate specific character usage in filename.
 
         Args:
             filename: Filename to check
@@ -779,8 +788,7 @@ class FilenameValidator:
         return result
 
     def suggest_fixes(self, filename: str, validation_result: dict) -> str:
-        """
-        Suggest fixes for filename validation errors.
+        """Suggest fixes for filename validation errors.
 
         Args:
             filename: Original filename
@@ -807,42 +815,58 @@ class FilenameValidator:
 
 # Convenience functions for common operations
 def slugify_text(text: str, max_length: int | None = None) -> str:
-    """Convenience function to slugify text."""
+    """
+    Convenience function to slugify text.
+    """
     return MarkdownNamingUtils().slugify(text, max_length)
 
 
 def sanitize_filename(filename: str) -> str:
-    """Convenience function to sanitize filename."""
+    """
+    Convenience function to sanitize filename.
+    """
     return MarkdownNamingUtils().sanitize_filename(filename)
 
 
 def generate_document_name(title: str, doc_type: str = "document") -> str:
-    """Convenience function to generate document filename."""
+    """
+    Convenience function to generate document filename.
+    """
     return MarkdownNamingUtils().generate_document_filename(title, doc_type)
 
 
 def generate_email_name(subject: str, thread_id: str = "") -> str:
-    """Convenience function to generate email thread filename."""
+    """
+    Convenience function to generate email thread filename.
+    """
     return MarkdownNamingUtils().generate_email_thread_filename(subject, thread_id)
 
 
 def resolve_collision(target_path: Path, strategy: str = "counter") -> Path:
-    """Convenience function to resolve filename collision."""
+    """
+    Convenience function to resolve filename collision.
+    """
     return CollisionResolver().resolve_collision(target_path, strategy)
 
 
 def check_for_duplicates(target_path: Path, similarity_threshold: float = 0.8) -> list[Path]:
-    """Convenience function to check for potential duplicates."""
+    """
+    Convenience function to check for potential duplicates.
+    """
     return CollisionResolver().check_potential_duplicates(target_path, similarity_threshold)
 
 
 def validate_filename(filename: str, target_platform: str = "all") -> dict:
-    """Convenience function to validate filename for cross-platform compatibility."""
+    """
+    Convenience function to validate filename for cross-platform compatibility.
+    """
     return FilenameValidator().validate_filename(filename, target_platform)
 
 
 def suggest_filename_fixes(filename: str) -> str:
-    """Convenience function to get suggested fixes for problematic filename."""
+    """
+    Convenience function to get suggested fixes for problematic filename.
+    """
     validator = FilenameValidator()
     validation = validator.validate_filename(filename)
     return validator.suggest_fixes(filename, validation)

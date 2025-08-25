@@ -14,7 +14,7 @@ Architecture: Wraps existing OCRCoordinator with quality gates and enhanced proc
 
 import time
 import uuid
-from typing import Dict, Any, List
+from typing import Any
 from datetime import datetime
 from loguru import logger
 
@@ -32,9 +32,8 @@ from shared.content_quality_scorer import ContentQualityScorer, ValidationStatus
 
 
 class EnhancedOCRCoordinator:
-    """
-    Enhanced OCR coordinator with quality gates and dual-pass processing.
-    
+    """Enhanced OCR coordinator with quality gates and dual-pass processing.
+
     Features:
     - Quality-gated pipeline with fail-fast at each stage
     - Born-digital fast-path for text-based PDFs
@@ -73,14 +72,13 @@ class EnhancedOCRCoordinator:
         force_ocr: bool = False,
         quality_gates_enabled: bool = True
     ) -> dict[str, Any]:
-        """
-        Main enhanced OCR processing with quality gates and fail-fast.
-        
+        """Main enhanced OCR processing with quality gates and fail-fast.
+
         Args:
             pdf_path: Path to PDF file
             force_ocr: Force OCR even for text PDFs
             quality_gates_enabled: Enable quality validation gates
-            
+
         Returns:
             Dict with extracted text, quality metrics, and processing metadata
         """
@@ -435,5 +433,7 @@ class EnhancedOCRCoordinator:
 
 
 def get_enhanced_ocr_coordinator(dpi: int = 300) -> EnhancedOCRCoordinator:
-    """Factory function for enhanced OCR coordinator."""
+    """
+    Factory function for enhanced OCR coordinator.
+    """
     return EnhancedOCRCoordinator(dpi=dpi)

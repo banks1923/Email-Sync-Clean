@@ -17,10 +17,14 @@ from gmail.main import GmailService
 
 
 class TestGmailServiceCore:
-    """Essential Gmail service tests."""
+    """
+    Essential Gmail service tests.
+    """
     
     def test_service_initialization(self, simple_db):
-        """Test Gmail service initializes with all required components."""
+        """
+        Test Gmail service initializes with all required components.
+        """
         service = GmailService(db_path=simple_db.db_path)
         
         assert service.gmail_api is not None
@@ -31,7 +35,9 @@ class TestGmailServiceCore:
 
     @patch('gmail.main.GmailService._sync_emails_batch')
     def test_sync_emails_batch_mode(self, mock_batch, gmail_service_with_mocks):
-        """Test batch sync for production use (50+ emails)."""
+        """
+        Test batch sync for production use (50+ emails).
+        """
         service, mocks = gmail_service_with_mocks
         
         mock_messages = [{"id": f"msg_{i}"} for i in range(50)]
@@ -47,7 +53,9 @@ class TestGmailServiceCore:
         assert result["success"] is True
 
     def test_sync_emails_with_config(self, gmail_service_with_mocks):
-        """Test sync using config-based sender filters."""
+        """
+        Test sync using config-based sender filters.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['config'].get_query.return_value = "from:important@example.com"
@@ -66,7 +74,9 @@ class TestGmailServiceCore:
         assert result["success"] is True
 
     def test_sync_emails_api_failure(self, gmail_service_with_mocks):
-        """Test graceful handling of API failures."""
+        """
+        Test graceful handling of API failures.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['gmail_api'].get_messages.return_value = {
@@ -80,7 +90,9 @@ class TestGmailServiceCore:
         assert "API quota exceeded" in result["error"]
 
     def test_sync_incremental_with_history(self, gmail_service_with_mocks):
-        """Test incremental sync using Gmail History API."""
+        """
+        Test incremental sync using Gmail History API.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['storage'].get_last_history_id.return_value = "12345"
@@ -97,7 +109,9 @@ class TestGmailServiceCore:
         assert result["processed"] == 2
 
     def test_sync_incremental_fallback_to_full(self, gmail_service_with_mocks):
-        """Test fallback to full sync when no history available."""
+        """
+        Test fallback to full sync when no history available.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['storage'].get_last_history_id.return_value = None
@@ -113,7 +127,9 @@ class TestGmailServiceCore:
         assert result["success"] is True
 
     def test_sync_emails_batch_chunking(self, gmail_service_with_mocks):
-        """Test batch sync processes in 50-email chunks."""
+        """
+        Test batch sync processes in 50-email chunks.
+        """
         service, mocks = gmail_service_with_mocks
         
         # Create 120 messages
@@ -136,7 +152,9 @@ class TestGmailServiceCore:
         assert result["processed"] == 120
 
     def test_fetch_and_save_messages(self, gmail_service_with_mocks):
-        """Test fetching and saving messages with deduplication."""
+        """
+        Test fetching and saving messages with deduplication.
+        """
         service, mocks = gmail_service_with_mocks
         
         messages = [{"id": "msg1"}, {"id": "msg2"}]
@@ -160,7 +178,9 @@ class TestGmailServiceCore:
         assert result["duplicates"] == 1
 
     def test_process_email_summaries(self, gmail_service_with_mocks):
-        """Test email summarization for long content."""
+        """
+        Test email summarization for long content.
+        """
         service, mocks = gmail_service_with_mocks
         
         # Mock emails with long content
@@ -176,7 +196,9 @@ class TestGmailServiceCore:
         assert mocks['db'].add_content.call_count == 1
 
     def test_get_emails_basic(self, gmail_service_with_mocks):
-        """Test retrieving emails from storage."""
+        """
+        Test retrieving emails from storage.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['storage'].get_all_emails.return_value = {
@@ -191,7 +213,9 @@ class TestGmailServiceCore:
         assert result["count"] == 2
 
     def test_get_emails_storage_failure(self, gmail_service_with_mocks):
-        """Test handling storage failures gracefully."""
+        """
+        Test handling storage failures gracefully.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['storage'].get_all_emails.return_value = {
@@ -205,7 +229,9 @@ class TestGmailServiceCore:
         assert "Database locked" in result["error"]
 
     def test_sync_emails_empty_messages(self, gmail_service_with_mocks):
-        """Test handling empty message list."""
+        """
+        Test handling empty message list.
+        """
         service, mocks = gmail_service_with_mocks
         
         mocks['gmail_api'].get_messages.return_value = {
@@ -220,7 +246,9 @@ class TestGmailServiceCore:
         assert result["message"] == "No messages to sync"
 
     def test_gmail_service_with_real_db(self, simple_db):
-        """Test Gmail service with real database operations."""
+        """
+        Test Gmail service with real database operations.
+        """
         GmailService(db_path=simple_db.db_path)
         
         # Verify database tables exist
@@ -231,7 +259,9 @@ class TestGmailServiceCore:
         assert 'summaries' in table_names
 
     def test_config_integration(self, simple_db):
-        """Test config loading and usage."""
+        """
+        Test config loading and usage.
+        """
         with patch('gmail.config.GmailConfig') as mock_config_class:
             mock_config = Mock()
             mock_config.preferred_senders = ["test@example.com"]
@@ -244,7 +274,9 @@ class TestGmailServiceCore:
             assert service.config.preferred_senders == ["test@example.com"]
 
     def test_end_to_end_sync_flow(self, gmail_service_with_mocks):
-        """Test complete sync flow from API to storage."""
+        """
+        Test complete sync flow from API to storage.
+        """
         service, mocks = gmail_service_with_mocks
         
         # Setup complete flow

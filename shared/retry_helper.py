@@ -1,5 +1,5 @@
-"""
-Simple retry decorator for transient failures.
+"""Simple retry decorator for transient failures.
+
 No complex configuration - just sensible defaults that work.
 """
 
@@ -16,8 +16,7 @@ def retry_on_failure(
     backoff: float = 2.0,
     logger_instance: Any = None,
 ) -> Callable:
-    """
-    Simple retry decorator with exponential backoff.
+    """Simple retry decorator with exponential backoff.
 
     Args:
         max_attempts: Maximum retry attempts (default 3)
@@ -66,7 +65,9 @@ def retry_on_failure(
 
 # Convenience decorators for common use cases
 def retry_database(func: Callable) -> Callable:
-    """Retry decorator specifically for database operations."""
+    """
+    Retry decorator specifically for database operations.
+    """
     import sqlite3
 
     return retry_on_failure(
@@ -75,7 +76,9 @@ def retry_database(func: Callable) -> Callable:
 
 
 def retry_network(func: Callable) -> Callable:
-    """Retry decorator specifically for network operations."""
+    """
+    Retry decorator specifically for network operations.
+    """
     import socket
     import urllib.error
 

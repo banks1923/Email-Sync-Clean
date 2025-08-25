@@ -18,7 +18,9 @@ from loguru import logger
 
 @dataclass
 class DatabaseMetrics:
-    """Database health metrics data structure"""
+    """
+    Database health metrics data structure.
+    """
 
     connection_time_ms: float
     query_time_ms: float
@@ -33,7 +35,9 @@ class DatabaseMetrics:
 
 @dataclass
 class OperationMetric:
-    """Individual operation metric"""
+    """
+    Individual operation metric.
+    """
 
     timestamp: datetime
     operation_type: str
@@ -43,8 +47,7 @@ class OperationMetric:
 
 
 class DatabaseHealthMonitor:
-    """
-    Production-ready database health monitoring system
+    """Production-ready database health monitoring system.
 
     Features:
     - Connection health checks with timing
@@ -55,8 +58,7 @@ class DatabaseHealthMonitor:
     """
 
     def __init__(self, db_path: str, monitoring_window_minutes: int = 60) -> None:
-        """
-        Initialize database health monitor
+        """Initialize database health monitor.
 
         Args:
             db_path: Path to SQLite database file
@@ -77,8 +79,7 @@ class DatabaseHealthMonitor:
         self.disk_usage_threshold = 0.85  # 85% disk usage threshold
 
     def health_check(self) -> dict[str, Any]:
-        """
-        Comprehensive database health check
+        """Comprehensive database health check.
 
         Returns:
             Dict with health status and detailed metrics
@@ -135,8 +136,7 @@ class DatabaseHealthMonitor:
         success: bool,
         error_message: str | None = None,
     ) -> None:
-        """
-        Track database operation performance
+        """Track database operation performance.
 
         Args:
             operation_type: Type of operation (SELECT, INSERT, UPDATE, etc.)
@@ -170,8 +170,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Database operation failed: {operation_type} - {error_message}")
 
     def get_performance_report(self) -> dict[str, Any]:
-        """
-        Generate comprehensive performance report
+        """Generate comprehensive performance report.
 
         Returns:
             Dict with performance metrics and analysis
@@ -210,7 +209,9 @@ class DatabaseHealthMonitor:
         }
 
     def _test_database_connection(self) -> dict[str, Any]:
-        """Test database connectivity and measure connection time"""
+        """
+        Test database connectivity and measure connection time.
+        """
         start_time = time.time()
 
         try:
@@ -247,7 +248,9 @@ class DatabaseHealthMonitor:
             }
 
     def _get_current_metrics(self) -> DatabaseMetrics:
-        """Get current database metrics"""
+        """
+        Get current database metrics.
+        """
         with self._lock:
             recent_metrics = self._get_recent_metrics()
 
@@ -293,7 +296,9 @@ class DatabaseHealthMonitor:
         )
 
     def _check_disk_space(self) -> dict[str, Any]:
-        """Check disk space for database file"""
+        """
+        Check disk space for database file.
+        """
         try:
             db_size_mb, available_disk_mb, disk_usage_percent = self._get_disk_metrics()
 
@@ -313,7 +318,9 @@ class DatabaseHealthMonitor:
             return {"success": False, "error": f"Failed to check disk space: {str(e)}"}
 
     def _get_disk_metrics(self) -> tuple[float, float, float]:
-        """Get database size and disk space metrics"""
+        """
+        Get database size and disk space metrics.
+        """
         # Database file size
         db_size_mb = 0.0
         if os.path.exists(self.db_path):
@@ -330,7 +337,9 @@ class DatabaseHealthMonitor:
         return db_size_mb, available_disk_mb, disk_usage_percent
 
     def _analyze_recent_performance(self) -> dict[str, Any]:
-        """Analyze recent performance trends"""
+        """
+        Analyze recent performance trends.
+        """
         with self._lock:
             recent_metrics = self._get_recent_metrics()
 
@@ -381,7 +390,9 @@ class DatabaseHealthMonitor:
         disk_result: dict,
         performance: dict,
     ) -> dict[str, Any]:
-        """Determine overall health status and generate alerts"""
+        """
+        Determine overall health status and generate alerts.
+        """
         alerts = []
         score = 100  # Start with perfect score
 
@@ -464,12 +475,16 @@ class DatabaseHealthMonitor:
         return {"status": status, "score": max(0, score), "alerts": alerts}
 
     def _get_recent_metrics(self) -> list[OperationMetric]:
-        """Get metrics within the monitoring window"""
+        """
+        Get metrics within the monitoring window.
+        """
         cutoff_time = datetime.now() - self.monitoring_window
         return [m for m in self.metrics_history if m.timestamp >= cutoff_time]
 
     def _analyze_operations_by_type(self, metrics: list[OperationMetric]) -> dict[str, Any]:
-        """Analyze operations grouped by type"""
+        """
+        Analyze operations grouped by type.
+        """
         operations = defaultdict(list)
 
         for metric in metrics:

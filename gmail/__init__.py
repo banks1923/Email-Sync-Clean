@@ -1,4 +1,5 @@
-"""Gmail service package for email synchronization with batch processing support.
+"""Gmail service package for email synchronization with batch processing
+support.
 
 This package provides Gmail API integration with features including:
 - OAuth2 authentication with secure keyring storage
@@ -17,7 +18,9 @@ from .storage import EmailStorage
 
 
 def get_gmail_service():
-    """Factory function for GmailService."""
+    """
+    Factory function for GmailService.
+    """
     return GmailService()
 
 

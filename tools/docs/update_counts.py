@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""
-Update documentation with auto-generated line counts and service information.
+"""Update documentation with auto-generated line counts and service
+information.
+
 Replaces manual claims with data from the audit system.
 """
 
@@ -16,7 +17,9 @@ from tools.docs.audit import DocumentationAuditor
 
 
 def format_service_table(services: list) -> str:
-    """Generate markdown table of services with line counts."""
+    """
+    Generate markdown table of services with line counts.
+    """
     
     # Filter out services with 0 lines (non-existent)  
     # Handle both dict and object formats
@@ -61,7 +64,9 @@ def format_service_table(services: list) -> str:
 
 
 def update_claude_md(audit_report: dict, file_path: Path) -> bool:
-    """Update CLAUDE.md with accurate line counts and service information."""
+    """
+    Update CLAUDE.md with accurate line counts and service information.
+    """
     
     with open(file_path, encoding='utf-8') as f:
         content = f.read()
@@ -126,7 +131,9 @@ def update_claude_md(audit_report: dict, file_path: Path) -> bool:
 
 
 def update_readme_md(audit_report: dict, file_path: Path) -> bool:
-    """Update README.md if it has similar false claims."""
+    """
+    Update README.md if it has similar false claims.
+    """
     
     if not file_path.exists():
         return False
@@ -158,7 +165,9 @@ def update_readme_md(audit_report: dict, file_path: Path) -> bool:
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+    """
     import argparse
     
     parser = argparse.ArgumentParser(description="Update documentation with audit data")

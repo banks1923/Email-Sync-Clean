@@ -1,6 +1,6 @@
 """
-Test suite for large PDF handling capabilities
-Tests memory management, streaming, and batch processing for 50MB+ PDFs
+Test suite for large PDF handling capabilities Tests memory management,
+streaming, and batch processing for 50MB+ PDFs.
 """
 
 import gc
@@ -20,11 +20,15 @@ if project_root not in sys.path:
 
 
 class TestLargePDFProcessing:
-    """Test processing of large PDF files with memory management"""
+    """
+    Test processing of large PDF files with memory management.
+    """
 
     @pytest.fixture
     def large_pdf_path(self):
-        """Path to a large test PDF (if available)"""
+        """
+        Path to a large test PDF (if available)
+        """
         # Check if we have the actual large PDF
         large_pdf = (
             "data/raw_uploads/Documents/Unlawful Detainer #1/UD - Complaint Summons, POS (full).pdf"
@@ -37,7 +41,9 @@ class TestLargePDFProcessing:
         )
 
     def test_memory_efficient_batch_processing(self):
-        """Test that batch processing maintains memory limits"""
+        """
+        Test that batch processing maintains memory limits.
+        """
         processor = PageByPageProcessor(batch_size=2, max_memory_mb=100)
 
         # Track memory usage
@@ -66,7 +72,9 @@ class TestLargePDFProcessing:
             gc.collect()
 
     def test_streaming_generator_memory_efficiency(self):
-        """Test that generator mode uses minimal memory"""
+        """
+        Test that generator mode uses minimal memory.
+        """
         processor = PageByPageProcessor()
 
         pdf_path = os.path.join(
@@ -90,7 +98,9 @@ class TestLargePDFProcessing:
             assert total_text_length > 0
 
     def test_batch_size_adjustment(self):
-        """Test different batch sizes for optimal performance"""
+        """
+        Test different batch sizes for optimal performance.
+        """
         batch_sizes = [1, 3, 5]
         results = []
 
@@ -117,7 +127,9 @@ class TestLargePDFProcessing:
 
     @patch("os.path.getsize")
     def test_automatic_routing_threshold(self, mock_getsize):
-        """Test automatic routing to page processor for large files"""
+        """
+        Test automatic routing to page processor for large files.
+        """
         service = get_pdf_service()
 
         # Mock a 93MB file (like our real test case)
@@ -131,7 +143,9 @@ class TestLargePDFProcessing:
             assert requires_progressive is True
 
     def test_page_range_extraction(self):
-        """Test extracting specific page ranges from large PDFs"""
+        """
+        Test extracting specific page ranges from large PDFs.
+        """
         processor = PageByPageProcessor(batch_size=2)
 
         pdf_path = os.path.join(
@@ -147,7 +161,9 @@ class TestLargePDFProcessing:
             assert "text" in result
 
     def test_progress_tracking_accuracy(self):
-        """Test that progress tracking is accurate"""
+        """
+        Test that progress tracking is accurate.
+        """
         processor = PageByPageProcessor(batch_size=1)
         progress_percentages = []
 
@@ -172,7 +188,9 @@ class TestLargePDFProcessing:
                 assert progress_percentages[-1] == 100.0
 
     def test_error_handling_in_batch_processing(self):
-        """Test error handling when processing fails for some pages"""
+        """
+        Test error handling when processing fails for some pages.
+        """
         processor = PageByPageProcessor(batch_size=2)
 
         # Test with corrupted PDF
@@ -189,7 +207,9 @@ class TestLargePDFProcessing:
                 assert "error" in result
 
     def test_concurrent_processing_safety(self):
-        """Test that concurrent processing doesn't cause issues"""
+        """
+        Test that concurrent processing doesn't cause issues.
+        """
         import threading
 
         processor = PageByPageProcessor(batch_size=1)

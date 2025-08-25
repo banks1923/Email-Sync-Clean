@@ -12,7 +12,7 @@ Follows CLAUDE.md principles: Simple > Complex, Direct > Indirect.
 
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 
@@ -20,7 +20,9 @@ from .simple_upload_processor import SimpleUploadProcessor
 
 
 class UnifiedIngestionService:
-    """Manual ingestion service for emails and documents through unified pipeline."""
+    """
+    Manual ingestion service for emails and documents through unified pipeline.
+    """
 
     def __init__(self):
         self.document_processor = SimpleUploadProcessor()
@@ -30,13 +32,13 @@ class UnifiedIngestionService:
         directory: str = "data/Stoneman_dispute/user_data",
         extensions: list[str] = None
     ) -> dict[str, Any]:
-        """
-        Process documents from directory recursively through unified pipeline.
-        
+        """Process documents from directory recursively through unified
+        pipeline.
+
         Args:
             directory: Directory to scan recursively
             extensions: File extensions to process (default: pdf, txt, docx, md)
-            
+
         Returns:
             Processing results with counts and file details
         """
@@ -101,12 +103,11 @@ class UnifiedIngestionService:
         return processed_results
 
     def ingest_emails(self, since: str = None) -> dict[str, Any]:
-        """
-        Process emails via GmailService.
-        
+        """Process emails via GmailService.
+
         Args:
             since: Date filter (e.g., '2024-01-01', 'last week')
-            
+
         Returns:
             Processing results from email sync
         """
@@ -148,13 +149,12 @@ class UnifiedIngestionService:
         document_directory: str = "data/Stoneman_dispute/user_data",
         email_since: str = None
     ) -> dict[str, Any]:
-        """
-        Process both emails and documents.
-        
+        """Process both emails and documents.
+
         Args:
             document_directory: Directory for document processing
             email_since: Date filter for emails
-            
+
         Returns:
             Combined results from both operations
         """
@@ -191,5 +191,8 @@ class UnifiedIngestionService:
 
 
 def get_ingestion_service() -> UnifiedIngestionService:
-    """Get ingestion service instance. Simple factory following CLAUDE.md principles."""
+    """Get ingestion service instance.
+
+    Simple factory following CLAUDE.md principles.
+    """
     return UnifiedIngestionService()

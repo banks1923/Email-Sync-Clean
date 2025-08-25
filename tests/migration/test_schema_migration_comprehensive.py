@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Comprehensive schema migration tests.
+"""Comprehensive schema migration tests.
 
 Tests the complete migration process from content_id to id schema,
 including business keys, deterministic UUIDs, and UPSERT functionality.
@@ -27,11 +26,15 @@ UUID_NAMESPACE = UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
 
 
 class TestSchemaMigration:
-    """Test complete schema migration process."""
+    """
+    Test complete schema migration process.
+    """
     
     @pytest.fixture
     def temp_db_path(self):
-        """Create temporary database for testing."""
+        """
+        Create temporary database for testing.
+        """
         fd, path = tempfile.mkstemp(suffix='.db')
         os.close(fd)
         yield path
@@ -42,7 +45,9 @@ class TestSchemaMigration:
     
     @pytest.fixture
     def pre_migration_db(self, temp_db_path):
-        """Set up database with old schema for migration testing."""
+        """
+        Set up database with old schema for migration testing.
+        """
         conn = sqlite3.connect(temp_db_path)
         cursor = conn.cursor()
         
@@ -88,7 +93,9 @@ class TestSchemaMigration:
         return temp_db_path
     
     def test_deterministic_uuid_generation(self):
-        """Test that UUID5 generation is deterministic and consistent."""
+        """
+        Test that UUID5 generation is deterministic and consistent.
+        """
         # Test email UUID generation
         email_uuid_1 = str(uuid5(UUID_NAMESPACE, "email:email123"))
         email_uuid_2 = str(uuid5(UUID_NAMESPACE, "email:email123"))
@@ -106,7 +113,9 @@ class TestSchemaMigration:
         assert email_uuid_1 != pdf_uuid_1, "Different inputs should produce different UUIDs"
     
     def test_business_key_uniqueness(self, temp_db_path):
-        """Test business key constraint prevents duplicates."""
+        """
+        Test business key constraint prevents duplicates.
+        """
         db = SimpleDB(temp_db_path)
         
         # Test UPSERT functionality if available
@@ -137,7 +146,9 @@ class TestSchemaMigration:
             assert records[0]['count'] == 1, "UPSERT should not create duplicates"
     
     def test_schema_migration_process(self, pre_migration_db):
-        """Test complete schema migration process."""
+        """
+        Test complete schema migration process.
+        """
         # Run migration
         migration = ContentSchemaMigration(pre_migration_db)
         metrics = migration.run_migration(dry_run=False)
@@ -157,7 +168,9 @@ class TestSchemaMigration:
                 assert row.get('external_id') is not None, "Email content should have external_id"
     
     def test_sql_string_compliance(self):
-        """Test that no code uses content_id in SQL strings."""
+        """
+        Test that no code uses content_id in SQL strings.
+        """
         project_root = Path(__file__).parent.parent.parent
         
         # Import and run the compliance checker
@@ -171,7 +184,9 @@ class TestSchemaMigration:
         assert len(violation_lines) == 0, f"Found prohibited content_id usage: {violation_lines}"
     
     def test_libcst_idempotency(self):
-        """Test that LibCST codemod is idempotent."""
+        """
+        Test that LibCST codemod is idempotent.
+        """
         project_root = Path(__file__).parent.parent.parent
         
         # Import compliance checker
@@ -182,7 +197,9 @@ class TestSchemaMigration:
         assert is_idempotent, f"LibCST codemod should be idempotent: {message}"
     
     def test_external_id_conventions(self):
-        """Test external_id format validation for different content types."""
+        """
+        Test external_id format validation for different content types.
+        """
         
         # Test email external_id format
         assert self._validate_email_id("178a1b2c3d4e5f6g"), "Valid email ID should pass"
@@ -194,16 +211,22 @@ class TestSchemaMigration:
         assert not self._validate_pdf_id("invalid_hash"), "Invalid PDF hash should fail"
     
     def _validate_email_id(self, external_id: str) -> bool:
-        """Validate email external_id format."""
+        """
+        Validate email external_id format.
+        """
         import re
         return bool(re.match(r'^[a-zA-Z0-9]{10,20}$', external_id))
     
     def _validate_pdf_id(self, external_id: str) -> bool:
-        """Validate PDF external_id format (SHA-256)."""
+        """
+        Validate PDF external_id format (SHA-256).
+        """
         return len(external_id) == 64 and all(c in '0123456789abcdef' for c in external_id.lower())
     
     def test_migration_idempotency(self, pre_migration_db):
-        """Test that migration can be run multiple times safely."""
+        """
+        Test that migration can be run multiple times safely.
+        """
         # Run migration first time
         migration1 = ContentSchemaMigration(pre_migration_db)
         migration1.run_migration(dry_run=False)
@@ -224,7 +247,9 @@ class TestSchemaMigration:
         assert len(metrics2['errors']) == 0, "Second migration should complete without errors"
     
     def test_qdrant_reconciliation_preparation(self, temp_db_path):
-        """Test that migration prepares data for Qdrant reconciliation."""
+        """
+        Test that migration prepares data for Qdrant reconciliation.
+        """
         db = SimpleDB(temp_db_path)
         
         # Add content with business keys
@@ -249,15 +274,21 @@ class TestSchemaMigration:
 
 
 class TestMigrationPerformance:
-    """Test migration performance characteristics."""
+    """
+    Test migration performance characteristics.
+    """
     
     def test_batch_performance(self, temp_db_path):
-        """Test that migration handles large batches efficiently."""
+        """
+        Test that migration handles large batches efficiently.
+        """
         # This would test migration of thousands of emails
         # to ensure performance is acceptable
     
     def test_memory_usage(self, temp_db_path):
-        """Test that migration doesn't consume excessive memory."""
+        """
+        Test that migration doesn't consume excessive memory.
+        """
         # This would monitor memory usage during migration
         # to ensure it stays within reasonable bounds
 

@@ -1,7 +1,7 @@
-"""
-Tests for EmailThreadProcessor (simplified after analog removal).
+"""Tests for EmailThreadProcessor (simplified after analog removal).
 
-Tests Gmail thread processing, chronological sorting, and markdown formatting.
+Tests Gmail thread processing, chronological sorting, and markdown
+formatting.
 """
 
 from unittest.mock import Mock, patch
@@ -22,11 +22,15 @@ pytestmark = pytest.mark.skipif(
 
 
 class TestEmailThreadProcessor:
-    """Test suite for EmailThreadProcessor (simplified)."""
+    """
+    Test suite for EmailThreadProcessor (simplified).
+    """
 
     @pytest.fixture
     def sample_messages(self):
-        """Create sample email messages for testing."""
+        """
+        Create sample email messages for testing.
+        """
         return [
             {
                 "message_id": "msg_001",
@@ -52,7 +56,9 @@ class TestEmailThreadProcessor:
 
     @pytest.fixture
     def mock_processor(self):
-        """Create EmailThreadProcessor with mocked Gmail service."""
+        """
+        Create EmailThreadProcessor with mocked Gmail service.
+        """
         processor = EmailThreadProcessor()
         
         # Mock Gmail service
@@ -67,14 +73,18 @@ class TestEmailThreadProcessor:
         return processor
 
     def test_initialization(self):
-        """Test EmailThreadProcessor initialization."""
+        """
+        Test EmailThreadProcessor initialization.
+        """
         if PROCESSOR_AVAILABLE:
             processor = EmailThreadProcessor()
             assert processor.gmail_service is None  # Set externally
             assert processor.max_emails_per_file == 100
 
     def test_sort_chronologically(self, mock_processor, sample_messages):
-        """Test chronological sorting of messages."""
+        """
+        Test chronological sorting of messages.
+        """
         # Reverse the messages
         reversed_messages = list(reversed(sample_messages))
         
@@ -84,7 +94,9 @@ class TestEmailThreadProcessor:
         assert sorted_messages[1]["message_id"] == "msg_002"
 
     def test_generate_thread_metadata(self, mock_processor, sample_messages):
-        """Test metadata generation for thread."""
+        """
+        Test metadata generation for thread.
+        """
         metadata = mock_processor._generate_thread_metadata(sample_messages, "thread_123")
         
         assert metadata["thread_id"] == "thread_123"
@@ -95,7 +107,9 @@ class TestEmailThreadProcessor:
         assert "bob@example.com" in metadata["participants"]
 
     def test_process_single_thread(self, mock_processor, sample_messages):
-        """Test processing a single thread (returns markdown)."""
+        """
+        Test processing a single thread (returns markdown).
+        """
         metadata = {
             "thread_id": "thread_123",
             "subject": "Test Thread",
@@ -116,7 +130,9 @@ class TestEmailThreadProcessor:
         assert result["suggested_filename"]
 
     def test_process_large_thread(self, mock_processor):
-        """Test processing a large thread (returns multiple markdown parts)."""
+        """
+        Test processing a large thread (returns multiple markdown parts).
+        """
         # Create 150 messages
         large_messages = []
         for i in range(150):
@@ -152,7 +168,9 @@ class TestEmailThreadProcessor:
         assert result["split_into_parts"] is True
 
     def test_format_message_as_markdown(self, mock_processor, sample_messages):
-        """Test formatting single message as markdown."""
+        """
+        Test formatting single message as markdown.
+        """
         with patch('infrastructure.documents.processors.email_thread_processor.clean_html_content') as mock_clean:
             mock_clean.return_value = "Hello Bob, this is the first message."
             
@@ -164,7 +182,9 @@ class TestEmailThreadProcessor:
         assert "Hello Bob, this is the first message." in markdown
 
     def test_generate_filename(self, mock_processor):
-        """Test filename generation."""
+        """
+        Test filename generation.
+        """
         metadata = {
             "thread_id": "thread_123",
             "subject": "Test Email Thread!",
@@ -184,7 +204,9 @@ class TestEmailThreadProcessor:
         assert "part2" in filename_part
 
     def test_process_thread_end_to_end(self, mock_processor, sample_messages):
-        """Test complete thread processing."""
+        """
+        Test complete thread processing.
+        """
         thread_id = "thread_123"
         
         # Mock the fetch method
@@ -202,7 +224,9 @@ class TestEmailThreadProcessor:
         assert result["markdown_content"]
 
     def test_validate_setup(self, mock_processor):
-        """Test setup validation."""
+        """
+        Test setup validation.
+        """
         result = mock_processor.validate_setup()
         
         assert "gmail_available" in result

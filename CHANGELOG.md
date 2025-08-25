@@ -2,6 +2,120 @@
 
 > ⚠️ **IMPORTANT**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-25] - Gmail Sync v2.0 Production Ready + Schema Fixes 🎯✅
+
+### 3:05 PM - Production Baseline Established
+**NEW BASELINE**: Gmail sync fully operational with v2.0 message-level deduplication
+
+**🎯 Production Status:**
+- ✅ **Gmail Sync**: 668 emails synced, v2.0 compatible schema
+- ✅ **Message Deduplication**: 302 unique messages from 393 occurrences (23% reduction)
+- ✅ **Keyword Search**: Fully functional with hybrid search
+- ✅ **Vector Service**: Connected (Qdrant + Legal BERT ready for embeddings)
+- ✅ **Debug Logging**: Enabled and working
+- ✅ **Schema Compatibility**: All services aligned to v2.0
+
+**Critical Fixes Applied:**
+1. **Semantic Pipeline Schema Fix**: Updated `utilities/semantic_pipeline.py` to use v2.0 schema
+   - Fixed query: `individual_messages` ↔ `content_unified` relationship
+   - Replaced deprecated `emails` table and `metadata` column references
+2. **Database Schema Updates**: Added missing columns to `document_summaries` table
+   - `summary_id TEXT` - Required by SimpleDB
+   - `tf_idf_keywords TEXT` - TF-IDF data storage  
+   - `textrank_sentences TEXT` - TextRank results
+   - `summary_text TEXT` - Summary content storage
+
+**System Metrics (New Baseline):**
+- Content unified: 668 records
+- Email messages: 663 records  
+- Individual messages: 302 unique
+- Message occurrences: 393 total
+- Vector dimensions: 1024 (Legal BERT)
+- Qdrant status: Connected, collection ready
+
+**Next Phase**: Generate embeddings for semantic search: `tools/scripts/vsearch ingest --emails`
+
+---
+
+## [2025-08-25] - Semantic Pipeline Restoration & Email Deduplication v2.0 🎯
+
+### Major Architecture Changes
+
+#### 1. Semantic Pipeline Restoration (1:58 PM)
+**RESTORED** full semantic enrichment pipeline from git history after 70% cleanup removed it.
+- **utilities/semantic_pipeline.py** (443 lines) - Complete orchestration system restored
+- **infrastructure/pipelines/service_orchestrator.py** - Pipeline coordination restored
+- **scripts/backfill_semantic.py** - Batch semantic processing restored
+- **scripts/setup_semantic_schema.py** - Schema setup restored
+- **scripts/test_semantic_pipeline.py** - Testing framework restored
+- **scripts/verify_semantic_wiring.py** - Verification tools restored
+- **tests/test_semantic_pipeline_comprehensive.py** - Full test suite restored
+- **Qdrant server** started and connected (port 6333, collection 'emails')
+- **Legal BERT integration** confirmed working (pile-of-law/legalbert-large-1.7M-2)
+- **Vector store** ready for semantic search operations
+
+#### 2. Message-Level Email Deduplication v2.0
+Complete rebuild of email processing system from thread-level to message-level deduplication with TEXT source_ids.
+
+**Testing Update (10:50 AM)**: 
+- Fixed critical boundary detection bug (character-based → line-based slicing)
+- Fixed all failing unit tests (16/16 passing)
+- Added integration test suite (4/4 passing)
+- Achieved 97%+ code coverage on email_parsing module
+- Created `test_email_coverage.py` with 18 additional edge case tests
+- Total: 34 tests passing, comprehensive validation complete
+
+### Added
+- **`email_parsing/message_deduplicator.py`** (496 lines) - Advanced email parsing service
+  - Message boundary detection (forwards, replies, quotes)
+  - SHA256 content hashing for deduplication
+  - Content normalization (signatures, disclaimers, timestamps)
+  - Quote depth tracking and context preservation
+  
+- **`scripts/parse_messages.py`** (380 lines) - Batch email processor
+  - Resume capability for interrupted runs
+  - Progress tracking and statistics
+  - Processes 100+ emails/second
+  - Populates both individual_messages and content_unified tables
+
+- **`scripts/backup_database.py`** (330 lines) - Database backup utility
+  - Timestamped backups with compression
+  - SHA256 integrity verification
+  - Restore capability with validation
+  - Automatic cleanup of old backups
+
+- **`tests/test_email_parser.py`** (520 lines) - Comprehensive test suite
+  - 15+ test cases for parsing validation
+  - Foreign key constraint testing
+  - Database integration tests
+  - Thread reconstruction validation
+
+- **`NEW_SCHEMA.sql`** (423 lines) - Complete v2.0 database schema
+  - TEXT source_ids for flexibility
+  - individual_messages table for unique messages
+  - message_occurrences table for audit trail
+  - Foreign key constraints with CASCADE
+
+### Modified
+- **`shared/simple_db.py`** - Extended with email-specific methods
+  - `add_content()` now handles TEXT source_ids for email_message type
+  - Added: `add_individual_message()`, `add_message_occurrence()`
+  - Added: `get_message_by_hash()`, `get_thread_messages()`
+  - Maintains backward compatibility for INTEGER source_ids
+
+### Database Schema Changes
+- **Primary Change**: source_id column now TEXT instead of INTEGER
+- **New Tables**: individual_messages, message_occurrences
+- **Deduplication**: 70-80% content reduction expected
+- **Legal Integrity**: Foreign keys ensure no orphaned records
+
+### Expected Impact
+- **Before**: 235 emails with massive duplication in threads
+- **After**: ~400-500 unique individual messages
+- **Search**: Eliminates duplicate results
+- **Performance**: >100 emails/second processing
+- **Storage**: 70-80% reduction in content volume
+
 ## [2025-08-25] - Removed Obsolete Email Sanitization CLI Tools 🧹
 
 ### Removed

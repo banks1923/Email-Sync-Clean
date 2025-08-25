@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Automated transformation to centralize configuration using LibCST.
+"""Automated transformation to centralize configuration using LibCST.
 
 Replaces hardcoded paths and config instantiation across the codebase.
 """
@@ -10,7 +9,9 @@ import libcst as cst
 
 
 class ConfigCentralizationTransformer(cst.CSTTransformer):
-    """Transform hardcoded configs to use centralized settings."""
+    """
+    Transform hardcoded configs to use centralized settings.
+    """
 
     def __init__(self):
         self.changes = []
@@ -18,7 +19,9 @@ class ConfigCentralizationTransformer(cst.CSTTransformer):
     def leave_SimpleStatementLine(
         self, original_node: cst.SimpleStatementLine, updated_node: cst.SimpleStatementLine
     ) -> cst.SimpleStatementLine:
-        """Replace hardcoded string literals with settings references."""
+        """
+        Replace hardcoded string literals with settings references.
+        """
 
         # Track if we made any changes to this line
         made_changes = False
@@ -39,7 +42,9 @@ class ConfigCentralizationTransformer(cst.CSTTransformer):
         return updated_node
 
     def _transform_assignment(self, node: cst.Assign) -> cst.Assign:
-        """Transform assignment statements with hardcoded paths."""
+        """
+        Transform assignment statements with hardcoded paths.
+        """
 
         if not isinstance(node.value, cst.SimpleString):
             return node
@@ -80,7 +85,9 @@ class ConfigCentralizationTransformer(cst.CSTTransformer):
     def leave_SimpleString(
         self, original_node: cst.SimpleString, updated_node: cst.SimpleString
     ) -> cst.SimpleString:
-        """Replace standalone string literals in function calls."""
+        """
+        Replace standalone string literals in function calls.
+        """
 
         string_value = updated_node.value.strip("'\"")
 
@@ -94,7 +101,9 @@ class ConfigCentralizationTransformer(cst.CSTTransformer):
 
 
 def transform_file(file_path: Path) -> bool:
-    """Transform a single Python file."""
+    """
+    Transform a single Python file.
+    """
 
     try:
         with open(file_path, encoding="utf-8") as f:
@@ -139,7 +148,9 @@ def transform_file(file_path: Path) -> bool:
 
 
 def find_python_files(root_dir: Path) -> list[Path]:
-    """Find all Python files that might need transformation."""
+    """
+    Find all Python files that might need transformation.
+    """
 
     exclude_patterns = [
         "__pycache__",
@@ -165,7 +176,9 @@ def find_python_files(root_dir: Path) -> list[Path]:
 
 
 def move_files_to_config():
-    """Move configuration files to .config directory."""
+    """
+    Move configuration files to .config directory.
+    """
 
     moves = [
         ("credentials.json", ".config/credentials.json"),
@@ -189,7 +202,9 @@ def move_files_to_config():
 
 
 def main():
-    """Run the configuration centralization transformation."""
+    """
+    Run the configuration centralization transformation.
+    """
 
     root_dir = Path(".")
 

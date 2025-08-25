@@ -27,10 +27,13 @@ from .storage import EmailStorage
 
 
 class GmailService:
-    """Main Gmail service for email synchronization with batch processing support."""
+    """
+    Main Gmail service for email synchronization with batch processing support.
+    """
 
     def __init__(self, gmail_timeout: int = 30, db_path: str = None) -> None:
-        """Initialize Gmail service with API, storage, and processing components.
+        """Initialize Gmail service with API, storage, and processing
+        components.
 
         Args:
             gmail_timeout: Timeout in seconds for Gmail API requests.
@@ -60,15 +63,17 @@ class GmailService:
         self._setup_logging()
 
     def _setup_logging(self) -> None:
-        """Set up log directory for Gmail service."""
+        """
+        Set up log directory for Gmail service.
+        """
         os.makedirs("logs", exist_ok=True)
     
     def _should_exclude_email(self, email_data: dict) -> bool:
         """Check if email should be excluded based on date.
-        
+
         Args:
             email_data: Email data dictionary with datetime_utc field
-            
+
         Returns:
             bool: True if email should be excluded, False otherwise
         """
@@ -82,7 +87,7 @@ class GmailService:
         # Convert email date to YYYY/MM/DD format for comparison
         # Email dates are in format like "2023-10-03T12:39:32-07:00"
         try:
-            from datetime import datetime
+            pass
             # Parse the datetime string
             if 'T' in email_date:
                 date_part = email_date.split('T')[0]  # Get YYYY-MM-DD part
@@ -141,7 +146,9 @@ class GmailService:
             return self._sync_emails_single(messages)
 
     def _sync_emails_batch(self, messages) -> dict[str, Any]:
-        """Sync emails using streaming batch operations for reliability"""
+        """
+        Sync emails using streaming batch operations for reliability.
+        """
         logger.info(f"Using streaming batch mode for {len(messages)} emails")
 
         total_processed = 0
@@ -267,9 +274,10 @@ class GmailService:
         return {"success": True, "data": emails}
 
     def sync_incremental(self, max_results: int = 500) -> dict[str, Any]:
-        """
-        Perform incremental sync using Gmail History API.
-        Falls back to full sync if history ID is not available or expired.
+        """Perform incremental sync using Gmail History API.
+
+        Falls back to full sync if history ID is not available or
+        expired.
         """
         logger.info("Starting incremental sync")
 
@@ -373,10 +381,10 @@ class GmailService:
 
     def _group_messages_by_thread(self, email_list: list[dict]) -> dict[str, list[dict]]:
         """Group emails by thread ID for thread-based processing.
-        
+
         Args:
             email_list: List of parsed email data
-            
+
         Returns:
             Dict mapping thread_id to list of emails in that thread
         """
@@ -393,9 +401,11 @@ class GmailService:
         return threads
 
     def _process_threads_advanced(self, threads_grouped: dict[str, list[dict]]) -> dict[str, Any]:
-        """
-        Process threads using advanced parsing to extract individual messages.
-        This is the new unified approach for legal case evidence preservation.
+        """Process threads using advanced parsing to extract individual
+        messages.
+
+        This is the new unified approach for legal case evidence
+        preservation.
         """
         if not ADVANCED_PARSING_AVAILABLE:
             logger.warning("Advanced parsing not available, skipping individual message extraction")
@@ -477,12 +487,13 @@ class GmailService:
         return result
 
     def _process_thread_batch(self, threads_grouped: dict[str, list[dict]], email_list: list[dict]) -> dict[str, Any]:
-        """Process grouped threads and save to both email storage and analog DB.
-        
+        """Process grouped threads and save to both email storage and analog
+        DB.
+
         Args:
             threads_grouped: Dictionary of thread_id -> emails
             email_list: Original email list for backward compatibility
-            
+
         Returns:
             Dict with processing results
         """
@@ -556,8 +567,7 @@ class GmailService:
     def _fetch_and_save_messages(
         self, message_ids: list[str], account_email: str
     ) -> dict[str, Any]:
-        """
-        Fetch full message details and save them using batch operations.
+        """Fetch full message details and save them using batch operations.
 
         Args:
             message_ids: List of message IDs to fetch
@@ -635,7 +645,9 @@ class GmailService:
             }
 
     def _process_email_summaries(self, email_list: list[dict]) -> None:
-        """Process and store summaries for a list of emails."""
+        """
+        Process and store summaries for a list of emails.
+        """
         try:
             for email_data in email_list:
                 # Skip if no content
@@ -651,9 +663,9 @@ class GmailService:
                 if not existing:
                     # Use upsert_content which properly handles content_unified
                     content_id = self.db.upsert_content(
-                        source_type="email",
+                        source_type="email_message",  # v2.0 uses email_message
                         external_id=email_data.get("message_id"),
-                        content_type="email",  # Required by method signature
+                        content_type="email_message",  # v2.0 compatibility
                         title=email_data.get("subject", "No Subject"),
                         content=email_data.get("content", ""),
                         metadata={

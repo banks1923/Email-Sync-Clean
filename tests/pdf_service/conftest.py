@@ -1,6 +1,7 @@
-"""
-Test fixtures for PDF service tests.
-Following TESTING_PROTOCOLS.md: Isolated databases, real data, minimal mocking.
+"""Test fixtures for PDF service tests.
+
+Following TESTING_PROTOCOLS.md: Isolated databases, real data, minimal
+mocking.
 """
 
 import hashlib
@@ -15,8 +16,8 @@ import pytest
 
 @pytest.fixture(scope="function")
 def isolated_test_db_path() -> Generator[str, None, None]:
-    """
-    Completely isolated test database per test function.
+    """Completely isolated test database per test function.
+
     Following TESTING_PROTOCOLS.md standards.
     """
     # Create unique database file for each test
@@ -38,8 +39,8 @@ def isolated_test_db_path() -> Generator[str, None, None]:
 
 @pytest.fixture(scope="function")
 def test_database_with_documents_table(isolated_test_db_path) -> str:
-    """
-    Create isolated database with documents table schema.
+    """Create isolated database with documents table schema.
+
     Following pdf_service/CLAUDE.md database schema.
     """
     conn = sqlite3.connect(isolated_test_db_path)
@@ -78,8 +79,8 @@ def test_database_with_documents_table(isolated_test_db_path) -> str:
 
 @pytest.fixture(scope="function")
 def sample_pdf_content() -> list[dict]:
-    """
-    Sample PDF content chunks for testing.
+    """Sample PDF content chunks for testing.
+
     Real document content patterns following TESTING_PROTOCOLS.md.
     """
     return [
@@ -193,8 +194,8 @@ def sample_pdf_content() -> list[dict]:
 
 @pytest.fixture(scope="function")
 def temp_pdf_files(tmp_path) -> dict[str, str]:
-    """
-    Create temporary PDF files for testing upload functionality.
+    """Create temporary PDF files for testing upload functionality.
+
     Real file system interaction following TESTING_PROTOCOLS.md.
     """
     # Create test PDF directory
@@ -230,9 +231,10 @@ def temp_pdf_files(tmp_path) -> dict[str, str]:
 
 @pytest.fixture
 def malformed_pdf_test_cases(tmp_path) -> list[dict]:
-    """
-    Malformed PDF files for adversarial testing.
-    Following TESTING_PROTOCOLS.md: Test edge cases that could break processing.
+    """Malformed PDF files for adversarial testing.
+
+    Following TESTING_PROTOCOLS.md: Test edge cases that could break
+    processing.
     """
     test_cases = []
 
@@ -299,9 +301,10 @@ def sample_document_hashes() -> dict[str, str]:
 
 @pytest.fixture
 def pdf_processing_mock_data():
-    """
-    Mock data for PDF processing pipeline testing.
-    Simulates QuickPDFHandler output without requiring actual PDF parsing.
+    """Mock data for PDF processing pipeline testing.
+
+    Simulates QuickPDFHandler output without requiring actual PDF
+    parsing.
     """
     return {
         "successful_processing": {
@@ -328,8 +331,8 @@ def pdf_processing_mock_data():
 
 @pytest.fixture
 def database_migration_scenarios():
-    """
-    Test scenarios for database schema migration testing.
+    """Test scenarios for database schema migration testing.
+
     Tests backward compatibility with existing databases.
     """
     return [
@@ -382,8 +385,9 @@ def database_migration_scenarios():
 
 @pytest.fixture(scope="function")
 def real_database_with_contentwriter(isolated_test_db_path):
-    """
-    Phase 2 Task 2.1: Real database fixture with ContentWriter for testing actual storage.
+    """Phase 2 Task 2.1: Real database fixture with ContentWriter for testing
+    actual storage.
+
     Eliminates mock dependencies by providing real database operations.
     Following tri_plan.md Phase 2 requirements for mock elimination.
     """
@@ -405,9 +409,11 @@ def real_database_with_contentwriter(isolated_test_db_path):
 
 @pytest.fixture(scope="function")
 def populated_test_database(real_database_with_contentwriter, sample_pdf_content):
-    """
-    Phase 2 Task 2.1: Test database pre-populated with real PDF document chunks.
-    Provides realistic test data for validating database operations without mocks.
+    """Phase 2 Task 2.1: Test database pre-populated with real PDF document
+    chunks.
+
+    Provides realistic test data for validating database operations
+    without mocks.
     """
     db = real_database_with_contentwriter["db"]
     db_path = real_database_with_contentwriter["db_path"]
@@ -441,14 +447,16 @@ def populated_test_database(real_database_with_contentwriter, sample_pdf_content
 
 @pytest.fixture(scope="function")
 def database_error_scenarios(isolated_test_db_path):
-    """
-    Phase 2 Task 2.2: Database error scenario testing fixtures.
+    """Phase 2 Task 2.2: Database error scenario testing fixtures.
+
     Tests real database constraint violations and error conditions.
     """
     import sqlite3
 
     def create_constraint_violation_scenario():
-        """Create scenario to test unique constraint violations"""
+        """
+        Create scenario to test unique constraint violations.
+        """
         conn = sqlite3.connect(isolated_test_db_path)
         cursor = conn.cursor()
 

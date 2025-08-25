@@ -1,5 +1,5 @@
-"""
-Unit tests for document intelligence database schema and operations.
+"""Unit tests for document intelligence database schema and operations.
+
 Tests schema creation, migration, CRUD operations, and data integrity.
 """
 
@@ -16,10 +16,14 @@ from shared.simple_db import SimpleDB
 
 
 class TestIntelligenceSchema(unittest.TestCase):
-    """Test suite for intelligence database schema and operations."""
+    """
+    Test suite for intelligence database schema and operations.
+    """
 
     def setUp(self):
-        """Create a temporary database for testing."""
+        """
+        Create a temporary database for testing.
+        """
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
         self.temp_db.close()
@@ -58,14 +62,18 @@ class TestIntelligenceSchema(unittest.TestCase):
         )
 
     def tearDown(self):
-        """Clean up temporary database."""
+        """
+        Clean up temporary database.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
             pass
 
     def test_create_intelligence_tables(self):
-        """Test creation of intelligence tables."""
+        """
+        Test creation of intelligence tables.
+        """
         result = self.db.create_intelligence_tables()
 
         self.assertTrue(result["success"])
@@ -84,7 +92,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(len(tables), 3)
 
     def test_schema_migration(self):
-        """Test schema migration functionality."""
+        """
+        Test schema migration functionality.
+        """
         # Initial version should be 0
         version = self.db.get_schema_version()
         self.assertEqual(version, 0)
@@ -104,7 +114,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(result["current_version"], 1)
 
     def test_add_document_summary(self):
-        """Test adding document summaries."""
+        """
+        Test adding document summaries.
+        """
         self.db.create_intelligence_tables()
 
         # Add summary with all fields
@@ -130,7 +142,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(summaries[0]["textrank_sentences"], sentences)
 
     def test_add_document_intelligence(self):
-        """Test adding document intelligence data."""
+        """
+        Test adding document intelligence data.
+        """
         self.db.create_intelligence_tables()
 
         # Add intelligence data
@@ -157,7 +171,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(intelligence[0]["confidence_score"], 0.85)
 
     def test_add_relationship_cache(self):
-        """Test adding cached relationships."""
+        """
+        Test adding cached relationships.
+        """
         self.db.create_intelligence_tables()
 
         # Add relationship
@@ -182,7 +198,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(relationships[0]["cached_data"], cache_data)
 
     def test_relationship_unique_constraint(self):
-        """Test that relationship unique constraint works."""
+        """
+        Test that relationship unique constraint works.
+        """
         self.db.create_intelligence_tables()
 
         # Add first relationship
@@ -211,7 +229,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(relationships[0]["strength"], 0.9)  # Updated value
 
     def test_foreign_key_constraints(self):
-        """Test that foreign key constraints are enforced."""
+        """
+        Test that foreign key constraints are enforced.
+        """
         self.db.create_intelligence_tables()
 
         # Try to add summary for non-existent document
@@ -227,7 +247,9 @@ class TestIntelligenceSchema(unittest.TestCase):
             )
 
     def test_batch_add_summaries(self):
-        """Test batch adding summaries."""
+        """
+        Test batch adding summaries.
+        """
         self.db.create_intelligence_tables()
 
         # Create batch data
@@ -257,7 +279,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(len(summaries2), 1)
 
     def test_get_document_intelligence_by_type(self):
-        """Test filtering intelligence by type."""
+        """
+        Test filtering intelligence by type.
+        """
         self.db.create_intelligence_tables()
 
         # Add multiple intelligence types
@@ -282,7 +306,9 @@ class TestIntelligenceSchema(unittest.TestCase):
             self.assertEqual(intel["intelligence_type"], "entities")
 
     def test_clean_expired_cache(self):
-        """Test cleaning expired cache entries."""
+        """
+        Test cleaning expired cache entries.
+        """
         self.db.create_intelligence_tables()
 
         # Add relationship with very short TTL
@@ -310,7 +336,9 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.assertEqual(relationships[0]["relationship_type"], "current")
 
     def test_check_constraint_validation(self):
-        """Test CHECK constraints are working."""
+        """
+        Test CHECK constraints are working.
+        """
         self.db.create_intelligence_tables()
 
         # Test invalid summary_type
@@ -347,7 +375,9 @@ class TestIntelligenceSchema(unittest.TestCase):
             )
 
     def test_json_field_handling(self):
-        """Test proper JSON serialization/deserialization."""
+        """
+        Test proper JSON serialization/deserialization.
+        """
         self.db.create_intelligence_tables()
 
         # Complex nested JSON data

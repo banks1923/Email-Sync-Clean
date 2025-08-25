@@ -1,5 +1,4 @@
-"""
-Base processor for document processing.
+"""Base processor for document processing.
 
 Simple pattern following CLAUDE.md principles - no complex inheritance.
 """
@@ -12,15 +11,18 @@ from loguru import logger
 
 
 class BaseProcessor:
-    """Base document processor with common functionality."""
+    """
+    Base document processor with common functionality.
+    """
 
     def __init__(self):
-        """Initialize processor."""
+        """
+        Initialize processor.
+        """
         self.format_type = "unknown"
 
     def process(self, file_path: Path) -> dict[str, Any]:
-        """
-        Process document file.
+        """Process document file.
 
         Args:
             file_path: Path to document
@@ -56,9 +58,7 @@ class BaseProcessor:
             return {"success": False, "error": str(e)}
 
     def extract_text(self, file_path: Path) -> str:
-        """
-        Extract text content from file.
-        Override in subclasses.
+        """Extract text content from file. Override in subclasses.
 
         Args:
             file_path: Path to document
@@ -69,8 +69,7 @@ class BaseProcessor:
         raise NotImplementedError("Subclasses must implement extract_text")
 
     def extract_metadata(self, file_path: Path) -> dict[str, Any]:
-        """
-        Extract metadata from file.
+        """Extract metadata from file.
 
         Args:
             file_path: Path to document
@@ -89,8 +88,7 @@ class BaseProcessor:
         }
 
     def calculate_metrics(self, content: str) -> dict[str, Any]:
-        """
-        Calculate content metrics.
+        """Calculate content metrics.
 
         Args:
             content: Text content
@@ -110,8 +108,7 @@ class BaseProcessor:
         }
 
     def validate_content(self, content: str) -> bool:
-        """
-        Validate extracted content.
+        """Validate extracted content.
 
         Args:
             content: Extracted text

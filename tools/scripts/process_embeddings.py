@@ -29,7 +29,9 @@ from utilities.vector_store import get_vector_store
 
 
 def process_all_embeddings(batch_size: int = 10):
-    """Process embeddings for all unprocessed content."""
+    """
+    Process embeddings for all unprocessed content.
+    """
 
     db = SimpleDB()
     emb = get_embedding_service()
@@ -151,7 +153,9 @@ def process_all_embeddings(batch_size: int = 10):
 
 
 def main():
-    """Main function."""
+    """
+    Main function.
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Process embeddings for all content")

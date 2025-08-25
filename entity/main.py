@@ -5,7 +5,7 @@ Follows service independence patterns from existing codebase.
 
 import os
 import sys
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -381,10 +381,10 @@ class EntityService:
 
 def get_entity_service(db_path: str = "data/emails.db") -> EntityService:
     """Factory function to create EntityService instance.
-    
+
     Args:
         db_path: Path to the database file
-        
+
     Returns:
         EntityService instance
     """

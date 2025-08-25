@@ -1,8 +1,8 @@
-"""
-Search Intelligence Service
+"""Search Intelligence Service.
 
-Core service that provides intelligent search capabilities including query expansion,
-document similarity analysis, entity extraction caching, and content clustering.
+Core service that provides intelligent search capabilities including
+query expansion, document similarity analysis, entity extraction
+caching, and content clustering.
 """
 
 import hashlib
@@ -25,11 +25,13 @@ from utilities.vector_store import get_vector_store
 
 
 class SearchIntelligenceService:
-    """Unified search intelligence service"""
+    """
+    Unified search intelligence service.
+    """
 
     def __init__(self, db_path: str | None = None) -> None:
-        """Initialize Search Intelligence Service
-        
+        """Initialize Search Intelligence Service.
+
         Args:
             db_path: Path to the SQLite database (uses default if None)
         """
@@ -110,7 +112,7 @@ class SearchIntelligenceService:
     
     def health(self) -> dict:
         """Health probe for SearchIntelligenceService.
-        
+
         Returns:
             Dictionary with health status including:
             - embed_dim: Embedding dimensions
@@ -157,14 +159,14 @@ class SearchIntelligenceService:
         use_expansion: bool = True,
         filters: dict | None = None,
     ) -> list[dict[str, Any]]:
-        """Unified database search with query preprocessing
-        
+        """Unified database search with query preprocessing.
+
         Args:
             query: Search query string
             limit: Maximum number of results
             use_expansion: Whether to expand query with synonyms
             filters: Additional filters for search
-        
+
         Returns:
             List of search results from the database
         """
@@ -180,7 +182,9 @@ class SearchIntelligenceService:
         return results[:limit]
     
     def _preprocess_and_expand_query(self, query: str) -> str:
-        """Preprocess and expand query with synonyms"""
+        """
+        Preprocess and expand query with synonyms.
+        """
         processed = self._preprocess_query(query)
         expanded_terms = self._expand_query(processed)
         if expanded_terms:
@@ -195,7 +199,9 @@ class SearchIntelligenceService:
         use_expansion: bool = True,
         filters: dict | None = None,
     ) -> list[dict[str, Any]]:
-        """Smart search with query preprocessing and expansion"""
+        """
+        Smart search with query preprocessing and expansion.
+        """
         try:
             # Preprocess query
             processed_query = self._preprocess_query(query)
@@ -241,7 +247,9 @@ class SearchIntelligenceService:
             return []
 
     def _preprocess_query(self, query: str) -> str:
-        """Preprocess query for better search"""
+        """
+        Preprocess query for better search.
+        """
         # Convert to lowercase
         query = query.lower()
 
@@ -256,7 +264,9 @@ class SearchIntelligenceService:
         return query
 
     def _expand_query(self, query: str) -> list[str]:
-        """Expand query with synonyms"""
+        """
+        Expand query with synonyms.
+        """
         expanded = []
         words = query.split()
 
@@ -268,7 +278,9 @@ class SearchIntelligenceService:
         return expanded
 
     def _enhance_search_results(self, results: list[dict], query: str) -> list[dict]:
-        """Enhance search results with additional intelligence"""
+        """
+        Enhance search results with additional intelligence.
+        """
         for result in results:
             # Add relevance score based on entity overlap
             content_id = result.get("content_id")
@@ -288,7 +300,9 @@ class SearchIntelligenceService:
         return results
 
     def _calculate_recency_score(self, created_time: str) -> float:
-        """Calculate recency score (0-1) based on age"""
+        """
+        Calculate recency score (0-1) based on age.
+        """
         try:
             # Parse date
             if isinstance(created_time, str):
@@ -307,7 +321,9 @@ class SearchIntelligenceService:
             return 0.5  # Default middle score
 
     def _rerank_results(self, results: list[dict]) -> list[dict]:
-        """Re-rank results based on multiple factors"""
+        """
+        Re-rank results based on multiple factors.
+        """
         for result in results:
             # Combine scores
             base_score = result.get("score", 0.5)
@@ -328,7 +344,9 @@ class SearchIntelligenceService:
     def analyze_document_similarity(
         self, doc_id: str, threshold: float = 0.7, limit: int = 10
     ) -> list[dict[str, Any]]:
-        """Analyze similarity between documents using Legal BERT"""
+        """
+        Analyze similarity between documents using Legal BERT.
+        """
         try:
             # Get document content
             doc = self.db.get_content(content_id=doc_id)
@@ -383,7 +401,9 @@ class SearchIntelligenceService:
     def extract_and_cache_entities(
         self, doc_id: str, force_refresh: bool = False
     ) -> list[dict[str, Any]]:
-        """Extract entities and cache in relationship_cache table"""
+        """
+        Extract entities and cache in relationship_cache table.
+        """
         try:
             # Check cache first
             if not force_refresh:
@@ -414,7 +434,9 @@ class SearchIntelligenceService:
             return []
 
     def _get_cached_entities(self, doc_id: str) -> list[dict] | None:
-        """Get cached entities from relationship_cache"""
+        """
+        Get cached entities from relationship_cache.
+        """
         try:
             # Query relationship_cache
             query = """
@@ -437,7 +459,9 @@ class SearchIntelligenceService:
             return None
 
     def _cache_entities(self, doc_id: str, entities: list[dict]):
-        """Cache entities in relationship_cache"""
+        """
+        Cache entities in relationship_cache.
+        """
         try:
             # Prepare cache data
             cache_data = json.dumps(entities)
@@ -456,7 +480,9 @@ class SearchIntelligenceService:
     def auto_summarize_document(
         self, doc_id: str, force_refresh: bool = False
     ) -> dict[str, Any] | None:
-        """Automatically summarize document if not already done"""
+        """
+        Automatically summarize document if not already done.
+        """
         try:
             # Check if summary exists
             if not force_refresh:
@@ -501,7 +527,9 @@ class SearchIntelligenceService:
     def cluster_similar_content(
         self, threshold: float = 0.7, min_samples: int = 2, limit: int = 100
     ) -> list[dict[str, Any]]:
-        """Cluster similar content using DBSCAN"""
+        """
+        Cluster similar content using DBSCAN.
+        """
         try:
             # Get documents
             docs = self.db.search_content("", limit=limit)
@@ -563,7 +591,9 @@ class SearchIntelligenceService:
             return []
 
     def detect_duplicates(self, similarity_threshold: float = 0.95) -> list[dict[str, Any]]:
-        """Detect duplicate documents using hash and semantic similarity"""
+        """
+        Detect duplicate documents using hash and semantic similarity.
+        """
         try:
             # Get all documents
             docs = self.db.search_content("", limit=1000)

@@ -13,7 +13,7 @@ Architecture: Wraps existing OCREngine with enhanced processing capabilities
 """
 
 import time
-from typing import Dict, Any, List
+from typing import Any
 from loguru import logger
 
 try:
@@ -40,9 +40,8 @@ from shared.content_quality_scorer import ContentQualityScorer, ValidationStatus
 
 
 class EnhancedOCREngine:
-    """
-    Enhanced OCR engine with dual-pass processing and quality gates.
-    
+    """Enhanced OCR engine with dual-pass processing and quality gates.
+
     Features:
     - Born-digital PDF fast-path detection
     - Advanced image pre-processing (deskew, denoise, threshold)
@@ -72,14 +71,13 @@ class EnhancedOCREngine:
         page_count: int = 1,
         force_enhanced: bool = False
     ) -> dict[str, Any]:
-        """
-        Main dual-pass OCR extraction with quality gates.
-        
+        """Main dual-pass OCR extraction with quality gates.
+
         Args:
             image: PIL Image to process
             page_count: Number of pages for quality calculation
             force_enhanced: Skip standard pass, go straight to enhanced
-            
+
         Returns:
             Dict with text, quality metrics, validation status, and processing metadata
         """
@@ -171,11 +169,10 @@ class EnhancedOCREngine:
         }
     
     def _detect_born_digital_text(self, image: Image.Image) -> dict[str, Any]:
-        """
-        Fast detection of born-digital PDFs with genuine text layers.
-        
-        Uses image characteristics to determine if content is digitally generated
-        vs scanned/photographed.
+        """Fast detection of born-digital PDFs with genuine text layers.
+
+        Uses image characteristics to determine if content is digitally
+        generated vs scanned/photographed.
         """
         try:
             # Convert to numpy for analysis
@@ -215,10 +212,10 @@ class EnhancedOCREngine:
             return {'is_born_digital': False, 'error': str(e)}
     
     def _enhanced_ocr_extraction(self, image: Image.Image, processing_log: list[str]) -> dict[str, Any]:
-        """
-        Enhanced OCR with comprehensive pre-processing normalization.
-        
-        Applies deskew, denoise, adaptive threshold, and morphological operations.
+        """Enhanced OCR with comprehensive pre-processing normalization.
+
+        Applies deskew, denoise, adaptive threshold, and morphological
+        operations.
         """
         try:
             # Convert to OpenCV format
@@ -305,7 +302,9 @@ class EnhancedOCREngine:
             return {'success': False, 'error': str(e)}
     
     def _detect_skew_angle(self, image: np.ndarray) -> float:
-        """Detect text skew angle using Hough line transform."""
+        """
+        Detect text skew angle using Hough line transform.
+        """
         try:
             # Edge detection
             edges = cv2.Canny(image, 50, 150, apertureSize=3)
@@ -334,7 +333,9 @@ class EnhancedOCREngine:
             return 0.0
     
     def _correct_skew(self, image: np.ndarray, angle: float) -> np.ndarray:
-        """Correct image skew by rotation."""
+        """
+        Correct image skew by rotation.
+        """
         try:
             (h, w) = image.shape[:2]
             center = (w // 2, h // 2)
@@ -358,7 +359,9 @@ class EnhancedOCREngine:
             return image
     
     def _find_text_line_peaks(self, projection: np.ndarray) -> list[int]:
-        """Find peaks in horizontal projection that indicate text lines."""
+        """
+        Find peaks in horizontal projection that indicate text lines.
+        """
         # Simple peak detection
         peaks = []
         threshold = np.mean(projection) * 0.5
@@ -372,7 +375,9 @@ class EnhancedOCREngine:
         return peaks
     
     def _calculate_line_regularity(self, peaks: list[int]) -> float:
-        """Calculate regularity of text line spacing."""
+        """
+        Calculate regularity of text line spacing.
+        """
         if len(peaks) < 2:
             return 0.0
         
@@ -395,7 +400,9 @@ class EnhancedOCREngine:
         return float(regularity)
     
     def validate_enhanced_setup(self) -> dict[str, Any]:
-        """Validate enhanced OCR setup and dependencies."""
+        """
+        Validate enhanced OCR setup and dependencies.
+        """
         base_validation = self.base_engine.validate_ocr_setup()
         
         enhanced_validation = {
@@ -421,5 +428,7 @@ class EnhancedOCREngine:
 
 
 def get_enhanced_ocr_engine(dpi: int = 300) -> EnhancedOCREngine:
-    """Factory function for enhanced OCR engine."""
+    """
+    Factory function for enhanced OCR engine.
+    """
     return EnhancedOCREngine(dpi=dpi)

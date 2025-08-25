@@ -1,6 +1,7 @@
-"""
-Integration test for intelligence tables population.
-Verifies that all three intelligence tables receive data during document processing.
+"""Integration test for intelligence tables population.
+
+Verifies that all three intelligence tables receive data during document
+processing.
 """
 
 import json
@@ -19,10 +20,14 @@ from tests.integration.test_helpers import (
 
 
 class TestIntelligenceTablesPopulation(unittest.TestCase):
-    """Test that all intelligence tables get populated during processing."""
+    """
+    Test that all intelligence tables get populated during processing.
+    """
 
     def setUp(self):
-        """Set up test environment."""
+        """
+        Set up test environment.
+        """
         # Create test database
         self.db, self.db_path = create_test_database()
 
@@ -36,11 +41,15 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
         self.cleanup_paths = [self.db_path]
 
     def tearDown(self):
-        """Clean up test artifacts."""
+        """
+        Clean up test artifacts.
+        """
         cleanup_test_files(self.cleanup_paths)
 
     def test_document_summaries_table_populated(self):
-        """Test that document_summaries table receives data."""
+        """
+        Test that document_summaries table receives data.
+        """
         # Process a PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -83,7 +92,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
             self.assertGreater(len(sentences), 0)
 
     def test_document_intelligence_table_populated(self):
-        """Test that document_intelligence table can receive data."""
+        """
+        Test that document_intelligence table can receive data.
+        """
         # Process a PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -128,7 +139,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
         self.assertEqual(stored_data["entities"], intel_data["entities"])
 
     def test_relationship_cache_table_populated(self):
-        """Test that relationship_cache table can receive data."""
+        """
+        Test that relationship_cache table can receive data.
+        """
         # Process two PDFs to create relationship
         result1 = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
 
@@ -181,7 +194,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
         self.assertIsNotNone(rel["expires_at"])
 
     def test_all_tables_populated_from_single_document(self):
-        """Test that processing one document can populate all intelligence tables."""
+        """
+        Test that processing one document can populate all intelligence tables.
+        """
         # Process PDF
         result = self.pdf_service.upload_single_pdf(self.test_pdf, use_pipeline=False)
         content_id = result.get("content_id")
@@ -218,7 +233,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
             )
 
     def test_foreign_key_constraints_enforced(self):
-        """Test that foreign key constraints prevent orphan records."""
+        """
+        Test that foreign key constraints prevent orphan records.
+        """
         # Try to add summary for non-existent document
         with self.assertRaises(Exception):
             self.db.add_document_summary(
@@ -244,7 +261,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
             )
 
     def test_cascade_operations(self):
-        """Test that related records are handled properly."""
+        """
+        Test that related records are handled properly.
+        """
         # Create content
         content_id = self.db.add_content(
             content_type="test", title="Test Document", content="Test content for cascade testing"
@@ -269,7 +288,9 @@ class TestIntelligenceTablesPopulation(unittest.TestCase):
         self.assertEqual(len(intelligence), 1)
 
     def test_data_types_and_constraints(self):
-        """Test that data types and constraints are properly enforced."""
+        """
+        Test that data types and constraints are properly enforced.
+        """
         # Create content
         content_id = self.db.add_content(content_type="test", title="Test", content="Test content")
 

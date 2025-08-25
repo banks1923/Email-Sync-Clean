@@ -1,6 +1,7 @@
-"""
-Dead simple database operations. No abstraction astronauts allowed.
-For a single user who just wants things to work.
+"""Dead simple database operations.
+
+No abstraction astronauts allowed. For a single user who just wants
+things to work.
 """
 
 import contextlib
@@ -25,7 +26,9 @@ from .retry_helper import retry_database
 
 
 class DBMetrics:
-    """Simple metrics tracking for database operations."""
+    """
+    Simple metrics tracking for database operations.
+    """
     def __init__(self) -> None:
         self.slow_sql_count = 0
         self.busy_events = 0
@@ -33,7 +36,9 @@ class DBMetrics:
         self.total_queries = 0
     
     def report(self):
-        """Report metrics on exit or demand."""
+        """
+        Report metrics on exit or demand.
+        """
         if self.total_queries > 0:
             logger.info(f"DB Metrics: {self.total_queries} queries, "
                        f"{self.slow_sql_count} slow (>{100}ms), "
@@ -42,7 +47,10 @@ class DBMetrics:
 
 
 class SimpleDB:
-    """The entire database layer in under 100 lines. No BS."""
+    """The entire database layer in under 100 lines.
+
+    No BS.
+    """
 
     def __init__(self, db_path: str = None) -> None:
         # Use environment variable if available, otherwise use new default path
@@ -64,7 +72,9 @@ class SimpleDB:
         self._initialize_pragmas()
 
     def _initialize_pragmas(self) -> None:
-        """Initialize SQLite with optimized settings for single-user performance."""
+        """
+        Initialize SQLite with optimized settings for single-user performance.
+        """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 # Configure and verify on startup
@@ -73,7 +83,9 @@ class SimpleDB:
             logger.warning(f"Could not initialize SQLite pragmas: {e}")
 
     def _configure_connection(self, conn: sqlite3.Connection, verify: bool = False) -> None:
-        """Configure SQLite connection with optimized pragmas."""
+        """
+        Configure SQLite connection with optimized pragmas.
+        """
         # Enable foreign keys (already had this)
         conn.execute("PRAGMA foreign_keys=ON")
         
@@ -107,7 +119,9 @@ class SimpleDB:
             logger.info(f"SQLite config: mode={jm}, sync={sync}, cache={abs(cache)}KB, mmap={mmap}B")
 
     def _ensure_data_directories(self) -> None:
-        """Ensure basic /data/ directory structure exists."""
+        """
+        Ensure basic /data/ directory structure exists.
+        """
         # Get project root (parent of shared directory)  
         project_root = Path(__file__).parent.parent
         data_dir = project_root / "data"
@@ -124,7 +138,9 @@ class SimpleDB:
 
     @contextlib.contextmanager
     def durable_txn(self, conn: sqlite3.Connection) -> Generator[None, None, None]:
-        """Context manager for critical operations requiring full durability."""
+        """
+        Context manager for critical operations requiring full durability.
+        """
         prev_sync = conn.execute("PRAGMA synchronous").fetchone()[0]
         conn.execute("PRAGMA synchronous=FULL")
         try:
@@ -140,7 +156,10 @@ class SimpleDB:
 
     @retry_database
     def execute(self, query: str, params: tuple = ()) -> sqlite3.Cursor:
-        """Just run SQL. No enterprise patterns. Now with retry for database locks."""
+        """Just run SQL.
+
+        No enterprise patterns. Now with retry for database locks.
+        """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
@@ -171,7 +190,10 @@ class SimpleDB:
 
     @retry_database
     def fetch(self, query: str, params: tuple = ()) -> list[dict]:
-        """Run query and get results as dicts. With retry for database locks."""
+        """Run query and get results as dicts.
+
+        With retry for database locks.
+        """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
@@ -200,7 +222,9 @@ class SimpleDB:
             return []
 
     def fetch_one(self, query: str, params: tuple = ()) -> dict | None:
-        """Get single result as dict."""
+        """
+        Get single result as dict.
+        """
         results = self.fetch(query, params)
         return results[0] if results else None
 
@@ -212,8 +236,21 @@ class SimpleDB:
         content: str,
         metadata: dict | None = None,
         source_path: str | None = None,
+        message_hash: str | None = None,  # New parameter for email messages
     ) -> str:
-        """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID."""
+        """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID.
+        
+        Args:
+            content_type: Type of content ('email_message', 'pdf', 'transcript', etc.)
+            title: Content title or email subject
+            content: Full text content
+            metadata: Optional metadata dict
+            source_path: Optional source file path
+            message_hash: For email_message type, the SHA256 hash to use as source_id
+        
+        Returns:
+            Content ID as string
+        """
         # Calculate content hash for deduplication
         normalized_title = (title or "").strip().lower()
         normalized_content = (content or "").strip()
@@ -231,8 +268,15 @@ class SimpleDB:
             )
             return existing["id"]
 
-        # Generate numeric source_id from hash
-        source_id = abs(hash(content_hash)) % 2147483647  # Ensure it fits in INTEGER
+        # Generate source_id based on content type
+        if content_type == 'email_message':
+            # For email messages, use the provided message_hash as TEXT source_id
+            if not message_hash:
+                raise ValueError("message_hash is required for email_message type")
+            source_id = message_hash  # TEXT source_id for emails
+        else:
+            # Legacy: Generate numeric source_id from hash for other types
+            source_id = abs(hash(content_hash)) % 2147483647  # INTEGER for backward compatibility
         
         cursor = self.execute(
             """
@@ -270,8 +314,8 @@ class SimpleDB:
         depth: int = 0,
         message_type: str = "extracted"
     ) -> str:
-        """
-        Add individual email message from thread parsing.
+        """Add individual email message from thread parsing.
+
         Special handling for legal case evidence preservation.
         """
         # For legal cases, include sender and date in hash to catch harassment patterns
@@ -331,12 +375,11 @@ class SimpleDB:
         metadata: dict | None = None,
         parent_content_id: str | None = None
     ) -> str:
-        """
-        Upsert content using business key (source_type, external_id).
+        """Upsert content using business key (source_type, external_id).
 
         Args:
             source_type: Type of source (email, pdf, transcript, etc.)
-            external_id: External identifier (message_id, file_hash, etc.)  
+            external_id: External identifier (message_id, file_hash, etc.)
             content_type: Type of content (ignored - use source_type)
             title: Content title
             content: Actual content text
@@ -380,7 +423,10 @@ class SimpleDB:
             return str(source_id)
 
     def update_content(self, content_id: str, **kwargs: Any) -> bool:
-        """Update content fields. Returns True if successful."""
+        """Update content fields.
+
+        Returns True if successful.
+        """
         if not kwargs:
             return False
             
@@ -414,13 +460,19 @@ class SimpleDB:
         return cursor.rowcount > 0
 
     def delete_content(self, content_id: str) -> bool:
-        """Delete content by ID. Returns True if successful."""
+        """Delete content by ID.
+
+        Returns True if successful.
+        """
         cursor = self.execute("DELETE FROM content_unified WHERE id = ?", (content_id,))
         return cursor.rowcount > 0
 
     # Simple thread tracking methods
     def add_thread_tracking(self, thread_id: str, message_count: int, status: str = "processed") -> bool:
-        """Add or update thread processing status. Simple and direct."""
+        """Add or update thread processing status.
+
+        Simple and direct.
+        """
         self.execute(
             """
             INSERT OR REPLACE INTO thread_tracking 
@@ -432,21 +484,28 @@ class SimpleDB:
         return True
 
     def get_thread_status(self, thread_id: str) -> dict | None:
-        """Get thread processing status."""
+        """
+        Get thread processing status.
+        """
         return self.fetch_one(
             "SELECT * FROM thread_tracking WHERE thread_id = ?", 
             (thread_id,)
         )
 
     def list_processed_threads(self, limit: int = 100) -> list[dict]:
-        """List recently processed threads."""
+        """
+        List recently processed threads.
+        """
         return self.fetch(
             "SELECT * FROM thread_tracking ORDER BY last_updated DESC LIMIT ?",
             (limit,)
         )
 
     def add_document_chunk(self, chunk_data: dict) -> str:
-        """Add PDF document chunk. Returns chunk_id."""
+        """Add PDF document chunk.
+
+        Returns chunk_id.
+        """
         chunk_id = chunk_data.get("chunk_id", str(uuid.uuid4()))
 
         self.execute(
@@ -477,7 +536,9 @@ class SimpleDB:
         return chunk_id
 
     def get_content(self, content_id: str) -> dict | None:
-        """Get content by ID."""
+        """
+        Get content by ID.
+        """
         return self.fetch_one("SELECT * FROM content_unified WHERE id = ?", (content_id,))
 
     def search_content(
@@ -487,7 +548,9 @@ class SimpleDB:
         limit: int = 50,
         filters: dict | None = None,
     ) -> list[dict]:
-        """Search content with optional filters."""
+        """
+        Search content with optional filters.
+        """
         from .date_utils import get_date_range
 
         # Base WHERE clause
@@ -553,7 +616,9 @@ class SimpleDB:
         return self.fetch(query, tuple(params))
 
     def get_content_stats(self) -> dict:
-        """Get simple stats."""
+        """
+        Get simple stats.
+        """
         stats = {}
         
         # Get content count from the CORRECT table (content_unified not content)
@@ -570,8 +635,8 @@ class SimpleDB:
         doc_result = self.fetch_one("SELECT COUNT(*) as count FROM documents")
         stats["total_documents"] = doc_result["count"] if doc_result else 0
         
-        # Get breakdown by source type
-        stats["total_emails"] = stats["content_by_type"].get("email", 0)
+        # Get breakdown by source type (v2.0 uses email_message not email)
+        stats["total_emails"] = stats["content_by_type"].get("email_message", 0) + stats["content_by_type"].get("email", 0)
         stats["total_pdfs"] = stats["content_by_type"].get("pdf", 0)
         stats["total_transcripts"] = stats["content_by_type"].get("transcript", 0)
             
@@ -583,19 +648,19 @@ class SimpleDB:
 
     def get_content_count(self, content_type: str | None = None) -> int:
         """Get count of content entries by type.
-        
+
         Args:
             content_type: Optional type filter ('email', 'pdf', 'transcript', etc.)
                          If None, returns total count across all types.
-        
+
         Returns:
             Count of content entries
         """
         stats = self.get_content_stats()
         if content_type is not None:
-            # Map plural collection names to singular content types
+            # Map plural collection names to singular content types (v2.0 compatibility)
             type_mapping = {
-                'emails': 'email',
+                'emails': 'email_message',  # v2.0 uses email_message
                 'pdfs': 'pdf',
                 'transcriptions': 'transcript',
                 'notes': 'note'
@@ -609,10 +674,10 @@ class SimpleDB:
     
     def get_connection(self):
         """Get database connection for direct SQL operations.
-        
+
         Returns:
             sqlite3.Connection: A new database connection with configured pragmas
-            
+
         Note:
             Prefer using higher-level SimpleDB methods when possible.
             This is provided for maintenance scripts that need direct access.
@@ -632,10 +697,10 @@ class SimpleDB:
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> dict[str, Any]:
-        """
-        Generic batch insert with INSERT OR IGNORE for deduplication.
-        Includes timing, logging, and performance metrics.
-        Returns stats with performance data.
+        """Generic batch insert with INSERT OR IGNORE for deduplication.
+
+        Includes timing, logging, and performance metrics. Returns stats
+        with performance data.
         """
         if not data_list:
             logger.debug(f"Empty data list for {table_name}, skipping")
@@ -774,8 +839,8 @@ class SimpleDB:
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> dict[str, Any]:
-        """
-        Batch add content with auto-generation of IDs and metadata.
+        """Batch add content with auto-generation of IDs and metadata.
+
         Includes enhanced logging and performance tracking.
         Returns: {'stats': {total/inserted/ignored}, 'content_ids': [...]}
         """
@@ -860,8 +925,8 @@ class SimpleDB:
         batch_size: int = 1000,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> dict[str, Any]:
-        """
-        Batch add document chunks for PDF processing.
+        """Batch add document chunks for PDF processing.
+
         Includes enhanced logging and performance metrics.
         Returns: {'stats': {total/inserted/ignored}, 'chunk_ids': [...]}
         """
@@ -948,7 +1013,9 @@ class SimpleDB:
 
     # Intelligence Schema Methods (Task 2.2)
     def create_intelligence_tables(self):
-        """Create document intelligence tables for unified intelligence modules."""
+        """
+        Create document intelligence tables for unified intelligence modules.
+        """
         try:
             # Read SQL schema from file
             schema_path = Path(__file__).parent / "intelligence_schema.sql"
@@ -987,7 +1054,9 @@ class SimpleDB:
             return {"success": False, "error": str(e)}
 
     def _create_inline_intelligence_schema(self) -> None:
-        """Create intelligence tables with inline SQL (fallback method)."""
+        """
+        Create intelligence tables with inline SQL (fallback method).
+        """
         # Document summaries table
         self.execute(
             """
@@ -1067,7 +1136,9 @@ class SimpleDB:
         )
 
     def migrate_schema(self):
-        """Migrate database schema to latest version."""
+        """
+        Migrate database schema to latest version.
+        """
         try:
             # Get current schema version
             current_version = self.get_schema_version()
@@ -1085,7 +1156,9 @@ class SimpleDB:
             return {"success": False, "error": str(e)}
 
     def get_schema_version(self) -> int:
-        """Get current database schema version."""
+        """
+        Get current database schema version.
+        """
         try:
             # Create version table if it doesn't exist
             self.execute(
@@ -1104,7 +1177,9 @@ class SimpleDB:
             return 0
 
     def _set_schema_version(self, version: int) -> None:
-        """Set database schema version."""
+        """
+        Set database schema version.
+        """
         self.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
 
     # CRUD Operations for Intelligence Tables (Task 2.3)
@@ -1118,7 +1193,9 @@ class SimpleDB:
         tf_idf_keywords: dict | None = None,
         textrank_sentences: list | None = None,
     ) -> str:
-        """Add a document summary."""
+        """
+        Add a document summary.
+        """
         summary_id = str(uuid.uuid4())
         keywords_json = json.dumps(tf_idf_keywords) if tf_idf_keywords else None
         sentences_json = json.dumps(textrank_sentences) if textrank_sentences else None
@@ -1135,7 +1212,9 @@ class SimpleDB:
         return summary_id
 
     def get_document_summaries(self, document_id: str) -> list[dict]:
-        """Get all summaries for a document."""
+        """
+        Get all summaries for a document.
+        """
         results = self.fetch(
             """
             SELECT * FROM document_summaries
@@ -1168,7 +1247,9 @@ class SimpleDB:
         intelligence_data: dict,
         confidence_score: float = 0.0,
     ) -> str:
-        """Add document intelligence data."""
+        """
+        Add document intelligence data.
+        """
         intelligence_id = str(uuid.uuid4())
         data_json = json.dumps(intelligence_data)
 
@@ -1186,7 +1267,9 @@ class SimpleDB:
     def get_document_intelligence(
         self, document_id: str, intelligence_type: str | None = None
     ) -> list[dict[Any, Any]]:
-        """Get intelligence data for a document."""
+        """
+        Get intelligence data for a document.
+        """
         if intelligence_type:
             query = """
                 SELECT * FROM document_intelligence
@@ -1215,7 +1298,9 @@ class SimpleDB:
         return results
 
     def get_document_summary(self, summary_id: str) -> dict | None:
-        """Get a single document summary by summary ID."""
+        """
+        Get a single document summary by summary ID.
+        """
         result = self.fetch_one(
             "SELECT * FROM document_summaries WHERE summary_id = ?",
             (summary_id,)
@@ -1235,15 +1320,22 @@ class SimpleDB:
         return result
 
     def get_summaries_for_document(self, document_id: str) -> list[dict]:
-        """Get all summaries for a document (alias for get_document_summaries)."""
+        """
+        Get all summaries for a document (alias for get_document_summaries).
+        """
         return self.get_document_summaries(document_id)
 
     def get_intelligence_for_document(self, document_id: str, intelligence_type: str | None = None) -> list[dict]:
-        """Get intelligence data for a document (alias for get_document_intelligence)."""
+        """
+        Get intelligence data for a document (alias for
+        get_document_intelligence).
+        """
         return self.get_document_intelligence(document_id, intelligence_type)
 
     def get_intelligence_by_id(self, intelligence_id: str) -> dict | None:
-        """Get a single document intelligence record by intelligence ID."""
+        """
+        Get a single document intelligence record by intelligence ID.
+        """
         result = self.fetch_one(
             "SELECT * FROM document_intelligence WHERE intelligence_id = ?",
             (intelligence_id,)
@@ -1267,7 +1359,9 @@ class SimpleDB:
         cached_data: dict | None = None,
         ttl_hours: int | None = None,
     ) -> str:
-        """Add or update a cached relationship."""
+        """
+        Add or update a cached relationship.
+        """
         cache_id = str(uuid.uuid4())
         data_json = json.dumps(cached_data) if cached_data else None
         expires_at = None
@@ -1290,7 +1384,9 @@ class SimpleDB:
     def get_relationship_cache(
         self, source_id: str | None = None, target_id: str | None = None, relationship_type: str | None = None
     ) -> list[dict]:
-        """Get cached relationships with flexible filtering."""
+        """
+        Get cached relationships with flexible filtering.
+        """
         conditions = []
         params = []
 
@@ -1329,7 +1425,9 @@ class SimpleDB:
         return results
 
     def clean_expired_cache(self) -> int:
-        """Remove expired cache entries."""
+        """
+        Remove expired cache entries.
+        """
         cursor = self.execute(
             """
             DELETE FROM relationship_cache
@@ -1346,8 +1444,7 @@ class SimpleDB:
         ttl_hours: int = 24,
         cache_type: str = "computation",
     ) -> str:
-        """
-        Cache expensive computation results with TTL.
+        """Cache expensive computation results with TTL.
 
         Args:
             cache_key: Unique key for the cached result
@@ -1369,8 +1466,7 @@ class SimpleDB:
         )
 
     def get_cached_result(self, cache_key: str, cache_type: str = "computation") -> dict | None:
-        """
-        Get cached computation result.
+        """Get cached computation result.
 
         Args:
             cache_key: Cache key to look up
@@ -1396,8 +1492,7 @@ class SimpleDB:
         metadata: dict | None = None,
         ttl_hours: int = 168,  # 1 week default
     ) -> str:
-        """
-        Cache document similarity calculation.
+        """Cache document similarity calculation.
 
         Args:
             doc1_id: First document ID
@@ -1427,8 +1522,7 @@ class SimpleDB:
         )
 
     def get_cached_similarity(self, doc1_id: str, doc2_id: str) -> float | None:
-        """
-        Get cached similarity score between two documents.
+        """Get cached similarity score between two documents.
 
         Args:
             doc1_id: First document ID
@@ -1455,8 +1549,7 @@ class SimpleDB:
         extractor_version: str = "default",
         ttl_hours: int = 72,  # 3 days default
     ) -> str:
-        """
-        Cache entity extraction results.
+        """Cache entity extraction results.
 
         Args:
             content_id: Content ID that entities were extracted from
@@ -1484,8 +1577,7 @@ class SimpleDB:
         )
 
     def get_cached_entities(self, content_id: str) -> list[dict] | None:
-        """
-        Get cached entity extraction results.
+        """Get cached entity extraction results.
 
         Args:
             content_id: Content ID to get entities for
@@ -1509,8 +1601,7 @@ class SimpleDB:
         search_params: dict = None,
         ttl_hours: int = 1,  # Short TTL for search results
     ) -> str:
-        """
-        Cache search results for faster repeated queries.
+        """Cache search results for faster repeated queries.
 
         Args:
             query: Search query string
@@ -1547,8 +1638,7 @@ class SimpleDB:
     def get_cached_search_results(
         self, query: str, search_params: dict = None
     ) -> list[dict] | None:
-        """
-        Get cached search results.
+        """Get cached search results.
 
         Args:
             query: Search query string
@@ -1573,8 +1663,7 @@ class SimpleDB:
         return None
 
     def invalidate_cache_for_content(self, content_id: str) -> int:
-        """
-        Invalidate all cached data related to a specific content ID.
+        """Invalidate all cached data related to a specific content ID.
 
         Args:
             content_id: Content ID to invalidate cache for
@@ -1592,8 +1681,7 @@ class SimpleDB:
         return cursor.rowcount
 
     def get_cache_statistics(self) -> dict[str, Any]:
-        """
-        Get database cache statistics.
+        """Get database cache statistics.
 
         Returns:
             Dictionary with cache statistics
@@ -1638,7 +1726,9 @@ class SimpleDB:
         return stats
 
     def validate_pipeline_directories(self) -> dict[str, bool]:
-        """Validate basic data directories exist and are writable."""
+        """
+        Validate basic data directories exist and are writable.
+        """
         results = {}
         data_dir = Path(self.db_path).parent / "data"
         # Only validate system directories - user_data is case-specific
@@ -1670,7 +1760,9 @@ class SimpleDB:
         return results
 
     def get_pipeline_stats(self) -> dict[str, int]:
-        """Get file counts for main data directories."""
+        """
+        Get file counts for main data directories.
+        """
         stats = {}
         data_dir = Path(self.db_path).parent / "data" 
         # Only stats for system directories - user_data is case-specific  
@@ -1758,7 +1850,9 @@ class SimpleDB:
 
     # Batch operations for intelligence tables
     def batch_add_summaries(self, summaries: list[dict], batch_size: int = 1000) -> dict:
-        """Batch add document summaries."""
+        """
+        Batch add document summaries.
+        """
         if not summaries:
             return {"total": 0, "inserted": 0}
 
@@ -1800,7 +1894,10 @@ class SimpleDB:
     # Vector processing methods
     
     def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
-        """Get all content IDs, optionally filtered by type. Streams in pages of 1000."""
+        """Get all content IDs, optionally filtered by type.
+
+        Streams in pages of 1000.
+        """
         query = "SELECT id FROM content_unified"
         params = ()
         
@@ -1814,7 +1911,9 @@ class SimpleDB:
         return [row[0] for row in cursor.fetchall()]
     
     def get_content_by_ids(self, ids: list[str]) -> list[dict]:
-        """Get content by IDs, batching ≤500 to avoid SQLite 999 limit."""
+        """
+        Get content by IDs, batching ≤500 to avoid SQLite 999 limit.
+        """
         if not ids:
             return []
         
@@ -1835,7 +1934,9 @@ class SimpleDB:
         return results
     
     def mark_content_vectorized(self, content_id: str) -> bool:
-        """Mark single content as vectorized."""
+        """
+        Mark single content as vectorized.
+        """
         try:
             cursor = self.execute(
                 "UPDATE content_unified SET ready_for_embedding = 1 WHERE id = ?",
@@ -1847,7 +1948,9 @@ class SimpleDB:
             return False
     
     def batch_mark_vectorized(self, content_ids: list[str]) -> int:
-        """Batch mark content as vectorized, chunking to ≤500."""
+        """
+        Batch mark content as vectorized, chunking to ≤500.
+        """
         if not content_ids:
             return 0
         
@@ -1867,6 +1970,149 @@ class SimpleDB:
                 continue
         
         return total_updated
+    
+    # Email message operations for new deduplication schema
+    def add_individual_message(
+        self,
+        message_hash: str,
+        content: str,
+        subject: str | None = None,
+        sender_email: str | None = None,
+        sender_name: str | None = None,
+        recipients: list[str] | None = None,
+        date_sent: datetime | None = None,
+        message_id: str | None = None,
+        parent_message_id: str | None = None,
+        thread_id: str | None = None,
+        content_type: str = 'original',
+        first_seen_email_id: str | None = None,
+    ) -> bool:
+        """Add a unique individual message to the new deduplication schema.
+
+        Args:
+            message_hash: SHA256 hash of normalized message content (PRIMARY KEY)
+            content: Full message text
+            subject: Message subject line
+            sender_email: Sender's email address
+            sender_name: Sender's display name
+            recipients: List of recipient email addresses
+            date_sent: When the message was sent
+            message_id: Email Message-ID header
+            parent_message_id: In-Reply-To header for threading
+            thread_id: Thread identifier
+            content_type: 'original', 'reply', or 'forward'
+            first_seen_email_id: ID of first email where this message appeared
+
+        Returns:
+            True if message was inserted, False if already exists
+        """
+        try:
+            # Convert recipients list to JSON if provided
+            recipients_json = json.dumps(recipients) if recipients else None
+            
+            # Convert datetime to string if provided
+            date_sent_str = date_sent.isoformat() if date_sent else None
+            
+            cursor = self.execute(
+                """
+                INSERT OR IGNORE INTO individual_messages (
+                    message_hash, content, subject, sender_email, sender_name,
+                    recipients, date_sent, message_id, parent_message_id,
+                    thread_id, content_type, first_seen_email_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    message_hash, content, subject, sender_email, sender_name,
+                    recipients_json, date_sent_str, message_id, parent_message_id,
+                    thread_id, content_type, first_seen_email_id
+                )
+            )
+            
+            if cursor.rowcount > 0:
+                logger.debug(f"Added new individual message: {message_hash[:8]}...")
+                return True
+            else:
+                logger.debug(f"Message already exists: {message_hash[:8]}...")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to add individual message: {e}")
+            raise
+    
+    def add_message_occurrence(
+        self,
+        message_hash: str,
+        email_id: str,
+        position_in_email: int = 0,
+        context_type: str = 'original',
+        quote_depth: int = 0,
+    ) -> bool:
+        """Record where a message appears in an email (audit trail).
+
+        Args:
+            message_hash: SHA256 hash linking to individual_messages
+            email_id: Original email file/ID where this message was seen
+            position_in_email: Order within the email (0-based)
+            context_type: 'original', 'quoted', or 'forwarded'
+            quote_depth: Number of > markers (0 for original)
+
+        Returns:
+            True if occurrence was recorded
+        """
+        try:
+            cursor = self.execute(
+                """
+                INSERT INTO message_occurrences (
+                    message_hash, email_id, position_in_email,
+                    context_type, quote_depth
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (message_hash, email_id, position_in_email, context_type, quote_depth)
+            )
+            
+            if cursor.rowcount > 0:
+                logger.debug(f"Recorded message occurrence: {message_hash[:8]}... in {email_id}")
+                return True
+            return False
+                
+        except Exception as e:
+            logger.error(f"Failed to add message occurrence: {e}")
+            raise
+    
+    def get_message_by_hash(self, message_hash: str) -> dict | None:
+        """
+        Retrieve an individual message by its hash.
+        """
+        return self.fetch_one(
+            "SELECT * FROM individual_messages WHERE message_hash = ?",
+            (message_hash,)
+        )
+    
+    def get_message_occurrences(self, message_hash: str) -> list[dict]:
+        """
+        Get all occurrences of a message across emails.
+        """
+        return self.fetch(
+            """
+            SELECT * FROM message_occurrences 
+            WHERE message_hash = ? 
+            ORDER BY created_at, position_in_email
+            """,
+            (message_hash,)
+        )
+    
+    def get_thread_messages(self, thread_id: str) -> list[dict]:
+        """
+        Get all messages in a thread, ordered chronologically.
+        """
+        return self.fetch(
+            """
+            SELECT * FROM individual_messages 
+            WHERE thread_id = ? 
+            ORDER BY date_sent, message_hash
+            """,
+            (thread_id,)
+        )
 
 
 # That's it. That's the whole database layer.

@@ -1,7 +1,7 @@
-"""
-Unit tests for SearchIntelligenceService query expansion functionality.
+"""Unit tests for SearchIntelligenceService query expansion functionality.
 
-Tests the core query expansion logic that was fixed to prevent regressions.
+Tests the core query expansion logic that was fixed to prevent
+regressions.
 """
 import pytest
 from unittest.mock import Mock, patch
@@ -9,11 +9,15 @@ from search_intelligence.main import SearchIntelligenceService
 
 
 class TestQueryExpansion:
-    """Test query expansion functionality to prevent regressions."""
+    """
+    Test query expansion functionality to prevent regressions.
+    """
 
     @pytest.fixture
     def service(self):
-        """Create SearchIntelligenceService with mocked dependencies."""
+        """
+        Create SearchIntelligenceService with mocked dependencies.
+        """
         with patch('search_intelligence.main.SimpleDB'), \
              patch('search_intelligence.main.get_vector_store'), \
              patch('search_intelligence.main.EntityService'), \
@@ -28,7 +32,9 @@ class TestQueryExpansion:
             return service
 
     def test_preprocess_query_basic(self, service):
-        """Test basic query preprocessing."""
+        """
+        Test basic query preprocessing.
+        """
         # Test case conversion
         result = service._preprocess_query("LEGAL CASE")
         assert result == "legal case"
@@ -42,7 +48,9 @@ class TestQueryExpansion:
         assert result == "multiple spaces"
 
     def test_expand_query_basic(self, service):
-        """Test query expansion with synonyms."""
+        """
+        Test query expansion with synonyms.
+        """
         # Test legal synonym expansion
         result = service._expand_query("legal")
         assert "law" in result
@@ -58,7 +66,9 @@ class TestQueryExpansion:
         assert result == []
 
     def test_expand_query_multiple_terms(self, service):
-        """Test expansion with multiple expandable terms."""
+        """
+        Test expansion with multiple expandable terms.
+        """
         result = service._expand_query("legal contract")
         # Should include synonyms for both terms (first 2 each)
         assert "law" in result
@@ -70,7 +80,9 @@ class TestQueryExpansion:
 
     @patch('search_intelligence.main.logger')
     def test_smart_search_with_expansion_creates_or_query(self, mock_logger, service):
-        """Test that expansion creates proper OR query (REGRESSION TEST)."""
+        """
+        Test that expansion creates proper OR query (REGRESSION TEST).
+        """
         # Mock the fetch method to capture SQL queries
         service.db.fetch = Mock(return_value=[
             {"id": "1", "title": "Test", "body": "content", "source_type": "email"}
@@ -97,7 +109,9 @@ class TestQueryExpansion:
 
     @patch('search_intelligence.main.logger')
     def test_smart_search_without_expansion_uses_simple_query(self, mock_logger, service):
-        """Test that disabled expansion uses simple search."""
+        """
+        Test that disabled expansion uses simple search.
+        """
         # Test with expansion disabled
         result = service.smart_search_with_preprocessing("legal", limit=5, use_expansion=False)
         
@@ -109,7 +123,9 @@ class TestQueryExpansion:
 
     @patch('search_intelligence.main.logger')
     def test_no_results_debug_logging(self, mock_logger, service):
-        """Test debug logging for no-result queries."""
+        """
+        Test debug logging for no-result queries.
+        """
         # Mock empty results
         service.db.search_content = Mock(return_value=[])
         service.db.fetch = Mock(return_value=[])
@@ -127,7 +143,9 @@ class TestQueryExpansion:
         assert "nonexistentterm" in debug_call
 
     def test_filter_support_with_expansion(self, service):
-        """Test that filters work correctly with query expansion."""
+        """
+        Test that filters work correctly with query expansion.
+        """
         # Mock fetch to return results with content_type filter
         service.db.fetch = Mock(return_value=[
             {"id": "1", "title": "Email Test", "body": "content", "source_type": "email"}
@@ -146,7 +164,9 @@ class TestQueryExpansion:
         assert len(result) == 1
 
     def test_query_expansion_edge_cases(self, service):
-        """Test edge cases in query expansion."""
+        """
+        Test edge cases in query expansion.
+        """
         # Empty query
         result = service._expand_query("")
         assert result == []
@@ -165,7 +185,9 @@ class TestQueryExpansion:
         assert "judicial" in result
 
     def test_abbreviation_expansion_edge_cases(self, service):
-        """Test edge cases in abbreviation expansion."""
+        """
+        Test edge cases in abbreviation expansion.
+        """
         # Abbreviation at start
         result = service._preprocess_query("llc business")
         assert result == "limited liability company business"
@@ -184,11 +206,15 @@ class TestQueryExpansion:
 
 
 class TestParameterValidation:
-    """Test parameter validation to prevent type mismatches."""
+    """
+    Test parameter validation to prevent type mismatches.
+    """
 
     @pytest.fixture
     def service(self):
-        """Create service with mocked dependencies."""
+        """
+        Create service with mocked dependencies.
+        """
         with patch('search_intelligence.main.SimpleDB'), \
              patch('search_intelligence.main.get_vector_store'), \
              patch('search_intelligence.main.EntityService'), \
@@ -197,7 +223,9 @@ class TestParameterValidation:
             return SearchIntelligenceService()
 
     def test_extract_and_cache_entities_parameter_validation(self, service):
-        """Test entity extraction parameter validation (REGRESSION TEST)."""
+        """
+        Test entity extraction parameter validation (REGRESSION TEST).
+        """
         # Mock dependencies
         service.db.get_content = Mock(return_value={
             "body": "test content", 
@@ -215,7 +243,9 @@ class TestParameterValidation:
         assert len(result) == 1
 
     def test_analyze_document_similarity_parameter_validation(self, service):
-        """Test similarity analysis parameter validation."""
+        """
+        Test similarity analysis parameter validation.
+        """
         # Mock content retrieval
         service.db.get_content = Mock(return_value={
             "content": "test document content"
@@ -231,7 +261,9 @@ class TestParameterValidation:
         assert result == []  # No similar docs in mock
 
     def test_method_signature_consistency(self, service):
-        """Test that method signatures are consistent across the service."""
+        """
+        Test that method signatures are consistent across the service.
+        """
         import inspect
         
         # Check extract_and_cache_entities signature

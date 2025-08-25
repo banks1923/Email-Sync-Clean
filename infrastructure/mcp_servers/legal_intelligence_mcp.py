@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""
-Legal Intelligence MCP Server
+"""Legal Intelligence MCP Server.
 
-Unified Legal Intelligence MCP server that replaces existing legal and timeline servers.
-Provides comprehensive legal case analysis, entity extraction, timeline generation,
-knowledge graph relationships, and document intelligence.
+Unified Legal Intelligence MCP server that replaces existing legal and
+timeline servers. Provides comprehensive legal case analysis, entity
+extraction, timeline generation, knowledge graph relationships, and
+document intelligence.
 """
 
 import asyncio
@@ -40,7 +40,9 @@ except ImportError as e:
 
 
 def legal_extract_entities(content: str, case_id: str | None = None) -> str:
-    """Extract legal entities from text content using Legal BERT and NER"""
+    """
+    Extract legal entities from text content using Legal BERT and NER.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
 
@@ -104,7 +106,9 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
 def legal_timeline_events(
     case_number: str, start_date: str | None = None, end_date: str | None = None
 ) -> str:
-    """Generate comprehensive timeline of legal case events"""
+    """
+    Generate comprehensive timeline of legal case events.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
@@ -203,7 +207,9 @@ def legal_timeline_events(
 
 
 def legal_knowledge_graph(case_number: str, include_relationships: bool = True) -> str:
-    """Build and analyze knowledge graph relationships for legal case"""
+    """
+    Build and analyze knowledge graph relationships for legal case.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
@@ -291,7 +297,9 @@ def legal_knowledge_graph(case_number: str, include_relationships: bool = True) 
 
 
 def legal_document_analysis(case_number: str, analysis_type: str = "comprehensive") -> str:
-    """Perform comprehensive document analysis using Legal BERT embeddings"""
+    """
+    Perform comprehensive document analysis using Legal BERT embeddings.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
@@ -409,7 +417,9 @@ def legal_document_analysis(case_number: str, analysis_type: str = "comprehensiv
 
 
 def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
-    """Track legal case status, deadlines, and procedural requirements"""
+    """
+    Track legal case status, deadlines, and procedural requirements.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
@@ -533,7 +543,9 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
 
 
 def legal_relationship_discovery(case_number: str, entity_focus: str | None = None) -> str:
-    """Discover relationships between entities, documents, and cases"""
+    """
+    Discover relationships between entities, documents, and cases.
+    """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
     
@@ -681,14 +693,18 @@ def legal_relationship_discovery(case_number: str, entity_focus: str | None = No
 
 
 class LegalIntelligenceServer:
-    """Unified Legal Intelligence MCP Server"""
+    """
+    Unified Legal Intelligence MCP Server.
+    """
 
     def __init__(self):
         self.server = Server("legal-intelligence-server")
         self.setup_tools()
 
     def setup_tools(self):
-        """Register legal intelligence tools"""
+        """
+        Register legal intelligence tools.
+        """
 
         @self.server.list_tools()
         async def handle_list_tools():
@@ -867,7 +883,9 @@ class LegalIntelligenceServer:
 
 
 async def main():
-    """Run the legal intelligence server"""
+    """
+    Run the legal intelligence server.
+    """
     server = LegalIntelligenceServer()
 
     async with stdio_server() as (read_stream, write_stream):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-LibCST-based codemod to safely replace content_id with id in SQL string literals.
+"""LibCST-based codemod to safely replace content_id with id in SQL string
+literals.
 
 This transformer:
 1. Only targets SQL string literals (not Python identifiers)
@@ -73,18 +73,24 @@ SQL_MARKERS = re.compile(r"\b(SELECT|INSERT|UPDATE|DELETE|CREATE\s+TABLE|ALTER\s
 
 
 class SqlStringRewriter(cst.CSTTransformer):
-    """Transforms SQL string literals to replace content_id with id."""
+    """
+    Transforms SQL string literals to replace content_id with id.
+    """
     
     def __init__(self):
         self.changes_made = 0
         self.files_changed = 0
     
     def _is_sql_string(self, content: str) -> bool:
-        """Heuristic to identify SQL strings."""
+        """
+        Heuristic to identify SQL strings.
+        """
         return bool(SQL_MARKERS.search(content))
     
     def _rewrite_sql(self, content: str) -> str:
-        """Apply all SQL transformations to the string content."""
+        """
+        Apply all SQL transformations to the string content.
+        """
         if not self._is_sql_string(content):
             return content
             
@@ -104,7 +110,9 @@ class SqlStringRewriter(cst.CSTTransformer):
     def leave_SimpleString(
         self, original_node: cst.SimpleString, updated_node: cst.SimpleString
     ) -> cst.SimpleString | RemovalSentinel:
-        """Transform simple string literals containing SQL."""
+        """
+        Transform simple string literals containing SQL.
+        """
         raw_value = updated_node.value
         
         # Handle different quote styles
@@ -128,7 +136,9 @@ class SqlStringRewriter(cst.CSTTransformer):
     def leave_FormattedString(
         self, original_node: cst.FormattedString, updated_node: cst.FormattedString
     ) -> cst.FormattedString | RemovalSentinel:
-        """Transform f-string literals containing SQL (only the literal parts)."""
+        """
+        Transform f-string literals containing SQL (only the literal parts).
+        """
         new_parts = []
         changed = False
         
@@ -153,9 +163,8 @@ class SqlStringRewriter(cst.CSTTransformer):
 
 
 def transform_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
-    """
-    Transform a single Python file.
-    
+    """Transform a single Python file.
+
     Returns:
         (changed, diff_text)
     """
@@ -201,7 +210,9 @@ def transform_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
 
 
 def find_python_files(paths: list[Path]) -> list[Path]:
-    """Find all Python files in the given paths."""
+    """
+    Find all Python files in the given paths.
+    """
     python_files = []
     
     for path in paths:
@@ -221,7 +232,9 @@ def find_python_files(paths: list[Path]) -> list[Path]:
 
 
 def main():
-    """Main entry point for the codemod."""
+    """
+    Main entry point for the codemod.
+    """
     parser = argparse.ArgumentParser(
         description="Replace content_id with id in SQL string literals using LibCST",
         formatter_class=argparse.RawDescriptionHelpFormatter,

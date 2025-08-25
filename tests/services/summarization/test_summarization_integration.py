@@ -17,10 +17,14 @@ from shared.simple_db import SimpleDB
 
 
 class TestPDFSummarizationIntegration(unittest.TestCase):
-    """Test PDF service with summarization integration."""
+    """
+    Test PDF service with summarization integration.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         # Create temporary database
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
@@ -74,14 +78,18 @@ class TestPDFSummarizationIntegration(unittest.TestCase):
         self.db.create_intelligence_tables()
 
     def tearDown(self):
-        """Clean up temporary files."""
+        """
+        Clean up temporary files.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
             pass
 
     def test_pdf_upload_with_summary(self):
-        """Test that PDF upload generates and stores summary."""
+        """
+        Test that PDF upload generates and stores summary.
+        """
         # Create a mock PDF file
         test_pdf = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
         test_pdf.write(b"%PDF-1.4\ntest content")
@@ -137,10 +145,14 @@ class TestPDFSummarizationIntegration(unittest.TestCase):
 
 
 class TestGmailSummarizationIntegration(unittest.TestCase):
-    """Test Gmail service with summarization integration."""
+    """
+    Test Gmail service with summarization integration.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         # Create temporary database
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
@@ -171,7 +183,9 @@ class TestGmailSummarizationIntegration(unittest.TestCase):
         self.db.create_intelligence_tables()
 
     def tearDown(self):
-        """Clean up temporary files."""
+        """
+        Clean up temporary files.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
@@ -179,7 +193,9 @@ class TestGmailSummarizationIntegration(unittest.TestCase):
 
     @patch("gmail.gmail_api.GmailAPI")
     def test_email_sync_with_summary(self, mock_gmail_api):
-        """Test that email sync generates and stores summaries."""
+        """
+        Test that email sync generates and stores summaries.
+        """
         # Mock Gmail API responses
         mock_api_instance = MagicMock()
         mock_gmail_api.return_value = mock_api_instance
@@ -238,10 +254,14 @@ class TestGmailSummarizationIntegration(unittest.TestCase):
 
 
 class TestSummaryRetrieval(unittest.TestCase):
-    """Test retrieving and using summaries."""
+    """
+    Test retrieving and using summaries.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         # Create temporary database
         self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.db_path = self.temp_db.name
@@ -270,14 +290,18 @@ class TestSummaryRetrieval(unittest.TestCase):
         self.db.create_intelligence_tables()
 
     def tearDown(self):
-        """Clean up temporary files."""
+        """
+        Clean up temporary files.
+        """
         try:
             os.unlink(self.db_path)
         except Exception:
             pass
 
     def test_batch_summary_generation(self):
-        """Test generating summaries for multiple documents."""
+        """
+        Test generating summaries for multiple documents.
+        """
         # Add test documents
         documents = [
             {
@@ -322,7 +346,9 @@ class TestSummaryRetrieval(unittest.TestCase):
             self.assertIsNotNone(summaries[0]["summary_text"])
 
     def test_summary_search_integration(self):
-        """Test that summaries can be searched."""
+        """
+        Test that summaries can be searched.
+        """
         # Add document with summary
         content_id = self.db.add_content(
             content_type="email",

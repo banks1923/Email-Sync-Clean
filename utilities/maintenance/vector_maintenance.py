@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Consolidated Vector Store Maintenance Utilities
+"""Consolidated Vector Store Maintenance Utilities.
 
 Combines functionality from:
 - sync_emails_to_qdrant.py
@@ -12,7 +11,7 @@ Combines functionality from:
 
 import argparse
 import sys
-from typing import Any, List
+from typing import Any
 from collections.abc import Generator
 
 from loguru import logger
@@ -33,7 +32,9 @@ def _chunked(seq: list[Any], size: int) -> Generator[list[Any], None, None]:
 
 
 class VectorMaintenance:
-    """Unified vector store maintenance operations."""
+    """
+    Unified vector store maintenance operations.
+    """
     
     def __init__(self) -> None:
         # Direct SimpleDB usage (VectorMaintenanceAdapter removed 2025-08-20)
@@ -44,7 +45,9 @@ class VectorMaintenance:
         
     # --- Direct SimpleDB methods (replaced adapter) --------------------------
     def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
-        """Get all content IDs, optionally filtered by type."""
+        """
+        Get all content IDs, optionally filtered by type.
+        """
         try:
             if content_type:
                 # Map collection names to content types
@@ -69,7 +72,9 @@ class VectorMaintenance:
             return []
 
     def get_emails_without_vectors(self) -> list[dict]:
-        """Get emails that don't have vectors yet."""
+        """
+        Get emails that don't have vectors yet.
+        """
         try:
             query = """
                 SELECT id, message_id, subject, content 
@@ -89,7 +94,9 @@ class VectorMaintenance:
 
     # --- Compatibility helpers -------------------------------------------------
     def _db_get_all_content_ids(self, content_type: str) -> list[str]:
-        """Get content IDs with fallback compatibility."""
+        """
+        Get content IDs with fallback compatibility.
+        """
         # Use our new direct method first
         try:
             return self.get_all_content_ids(content_type)
@@ -98,7 +105,9 @@ class VectorMaintenance:
             return []
     
     def _db_get_emails_without_vectors(self) -> list[dict[str, Any]]:
-        """Get emails without vectors with fallback compatibility."""
+        """
+        Get emails without vectors with fallback compatibility.
+        """
         # Use our new direct method first
         try:
             return self.get_emails_without_vectors()
@@ -165,7 +174,9 @@ class VectorMaintenance:
         return
 
     def sync_emails_to_vectors(self, limit: int | None = None) -> dict[str, Any]:
-        """Sync email content to vector store (batched with API-compat fallbacks)."""
+        """
+        Sync email content to vector store (batched with API-compat fallbacks).
+        """
         logger.info("Starting email to vector sync (batched)")
 
         get_missing = getattr(self.db, "get_emails_without_vectors", None)
@@ -274,7 +285,9 @@ class VectorMaintenance:
         }
     
     def sync_missing_vectors(self, collection: str = "emails") -> dict[str, Any]:
-        """Find and sync content missing from vector store."""
+        """
+        Find and sync content missing from vector store.
+        """
         logger.info(f"Checking for missing vectors in {collection}")
 
         db_ids = self._db_get_all_content_ids(content_type=collection)
@@ -364,7 +377,9 @@ class VectorMaintenance:
         }
     
     def reconcile_vectors(self, fix: bool = False) -> dict[str, Any]:
-        """Reconcile vector store with database."""
+        """
+        Reconcile vector store with database.
+        """
         logger.info("Starting vector reconciliation")
         
         results = {
@@ -423,7 +438,9 @@ class VectorMaintenance:
         return results
     
     def verify_sync(self) -> dict[str, Any]:
-        """Verify vector sync status across all collections."""
+        """
+        Verify vector sync status across all collections.
+        """
         logger.info("Verifying vector sync status")
         
         status = {}
@@ -451,7 +468,9 @@ class VectorMaintenance:
         }
     
     def purge_test_vectors(self, dry_run: bool = True) -> dict[str, Any]:
-        """Remove test vectors from production collections."""
+        """
+        Remove test vectors from production collections.
+        """
         logger.info(f"Purging test vectors (dry_run={dry_run})")
         
         test_patterns = [
@@ -487,7 +506,9 @@ class VectorMaintenance:
         }
     
     def renormalize_vectors(self, collection: str = None, dry_run: bool = True) -> dict[str, Any]:
-        """Re-normalize existing vectors to unit length (L2 norm = 1.0)."""
+        """
+        Re-normalize existing vectors to unit length (L2 norm = 1.0).
+        """
         import numpy as np
         
         logger.info(f"Re-normalizing vectors (collection={collection}, dry_run={dry_run})")
@@ -549,7 +570,9 @@ class VectorMaintenance:
 
 
 def main():
-    """CLI interface for vector maintenance."""
+    """
+    CLI interface for vector maintenance.
+    """
     parser = argparse.ArgumentParser(description="Vector Store Maintenance")
     
     subparsers = parser.add_subparsers(dest='command', help='Commands')

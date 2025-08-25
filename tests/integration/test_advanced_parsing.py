@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Test script for advanced email parsing integration.
+"""Test script for advanced email parsing integration.
+
 Tests the new unified pipeline with existing emails.
 """
 
@@ -17,7 +17,9 @@ from shared.thread_manager import deduplicate_messages, extract_thread_messages
 
 
 def test_advanced_parsing():
-    """Test the advanced parsing with a small subset of emails."""
+    """
+    Test the advanced parsing with a small subset of emails.
+    """
     
     # Connect to database
     db = SimpleDB("data/emails.db")
@@ -129,7 +131,9 @@ def test_advanced_parsing():
     return True
 
 def show_current_stats():
-    """Show current database statistics."""
+    """
+    Show current database statistics.
+    """
     print("\n📊 Current Database Stats")
     print("=" * 30)
     

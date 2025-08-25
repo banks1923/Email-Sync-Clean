@@ -1,12 +1,12 @@
 """
-Email Cleaning and Sanitization Utilities
-Handles HTML stripping, signature removal, and content normalization
+Email Cleaning and Sanitization Utilities Handles HTML stripping, signature
+removal, and content normalization.
 """
 
 import html as html_lib
 import re
 from functools import lru_cache
-from typing import Any, Dict, List
+from typing import Any
 
 # Compiled patterns for HTML and text cleaning
 CLEANING_PATTERNS = {
@@ -38,12 +38,11 @@ class EmailCleaner:
         self._compiled_signature_patterns = [re.compile(p, re.IGNORECASE | re.MULTILINE) for p in self.signature_patterns]
 
     def clean(self, email_data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Clean an email dictionary, normalizing all text fields.
-        
+        """Clean an email dictionary, normalizing all text fields.
+
         Args:
             email_data: Raw email data dictionary
-            
+
         Returns:
             Cleaned email data dictionary
         """
@@ -67,7 +66,9 @@ class EmailCleaner:
         return cleaned
 
     def _clean_subject(self, subject: str) -> str:
-        """Clean email subject line."""
+        """
+        Clean email subject line.
+        """
         if not subject:
             return ""
         
@@ -80,12 +81,11 @@ class EmailCleaner:
         return subject.strip()
 
     def _clean_body(self, body: str) -> str:
-        """
-        Clean email body content.
-        
+        """Clean email body content.
+
         Args:
             body: Raw email body text (may contain HTML)
-            
+
         Returns:
             Cleaned plain text
         """
@@ -121,12 +121,11 @@ class EmailCleaner:
         return '\n'.join(cleaned_lines).strip()
 
     def _strip_html(self, html: str) -> str:
-        """
-        Convert HTML to plain text preserving structure.
-        
+        """Convert HTML to plain text preserving structure.
+
         Args:
             html: HTML content string
-            
+
         Returns:
             Plain text with preserved line breaks
         """
@@ -149,8 +148,8 @@ class EmailCleaner:
         return html
 
     def _remove_signatures(self, text: str) -> str:
-        """
-        Remove email signatures from text.
+        """Remove email signatures from text.
+
         NOTE: For legal cases, may want to preserve signatures as evidence.
         """
         if not text:
@@ -166,7 +165,9 @@ class EmailCleaner:
         return text
 
     def _is_reply(self, email_data: dict[str, Any]) -> bool:
-        """Determine if email is a reply based on subject and headers."""
+        """
+        Determine if email is a reply based on subject and headers.
+        """
         subject = email_data.get("subject", "").lower()
         
         # Check for reply prefixes
@@ -182,12 +183,11 @@ class EmailCleaner:
         return False
 
     def batch_clean(self, emails: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """
-        Clean a batch of emails efficiently.
-        
+        """Clean a batch of emails efficiently.
+
         Args:
             emails: List of email dictionaries
-            
+
         Returns:
             List of cleaned email dictionaries
         """
@@ -195,12 +195,11 @@ class EmailCleaner:
 
 
 def sanitize_filename(filename: str) -> str:
-    """
-    Sanitize filename by removing invalid characters.
-    
+    """Sanitize filename by removing invalid characters.
+
     Args:
         filename: Original filename
-        
+
     Returns:
         Sanitized filename safe for filesystem use
     """
@@ -228,12 +227,11 @@ def sanitize_filename(filename: str) -> str:
 
 @lru_cache(maxsize=500)
 def compute_message_hash(message_content: str) -> str:
-    """
-    Compute hash for message content with caching.
-    
+    """Compute hash for message content with caching.
+
     Args:
         message_content: Message content to hash
-        
+
     Returns:
         SHA256 hash of message content
     """
@@ -249,12 +247,11 @@ def compute_message_hash(message_content: str) -> str:
 
 
 def extract_email_addresses(text: str) -> list[str]:
-    """
-    Extract email addresses from text.
-    
+    """Extract email addresses from text.
+
     Args:
         text: Text to search for email addresses
-        
+
     Returns:
         List of email addresses found
     """
@@ -278,8 +275,8 @@ def extract_email_addresses(text: str) -> list[str]:
 
 
 def is_automated_email(email_data: dict[str, Any]) -> bool:
-    """
-    Detect if email appears to be automated/template-based.
+    """Detect if email appears to be automated/template-based.
+
     Useful for identifying systematic harassment patterns.
     """
     if not email_data:

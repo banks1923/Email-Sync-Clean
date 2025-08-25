@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Database Migration Runner
+"""Database Migration Runner.
 
 Applies SQL migration files safely with tracking.
 Usage: python3 shared/migrations/migrate.py [--dry-run]
@@ -18,14 +17,18 @@ from loguru import logger
 
 
 class MigrationRunner:
-    """Simple migration runner for SQLite database."""
+    """
+    Simple migration runner for SQLite database.
+    """
     
     def __init__(self, db_path: str = "data/emails.db"):
         self.db_path = db_path
         self.migrations_dir = Path(__file__).parent
         
     def _ensure_migration_table(self, conn):
-        """Create migrations table if it doesn't exist."""
+        """
+        Create migrations table if it doesn't exist.
+        """
         conn.execute("""
             CREATE TABLE IF NOT EXISTS migrations (
                 filename TEXT PRIMARY KEY,
@@ -36,22 +39,30 @@ class MigrationRunner:
         conn.commit()
     
     def _get_applied_migrations(self, conn):
-        """Get list of already applied migrations."""
+        """
+        Get list of already applied migrations.
+        """
         cursor = conn.execute("SELECT filename FROM migrations ORDER BY filename")
         return {row[0] for row in cursor.fetchall()}
     
     def _get_migration_files(self):
-        """Get list of migration SQL files."""
+        """
+        Get list of migration SQL files.
+        """
         return sorted(self.migrations_dir.glob("*.sql"))
     
     def _calculate_checksum(self, file_path):
-        """Calculate checksum of migration file."""
+        """
+        Calculate checksum of migration file.
+        """
         import hashlib
         with open(file_path, 'rb') as f:
             return hashlib.md5(f.read()).hexdigest()
     
     def run_migrations(self, dry_run: bool = False):
-        """Run pending migrations."""
+        """
+        Run pending migrations.
+        """
         logger.info(f"Running migrations on database: {self.db_path}")
         
         if dry_run:

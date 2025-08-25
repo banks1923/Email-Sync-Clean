@@ -17,7 +17,9 @@ class DocumentLifecycleManager:
     """Simplified document processing - no complex lifecycle."""
 
     def __init__(self, base_path: str = "data"):
-        """Initialize with simple folder structure."""
+        """
+        Initialize with simple folder structure.
+        """
         self.base_path = Path(base_path)
         self.folders = {
             "processed": self.base_path / "processed",
@@ -26,7 +28,9 @@ class DocumentLifecycleManager:
         self._ensure_folders_exist()
 
     def _ensure_folders_exist(self):
-        """Create lifecycle folders if they don't exist."""
+        """
+        Create lifecycle folders if they don't exist.
+        """
         for folder_name, folder_path in self.folders.items():
             folder_path.mkdir(parents=True, exist_ok=True)
             logger.info(f"Ensured folder exists: {folder_path}")
@@ -38,15 +42,14 @@ class DocumentLifecycleManager:
         file_type: str = "document",
         metadata: dict | None = None
     ) -> dict[str, Any]:
-        """
-        Process file in place and save clean version.
-        
+        """Process file in place and save clean version.
+
         Args:
             file_path: Original file path (left unchanged)
             content: Extracted content
             file_type: Type of file
             metadata: Optional metadata
-            
+
         Returns:
             Processing result dictionary
         """
@@ -62,11 +65,15 @@ class DocumentLifecycleManager:
             }
 
     def quarantine_file(self, file_path: Path, error_msg: str = "") -> Path:
-        """Copy problematic file to quarantine (leave original)."""
+        """
+        Copy problematic file to quarantine (leave original).
+        """
         return quarantine_file(file_path, error_msg)
 
     def get_stats(self) -> dict[str, Any]:
-        """Get statistics about processed and quarantined files."""
+        """
+        Get statistics about processed and quarantined files.
+        """
         stats = {}
         
         for folder_name, folder_path in self.folders.items():
@@ -84,5 +91,7 @@ class DocumentLifecycleManager:
 
 # Simple factory function following CLAUDE.md principles
 def get_lifecycle_manager(base_path: str = "data") -> DocumentLifecycleManager:
-    """Get document lifecycle manager instance."""
+    """
+    Get document lifecycle manager instance.
+    """
     return DocumentLifecycleManager(base_path)

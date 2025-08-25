@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Check if documents are actually in Qdrant
+Check if documents are actually in Qdrant.
 """
 
 import random
@@ -14,7 +14,9 @@ from utilities.vector_store import get_vector_store
 
 
 def check_qdrant_documents():
-    """Check what's actually in Qdrant"""
+    """
+    Check what's actually in Qdrant.
+    """
 
     print("Checking Qdrant for document vectors...")
     print("-" * 60)

@@ -15,7 +15,10 @@ from config.settings import get_db_path
 
 
 class EmailStorage:
-    """SQLite storage backend for Gmail emails with deduplication and sync state tracking."""
+    """
+    SQLite storage backend for Gmail emails with deduplication and sync state
+    tracking.
+    """
 
     def __init__(self, db_path=None):
         """Initialize email storage with database path.
@@ -30,7 +33,9 @@ class EmailStorage:
         self.init_db()
 
     def init_db(self):
-        """Initialize database tables for emails, sync state, and attachments."""
+        """
+        Initialize database tables for emails, sync state, and attachments.
+        """
         conn = sqlite3.connect(self.db_path)
 
         # Create emails table with content_hash for deduplication
@@ -91,8 +96,8 @@ class EmailStorage:
         conn.close()
 
     def generate_content_hash(self, email_data: dict) -> str:
-        """
-        Generate SHA-256 hash of email content for deduplication.
+        """Generate SHA-256 hash of email content for deduplication.
+
         Uses subject, sender, date, and body to create unique hash.
         """
         # Normalize data for consistent hashing
@@ -108,7 +113,9 @@ class EmailStorage:
         return content_hash
 
     def _validate_required_fields(self, email_data):
-        """Validate required fields in email data"""
+        """
+        Validate required fields in email data.
+        """
         if not email_data.get("message_id"):
             return {"success": False, "error": "Missing message_id"}
 
@@ -118,7 +125,9 @@ class EmailStorage:
         return {"success": True}
 
     def _validate_email_addresses(self, email_data):
-        """Validate and clean email addresses"""
+        """
+        Validate and clean email addresses.
+        """
         # Validate sender email format with intelligent header parsing
         sender_validation = EmailValidator.validate_email_header(email_data["sender"])
         if not sender_validation["success"]:
@@ -144,7 +153,9 @@ class EmailStorage:
         return {"success": True, "clean_sender": clean_sender, "clean_recipient": clean_recipient}
 
     def _validate_and_sanitize_data(self, email_data):
-        """Validate datetime and sanitize subject"""
+        """
+        Validate datetime and sanitize subject.
+        """
         # Validate datetime if provided
         if email_data.get("datetime_utc"):
             date_validation = DateValidator.validate_iso_datetime(email_data["datetime_utc"])
@@ -162,7 +173,9 @@ class EmailStorage:
         return {"success": True}
 
     def _insert_email_to_db(self, email_data, clean_sender, clean_recipient):
-        """Insert email data into database with content hash"""
+        """
+        Insert email data into database with content hash.
+        """
         # Generate content hash for deduplication
         content_hash = self.generate_content_hash(
             {
@@ -209,7 +222,9 @@ class EmailStorage:
             conn.close()
 
     def save_email(self, email_data):
-        """Save email to database with validation"""
+        """
+        Save email to database with validation.
+        """
         # Validate required fields
         required_validation = self._validate_required_fields(email_data)
         if not required_validation["success"]:
@@ -232,8 +247,8 @@ class EmailStorage:
         return self._insert_email_to_db(email_data, clean_sender, clean_recipient)
 
     def save_emails_batch(self, email_list, batch_size=1000, progress_callback=None):
-        """
-        Batch save multiple emails with validation and deduplication.
+        """Batch save multiple emails with validation and deduplication.
+
         Uses INSERT OR IGNORE for automatic deduplication.
         """
         if not email_list:
@@ -345,7 +360,9 @@ class EmailStorage:
 
     # Sync State Management Methods
     def get_sync_state(self, account_email: str) -> dict | None:
-        """Get sync state for an email account"""
+        """
+        Get sync state for an email account.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute("SELECT * FROM sync_state WHERE account_email = ?", (account_email,))
@@ -362,7 +379,9 @@ class EmailStorage:
         status: str = "idle",
         error: str = None,
     ) -> dict:
-        """Update sync state after successful sync"""
+        """
+        Update sync state after successful sync.
+        """
         conn = sqlite3.connect(self.db_path)
         try:
             cursor = conn.cursor()
@@ -426,7 +445,9 @@ class EmailStorage:
             conn.close()
 
     def save_attachments(self, message_id: str, attachments: list[dict]) -> dict:
-        """Save email attachment metadata"""
+        """
+        Save email attachment metadata.
+        """
         if not attachments:
             return {"success": True, "count": 0}
 

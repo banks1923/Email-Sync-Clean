@@ -17,10 +17,14 @@ from summarization.engine import (
 
 
 class TestTFIDFSummarizer(unittest.TestCase):
-    """Test TF-IDF summarizer functionality."""
+    """
+    Test TF-IDF summarizer functionality.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         self.summarizer = TFIDFSummarizer()
         self.sample_text = """
         This is a legal contract between ABC Corporation and XYZ Company.
@@ -32,7 +36,9 @@ class TestTFIDFSummarizer(unittest.TestCase):
         """
 
     def test_preprocess_text(self):
-        """Test text preprocessing."""
+        """
+        Test text preprocessing.
+        """
         text = "This is a TEST! With special #chars & numbers 123."
         processed = self.summarizer.preprocess_text(text)
 
@@ -43,7 +49,9 @@ class TestTFIDFSummarizer(unittest.TestCase):
         self.assertEqual(processed, processed.lower())
 
     def test_extract_keywords(self):
-        """Test keyword extraction."""
+        """
+        Test keyword extraction.
+        """
         keywords = self.summarizer.extract_keywords(self.sample_text, max_keywords=5)
 
         self.assertIsInstance(keywords, dict)
@@ -65,7 +73,9 @@ class TestTFIDFSummarizer(unittest.TestCase):
         )
 
     def test_extract_keywords_empty(self):
-        """Test keyword extraction with empty text."""
+        """
+        Test keyword extraction with empty text.
+        """
         keywords = self.summarizer.extract_keywords("")
         self.assertEqual(keywords, {})
 
@@ -73,7 +83,9 @@ class TestTFIDFSummarizer(unittest.TestCase):
         self.assertEqual(keywords, {})
 
     def test_extract_keywords_batch(self):
-        """Test batch keyword extraction."""
+        """
+        Test batch keyword extraction.
+        """
         texts = [
             self.sample_text,
             "This is another document about legal matters and court proceedings.",
@@ -89,10 +101,14 @@ class TestTFIDFSummarizer(unittest.TestCase):
 
 
 class TestTextRankSummarizer(unittest.TestCase):
-    """Test TextRank summarizer functionality."""
+    """
+    Test TextRank summarizer functionality.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         self.summarizer = TextRankSummarizer()
         self.sample_text = """
         This is a legal contract between ABC Corporation and XYZ Company.
@@ -106,7 +122,9 @@ class TestTextRankSummarizer(unittest.TestCase):
         """
 
     def test_split_sentences(self):
-        """Test sentence splitting."""
+        """
+        Test sentence splitting.
+        """
         text = "First sentence here. Second sentence here! Third sentence here? Fourth sentence."
         sentences = self.summarizer.split_sentences(text)
 
@@ -115,7 +133,9 @@ class TestTextRankSummarizer(unittest.TestCase):
         self.assertIn("Second sentence here", sentences)
 
     def test_extract_sentences(self):
-        """Test sentence extraction."""
+        """
+        Test sentence extraction.
+        """
         sentences = self.summarizer.extract_sentences(self.sample_text, max_sentences=3)
 
         self.assertIsInstance(sentences, list)
@@ -126,7 +146,9 @@ class TestTextRankSummarizer(unittest.TestCase):
             self.assertGreater(len(sentence), 0)
 
     def test_extract_sentences_empty(self):
-        """Test sentence extraction with empty text."""
+        """
+        Test sentence extraction with empty text.
+        """
         sentences = self.summarizer.extract_sentences("", max_sentences=3)
         self.assertEqual(sentences, [])
 
@@ -134,7 +156,9 @@ class TestTextRankSummarizer(unittest.TestCase):
         self.assertEqual(sentences, [])
 
     def test_extract_sentences_short_text(self):
-        """Test sentence extraction with short text."""
+        """
+        Test sentence extraction with short text.
+        """
         text = "Only one sentence here."
         sentences = self.summarizer.extract_sentences(text, max_sentences=3)
 
@@ -143,10 +167,14 @@ class TestTextRankSummarizer(unittest.TestCase):
 
 
 class TestDocumentSummarizer(unittest.TestCase):
-    """Test document summarizer orchestration."""
+    """
+    Test document summarizer orchestration.
+    """
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Set up test fixtures.
+        """
         self.summarizer = DocumentSummarizer()
         self.sample_text = """
         This legal agreement is entered into between ABC Corporation,
@@ -163,7 +191,9 @@ class TestDocumentSummarizer(unittest.TestCase):
         """
 
     def test_extract_summary_combined(self):
-        """Test combined summary extraction."""
+        """
+        Test combined summary extraction.
+        """
         summary = self.summarizer.extract_summary(
             self.sample_text, max_sentences=2, max_keywords=5, summary_type="combined"
         )
@@ -182,7 +212,9 @@ class TestDocumentSummarizer(unittest.TestCase):
         self.assertLessEqual(len(summary["textrank_sentences"]), 2)
 
     def test_extract_summary_tfidf_only(self):
-        """Test TF-IDF only summary."""
+        """
+        Test TF-IDF only summary.
+        """
         summary = self.summarizer.extract_summary(
             self.sample_text, max_keywords=5, summary_type="tfidf"
         )
@@ -194,7 +226,9 @@ class TestDocumentSummarizer(unittest.TestCase):
         self.assertIn("Key topics:", summary["summary_text"])
 
     def test_extract_summary_textrank_only(self):
-        """Test TextRank only summary."""
+        """
+        Test TextRank only summary.
+        """
         summary = self.summarizer.extract_summary(
             self.sample_text, max_sentences=2, summary_type="textrank"
         )
@@ -205,7 +239,9 @@ class TestDocumentSummarizer(unittest.TestCase):
         self.assertIsNotNone(summary["summary_text"])
 
     def test_summarize_batch(self):
-        """Test batch summarization."""
+        """
+        Test batch summarization.
+        """
         texts = [
             self.sample_text,
             "Another legal document about intellectual property rights.",
@@ -223,7 +259,9 @@ class TestDocumentSummarizer(unittest.TestCase):
                 self.assertLessEqual(len(summary["tf_idf_keywords"]), 3)
 
     def test_singleton_pattern(self):
-        """Test that get_document_summarizer returns singleton."""
+        """
+        Test that get_document_summarizer returns singleton.
+        """
         summarizer1 = get_document_summarizer()
         summarizer2 = get_document_summarizer()
 

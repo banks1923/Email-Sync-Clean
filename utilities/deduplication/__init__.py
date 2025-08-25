@@ -1,5 +1,5 @@
 """
-Deduplication utilities for exact and near-duplicate detection
+Deduplication utilities for exact and near-duplicate detection.
 """
 
 from .near_duplicate_detector import (

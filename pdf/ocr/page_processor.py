@@ -1,4 +1,6 @@
-"""Page-by-page processor for memory-efficient OCR of large PDFs."""
+"""
+Page-by-page processor for memory-efficient OCR of large PDFs.
+"""
 
 from collections.abc import Callable, Generator
 from typing import Any
@@ -13,11 +15,12 @@ from .rasterizer import PDFRasterizer
 
 
 class PageByPageProcessor:
-    """Process large PDFs page by page to manage memory usage."""
+    """
+    Process large PDFs page by page to manage memory usage.
+    """
 
     def __init__(self, batch_size: int = 5, max_memory_mb: int = 500) -> None:
-        """
-        Initialize processor with memory constraints.
+        """Initialize processor with memory constraints.
 
         Args:
             batch_size: Number of pages to process at once
@@ -36,8 +39,7 @@ class PageByPageProcessor:
         end_page: int | None = None,
         progress_callback: Callable | None = None,
     ) -> dict[str, Any]:
-        """
-        Process PDF with page range support.
+        """Process PDF with page range support.
 
         Args:
             pdf_path: Path to PDF file
@@ -128,8 +130,7 @@ class PageByPageProcessor:
     def process_with_generator(
         self, pdf_path: str, start_page: int = 0, end_page: int | None = None
     ) -> Generator[dict[str, Any], None, None]:
-        """
-        Process PDF and yield results page by page.
+        """Process PDF and yield results page by page.
 
         Args:
             pdf_path: Path to PDF file

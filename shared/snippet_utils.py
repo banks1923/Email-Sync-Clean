@@ -1,5 +1,5 @@
-"""
-Snippet extraction and highlighting utilities for search results.
+"""Snippet extraction and highlighting utilities for search results.
+
 Simple text processing without complex NLP algorithms.
 """
 
@@ -8,8 +8,7 @@ from functools import lru_cache
 
 
 def extract_snippet(text: str, query: str, window_size: int = 150) -> str:
-    """
-    Extract relevant snippet around query matches.
+    """Extract relevant snippet around query matches.
 
     Args:
         text: Full text content
@@ -61,8 +60,7 @@ def extract_snippet(text: str, query: str, window_size: int = 150) -> str:
 
 
 def highlight_keywords(text: str, query: str, use_ansi: bool = True) -> str:
-    """
-    Highlight query terms in text using ANSI colors or brackets.
+    """Highlight query terms in text using ANSI colors or brackets.
 
     Args:
         text: Text to highlight
@@ -96,8 +94,7 @@ def highlight_keywords(text: str, query: str, use_ansi: bool = True) -> str:
 
 
 def rank_snippets(snippets: list[str], query: str) -> list[tuple[str, float]]:
-    """
-    Rank snippets by relevance to query.
+    """Rank snippets by relevance to query.
 
     Args:
         snippets: List of snippet texts
@@ -121,7 +118,9 @@ def rank_snippets(snippets: list[str], query: str) -> list[tuple[str, float]]:
 
 
 def _calculate_snippet_score(snippet: str, query_terms: set) -> float:
-    """Calculate relevance score for a snippet."""
+    """
+    Calculate relevance score for a snippet.
+    """
     if not snippet or not query_terms:
         return 0.0
 
@@ -148,7 +147,9 @@ def _calculate_snippet_score(snippet: str, query_terms: set) -> float:
 
 @lru_cache(maxsize=128)
 def _cached_snippet_extraction(text_hash: str, query: str, window_size: int) -> str:
-    """Cached version of snippet extraction for performance."""
+    """
+    Cached version of snippet extraction for performance.
+    """
     # This is called by get_cached_snippet with hashed text
     # The actual text extraction happens in the calling function
     # This is just a placeholder for the caching mechanism
@@ -156,8 +157,7 @@ def _cached_snippet_extraction(text_hash: str, query: str, window_size: int) -> 
 
 
 def get_cached_snippet(text: str, query: str, window_size: int = 150) -> str:
-    """
-    Get snippet with caching for repeated queries.
+    """Get snippet with caching for repeated queries.
 
     Args:
         text: Full text content
@@ -179,8 +179,7 @@ def get_cached_snippet(text: str, query: str, window_size: int = 150) -> str:
 
 
 def format_search_result(content: dict, query: str, snippet_length: int = 200) -> dict:
-    """
-    Format search result with snippet and highlighting.
+    """Format search result with snippet and highlighting.
 
     Args:
         content: Content dictionary from search results

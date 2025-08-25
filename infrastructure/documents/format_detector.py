@@ -1,5 +1,4 @@
-"""
-Format Detection System
+"""Format Detection System.
 
 Detects document format using magic bytes and extensions.
 """
@@ -12,7 +11,9 @@ from loguru import logger
 
 
 class FormatDetector:
-    """Detects document format from file content and extension."""
+    """
+    Detects document format from file content and extension.
+    """
 
     # Magic bytes for common formats
     MAGIC_BYTES = {
@@ -41,8 +42,7 @@ class FormatDetector:
     }
 
     def detect_format(self, file_path: Path) -> str | None:
-        """
-        Detect document format from file.
+        """Detect document format from file.
 
         Args:
             file_path: Path to document file
@@ -75,7 +75,9 @@ class FormatDetector:
         return None
 
     def _detect_by_content(self, file_path: Path) -> str | None:
-        """Detect format by reading file header."""
+        """
+        Detect format by reading file header.
+        """
         try:
             with open(file_path, "rb") as f:
                 header = f.read(10)
@@ -92,13 +94,14 @@ class FormatDetector:
             return None
 
     def _detect_by_extension(self, file_path: Path) -> str | None:
-        """Detect format by file extension."""
+        """
+        Detect format by file extension.
+        """
         ext = file_path.suffix.lower()
         return self.EXTENSIONS.get(ext)
 
     def _is_text_file(self, file_path: Path) -> bool:
-        """
-        Check if file is plain text by attempting to decode it.
+        """Check if file is plain text by attempting to decode it.
 
         Args:
             file_path: Path to file
@@ -124,8 +127,7 @@ class FormatDetector:
             return False
 
     def is_supported_format(self, file_path: Path) -> bool:
-        """
-        Check if file format is supported.
+        """Check if file format is supported.
 
         Args:
             file_path: Path to file
@@ -137,12 +139,13 @@ class FormatDetector:
         return format_type in ["pdf", "docx", "txt", "md"]
 
     def get_supported_extensions(self) -> list:
-        """Get list of supported file extensions."""
+        """
+        Get list of supported file extensions.
+        """
         return list(self.EXTENSIONS.keys())
 
     def get_format_info(self, format_type: str) -> dict:
-        """
-        Get information about a format type.
+        """Get information about a format type.
 
         Args:
             format_type: Format identifier

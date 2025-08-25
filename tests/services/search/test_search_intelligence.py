@@ -1,5 +1,4 @@
-"""
-Tests for Search Intelligence Module
+"""Tests for Search Intelligence Module.
 
 Tests the unified search intelligence service including smart search,
 document similarity, clustering, and duplicate detection.
@@ -17,11 +16,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestSearchIntelligenceService:
-    """Test SearchIntelligenceService functionality."""
+    """
+    Test SearchIntelligenceService functionality.
+    """
 
     @pytest.fixture
     def service(self):
-        """Create service instance for testing."""
+        """
+        Create service instance for testing.
+        """
         with patch("search_intelligence.main.get_search_service"):
             with patch("search_intelligence.main.get_embedding_service"):
                 with patch("search_intelligence.main.get_vector_store"):
@@ -38,7 +41,9 @@ class TestSearchIntelligenceService:
                         return service
 
     def test_service_initialization(self, service):
-        """Test service initializes correctly."""
+        """
+        Test service initializes correctly.
+        """
         assert service is not None
         assert service.collection == "emails"
         assert hasattr(service, "synonyms")
@@ -47,7 +52,9 @@ class TestSearchIntelligenceService:
         assert hasattr(service, "duplicate_detector")
 
     def test_query_preprocessing(self, service):
-        """Test query preprocessing functionality."""
+        """
+        Test query preprocessing functionality.
+        """
         # Test abbreviation expansion
         query = "The LLC vs the corp re: Q1 meeting"
         processed = service._preprocess_query(query)
@@ -59,7 +66,9 @@ class TestSearchIntelligenceService:
         assert "first quarter" in processed
 
     def test_query_expansion(self, service):
-        """Test query expansion with synonyms."""
+        """
+        Test query expansion with synonyms.
+        """
         query = "contract attorney meeting"
         expanded = service._expand_query(query)
 
@@ -69,7 +78,9 @@ class TestSearchIntelligenceService:
         )
 
     def test_smart_search_preprocessing(self, service):
-        """Test smart search with preprocessing."""
+        """
+        Test smart search with preprocessing.
+        """
         # Mock the search service
         service.search_service.search = MagicMock(
             return_value=[
@@ -91,7 +102,9 @@ class TestSearchIntelligenceService:
         assert len(results) <= 5
 
     def test_entity_relevance_calculation(self, service):
-        """Test entity relevance scoring."""
+        """
+        Test entity relevance scoring.
+        """
         content = {"body": "John Doe from Apple Inc contacted us about the deal"}
         query = "John Doe Apple"
 
@@ -101,7 +114,9 @@ class TestSearchIntelligenceService:
         assert score > 0
 
     def test_recency_boost_calculation(self, service):
-        """Test recency boost for recent documents."""
+        """
+        Test recency boost for recent documents.
+        """
         from datetime import datetime, timedelta
 
         # Recent document (3 days old)
@@ -120,7 +135,9 @@ class TestSearchIntelligenceService:
         assert old_score < 0.5  # Older than 90 days
 
     def test_extract_and_cache_entities(self, service):
-        """Test entity extraction and caching."""
+        """
+        Test entity extraction and caching.
+        """
         # Mock document retrieval
         service._get_document_content = MagicMock(return_value={"body": "John Doe from Apple Inc"})
         service._cache_data = MagicMock()
@@ -138,7 +155,9 @@ class TestSearchIntelligenceService:
         service._cache_data.assert_called_once()
 
     def test_auto_summarize_document(self, service):
-        """Test document summarization."""
+        """
+        Test document summarization.
+        """
         # Mock summarizer
         service.summarizer.extract_summary = MagicMock(
             return_value={
@@ -164,7 +183,9 @@ class TestSearchIntelligenceService:
         service.db.add_document_summary.assert_called_once()
 
     def test_cluster_similar_content(self, service):
-        """Test content clustering."""
+        """
+        Test content clustering.
+        """
         # Mock clustering function
         with patch("search_intelligence.main.cluster_similar_content") as mock_cluster:
             mock_cluster.return_value = [
@@ -180,7 +201,9 @@ class TestSearchIntelligenceService:
             assert "sample_title" in clusters[0]
 
     def test_detect_duplicates(self, service):
-        """Test duplicate detection."""
+        """
+        Test duplicate detection.
+        """
         # Mock duplicate detector
         service.duplicate_detector.detect_duplicates = MagicMock(
             return_value={
@@ -204,18 +227,24 @@ class TestSearchIntelligenceService:
 
 
 class TestDocumentSimilarity:
-    """Test document similarity analyzer."""
+    """
+    Test document similarity analyzer.
+    """
 
     @pytest.fixture
     def analyzer(self):
-        """Create analyzer instance."""
+        """
+        Create analyzer instance.
+        """
         with patch("search_intelligence.similarity.get_embedding_service"):
             with patch("search_intelligence.similarity.get_vector_store"):
                 with patch("search_intelligence.similarity.SimpleDB"):
                     return DocumentSimilarityAnalyzer()
 
     def test_find_similar_documents(self, analyzer):
-        """Test finding similar documents."""
+        """
+        Test finding similar documents.
+        """
         # Mock vector store search
         analyzer.vector_store.search = MagicMock(
             return_value=[
@@ -234,7 +263,9 @@ class TestDocumentSimilarity:
         assert len(similar) <= 5
 
     def test_compute_pairwise_similarity(self, analyzer):
-        """Test pairwise similarity computation."""
+        """
+        Test pairwise similarity computation.
+        """
         import numpy as np
 
         # Mock document vectors
@@ -260,17 +291,23 @@ class TestDocumentSimilarity:
 
 
 class TestDocumentClusterer:
-    """Test document clustering."""
+    """
+    Test document clustering.
+    """
 
     @pytest.fixture
     def clusterer(self):
-        """Create clusterer instance."""
+        """
+        Create clusterer instance.
+        """
         with patch("search_intelligence.similarity.DocumentSimilarityAnalyzer"):
             with patch("search_intelligence.similarity.SimpleDB"):
                 return DocumentClusterer()
 
     def test_cluster_documents(self, clusterer):
-        """Test DBSCAN clustering."""
+        """
+        Test DBSCAN clustering.
+        """
         import numpy as np
 
         # Mock similarity matrix (3 clusters)
@@ -300,7 +337,9 @@ class TestDocumentClusterer:
                 assert len(members) == 2
 
     def test_store_cluster_relationships(self, clusterer):
-        """Test storing cluster relationships."""
+        """
+        Test storing cluster relationships.
+        """
         clusterer.db.add_relationship_cache = MagicMock()
 
         clusters = {0: ["doc1", "doc2", "doc3"], 1: ["doc4", "doc5"]}
@@ -314,18 +353,24 @@ class TestDocumentClusterer:
 
 
 class TestDuplicateDetector:
-    """Test duplicate detection."""
+    """
+    Test duplicate detection.
+    """
 
     @pytest.fixture
     def detector(self):
-        """Create detector instance."""
+        """
+        Create detector instance.
+        """
         with patch("search_intelligence.duplicate_detector.get_embedding_service"):
             with patch("search_intelligence.duplicate_detector.get_vector_store"):
                 with patch("search_intelligence.duplicate_detector.SimpleDB"):
                     return DuplicateDetector()
 
     def test_detect_exact_duplicates(self, detector):
-        """Test exact duplicate detection using hashes."""
+        """
+        Test exact duplicate detection using hashes.
+        """
         documents = [
             {"content_id": "doc1", "content": "This is content A"},
             {"content_id": "doc2", "content": "This is content A"},  # Duplicate
@@ -343,7 +388,9 @@ class TestDuplicateDetector:
             assert group["count"] == 2
 
     def test_detect_semantic_duplicates(self, detector):
-        """Test semantic duplicate detection."""
+        """
+        Test semantic duplicate detection.
+        """
         import numpy as np
 
         documents = [
@@ -369,7 +416,9 @@ class TestDuplicateDetector:
         assert near_dups[0]["type"] == "semantic"
 
     def test_remove_duplicates(self, detector):
-        """Test duplicate removal strategies."""
+        """
+        Test duplicate removal strategies.
+        """
         detector.db.add_relationship_cache = MagicMock()
         detector._get_document = MagicMock(return_value={"created_at": "2024-01-01"})
 
@@ -388,10 +437,14 @@ class TestDuplicateDetector:
 
 
 class TestIntegration:
-    """Integration tests for the complete module."""
+    """
+    Integration tests for the complete module.
+    """
 
     def test_singleton_pattern(self):
-        """Test singleton pattern works correctly."""
+        """
+        Test singleton pattern works correctly.
+        """
         with patch("search_intelligence.main.get_search_service"):
             with patch("search_intelligence.main.get_embedding_service"):
                 with patch("search_intelligence.main.get_vector_store"):
@@ -406,7 +459,9 @@ class TestIntegration:
                         assert service3 is not service1
 
     def test_end_to_end_search_flow(self):
-        """Test complete search flow."""
+        """
+        Test complete search flow.
+        """
         with patch("search_intelligence.main.get_search_service"):
             with patch("search_intelligence.main.get_embedding_service"):
                 with patch("search_intelligence.main.get_vector_store"):

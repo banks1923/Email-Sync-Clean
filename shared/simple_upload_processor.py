@@ -10,7 +10,7 @@ import hashlib
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 
@@ -18,7 +18,10 @@ from .simple_db import SimpleDB
 
 
 class SimpleUploadProcessor:
-    """Direct file upload processing. No pipeline directories, no state management."""
+    """Direct file upload processing.
+
+    No pipeline directories, no state management.
+    """
 
     def __init__(self, quarantine_dir: str = "data/system_data/quarantine"):
         self.quarantine_dir = Path(quarantine_dir)
@@ -26,13 +29,12 @@ class SimpleUploadProcessor:
         self.db = SimpleDB()
 
     def process_file(self, file_path: Path, source: str = "upload") -> dict[str, Any]:
-        """
-        Process file directly to database. No intermediate directories.
-        
+        """Process file directly to database. No intermediate directories.
+
         Args:
             file_path: Path to file to process
             source: Source type (upload, pdf, email, etc.)
-            
+
         Returns:
             Processing result with content_id or error info
         """
@@ -112,7 +114,9 @@ class SimpleUploadProcessor:
             }
 
     def process_directory(self, dir_path: Path, limit: int = None) -> dict[str, Any]:
-        """Process all supported files in a directory."""
+        """
+        Process all supported files in a directory.
+        """
         if not dir_path.exists() or not dir_path.is_dir():
             return {"success": False, "error": f"Directory not found: {dir_path}"}
 
@@ -153,7 +157,9 @@ class SimpleUploadProcessor:
         return results
 
     def process_directory_recursive(self, dir_path: Path, extensions: list[str] = None) -> dict[str, Any]:
-        """Process all supported files in a directory recursively."""
+        """
+        Process all supported files in a directory recursively.
+        """
         if not dir_path.exists() or not dir_path.is_dir():
             return {"success": False, "error": f"Directory not found: {dir_path}"}
 
@@ -197,7 +203,9 @@ class SimpleUploadProcessor:
         return results
 
     def _extract_content(self, file_path: Path) -> str:
-        """Extract text content from file based on extension."""
+        """
+        Extract text content from file based on extension.
+        """
         suffix = file_path.suffix.lower()
         
         if suffix == '.txt' or suffix == '.md':
@@ -266,7 +274,9 @@ class SimpleUploadProcessor:
             return f"[Unsupported file type: {suffix}]"
 
     def _get_file_hash(self, file_path: Path) -> str:
-        """Calculate SHA256 hash of file content."""
+        """
+        Calculate SHA256 hash of file content.
+        """
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -274,7 +284,9 @@ class SimpleUploadProcessor:
         return sha256_hash.hexdigest()
 
     def _quarantine_file(self, file_path: Path, error_msg: str) -> Path:
-        """Move problematic file to quarantine with error log."""
+        """
+        Move problematic file to quarantine with error log.
+        """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         quarantine_filename = f"{file_path.stem}_{timestamp}_failed{file_path.suffix}"
         quarantine_path = self.quarantine_dir / quarantine_filename
@@ -297,5 +309,8 @@ Quarantine path: {quarantine_path}
 
 
 def get_upload_processor() -> SimpleUploadProcessor:
-    """Get upload processor instance. Simple factory following CLAUDE.md principles."""
+    """Get upload processor instance.
+
+    Simple factory following CLAUDE.md principles.
+    """
     return SimpleUploadProcessor()

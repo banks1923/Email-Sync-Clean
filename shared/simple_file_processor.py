@@ -24,15 +24,14 @@ def process_file_simple(
     file_type: str = "document",
     metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    """
-    Process file in place and save clean version.
-    
+    """Process file in place and save clean version.
+
     Args:
         file_path: Original file path (left unchanged)
         content: Extracted/cleaned content
         file_type: Type of file ('pdf', 'email', 'document')
         metadata: Optional metadata
-        
+
     Returns:
         Dictionary with processing results
     """
@@ -78,14 +77,15 @@ def process_file_simple(
 
 
 def get_content_hash(content: str) -> str:
-    """Calculate SHA-256 hash of content for deduplication."""
+    """
+    Calculate SHA-256 hash of content for deduplication.
+    """
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
 
 def check_content_duplicate(content: str) -> str | None:
-    """
-    Check if content already exists by hash.
-    
+    """Check if content already exists by hash.
+
     Returns:
         Content ID if duplicate exists, None if unique
     """
@@ -102,7 +102,9 @@ def check_content_duplicate(content: str) -> str | None:
 
 
 def quarantine_file(file_path: Path, error_msg: str) -> Path:
-    """Move problematic file to quarantine with error log."""
+    """
+    Move problematic file to quarantine with error log.
+    """
     quarantine_dir = Path("data/quarantine")
     quarantine_dir.mkdir(parents=True, exist_ok=True)
     
@@ -123,7 +125,9 @@ def quarantine_file(file_path: Path, error_msg: str) -> Path:
 
 # Simple factory function following CLAUDE.md principles
 def get_simple_processor():
-    """Get simple file processor (no complex instantiation needed)."""
+    """
+    Get simple file processor (no complex instantiation needed).
+    """
     return {
         "process_file": process_file_simple,
         "check_duplicate": check_content_duplicate,

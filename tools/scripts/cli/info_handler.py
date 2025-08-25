@@ -23,7 +23,9 @@ except ImportError:
 
 
 def show_info():
-    """Show system status using clean services"""
+    """
+    Show system status using clean services.
+    """
     print("🤖 AI-Powered Email Search System Status")
     print("=" * 50)
 
@@ -119,7 +121,9 @@ def show_info():
 
 
 def show_pdf_stats():
-    """Show PDF collection statistics using clean services"""
+    """
+    Show PDF collection statistics using clean services.
+    """
     print("📄 PDF Collection Statistics")
     print("=" * 40)
 
@@ -166,7 +170,9 @@ def show_pdf_stats():
 
 
 def show_transcription_stats():
-    """Show transcription statistics using clean services"""
+    """
+    Show transcription statistics using clean services.
+    """
     print("🎙️ Transcription Service Statistics")
     print("=" * 40)
 

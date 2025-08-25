@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""
-Test runner for MCP functionality tests.
+"""Test runner for MCP functionality tests.
 
-Runs unit and integration tests to validate query expansion and parameter handling.
+Runs unit and integration tests to validate query expansion and
+parameter handling.
 """
 import sys
 import subprocess
@@ -14,7 +14,9 @@ sys.path.insert(0, str(project_root))
 
 
 def run_tests():
-    """Run all MCP-related tests."""
+    """
+    Run all MCP-related tests.
+    """
     test_files = [
         "tests/unit/test_search_intelligence_query_expansion.py",
         "tests/integration/test_mcp_parameter_validation.py"
@@ -72,7 +74,9 @@ def run_tests():
 
 
 def run_specific_test_category(category):
-    """Run tests for a specific category."""
+    """
+    Run tests for a specific category.
+    """
     if category == "unit":
         test_files = ["tests/unit/test_search_intelligence_query_expansion.py"]
     elif category == "integration":

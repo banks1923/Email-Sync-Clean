@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Consolidated Schema Maintenance Utilities
+"""Consolidated Schema Maintenance Utilities.
 
 Combines functionality from:
 - fix_content_schema.py
@@ -19,13 +18,17 @@ from shared.simple_db import SimpleDB
 
 
 class SchemaMaintenance:
-    """Unified database schema maintenance operations."""
+    """
+    Unified database schema maintenance operations.
+    """
     
     def __init__(self):
         self.db = SimpleDB()
         
     def fix_content_schema(self, dry_run: bool = True) -> dict[str, Any]:
-        """Fix content schema issues and inconsistencies."""
+        """
+        Fix content schema issues and inconsistencies.
+        """
         logger.info(f"Fixing content schema (dry_run={dry_run})")
         
         issues_found = []
@@ -108,7 +111,9 @@ class SchemaMaintenance:
         }
     
     def migrate_emails_to_content(self, batch_size: int = 100) -> dict[str, Any]:
-        """Migrate emails from legacy table to unified_content."""
+        """
+        Migrate emails from legacy table to unified_content.
+        """
         logger.info(f"Migrating emails to unified_content (batch_size={batch_size})")
         
         migrated_count = 0
@@ -186,7 +191,9 @@ class SchemaMaintenance:
         }
     
     def update_schema_refs(self, table_mappings: dict[str, str] | None = None) -> dict[str, Any]:
-        """Update schema references after table changes."""
+        """
+        Update schema references after table changes.
+        """
         logger.info("Updating schema references")
         
         if not table_mappings:
@@ -276,7 +283,9 @@ class SchemaMaintenance:
         }
     
     def validate_schema(self) -> dict[str, Any]:
-        """Validate current schema integrity."""
+        """
+        Validate current schema integrity.
+        """
         logger.info("Validating schema integrity")
         
         validation_results = {
@@ -365,7 +374,9 @@ class SchemaMaintenance:
 
 
 def main():
-    """CLI interface for schema maintenance."""
+    """
+    CLI interface for schema maintenance.
+    """
     parser = argparse.ArgumentParser(description="Database Schema Maintenance")
     
     subparsers = parser.add_subparsers(dest='command', help='Commands')

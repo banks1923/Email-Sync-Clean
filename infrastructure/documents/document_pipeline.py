@@ -1,5 +1,4 @@
-"""
-Document Processing Pipeline Router
+"""Document Processing Pipeline Router.
 
 Routes documents through the appropriate processor based on format.
 Manages the complete document lifecycle from raw to export.
@@ -27,22 +26,23 @@ except ImportError:
 # Import shared database
 try:
     from shared.simple_db import SimpleDB
-from config.settings import get_db_path
-
+    from config.settings import get_db_path
     DB_AVAILABLE = True
 except ImportError:
     DB_AVAILABLE = False
     SimpleDB = None
+    get_db_path = lambda: "data/emails.db"
 
 # Logger is now imported globally from loguru
 
 
 class DocumentPipeline:
-    """Main document processing pipeline router."""
+    """
+    Main document processing pipeline router.
+    """
 
     def __init__(self, base_path: str = "data", db_path: str = None):
-        """
-        Initialize document pipeline.
+        """Initialize document pipeline.
 
         Args:
             base_path: Base path for document folders
@@ -81,8 +81,7 @@ class DocumentPipeline:
     def process_document(
         self, file_path: Path, case_name: str | None = None, doc_type: str | None = None
     ) -> dict[str, Any]:
-        """
-        Process a document in place and save clean version.
+        """Process a document in place and save clean version.
 
         Args:
             file_path: Path to document (left unchanged)
@@ -177,8 +176,7 @@ class DocumentPipeline:
         doc_type: str | None = None,
         recursive: bool = False,
     ) -> dict[str, Any]:
-        """
-        Process all documents in a directory.
+        """Process all documents in a directory.
 
         Args:
             directory_path: Path to directory
@@ -221,7 +219,9 @@ class DocumentPipeline:
         return {"success": True, "total_files": len(files), "results": results, "stats": self.stats}
 
     def get_pipeline_stats(self) -> dict[str, Any]:
-        """Get pipeline statistics."""
+        """
+        Get pipeline statistics.
+        """
         folder_stats = self.lifecycle.get_folder_stats()
 
         return {

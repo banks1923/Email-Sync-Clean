@@ -20,7 +20,7 @@ PDF_AVAILABLE = True
 
 def set_pdf_service_factories(factories):
     """Inject PDF service factories from higher layers.
-    
+
     Args:
         factories: Dict with keys: 'validator', 'storage', 'ocr_coordinator', 'processor'
     """
@@ -30,10 +30,14 @@ def set_pdf_service_factories(factories):
 
 
 class DocumentConverter:
-    """Converts PDF files to markdown with YAML frontmatter metadata."""
+    """
+    Converts PDF files to markdown with YAML frontmatter metadata.
+    """
 
     def __init__(self, db_path: str = None):
-        """Initialize converter with PDF infrastructure."""
+        """
+        Initialize converter with PDF infrastructure.
+        """
         # Use centralized config if no path provided
         if db_path is None:
             db_path = get_db_path()
@@ -57,14 +61,13 @@ class DocumentConverter:
         output_path: Path | None = None,
         include_metadata: bool = True
     ) -> dict[str, Any]:
-        """
-        Convert PDF to markdown with YAML frontmatter.
-        
+        """Convert PDF to markdown with YAML frontmatter.
+
         Args:
             pdf_path: Path to PDF file
             output_path: Optional output path for markdown file
             include_metadata: Whether to include YAML frontmatter
-            
+
         Returns:
             Conversion result with success status and paths
         """
@@ -117,7 +120,9 @@ class DocumentConverter:
             return {"success": False, "error": f"Conversion failed: {str(e)}"}
 
     def _extract_text_from_pdf(self, pdf_path: Path) -> dict[str, Any]:
-        """Extract text using existing PDF infrastructure."""
+        """
+        Extract text using existing PDF infrastructure.
+        """
         try:
             # Use OCR coordinator for automatic text/OCR detection
             ocr_result = self.ocr_coordinator.process_pdf_with_ocr(str(pdf_path))
@@ -158,7 +163,9 @@ class DocumentConverter:
             return {"success": False, "error": f"Text extraction failed: {str(e)}"}
 
     def _generate_metadata(self, pdf_path: Path, extraction_result: dict) -> dict[str, Any]:
-        """Generate comprehensive metadata for YAML frontmatter."""
+        """
+        Generate comprehensive metadata for YAML frontmatter.
+        """
         try:
             # Calculate file hash
             file_hash = self._calculate_file_hash(pdf_path)
@@ -198,7 +205,9 @@ class DocumentConverter:
             return {"title": pdf_path.stem, "processed_at": datetime.now().isoformat()}
 
     def _calculate_file_hash(self, file_path: Path) -> str:
-        """Calculate SHA-256 hash of file."""
+        """
+        Calculate SHA-256 hash of file.
+        """
         try:
             sha256_hash = hashlib.sha256()
             with open(file_path, "rb") as f:
@@ -210,7 +219,9 @@ class DocumentConverter:
             return "unknown"
 
     def _format_as_markdown(self, text: str, metadata: dict | None = None) -> str:
-        """Format text as markdown with optional YAML frontmatter."""
+        """
+        Format text as markdown with optional YAML frontmatter.
+        """
         try:
             if metadata:
                 # Create frontmatter document
@@ -225,7 +236,9 @@ class DocumentConverter:
             return text
 
     def _clean_text_for_markdown(self, text: str) -> str:
-        """Clean and format text for markdown output."""
+        """
+        Clean and format text for markdown output.
+        """
         try:
             if not text:
                 return ""
@@ -266,14 +279,13 @@ class DocumentConverter:
         output_dir: Path | None = None,
         recursive: bool = False
     ) -> dict[str, Any]:
-        """
-        Convert all PDFs in a directory to markdown.
-        
+        """Convert all PDFs in a directory to markdown.
+
         Args:
             directory_path: Directory containing PDF files
             output_dir: Optional output directory for markdown files
             recursive: Whether to process subdirectories
-            
+
         Returns:
             Batch conversion results
         """
@@ -330,7 +342,9 @@ class DocumentConverter:
             return {"success": False, "error": f"Directory conversion failed: {str(e)}"}
 
     def validate_setup(self) -> dict[str, Any]:
-        """Validate DocumentConverter setup and dependencies."""
+        """
+        Validate DocumentConverter setup and dependencies.
+        """
         try:
             validation_result = {
                 "pdf_available": PDF_AVAILABLE,
@@ -361,7 +375,9 @@ class DocumentConverter:
 
 # Simple factory function following CLAUDE.md principles
 def get_document_converter(db_path: str = None) -> DocumentConverter | None:
-    """Get or create DocumentConverter instance."""
+    """
+    Get or create DocumentConverter instance.
+    """
     try:
         # Use centralized config if no path provided
         if db_path is None:

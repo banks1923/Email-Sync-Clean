@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 
 
 def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
-    """Build PDF service with lazy-loaded providers"""
+    """
+    Build PDF service with lazy-loaded providers.
+    """
     from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
     from pdf.pdf_storage_enhanced import EnhancedPDFStorage
     from shared.simple_db import SimpleDB
@@ -88,11 +90,11 @@ _service_instance = None
 
 
 def get_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
-    """Get or create PDF service instance
-    
+    """Get or create PDF service instance.
+
     Args:
         db_path: Database path (default: "data/emails.db")
-        
+
     Returns:
         Configured PDFService instance
     """
@@ -103,6 +105,8 @@ def get_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
 
 
 def reset_pdf_service() -> None:
-    """Reset service instance (for testing)"""
+    """
+    Reset service instance (for testing)
+    """
     global _service_instance
     _service_instance = None

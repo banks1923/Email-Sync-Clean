@@ -35,11 +35,12 @@ _upload_semaphore = threading.Semaphore(MAX_CONCURRENT_UPLOADS)
 
 
 class PDFService:
-    """Thin Facade over core PDF components; optional features resolved via providers.
+    """Thin Facade over core PDF components; optional features resolved via
+    providers.
 
-    Core deps (eager): db, processor, storage
-    Optional deps (lazy via providers): validator, ocr, summarizer,
-    health_monitor, error_recovery, health_manager
+    Core deps (eager): db, processor, storage Optional deps (lazy via
+    providers): validator, ocr, summarizer, health_monitor,
+    error_recovery, health_manager
     """
 
     def __init__(
@@ -130,11 +131,11 @@ class PDFService:
         return self._get("health_manager")
 
     def health_check(self) -> dict[str, Any]:
-        """Perform comprehensive health check for PDF service
-        
+        """Perform comprehensive health check for PDF service.
+
         Returns health response with standard contract including:
         - 'available': bool - Overall service availability
-        - 'components': dict - Component-specific health status  
+        - 'components': dict - Component-specific health status
         - 'ts': float - Timestamp
         - 'version': str - Health contract schema version
         """
@@ -143,7 +144,9 @@ class PDFService:
     def upload_single_pdf(
         self, pdf_path: str, source: str = "upload"
     ) -> dict[str, Any]:
-        """Upload single PDF with integrated processing"""
+        """
+        Upload single PDF with integrated processing.
+        """
         with _upload_semaphore:
             try:
                 # Basic validation (process file in place)
@@ -174,7 +177,9 @@ class PDFService:
                 return {"success": False, "error": f"Upload failed: {str(e)}"}
 
     def upload_directory(self, directory_path: str, limit: int | None = None) -> dict[str, Any]:
-        """Upload directory of PDFs with batch processing"""
+        """
+        Upload directory of PDFs with batch processing.
+        """
         try:
             pdf_files = self._prepare_pdf_files(directory_path, limit)
             if "error" in pdf_files:
@@ -188,7 +193,9 @@ class PDFService:
             return {"success": False, "error": f"Directory upload failed: {str(e)}"}
 
     def _prepare_pdf_files(self, directory_path: str, limit: int | None) -> dict[str, Any]:
-        """Prepare and validate PDF files for processing"""
+        """
+        Prepare and validate PDF files for processing.
+        """
         if not os.path.exists(directory_path):
             return {"error": "Directory does not exist"}
 
@@ -202,7 +209,9 @@ class PDFService:
         return {"files": pdf_files}
 
     def _process_pdf_files(self, pdf_files: list[str]) -> dict[str, Any]:
-        """Process list of PDF files and collect results"""
+        """
+        Process list of PDF files and collect results.
+        """
         results = {"success_count": 0, "skipped_count": 0, "error_count": 0, "details": []}
 
         for pdf_file in pdf_files:
@@ -212,7 +221,9 @@ class PDFService:
         return results
 
     def _update_results(self, results: dict[str, Any], pdf_file: str, result: dict[str, Any]) -> None:
-        """Update results counters based on processing result"""
+        """
+        Update results counters based on processing result.
+        """
         if result.get("success"):
             if result.get("skipped"):
                 results["skipped_count"] += 1
@@ -224,14 +235,18 @@ class PDFService:
         results["details"].append({"file": os.path.basename(pdf_file), "result": result})
 
     def get_pdf_stats(self) -> dict[str, Any]:
-        """Get PDF collection statistics"""
+        """
+        Get PDF collection statistics.
+        """
         # Update storage path if it changed
         if hasattr(self, "db_path") and self.storage.db_path != self.db_path:
             self.storage.db_path = self.db_path
         return self.storage.get_enhanced_pdf_stats()
 
     def _process_pdf_internal(self, pdf_path: str, file_hash: str, source: str) -> dict[str, Any]:
-        """Internal PDF processing with OCR and legal metadata support"""
+        """
+        Internal PDF processing with OCR and legal metadata support.
+        """
         try:
             # Use OCR coordinator for better OCR handling
             ocr_result = self.ocr.process_pdf_with_ocr(pdf_path)
@@ -346,7 +361,9 @@ class PDFService:
             return {"success": False, "error": f"Processing failed: {str(e)}"}
 
     def _enable_idempotent_writes(self) -> None:
-        """Enable idempotent writes with SHA256 deduplication"""
+        """
+        Enable idempotent writes with SHA256 deduplication.
+        """
         try:
             from pdf.pdf_idempotent_writer import make_pdf_write_idempotent
             make_pdf_write_idempotent(self)
@@ -357,15 +374,21 @@ class PDFService:
             logger.error(f"Failed to enable idempotent writes: {e}")
 
     def _handle_database_alert(self, alert) -> None:
-        """Handle database alerts from error recovery system"""
+        """
+        Handle database alerts from error recovery system.
+        """
         logger.warning(
             f"Database Alert [{alert.severity.value}] {alert.error_type}: {alert.message}"
         )
 
     def create_database_backup(self, backup_name: str | None = None) -> dict[str, Any]:
-        """Create database backup for disaster recovery"""
+        """
+        Create database backup for disaster recovery.
+        """
         return self.error_recovery.create_backup(backup_name)
 
     def get_recovery_status(self) -> dict[str, Any]:
-        """Get current database recovery system status"""
+        """
+        Get current database recovery system status.
+        """
         return self.error_recovery.get_recovery_status()

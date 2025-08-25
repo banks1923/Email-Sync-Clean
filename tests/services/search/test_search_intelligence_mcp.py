@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for Search Intelligence MCP Server
+Test script for Search Intelligence MCP Server.
 """
 
 import sys
@@ -20,7 +20,9 @@ from infrastructure.mcp_servers.search_intelligence_mcp import (
 
 
 def test_search_smart():
-    """Test smart search functionality"""
+    """
+    Test smart search functionality.
+    """
     print("\n🔍 Testing search_smart...")
     result = search_smart("contract", limit=3, use_expansion=True)
     print(result)
@@ -29,7 +31,9 @@ def test_search_smart():
 
 
 def test_search_entities():
-    """Test entity extraction"""
+    """
+    Test entity extraction.
+    """
     print("\n🏷️ Testing search_entities...")
     test_text = (
         "John Smith from ABC Corporation signed the contract on January 15, 2024 in New York."
@@ -41,7 +45,9 @@ def test_search_entities():
 
 
 def test_search_summarize():
-    """Test document summarization"""
+    """
+    Test document summarization.
+    """
     print("\n📝 Testing search_summarize...")
     test_text = """
     This is a test document about legal contracts. Contracts are important legal documents
@@ -57,7 +63,9 @@ def test_search_summarize():
 
 
 def test_search_similar():
-    """Test document similarity search"""
+    """
+    Test document similarity search.
+    """
     print("\n🔄 Testing search_similar...")
     # This will likely fail without a valid document ID, but we test the function works
     result = search_similar("test_doc_id", threshold=0.5, limit=5)
@@ -68,7 +76,9 @@ def test_search_similar():
 
 
 def test_search_cluster():
-    """Test document clustering"""
+    """
+    Test document clustering.
+    """
     print("\n🗂️ Testing search_cluster...")
     result = search_cluster(threshold=0.6, limit=50, min_cluster_size=2)
     print(result)
@@ -77,7 +87,9 @@ def test_search_cluster():
 
 
 def test_search_process_all():
-    """Test batch processing"""
+    """
+    Test batch processing.
+    """
     print("\n⚙️ Testing search_process_all...")
     result = search_process_all("find_duplicates", limit=10)
     print(result)
@@ -86,7 +98,9 @@ def test_search_process_all():
 
 
 def main():
-    """Run all tests"""
+    """
+    Run all tests.
+    """
     print("=" * 60)
     print("Search Intelligence MCP Server Test Suite")
     print("=" * 60)

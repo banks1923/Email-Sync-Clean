@@ -1,5 +1,5 @@
 """
-PDF validation and resource checking
+PDF validation and resource checking.
 """
 
 import os
@@ -13,10 +13,14 @@ MIN_MEMORY_THRESHOLD = 512 * 1024 * 1024  # 512MB minimum available memory
 
 
 class PDFValidator:
-    """Handles PDF validation and resource checking"""
+    """
+    Handles PDF validation and resource checking.
+    """
 
     def validate_pdf_file(self, pdf_path: str) -> dict[str, Any]:
-        """Validate PDF file exists and is valid"""
+        """
+        Validate PDF file exists and is valid.
+        """
         if not os.path.exists(pdf_path):
             return {"success": False, "error": f"File not found: {pdf_path}"}
 
@@ -26,7 +30,9 @@ class PDFValidator:
         return {"success": True}
 
     def check_resource_limits(self, pdf_path: str) -> dict[str, Any]:
-        """Check resource limits before processing"""
+        """
+        Check resource limits before processing.
+        """
         try:
             # Check file size limit
             file_size = os.path.getsize(pdf_path)
@@ -54,7 +60,9 @@ class PDFValidator:
             return {"success": False, "error": f"Resource check failed: {str(e)}"}
 
     def check_system_health(self) -> dict[str, Any]:
-        """System health monitoring"""
+        """
+        System health monitoring.
+        """
         try:
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage("/")
@@ -73,7 +81,9 @@ class PDFValidator:
             return {"success": False, "error": f"Health check failed: {str(e)}"}
 
     def get_resource_constants(self) -> dict[str, Any]:
-        """Get resource protection constants"""
+        """
+        Get resource protection constants.
+        """
         return {
             "max_file_size_mb": MAX_PDF_SIZE / (1024 * 1024),
             "memory_threshold_mb": MIN_MEMORY_THRESHOLD / (1024 * 1024),

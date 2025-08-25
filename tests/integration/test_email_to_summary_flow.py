@@ -1,6 +1,7 @@
-"""
-Integration test for email processing to summary generation flow.
-Verifies end-to-end processing from email sync through summarization to database storage.
+"""Integration test for email processing to summary generation flow.
+
+Verifies end-to-end processing from email sync through summarization to
+database storage.
 """
 
 import sys
@@ -22,10 +23,14 @@ from tests.integration.test_helpers import (
 
 
 class TestEmailToSummaryFlow(unittest.TestCase):
-    """Test complete flow from email sync to summary in database."""
+    """
+    Test complete flow from email sync to summary in database.
+    """
 
     def setUp(self):
-        """Set up test environment."""
+        """
+        Set up test environment.
+        """
         # Create test database
         self.db, self.db_path = create_test_database()
 
@@ -39,11 +44,15 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         self.cleanup_paths = [self.db_path]
 
     def tearDown(self):
-        """Clean up test artifacts."""
+        """
+        Clean up test artifacts.
+        """
         cleanup_test_files(self.cleanup_paths)
 
     def test_email_processing_creates_content_record(self):
-        """Test that processing an email creates a content record."""
+        """
+        Test that processing an email creates a content record.
+        """
         # Save test email to database first
         self.db.execute(
             """
@@ -94,7 +103,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         self.assertGreater(content["char_count"], 0)
 
     def test_email_processing_creates_summary(self):
-        """Test that processing an email generates a summary."""
+        """
+        Test that processing an email generates a summary.
+        """
         # Process email summaries
         self.gmail_service._process_email_summaries(
             [
@@ -131,7 +142,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         )
 
     def test_email_summary_contains_relevant_keywords(self):
-        """Test that email summary contains relevant TF-IDF keywords."""
+        """
+        Test that email summary contains relevant TF-IDF keywords.
+        """
         # Process email summaries
         self.gmail_service._process_email_summaries(
             [
@@ -181,7 +194,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         )
 
     def test_email_summary_contains_key_sentences(self):
-        """Test that email summary contains TextRank sentences."""
+        """
+        Test that email summary contains TextRank sentences.
+        """
         # Process email summaries
         self.gmail_service._process_email_summaries(
             [
@@ -222,7 +237,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
             )
 
     def test_batch_email_processing(self):
-        """Test processing multiple emails in batch."""
+        """
+        Test processing multiple emails in batch.
+        """
         # Create multiple test emails
         email_list = []
         for i in range(3):
@@ -254,7 +271,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
                 self.assertIsNotNone(summary, f"No summary for {email['subject']}")
 
     def test_html_email_processing(self):
-        """Test processing HTML emails."""
+        """
+        Test processing HTML emails.
+        """
         # Create HTML email
         html_email = create_test_email_data()
         html_body_text = """
@@ -294,7 +313,9 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
     @patch("gmail.main.GmailService._get_gmail_service")
     def test_email_sync_integration(self, mock_gmail):
-        """Test full email sync flow with mocked Gmail API."""
+        """
+        Test full email sync flow with mocked Gmail API.
+        """
         # Mock Gmail API response
         mock_service = MagicMock()
         mock_gmail.return_value = mock_service

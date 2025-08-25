@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""
-Simple MCP validation tests that can run without complex dependencies.
+"""Simple MCP validation tests that can run without complex dependencies.
 
-These tests validate the core functionality we fixed to prevent regressions.
+These tests validate the core functionality we fixed to prevent
+regressions.
 """
 import sys
 from pathlib import Path
@@ -13,7 +13,9 @@ sys.path.insert(0, str(project_root))
 
 
 def test_query_expansion_logic():
-    """Test the core query expansion logic we fixed."""
+    """
+    Test the core query expansion logic we fixed.
+    """
     print("🧪 Testing query expansion logic...")
     
     # Test the core logic that was broken
@@ -35,7 +37,9 @@ def test_query_expansion_logic():
 
 
 def test_mcp_parameter_mapping():
-    """Test MCP parameter name mapping we fixed."""
+    """
+    Test MCP parameter name mapping we fixed.
+    """
     print("🧪 Testing MCP parameter mapping...")
     
     # Test the parameter fixes
@@ -57,7 +61,9 @@ def test_mcp_parameter_mapping():
 
 
 def test_search_intelligence_service_methods():
-    """Test that SearchIntelligenceService has the methods we expect."""
+    """
+    Test that SearchIntelligenceService has the methods we expect.
+    """
     print("🧪 Testing SearchIntelligenceService method signatures...")
     
     try:
@@ -95,7 +101,9 @@ def test_search_intelligence_service_methods():
 
 
 def test_mcp_function_imports():
-    """Test that MCP functions can be imported."""
+    """
+    Test that MCP functions can be imported.
+    """
     print("🧪 Testing MCP function imports...")
     
     try:
@@ -113,7 +121,9 @@ def test_mcp_function_imports():
 
 
 def test_logging_implementation():
-    """Test that debug logging is implemented correctly."""
+    """
+    Test that debug logging is implemented correctly.
+    """
     print("🧪 Testing debug logging implementation...")
     
     try:
@@ -134,7 +144,9 @@ def test_logging_implementation():
 
 
 def run_all_tests():
-    """Run all validation tests."""
+    """
+    Run all validation tests.
+    """
     print("🧪 Running Simple MCP Validation Tests")
     print("=" * 50)
     

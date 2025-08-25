@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""
-Entity Handler for CLI
+"""Entity Handler for CLI.
 
-Handles entity extraction and management commands.
-Integrates with unified entity processing system.
+Handles entity extraction and management commands. Integrates with
+unified entity processing system.
 """
 
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -19,13 +18,17 @@ from shared.unified_entity_processor import UnifiedEntityProcessor
 
 
 class EntityHandler:
-    """Handle entity extraction and management commands"""
+    """
+    Handle entity extraction and management commands.
+    """
     
     def __init__(self):
         self.processor = UnifiedEntityProcessor()
     
     def extract_entities_unified(self, args) -> dict[str, Any]:
-        """Extract entities from unified content pipeline"""
+        """
+        Extract entities from unified content pipeline.
+        """
         max_content = getattr(args, 'limit', None)
         missing_only = getattr(args, 'missing_only', False)
         
@@ -63,7 +66,9 @@ class EntityHandler:
             return {'success': False, 'error': str(e)}
     
     def entity_status(self, args) -> dict[str, Any]:
-        """Show entity extraction status for unified content"""
+        """
+        Show entity extraction status for unified content.
+        """
         try:
             status = self.processor.get_processing_status()
             
@@ -131,7 +136,9 @@ class EntityHandler:
             return {'error': str(e)}
     
     def search_by_entity(self, args):
-        """Search content by entity type and value"""
+        """
+        Search content by entity type and value.
+        """
         entity_type = getattr(args, 'entity_type', None)
         entity_value = getattr(args, 'entity_value', None)
         limit = getattr(args, 'limit', 10)
@@ -184,7 +191,9 @@ class EntityHandler:
 
 
 def handle_entity_command(command: str, args) -> dict[str, Any]:
-    """Route entity commands to appropriate handlers"""
+    """
+    Route entity commands to appropriate handlers.
+    """
     handler = EntityHandler()
     
     if command == 'extract-entities':

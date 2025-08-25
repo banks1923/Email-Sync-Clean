@@ -1,5 +1,4 @@
-"""
-DOCX document processor for Microsoft Word files.
+"""DOCX document processor for Microsoft Word files.
 
 Handles DOCX files with text, tables, and metadata extraction.
 """
@@ -21,10 +20,14 @@ except ImportError:
 
 
 class DocxProcessor(BaseProcessor):
-    """Processes Microsoft Word DOCX documents."""
+    """
+    Processes Microsoft Word DOCX documents.
+    """
 
     def __init__(self):
-        """Initialize DOCX processor."""
+        """
+        Initialize DOCX processor.
+        """
         super().__init__()
         self.format_type = "docx"
         self.available = DOCX_AVAILABLE
@@ -33,8 +36,7 @@ class DocxProcessor(BaseProcessor):
             logger.warning("python-docx not installed. Install with: pip install python-docx")
 
     def extract_text(self, file_path: Path) -> str:
-        """
-        Extract text from DOCX file.
+        """Extract text from DOCX file.
 
         Args:
             file_path: Path to DOCX file
@@ -85,8 +87,7 @@ class DocxProcessor(BaseProcessor):
             raise
 
     def _extract_tables(self, doc: Document) -> list[str]:
-        """
-        Extract text from tables in document.
+        """Extract text from tables in document.
 
         Args:
             doc: python-docx Document object
@@ -115,8 +116,7 @@ class DocxProcessor(BaseProcessor):
         return tables_text
 
     def _extract_headers_footers(self, doc: Document) -> dict[str, list[str]]:
-        """
-        Extract headers and footers from document.
+        """Extract headers and footers from document.
 
         Args:
             doc: python-docx Document object
@@ -147,8 +147,7 @@ class DocxProcessor(BaseProcessor):
         return result
 
     def extract_metadata(self, file_path: Path) -> dict[str, Any]:
-        """
-        Extract metadata from DOCX file including document properties.
+        """Extract metadata from DOCX file including document properties.
 
         Args:
             file_path: Path to DOCX file
@@ -198,8 +197,7 @@ class DocxProcessor(BaseProcessor):
         return metadata
 
     def _get_document_stats(self, doc: Document) -> dict[str, Any]:
-        """
-        Get document statistics.
+        """Get document statistics.
 
         Args:
             doc: python-docx Document object
@@ -242,8 +240,7 @@ class DocxProcessor(BaseProcessor):
         return {"document_stats": stats}
 
     def extract_comments(self, file_path: Path) -> list[str]:
-        """
-        Extract comments from DOCX file.
+        """Extract comments from DOCX file.
 
         Args:
             file_path: Path to DOCX file
@@ -271,8 +268,7 @@ class DocxProcessor(BaseProcessor):
         return comments
 
     def validate_content(self, content: str) -> bool:
-        """
-        Validate DOCX content.
+        """Validate DOCX content.
 
         Args:
             content: Extracted text

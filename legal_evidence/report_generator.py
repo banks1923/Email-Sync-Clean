@@ -16,10 +16,14 @@ from .thread_analyzer import get_thread_analyzer
 
 
 class LegalReportGenerator:
-    """Generate legal evidence reports with traceable EID references."""
+    """
+    Generate legal evidence reports with traceable EID references.
+    """
     
     def __init__(self, db_path: str = "data/emails.db"):
-        """Initialize with evidence tracker and thread analyzer."""
+        """
+        Initialize with evidence tracker and thread analyzer.
+        """
         self.evidence = get_evidence_tracker(db_path)
         self.threads = get_thread_analyzer(db_path)
         
@@ -27,7 +31,7 @@ class LegalReportGenerator:
                               thread_ids: list[str] | None = None,
                               keywords: list[str] | None = None) -> str:
         """Generate structured lookup report with EID references.
-        
+
         This is for quick evidence retrieval during legal proceedings.
         """
         report = []
@@ -112,7 +116,9 @@ class LegalReportGenerator:
     def generate_narrative_report(self,
                                  disputed_topics: list[str],
                                  focus_senders: list[str] | None = None) -> str:
-        """Generate narrative report with pattern analysis for court filing."""
+        """
+        Generate narrative report with pattern analysis for court filing.
+        """
         report = []
         report.append("# Legal Evidence Analysis Report")
         report.append(f"Generated: {datetime.now().isoformat()}")
@@ -259,7 +265,9 @@ class LegalReportGenerator:
                                output_dir: str,
                                thread_ids: list[str] | None = None,
                                keywords: list[str] | None = None) -> dict[str, Any]:
-        """Export complete evidence package with all reports and data."""
+        """
+        Export complete evidence package with all reports and data.
+        """
         os.makedirs(output_dir, exist_ok=True)
         
         # Generate timestamp for filenames
@@ -333,5 +341,7 @@ class LegalReportGenerator:
 
 # Simple factory function  
 def get_report_generator(db_path: str = "data/emails.db") -> LegalReportGenerator:
-    """Get report generator instance."""
+    """
+    Get report generator instance.
+    """
     return LegalReportGenerator(db_path)

@@ -1,5 +1,5 @@
-"""
-Simple HTML cleaning utilities for email content.
+"""Simple HTML cleaning utilities for email content.
+
 Uses only standard library to avoid external dependencies.
 """
 
@@ -8,12 +8,11 @@ import re
 
 
 def clean_html_content(html_content: str) -> str:
-    """
-    Clean HTML content to readable text.
-    
+    """Clean HTML content to readable text.
+
     Args:
         html_content: Raw HTML content
-        
+
     Returns:
         Clean text content suitable for markdown
     """
@@ -60,12 +59,11 @@ def clean_html_content(html_content: str) -> str:
 
 
 def extract_email_content(email_html: str) -> tuple[str, dict]:
-    """
-    Extract meaningful content from email HTML.
-    
+    """Extract meaningful content from email HTML.
+
     Args:
         email_html: Raw email HTML content
-        
+
     Returns:
         Tuple of (cleaned_content, metadata)
     """
@@ -94,7 +92,9 @@ def extract_email_content(email_html: str) -> tuple[str, dict]:
 
 
 def remove_email_boilerplate(content: str) -> str:
-    """Remove common email boilerplate and quoted content."""
+    """
+    Remove common email boilerplate and quoted content.
+    """
     if not content:
         return ""
     
@@ -131,13 +131,12 @@ def remove_email_boilerplate(content: str) -> str:
 
 
 def format_as_clean_markdown(content: str, title: str | None = None) -> str:
-    """
-    Format cleaned content as markdown.
-    
+    """Format cleaned content as markdown.
+
     Args:
         content: Cleaned text content
         title: Optional title for the document
-        
+
     Returns:
         Formatted markdown content
     """

@@ -12,7 +12,9 @@ from config.settings import get_db_path
 
 
 class TimelineDatabase:
-    """Database operations for timeline management."""
+    """
+    Database operations for timeline management.
+    """
 
     def __init__(self, db_path: str = None):
         # Use centralized config if no path provided
@@ -31,7 +33,9 @@ class TimelineDatabase:
         source_type: str | None = None,
         importance_score: int = 0,
     ) -> dict[str, Any]:
-        """Create a new timeline event."""
+        """
+        Create a new timeline event.
+        """
         try:
             event_id = str(uuid.uuid4())
             metadata_json = json.dumps(metadata) if metadata else None
@@ -73,7 +77,9 @@ class TimelineDatabase:
         event_type: str | None = None,
         limit: int = 50,
     ) -> dict[str, Any]:
-        """Get timeline events with optional filtering."""
+        """
+        Get timeline events with optional filtering.
+        """
         try:
             query_parts = ["SELECT * FROM timeline_events WHERE 1=1"]
             params = []
@@ -116,7 +122,9 @@ class TimelineDatabase:
     def create_event_relationship(
         self, parent_event_id: str, child_event_id: str, relationship_type: str = "related"
     ) -> dict[str, Any]:
-        """Create relationship between timeline events."""
+        """
+        Create relationship between timeline events.
+        """
         try:
             relationship_id = str(uuid.uuid4())
 
@@ -139,7 +147,9 @@ class TimelineDatabase:
             return {"success": False, "error": f"Database error: {str(e)}"}
 
     def get_related_events(self, event_id: str) -> dict[str, Any]:
-        """Get events related to a specific event."""
+        """
+        Get events related to a specific event.
+        """
         try:
             query = """
                 SELECT te.*, tr.relationship_type

@@ -3,13 +3,12 @@
 
 Usage:
     python3 scripts/batch_process_documents.py <directory> [output_directory]
-    
+
 Examples:
     python3 scripts/batch_process_documents.py data/Stoneman_dispute/user_data
     python3 scripts/batch_process_documents.py data/Stoneman_dispute/user_data ./extracted_text
 """
 
-import os
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -18,7 +17,7 @@ from scripts.process_single_document import process_document
 
 def batch_process(directory, output_dir=None, recursive=False):
     """Process all PDFs in a directory.
-    
+
     Args:
         directory: Directory containing PDFs
         output_dir: Optional output directory for extracted text

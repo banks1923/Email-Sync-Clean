@@ -1,5 +1,4 @@
-"""
-Text document processor for TXT files.
+"""Text document processor for TXT files.
 
 Handles plain text files with encoding detection.
 """
@@ -14,17 +13,20 @@ from .base_processor import BaseProcessor
 
 
 class TextProcessor(BaseProcessor):
-    """Processes plain text documents."""
+    """
+    Processes plain text documents.
+    """
 
     def __init__(self):
-        """Initialize text processor."""
+        """
+        Initialize text processor.
+        """
         super().__init__()
         self.format_type = "txt"
         self.supported_encodings = ["utf-8", "ascii", "latin-1", "cp1252", "utf-16"]
 
     def extract_text(self, file_path: Path) -> str:
-        """
-        Extract text from plain text file with encoding detection.
+        """Extract text from plain text file with encoding detection.
 
         Args:
             file_path: Path to text file
@@ -64,8 +66,7 @@ class TextProcessor(BaseProcessor):
             raise
 
     def _detect_encoding(self, file_path: Path) -> str:
-        """
-        Detect file encoding using chardet.
+        """Detect file encoding using chardet.
 
         Args:
             file_path: Path to file
@@ -91,8 +92,7 @@ class TextProcessor(BaseProcessor):
         return "utf-8"  # Default fallback
 
     def _normalize_text(self, content: str) -> str:
-        """
-        Normalize text content.
+        """Normalize text content.
 
         Args:
             content: Raw text content
@@ -125,8 +125,7 @@ class TextProcessor(BaseProcessor):
         return "\n".join(normalized_lines)
 
     def extract_metadata(self, file_path: Path) -> dict[str, Any]:
-        """
-        Extract metadata from text file.
+        """Extract metadata from text file.
 
         Args:
             file_path: Path to text file
@@ -169,8 +168,7 @@ class TextProcessor(BaseProcessor):
         return metadata
 
     def validate_content(self, content: str) -> bool:
-        """
-        Validate text content.
+        """Validate text content.
 
         Args:
             content: Extracted text

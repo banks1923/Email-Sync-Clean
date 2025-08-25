@@ -16,7 +16,9 @@ from shared.simple_upload_processor import get_upload_processor
 
 
 def upload_pdf(pdf_path, source="upload"):
-    """Upload single PDF file using direct processing."""
+    """
+    Upload single PDF file using direct processing.
+    """
     print(f"📄 Uploading PDF: {os.path.basename(pdf_path)}")
     
     try:
@@ -40,7 +42,9 @@ def upload_pdf(pdf_path, source="upload"):
 
 
 def upload_directory(dir_path, limit=None):
-    """Upload all files in directory using direct processing."""
+    """
+    Upload all files in directory using direct processing.
+    """
     print(f"📁 Scanning directory: {dir_path}")
     print("📋 Using direct processing")
 
@@ -65,7 +69,9 @@ def upload_directory(dir_path, limit=None):
 
 
 def transcribe_file(file_path, source="transcribe"):
-    """Transcribe audio/video file using direct processing."""
+    """
+    Transcribe audio/video file using direct processing.
+    """
     print(f"🎤 Transcribing: {os.path.basename(file_path)}")
     print("⚠️  Transcription service not yet implemented in simple processing")
     

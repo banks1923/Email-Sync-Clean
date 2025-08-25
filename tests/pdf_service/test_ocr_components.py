@@ -1,6 +1,6 @@
 """
 Test suite for OCR components including PageByPageProcessor and OCRCoordinator
-Tests new memory-efficient processing features added for large PDFs
+Tests new memory-efficient processing features added for large PDFs.
 """
 
 import os
@@ -18,10 +18,14 @@ if project_root not in sys.path:
 
 
 class TestPageByPageProcessor:
-    """Test the PageByPageProcessor for large PDF handling"""
+    """
+    Test the PageByPageProcessor for large PDF handling.
+    """
 
     def test_init_with_custom_settings(self):
-        """Test initialization with custom batch size and memory limits"""
+        """
+        Test initialization with custom batch size and memory limits.
+        """
         processor = PageByPageProcessor(batch_size=3, max_memory_mb=300)
 
         assert processor.batch_size == 3
@@ -30,7 +34,9 @@ class TestPageByPageProcessor:
         assert processor.postprocessor is not None
 
     def test_process_large_pdf_with_page_range(self):
-        """Test processing specific page range"""
+        """
+        Test processing specific page range.
+        """
         processor = PageByPageProcessor(batch_size=2)
 
         # Use the multi-page test PDF
@@ -49,7 +55,9 @@ class TestPageByPageProcessor:
             assert result["method"] == "page_by_page_ocr"
 
     def test_progress_callback(self):
-        """Test that progress callbacks are invoked correctly"""
+        """
+        Test that progress callbacks are invoked correctly.
+        """
         processor = PageByPageProcessor(batch_size=1)
 
         # Track progress calls
@@ -76,7 +84,9 @@ class TestPageByPageProcessor:
                 assert "progress_percent" in update
 
     def test_generator_mode(self):
-        """Test streaming results with generator"""
+        """
+        Test streaming results with generator.
+        """
         processor = PageByPageProcessor()
 
         pdf_path = os.path.join(
@@ -101,10 +111,14 @@ class TestPageByPageProcessor:
 
 
 class TestOCRCoordinator:
-    """Test the enhanced OCR coordinator with page processor integration"""
+    """
+    Test the enhanced OCR coordinator with page processor integration.
+    """
 
     def test_coordinator_initialization(self):
-        """Test OCR coordinator initializes with all components"""
+        """
+        Test OCR coordinator initializes with all components.
+        """
         coordinator = OCRCoordinator()
 
         assert coordinator.loader is not None
@@ -119,7 +133,9 @@ class TestOCRCoordinator:
 
     @patch("os.path.getsize")
     def test_large_file_routing(self, mock_getsize):
-        """Test that large files are routed to page processor"""
+        """
+        Test that large files are routed to page processor.
+        """
         coordinator = OCRCoordinator()
 
         # Mock a 15MB file (should trigger page processor)
@@ -145,7 +161,9 @@ class TestOCRCoordinator:
 
     @patch("os.path.getsize")
     def test_small_file_standard_processing(self, mock_getsize):
-        """Test that small files use standard processing"""
+        """
+        Test that small files use standard processing.
+        """
         coordinator = OCRCoordinator()
 
         # Mock a 5MB file (should not trigger page processor)
@@ -169,10 +187,14 @@ class TestOCRCoordinator:
 
 
 class TestPDFProcessor:
-    """Test the main PDF processor with new OCR integration"""
+    """
+    Test the main PDF processor with new OCR integration.
+    """
 
     def test_processor_with_ocr_coordinator(self):
-        """Test that PDF processor properly uses OCR coordinator"""
+        """
+        Test that PDF processor properly uses OCR coordinator.
+        """
         processor = PDFProcessor()
 
         assert processor.ocr_coordinator is not None
@@ -184,7 +206,9 @@ class TestPDFProcessor:
         assert "legal_metadata" in deps
 
     def test_should_use_ocr_delegation(self):
-        """Test that should_use_ocr delegates to coordinator"""
+        """
+        Test that should_use_ocr delegates to coordinator.
+        """
         processor = PDFProcessor()
 
         pdf_path = os.path.join(
@@ -199,7 +223,9 @@ class TestPDFProcessor:
                 assert "is_scanned" in result or "use_ocr" in result
 
     def test_progressive_processing_trigger(self):
-        """Test that large files trigger progressive processing"""
+        """
+        Test that large files trigger progressive processing.
+        """
         processor = PDFProcessor()
 
         # Create a mock large file path
@@ -216,7 +242,9 @@ class TestPDFProcessor:
             assert requires_progressive is False
 
     def test_timeout_calculation(self):
-        """Test timeout calculation based on file size"""
+        """
+        Test timeout calculation based on file size.
+        """
         processor = PDFProcessor()
 
         with patch.object(processor, "_get_file_size_mb") as mock_size:

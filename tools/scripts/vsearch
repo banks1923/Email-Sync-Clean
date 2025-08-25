@@ -146,41 +146,6 @@ def _format_filter_info(filters):
     return f" (Filters: {', '.join(filter_parts)})" if filter_parts else ""
 
 
-def display_search_results(results, search_type, search_mode="hybrid"):
-    """Unified display function for all search result types"""
-    print(f"\n=== {search_type} Results ===")
-    
-    # Show vector store status for hybrid/semantic searches
-    if search_mode in ["hybrid", "semantic"]:
-        vector_available = vector_store_available()
-        print(f"Vector Service: {'✅ Connected' if vector_available else '❌ Unavailable (keyword fallback)'}")
-
-    for i, result in enumerate(results, 1):
-        # Get content type and icon
-        content_type = result.get("content_type", result.get("type", "unknown"))
-        type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
-        icon = type_icons.get(content_type, "📄")
-
-        # Format score information
-        score_info = _format_score_info(result, search_mode)
-        
-        print(f"\n--- {icon} Result {i}{score_info} ---")
-        print(f"Title: {result.get('title', 'No title')}")
-
-        # Show metadata based on content type
-        if content_type == "email":
-            if result.get("sender"):
-                print(f"From: {result['sender']}")
-            if result.get("date") or result.get("datetime_utc"):
-                date_str = result.get("date", result.get("datetime_utc", ""))
-                print(f"Date: {date_str}")
-
-        # Show content preview
-        content_preview = _get_content_preview(result)
-        if content_preview:
-            print(f"Content: {content_preview}")
-
-
 def _format_score_info(result, search_mode):
     """Format search score information based on search mode"""
     if search_mode == "hybrid":
@@ -218,6 +183,53 @@ def _get_content_preview(result):
                 return f"{preview}..." if len(str(content)) > 200 else preview
     
     return "No content preview available"
+
+
+def display_search_results(results, search_type, search_mode="hybrid"):
+    """Unified display function for all search result types"""
+    try:
+        print(f"\n=== {search_type} Results ===")
+        
+        # Show vector store status for hybrid/semantic searches  
+        if search_mode in ["hybrid", "semantic"]:
+            try:
+                search_funcs = _get_search_functions()
+                vector_available = search_funcs['vector_store_available']()
+                print(f"Vector Service: {'✅ Connected' if vector_available else '❌ Unavailable (keyword fallback)'}")
+            except:
+                print("Vector Service: ❓ Status unknown")
+
+        for i, result in enumerate(results, 1):
+            # Get content type and icon
+            content_type = result.get("content_type", result.get("type", "unknown"))
+            type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
+            icon = type_icons.get(content_type, "📄")
+
+            # Format score information
+            score_info = _format_score_info(result, search_mode)
+            
+            print(f"\n--- {icon} Result {i}{score_info} ---")
+            print(f"Title: {result.get('title', 'No title')}")
+
+            # Show metadata based on content type
+            if content_type == "email":
+                if result.get("sender"):
+                    print(f"From: {result['sender']}")
+                if result.get("date") or result.get("datetime_utc"):
+                    date_str = result.get("date", result.get("datetime_utc", ""))
+                    print(f"Date: {date_str}")
+
+            # Show content preview
+            content_preview = _get_content_preview(result)
+            if content_preview:
+                print(f"Content: {content_preview}")
+                
+    except Exception as e:
+        print(f"❌ Database operation failed while searching")
+        if '--verbose' in sys.argv:
+            import traceback
+            print(f"Debug: {e}")
+            traceback.print_exc()
 
 
 

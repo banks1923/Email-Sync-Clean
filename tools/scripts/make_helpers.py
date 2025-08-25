@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Helper scripts for make commands."""
+"""
+Helper scripts for make commands.
+"""
 
 import os
 import sys
@@ -11,7 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 def test_basic():
-    """Test basic system functionality."""
+    """
+    Test basic system functionality.
+    """
     print("🧪 Testing basic system functionality...")
     try:
         from shared.simple_db import SimpleDB
@@ -31,7 +35,9 @@ def test_basic():
 
 
 def recent_activity():
-    """Show recent system activity."""
+    """
+    Show recent system activity.
+    """
     print("📊 Recent Activity")
     print("==================")
     try:
@@ -50,7 +56,9 @@ def recent_activity():
 
 
 def test_gmail():
-    """Test Gmail connection."""
+    """
+    Test Gmail connection.
+    """
     print("📧 Testing Gmail connection...")
     try:
         from gmail.main import GmailService
@@ -62,7 +70,9 @@ def test_gmail():
 
 
 def db_stats():
-    """Show database statistics."""
+    """
+    Show database statistics.
+    """
     print("📊 Database Statistics")
     print("=====================")
     try:
@@ -90,7 +100,9 @@ def db_stats():
 
 
 def performance_stats():
-    """Show performance statistics."""
+    """
+    Show performance statistics.
+    """
     print("⚡ Performance Statistics")
     print("========================")
     try:
@@ -116,7 +128,9 @@ def performance_stats():
 
 
 def optimize_db():
-    """Optimize database performance."""
+    """
+    Optimize database performance.
+    """
     print("⚡ Optimizing database...")
     try:
         from shared.simple_db import SimpleDB

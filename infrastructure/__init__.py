@@ -1,1 +1,3 @@
-"""Infrastructure services including pipelines, documents, and MCP servers."""
+"""
+Infrastructure services including pipelines, documents, and MCP servers.
+"""

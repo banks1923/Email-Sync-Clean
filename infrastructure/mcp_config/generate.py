@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""
-MCP Configuration Generator
+"""MCP Configuration Generator.
 
-CLI tool to generate MCP configurations for Claude Code and Claude Desktop.
-Follows CLAUDE.md principles: Simple > Complex, Working > Perfect.
+CLI tool to generate MCP configurations for Claude Code and Claude
+Desktop. Follows CLAUDE.md principles: Simple > Complex, Working >
+Perfect.
 """
 
 import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -19,7 +18,9 @@ from infrastructure.mcp_config.config import get_mcp_config
 
 
 def generate_mcp_json(output_path: Path | None = None, dry_run: bool = False) -> None:
-    """Generate .mcp.json file for Claude Code"""
+    """
+    Generate .mcp.json file for Claude Code.
+    """
     config = get_mcp_config()
     servers = config.get_mcp_servers()
     
@@ -40,7 +41,9 @@ def generate_mcp_json(output_path: Path | None = None, dry_run: bool = False) ->
 
 
 def generate_claude_desktop_config(output_path: Path | None = None, dry_run: bool = False) -> None:
-    """Generate Claude Desktop configuration"""
+    """
+    Generate Claude Desktop configuration.
+    """
     config = get_mcp_config()
     servers = config.get_claude_desktop_servers()
     
@@ -64,7 +67,9 @@ def generate_claude_desktop_config(output_path: Path | None = None, dry_run: boo
 
 
 def show_status() -> None:
-    """Show MCP configuration status"""
+    """
+    Show MCP configuration status.
+    """
     config = get_mcp_config()
     
     print("🔧 MCP Configuration Status:")
@@ -88,7 +93,9 @@ def show_status() -> None:
 
 
 def validate_servers() -> bool:
-    """Validate that MCP servers can be found and imported"""
+    """
+    Validate that MCP servers can be found and imported.
+    """
     config = get_mcp_config()
     servers = config.get_mcp_servers()
     
@@ -117,7 +124,9 @@ def validate_servers() -> bool:
 
 
 def clean_configs() -> None:
-    """Remove generated MCP configuration files"""
+    """
+    Remove generated MCP configuration files.
+    """
     files_to_remove = [
         Path(".mcp.json"),
         Path(".config/claude_desktop_config.json")
@@ -137,7 +146,9 @@ def clean_configs() -> None:
 
 
 def main():
-    """Main CLI entry point"""
+    """
+    Main CLI entry point.
+    """
     parser = argparse.ArgumentParser(
         description="Generate MCP configurations for Claude Code and Claude Desktop",
         formatter_class=argparse.RawDescriptionHelpFormatter,

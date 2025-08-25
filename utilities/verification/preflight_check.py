@@ -8,7 +8,9 @@ from pathlib import Path
 
 
 def check_schema():
-    """Verify database schema has required columns"""
+    """
+    Verify database schema has required columns.
+    """
     
     db_path = os.getenv("APP_DB_PATH", "data/emails.db")
     
@@ -59,7 +61,9 @@ def check_schema():
     return True
 
 def check_environment():
-    """Verify environment configuration"""
+    """
+    Verify environment configuration.
+    """
     
     # Check if ingestion is frozen
     if Path("INGESTION_FROZEN.txt").exists():

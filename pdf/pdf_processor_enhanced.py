@@ -1,6 +1,6 @@
 """
-Enhanced PDF processor with OCR and legal metadata extraction
-Integrates OCR capabilities and legal metadata into main PDF workflow
+Enhanced PDF processor with OCR and legal metadata extraction Integrates OCR
+capabilities and legal metadata into main PDF workflow.
 """
 
 import json
@@ -21,10 +21,14 @@ except ImportError:
 
 
 class EnhancedPDFProcessor:
-    """PDF processor with OCR and legal metadata capabilities"""
+    """
+    PDF processor with OCR and legal metadata capabilities.
+    """
 
     def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100, use_enhanced_ocr: bool = True) -> None:
-        """Initialize with OCR support"""
+        """
+        Initialize with OCR support.
+        """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.use_enhanced_ocr = use_enhanced_ocr
@@ -46,7 +50,9 @@ class EnhancedPDFProcessor:
             self.legal_extractor = None
 
     def validate_dependencies(self) -> dict[str, Any]:
-        """Validate all dependencies including OCR"""
+        """
+        Validate all dependencies including OCR.
+        """
         # Check enhanced OCR if available
         if self.use_enhanced_ocr and self.enhanced_ocr_coordinator:
             enhanced_validation = self.enhanced_ocr_coordinator.validate_enhanced_setup()
@@ -73,7 +79,10 @@ class EnhancedPDFProcessor:
         return result
 
     def extract_and_chunk_pdf(self, pdf_path: str, force_ocr: bool = False, quality_gates_enabled: bool = True) -> dict[str, Any]:
-        """Extract text and create chunks with enhanced OCR and quality gates support"""
+        """
+        Extract text and create chunks with enhanced OCR and quality gates
+        support.
+        """
         try:
             # Use enhanced OCR coordinator if available
             if self.use_enhanced_ocr and self.enhanced_ocr_coordinator:
@@ -164,7 +173,9 @@ class EnhancedPDFProcessor:
             return {"success": False, "error": str(e)}
 
     def should_use_ocr(self, pdf_path: str) -> dict[str, Any]:
-        """Analyze PDF to determine if OCR is needed"""
+        """
+        Analyze PDF to determine if OCR is needed.
+        """
         return self.ocr_coordinator.validator.should_use_ocr(pdf_path)
 
     # Legacy compatibility methods

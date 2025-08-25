@@ -4,7 +4,6 @@ Implements the quality scoring system with hard gates for OCR validation.
 """
 
 import re
-from typing import Tuple
 from enum import Enum
 from dataclasses import dataclass
 
@@ -17,7 +16,9 @@ class ValidationStatus(Enum):
 
 @dataclass
 class QualityMetrics:
-    """Quality metrics for content scoring"""
+    """
+    Quality metrics for content scoring.
+    """
     text_length: int
     alpha_ratio: float
     digit_punct_ratio: float
@@ -31,8 +32,8 @@ class QualityMetrics:
     failure_reasons: list
 
 class ContentQualityScorer:
-    """
-    Implements text validation gates with hard quality thresholds.
+    """Implements text validation gates with hard quality thresholds.
+
     Based on the systematic OCR quality requirements.
     """
     
@@ -77,9 +78,10 @@ class ContentQualityScorer:
         }
     
     def score_content(self, text: str, page_count: int = 1, entity_count: int = 0) -> QualityMetrics:
-        """
-        Score content quality and apply validation gates.
-        Returns QualityMetrics with validation status and failure reasons.
+        """Score content quality and apply validation gates.
+
+        Returns QualityMetrics with validation status and failure
+        reasons.
         """
         if not text or not text.strip():
             return QualityMetrics(
@@ -181,7 +183,9 @@ class ContentQualityScorer:
         )
     
     def _count_unique_bigrams(self, text: str) -> int:
-        """Count unique character bigrams (crude garble detection)"""
+        """
+        Count unique character bigrams (crude garble detection)
+        """
         # Clean text and create bigrams
         clean_text = re.sub(r'\s+', ' ', text.lower())
         bigrams = set()
@@ -196,8 +200,8 @@ class ContentQualityScorer:
     def _calculate_quality_score(self, alpha_ratio: float, digit_punct_ratio: float, 
                                 symbol_ratio: float, unique_bigrams: int, 
                                 english_hit_rate: float, chars_per_page: float) -> float:
-        """
-        Calculate weighted composite quality score (0-1).
+        """Calculate weighted composite quality score (0-1).
+
         Higher scores indicate better quality content.
         """
         # Component scores (normalized to 0-1)
@@ -230,8 +234,8 @@ class ContentQualityScorer:
         return round(quality_score, 3)
     
     def classify_quality(self, quality_score: float) -> tuple[str, str]:
-        """
-        Classify content quality based on score.
+        """Classify content quality based on score.
+
         Returns (status, description) tuple.
         """
         if quality_score >= 0.7:
