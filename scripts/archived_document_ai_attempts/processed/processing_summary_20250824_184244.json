@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-08-25T01:42:44.495742",
+  "configuration": {
+    "project_id": "modular-command-466820-p2",
+    "processors": {
+      "form": "projects/1098140055345/locations/us/processors/29975d02da9ab3a2",
+      "ocr": "projects/1098140055345/locations/us/processors/8fadbc185616d041"
+    },
+    "limits": {
+      "page_cap": 30,
+      "chunk_size": 5,
+      "size_limit_mb": 40
+    }
+  },
+  "summary": {
+    "total_files": 65,
+    "successful": 4,
+    "failed": 0,
+    "chunks_created": 4,
+    "avg_confidence": 0.9889808043837547,
+    "avg_coverage": 1393.275
+  },
+  "failed_files": []
+}

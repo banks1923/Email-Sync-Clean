@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-08-25T00:54:42.332920",
+  "configuration": {
+    "project_id": "modular-command-466820-p2",
+    "processors": {
+      "form": "projects/1098140055345/locations/us/processors/29975d02da9ab3a2",
+      "ocr": "projects/1098140055345/locations/us/processors/8fadbc185616d041"
+    },
+    "limits": {
+      "page_cap": 30,
+      "chunk_size": 5,
+      "size_limit_mb": 40
+    }
+  },
+  "summary": {
+    "total_files": 64,
+    "successful": 10,
+    "failed": 8,
+    "chunks_created": 10,
+    "avg_confidence": 0.747035471200943,
+    "avg_coverage": 4177.179999999999
+  },
+  "failed_files": [
+    "Coldwell banker Lease Docs.pdf",
+    "2025-6-6 Supplemental Response - RFA.pdf.pdf",
+    "2025-6-6 Supplemental Response - RFP.pdf.pdf",
+    "2025-6-6 Supplemental Response - SROGS.pdf.pdf",
+    "2025-5-30 Plaintiff's Responses - FROGS-UD.pdf",
+    "2025-5-30 Plaintiff's Responses - RFA.pdf",
+    "2025-5-30 Plaintiff's Responses - SROGS.pdf",
+    "Mold Inspection Report.pdf"
+  ]
+}

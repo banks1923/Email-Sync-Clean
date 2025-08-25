@@ -1,4 +1,4 @@
-.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-truth-check docs-fix docs-audit docs-audit-summary docs-update complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke full-run email-scan email-quarantine vectors-reconcile ci-email-gate first-time-setup test-basic install-qdrant test-vector search upload sync-gmail health-check recent-activity install-all setup-gmail test-everything update-system backup diagnose check-requirements setup-gmail-auth test-gmail sync-gmail-recent db-stats performance-stats reindex-all start-qdrant qdrant-status fix-permissions check-disk-space memory-check system-report configure-advanced setup-backups setup-search-aliases optimize-db cleanup-old-data monitor-performance encrypt-database setup-secure-backups
+.PHONY: install install-dev format-advanced lint-all lint-fix type-check test test-fast test-unit test-integration test-slow test-coverage test-smoke security-check docs-check docs-truth-check docs-fix docs-audit docs-audit-summary docs-update complexity-check complexity-report validate clean help fix-all cleanup setup sonar-check sonar-fix sonar-report diag-wiring vector-smoke full-run vectors-reconcile first-time-setup test-basic install-qdrant test-vector search upload sync-gmail health-check recent-activity install-all setup-gmail test-everything update-system backup diagnose check-requirements setup-gmail-auth test-gmail sync-gmail-recent db-stats performance-stats reindex-all start-qdrant qdrant-status fix-permissions check-disk-space memory-check system-report configure-advanced setup-backups setup-search-aliases optimize-db cleanup-old-data monitor-performance encrypt-database setup-secure-backups
 
 # Default target
 .DEFAULT_GOAL := help
@@ -353,51 +353,9 @@ backfill-timeline: ensure-qdrant ## Backfill timeline events for old emails
 	@echo "📅 Backfilling timeline events..."
 	@$(PYTHON) scripts/backfill_semantic.py --steps timeline
 
-# Email Corpus Sanitation Targets
-email-scan: ## Scan email corpus for validation issues (JSON output)
-	@echo "🔍 Scanning email corpus for validation issues..."
-	@$(PYTHON) tools/cli/email_sanitizer.py scan --json
-
-email-quarantine: ## Move invalid emails to quarantine with batch tracking
-	@echo "🚨 Quarantining invalid emails..."
-	@$(PYTHON) tools/cli/email_sanitizer.py quarantine --json
-
-email-quarantine-dry: ## Dry run quarantine (scan only, no changes)
-	@echo "🔍 Dry run: checking what would be quarantined..."
-	@$(PYTHON) tools/cli/email_sanitizer.py quarantine --dry-run --json
-
 vectors-reconcile: ensure-qdrant ## Reconcile vectors between database and Qdrant
 	@echo "🔄 Reconciling vectors between database and Qdrant..."
-	@$(PYTHON) tools/cli/email_sanitizer.py reconcile --json
-
-ci-email-gate: ## CI validation gate (exits non-zero on violations)
-	@echo "🚪 Running CI email validation gate..."
-	@$(PYTHON) tools/scripts/email_sanitation_report.py --ci-check
-
-email-report: ## Generate comprehensive email sanitation report
-	@echo "📊 Generating email sanitation report..."
-	@$(PYTHON) tools/scripts/email_sanitation_report.py --format pretty
-
-email-report-json: ## Generate JSON email sanitation report
-	@echo "📊 Generating JSON email sanitation report..."
-	@$(PYTHON) tools/scripts/email_sanitation_report.py --format json
-
-email-setup: ## Setup email quarantine infrastructure
-	@echo "🏗️  Setting up email quarantine infrastructure..."
-	@$(PYTHON) scripts/create_quarantine_tables.py
-	@echo "✅ Email quarantine infrastructure ready!"
-
-email-rollback: ## Rollback quarantine batch (requires BATCH_ID)
-	@if [ -z "$(BATCH_ID)" ]; then \
-		echo "❌ Usage: make email-rollback BATCH_ID=batch-uuid"; \
-		exit 1; \
-	fi
-	@echo "🔄 Rolling back quarantine batch: $(BATCH_ID)..."
-	@$(PYTHON) tools/cli/email_sanitizer.py rollback $(BATCH_ID) --json
-
-email-stats: ## Show quarantine statistics
-	@echo "📈 Email quarantine statistics..."
-	@$(PYTHON) tools/cli/email_sanitizer.py stats
+	@$(PYTHON) utilities/maintenance/vector_maintenance.py --reconcile
 
 backfill-all: ensure-qdrant ## Backfill all semantic enrichment for old emails
 	@echo "🚀 Backfilling all semantic enrichment..."

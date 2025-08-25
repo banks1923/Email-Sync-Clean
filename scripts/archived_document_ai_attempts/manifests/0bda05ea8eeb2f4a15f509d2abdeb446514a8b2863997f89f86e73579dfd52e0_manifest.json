@@ -1,0 +1,22 @@
+{
+  "original_doc_id": "0bda05ea8eeb2f4a15f509d2abdeb446514a8b2863997f89f86e73579dfd52e0",
+  "original_filename": "Inspection Report - Blue Ribbon .pdf",
+  "total_pages": 53,
+  "chunks": [
+    {
+      "chunk_id": "2d343909942e4d00838ea05c377c3bf25705f53c38e4194fa5f0b7da78a3c34c",
+      "filename": "Inspection Report - Blue Ribbon __pp_1-25__780d8bacef736d2a.pdf",
+      "page_range": "1-25"
+    },
+    {
+      "chunk_id": "d115b81a5a3e155e9dbb99937685e8141493585d2667e6dcce4dd988be438f40",
+      "filename": "Inspection Report - Blue Ribbon __pp_26-50__5b50699dec6949d7.pdf",
+      "page_range": "26-50"
+    },
+    {
+      "chunk_id": "9772541a82d2ef8672e1f5d575c63ae89d8eca14f237e3444fa558383b294ee4",
+      "filename": "Inspection Report - Blue Ribbon __pp_51-53__055ac0c17b7ce39d.pdf",
+      "page_range": "51-53"
+    }
+  ]
+}

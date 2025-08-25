@@ -1,0 +1,27 @@
+{
+  "original_doc_id": "51965b891ed88d36194fdf4e99d77f71908bd76309d3a9200b0b8c28399f92d5",
+  "original_filename": "Doc - Hoa Laws.pdf",
+  "total_pages": 76,
+  "chunks": [
+    {
+      "chunk_id": "c09d0c4498e98e40b8862c0f5c34055b954f0021020cebc0926cad951417b764",
+      "filename": "Doc - Hoa Laws__pp_1-25__f92bc24c24018aba.pdf",
+      "page_range": "1-25"
+    },
+    {
+      "chunk_id": "bbc55854806c446898ca8787ab4335d9443ea2108298f415bba277b01d8fd914",
+      "filename": "Doc - Hoa Laws__pp_26-50__3df20a4dc9e96246.pdf",
+      "page_range": "26-50"
+    },
+    {
+      "chunk_id": "7de73b31b2365cf480fa02bb3ba5ee588750f8acfefc42b56066f3a84ba0fe08",
+      "filename": "Doc - Hoa Laws__pp_51-75__bf42cc8f8fe95466.pdf",
+      "page_range": "51-75"
+    },
+    {
+      "chunk_id": "60be02e679557ec34666e0464c11aa71fc586a8e6ee7aed55c32323ccbc651ee",
+      "filename": "Doc - Hoa Laws__pp_76-76__ff50e55cbb7ecdfc.pdf",
+      "page_range": "76-76"
+    }
+  ]
+}

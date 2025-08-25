@@ -1,0 +1,35 @@
+{
+  "document_id": "46acda8ecdf45ce544b9f8db15746d40ff7782874907de1afe57ccb6c5ab742d",
+  "filename": "2025-5-30 Proof of Service Disc Responses.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/fwplaintiffsdiscoveryresponses25pdud00999martinezv/2025-5-30 Proof of Service Disc Responses.pdf",
+  "processing_timestamp": "2025-08-25T00:05:12.001924Z",
+  "processor_used": "OCR",
+  "dual_processed": false,
+  "content": "1\n2\n3\n4\n5\nPROOF OF SERVICE\nSTATE OF CALIFORNIA, COUNTY OF LOS ANGELES\nI am employed in the County of Los Angeles, State of California. I am over the age of 18\nand not a party to the within action; my business address is 225 W. Broadway, Suite 103, Glendale,\nCA 91204.\nOn May 30, 2025 I served the foregoing documents described as:\n\u2022 2025-05-30 Plaintiffs Response to Form Interrogatories - Unlawful Detainer\n\u2022 2025-05-30 Plaintiff's Response to Request for Admissions\n6\n\u2022 2025-5-30 Plaintiff's Response \u2013 Special Interrogatories\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n,\nas follows:\n\u2022 2025-05-30 Plaintiffs Response to Form Interrogatories \u2013 General\n\u2022 2025-05-30 Plaintiffs Response to Request for Production\nDagmawi Teshale\nTeshale Law, PC\ndteshale@teshalelaw.com\n_ _ By Mail I am readily familiar with the firm\u2019s practice of collection and processing\ncorrespondence for mailing with the U.S. Postal Service. Under that practice, it would be\ndeposited with the U.S. Postal Service on that same day with postage thereon fully prepaid at City\nof Glendale, California in the ordinary course of business. The envelope was sealed and placed\nfor collection and mailing on that date following ordinary business practices.\n__ By Fax By transmitting said document(s) by electronic facsimile from fax number (818)\n638-9485 reported as completed without error.\n__ By Overnight Delivery I caused said document(s) to be placed in an envelope designated\nby Federal Express with delivery fees paid or provided for, addressed to the person on whom it is\nto be served, and then deposited in a box regularly maintained by the carrier at City of Glendale,\nCalifornia on the same day as shown on this declaration.\n__ By Messenger: I served the documents by placing them in an envelope or package\naddressed to the persons at the addresses listed above and providing them to a messenger for\nservice. (Separate declaration of personal service to be provided by the messenger.)\n_x_ By Email or Electronic Transmission: Based on an agreement between the parties\nand/or\nas a courtesy, I sent the documents to the persons at the email addresses listed above. I did\nnot receive, within a reasonable time after the transmission, any electronic message or other\nindication that the transmission was unsuccessful.\nI declare under penalty of perjury under the laws of the State of California that the above\nis true and correct. Executed on May 30, 2025 at City of Glendale, California.\nIsaac Guzman\n- 1\n| \n\u043c\u0435\u0434\n",
+  "page_count": 1,
+  "confidence": 0.9944848418235779,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "dates": [
+      "May 30, 2025"
+    ],
+    "money_amounts": [],
+    "legal_terms": [
+      "unlawful detainer",
+      "plaintiff"
+    ],
+    "case_numbers": []
+  },
+  "evidence_classification": {
+    "habitability": 0.0,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.0,
+    "evidence_strength": "supporting"
+  },
+  "processing_metrics": {
+    "latency_ms": 2366.204023361206,
+    "success": true,
+    "error": ""
+  }
+}

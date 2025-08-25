@@ -1,0 +1,35 @@
+{
+  "document_id": "95201856c7cda7ea01c179adeeadd77ba1c2f838c16e201c64c12a945b3d05d7",
+  "filename": "3 day notice - receipt 07:17:25.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/3 Day Notice /3 day notice - receipt 07:17:25.pdf",
+  "processing_timestamp": "2025-08-25T00:03:52.772017Z",
+  "processor_used": "FORM_PARSER",
+  "dual_processed": false,
+  "content": "Bank of America | Online Banking | Payment Activity Center\nDetails\n7/17/25, 8:54 PM\nYour payment has been submitted and, for your protection, is undergoing a security review\nwhich could take up to 24 hours. No action is needed on your part. We'll text or call if we need\nmore information.\nStatus\nTo\nFrom\nAmount\nDate\nMessage\nConZrmation Number\nHold\nZelle\u00ae payment\nbradford martinez\nBM\n626-375-5298\nBusiness Adv Fundamentals - 9818\n$8,125.00\nJul 17, 2025\nPayment made under protest in response to the 3\nday notice to pay or quit. Not an admission of\ndelinquency. We reserve all rights. 1 of 2\nhttps://secure.bankofamerica.com/pay-transfer-pay-portal/?request_locale=en-us&returnSiteIndicator=GAIEC&target=paymentactivity#/\npoc9t5jn6\nPage 1 of 1\n\u017b\n",
+  "page_count": 1,
+  "confidence": 0.952035129070282,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "dates": [
+      "Jul 17, 2025",
+      "7/17/25"
+    ],
+    "money_amounts": [
+      "$8,125.00"
+    ],
+    "legal_terms": [],
+    "case_numbers": []
+  },
+  "evidence_classification": {
+    "habitability": 0.0,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.0,
+    "evidence_strength": "strong"
+  },
+  "processing_metrics": {
+    "latency_ms": 5812.793016433716,
+    "success": true,
+    "error": ""
+  }
+}

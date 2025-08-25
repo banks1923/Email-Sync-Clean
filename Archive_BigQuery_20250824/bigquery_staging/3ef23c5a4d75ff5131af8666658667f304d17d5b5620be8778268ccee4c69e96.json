@@ -1,0 +1,39 @@
+{
+  "document_id": "3ef23c5a4d75ff5131af8666658667f304d17d5b5620be8778268ccee4c69e96",
+  "filename": "Repair checklist.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/Notices/Repair checklist.pdf",
+  "processing_timestamp": "2025-08-24T23:55:05.879706",
+  "processor_used": "OCR",
+  "content": "Stoneman Maintenance - History\nRepairs by Tenant\nRepairs W/ Mr. & Mrs. Martinez\nRepairs W/ Lotus Property Services. INC\nCurrent maintenance issues 9/1/24\nLoose carpet (3rd step) twisted my ankle\nPatio drain blocked\nPatio floor cracked\nMold outside patio door\nMold on patio wall\nFront door difficult to secure\nFloors squeaks upstairs (joint damage?)\nFloor upstairs uneven\nFlooring in living room raised from water damage\nCrack in living room ceiling (brown stain) water damage\nCrack in window\nBelongings damaged from repair man spackle and paint\nMOLD\nToilet leaks in master bedroom\nDoors don\u2019t close (living room closet, restroom master bedroom)\nSandbags\nGarage leaks and smells musty\nCracks and leaks in stairs to garage\nMail key doesn\u2019t work\nCracks by fire place\nFlooring by fireplace loose and basically off\nO \nO \nEviction note from GPT:\nIn your situation, given your background of legal disputes and issues with the\nlandlord and management company, here's a breakdown of your rights based on\nCalifornia law and tenant protections, including the Tenant Protection Act\n(AB1482):\n### A. **Change the Day**\nUnder California law, landlords or management companies are required to provide\n\"reasonable\" notice (usually 24 hours in writing) before entering the unit for things\nlike inspections, maintenance, or repairs. Since you will be out of state and cannot\nreasonably accommodate the original inspection date, you can request to\nreschedule to a date when you are available. While the landlord has the right to\naccess the property for legitimate reasons, they must accommodate reasonable\nrequests to change the date, especially if it's in good faith.\n### B. **Have Your Own Inspector Present**\nYou have the right to have an independent party (such as your own inspector)\npresent during the walk-through or inspection. Since this is your home, you can\nrequest that your inspector or representative is there. The presence of a third-\nparty inspector can also ensure that all issues you need to be addressed are\nproperly documented.\n### C. **Deny the Original Date Due to the Dog**\nIf you have a large dog that will be on the premises and you are not home, this\ncould create a safety or liability issue for the management company or\ninspectors. It's reasonable to request that the inspection be rescheduled when\nyou or someone else can be there to manage the dog. Most landlords will agree\nto reschedule in such cases, as it\u2019s in their interest to avoid any potential problems\nwith pets.\n### D. **Require a Smaller Time Window**\nYou can request a more specific or narrow time window for the inspection,\nespecially if you are paying someone to be there in your absence. California law\ndoesn't specifically require landlords to narrow the inspection window, but as long\nas your request is reasonable, they should try to accommodate it. Providing a\nlarge inspection window can be seen as overly burdensome, particularly if\nyou\u2019re incurring costs.\n### General Recommendations:\n1. **Communicate in Writing**: Ensure that all communications with the landlord or\nmanagement company are in writing, so you have a record of your requests,\nespecially if there is a history of disputes.\n2. **Legal Counsel**: Since you\u2019re already in a legal dispute, consider consulting\nwith your attorney to ensure that your rights are fully protected during this\ninspection process. They might be able to formally request the changes you want\non your behalf.\n3. **HUD and Fair Housing Protections**: Since you have had issues with\ndiscrimination related to an emotional support animal (ESA), HUD protections\nunder the Fair Housing Act may come into play. Keep a record of any continuing\nissues regarding your ESA, especially if it affects how the management company\ninteracts with you or your property.\nIf you feel like the management company is being unreasonable, you can escalate\nthe issue with your attorney or relevant housing authorities.\n",
+  "page_count": 3,
+  "confidence": 0.9940747221310934,
+  "extracted_entities": {
+    "people": [
+      "Protection Act"
+    ],
+    "organizations": [],
+    "locations": [],
+    "dates": [
+      "9/1/24"
+    ],
+    "money_amounts": [],
+    "legal_terms": [
+      "tenant",
+      "motion",
+      "landlord",
+      "notice",
+      "eviction"
+    ],
+    "case_numbers": [],
+    "statutes": []
+  },
+  "evidence_classification": {
+    "habitability": 1.0,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.3333333333333333,
+    "breach_of_contract": 0.0,
+    "harassment": 0.0,
+    "evidence_strength": "smoking_gun",
+    "document_category": ""
+  }
+}

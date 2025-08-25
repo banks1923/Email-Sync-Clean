@@ -1,0 +1,22 @@
+{
+  "original_doc_id": "0bd7338ad52518c88aea00fd71b387c7ca54558048b796036ad6573e41229404",
+  "original_filename": "2025-06-06 Plaintiff's RFA (James).pdf",
+  "total_pages": 55,
+  "chunks": [
+    {
+      "chunk_id": "e24829dfe0657d844767832b140e750c9d0dbe90b8f76ebc3684568ca9ea7a36",
+      "filename": "2025-06-06 Plaintiff's RFA (James)__pp_1-25__7ea4255ecec60c2a.pdf",
+      "page_range": "1-25"
+    },
+    {
+      "chunk_id": "87c256b0faec0f1957cb9369ca2e7cb9bcf9bb1960be97ebc17c11950821782e",
+      "filename": "2025-06-06 Plaintiff's RFA (James)__pp_26-50__76616412f01e76b7.pdf",
+      "page_range": "26-50"
+    },
+    {
+      "chunk_id": "8e4045e4bfe201b80cdc8277d70a1081602ec92e60a2ef0c2cc6defc02747ec9",
+      "filename": "2025-06-06 Plaintiff's RFA (James)__pp_51-55__ccefda6db1b144bc.pdf",
+      "page_range": "51-55"
+    }
+  ]
+}

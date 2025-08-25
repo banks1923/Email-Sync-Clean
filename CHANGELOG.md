@@ -2,6 +2,151 @@
 
 > ⚠️ **IMPORTANT**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-25] - Removed Obsolete Email Sanitization CLI Tools 🧹
+
+### Removed
+- **`tools/cli/email_sanitizer.py`** (412 lines) - Broken import dependencies, outdated architecture
+- **`tools/scripts/email_sanitation_report.py`** (281 lines) - Missing EmailQuarantineManager dependency
+- **Makefile targets**: Removed `email-scan`, `email-quarantine`, `email-report`, `ci-email-gate` commands
+- **Total reduction**: 693 lines of broken code removed (~1.2% of codebase)
+
+### Preserved
+- **Core email validation**: `gmail/validators.py` EmailValidator class (used by email sync)
+- **Email processing**: `shared/email_cleaner.py`, `shared/email_parser.py` (working components)
+- **Vector reconciliation**: Updated to use `vector_maintenance.py` instead
+
+### Context
+The email sanitization CLI tools were built for an old database-quarantine architecture that was replaced with file-based quarantine for document processing. The tools had missing dependencies (`EmailQuarantineManager`, `VectorReconciliationService`) and couldn't function. Core email validation remains intact and is actively used by the email sync process.
+
+## [2025-08-25] - Document AI Complete Fix Implementation 🎯
+
+### 🔧 **CRITICAL FIXES FOR 95-100% SUCCESS**
+
+#### **Problem**: Only 52/65 documents reaching BigQuery
+#### **Root Causes Identified**:
+1. Wrong base directory - only scanning 2 PDFs in pdfs_raw/
+2. Not implementing dual processing as required
+3. Missing advanced OCR settings for legal documents
+4. BigQuery batch not flushing properly
+5. No Contract Parser for discovery documents
+
+#### **Solutions Implemented**:
+
+### 1️⃣ **TRUE Dual Processing (ALWAYS Both Processors)**
+- **Before**: Conditional dual processing only for forms
+- **After**: ALWAYS runs FORM_PARSER + OCR on EVERY document
+- **Triple Processing**: Adds Contract Parser for discovery docs (RFA/ROG/RFP)
+- **Best Result Selection**: Scores based on confidence (40%) + coverage (60%)
+
+### 2️⃣ **Advanced OCR Settings for Legal Documents**
+```python
+enable_symbol=True           # Preserves §, ¶, legal citations
+enable_handwriting=True      # Captures signatures/notes  
+enable_selection_marks=True  # Processes checkboxes in forms
+compute_style_info=True      # Preserves bold/italic emphasis
+languages=['en-US']          # Improves accuracy
+hints=['legal_document']     # Helps with legal terminology
+```
+
+### 3️⃣ **Enhanced Entity Extraction**
+- **Legal Citations**: Detects statutes, code sections (§ symbols)
+- **Violations**: Identifies breach types, legal violations
+- **Organizations**: Extracts companies, departments, agencies
+- **Addresses**: Captures property/location references
+- **Case Numbers**: Multiple patterns including "Case No:" format
+
+### 4️⃣ **Evidence Scoring System (0-1 scale)**
+- **Habitability Score**: Critical (0.95), High (0.8), Medium (0.6), Low (0.4)
+- **Retaliation Score**: Temporal analysis linking complaints to actions
+- **Quiet Enjoyment Score**: Harassment, intimidation, privacy violations
+- **Evidence Strength**: smoking_gun (≥0.9), strong (≥0.7), supporting (≥0.5), weak
+
+### 5️⃣ **BigQuery Schema Alignment**
+- **JSON Types**: entities, evidence, chunk_info, processing_metrics
+- **ARRAY Types**: parties, money_amounts, violations, legal_citations
+- **Unique Keys**: document_key (chunk-aware) + original_id
+- **Safe Merge**: Deduplication via ROW_NUMBER() before merge
+- **Force Flush**: Final batch always flushes with force=True
+
+### 6️⃣ **Directory Scanning Fix**
+- **Before**: Only scanning `pdfs_raw/` (2 PDFs)
+- **After**: Scans ALL subdirectories under `data/Stoneman_dispute/`
+- **Includes**: Civil/, Notices/, Our Reports/, Miscellaneous/, Owner Move In #2/
+- **Result**: Now finds all 65 PDFs
+
+### 📊 **Expected Results**
+- ✅ 65/65 PDFs discovered and tracked
+- ✅ 100% dual processing coverage
+- ✅ All documents reach BigQuery (no batch loss)
+- ✅ Proper deduplication (no duplicate key errors)
+- ✅ Enhanced entity and evidence extraction
+- ✅ Legal symbol preservation
+
+### 📁 **Updated Files**
+- `scripts/process_legal_docs_enhanced.py` - All fixes implemented
+- `scripts/bigquery_schema.sql` - Proper JSON/ARRAY schema
+- `scripts/archived_document_ai/` - 11 obsolete scripts archived
+
+## [2025-08-25] - Document AI Processing Enhancements 🚀
+
+### 🎯 **Enhanced Document Processing Pipeline**
+- **Problem Resolved**: 21 document failures due to page/size limits, batch insertion errors, schema mismatches
+- **Solution Implemented**: Pre-screening, PDF splitting, coverage metrics, stage->merge pattern, operational guardrails
+- **Success Rate Target**: 95-100% ingestion (up from 67%)
+
+### 📊 **Key Improvements**
+1. **Pre-screen & Route Strategy**
+   - Auto-detect documents >30 pages or >40MB
+   - Split into 25-page chunks (safety margin under 30)
+   - Imageless mode: 12-page chunks (under 15 limit)
+   - Manifest tracking for chunk reassembly
+
+2. **BigQuery Fixes**
+   - Stage->Merge pattern for idempotent upserts
+   - Excerpt storage (20k chars) instead of full text
+   - Proper schema with JSON strings and ARRAY types
+   - Rolling batch buffer (never resend prior rows)
+
+3. **Coverage Metrics**
+   - Calculate chars/page coverage score
+   - Dual output selection based on coverage
+   - 5% threshold for switching to fallback
+
+4. **Operational Guardrails**
+   - Exponential backoff with jitter (max 5 retries)
+   - SQLite state tracking for resume support
+   - Structured JSON logging with metrics
+   - Rate limiting and error recovery
+
+### 🔧 **Technical Implementation**
+- **Enhanced Script**: `scripts/process_legal_docs_enhanced.py` - Production-ready with all fixes
+- **Original Script**: `scripts/process_legal_docs_fixed.py` - Previous version for reference
+- **BigQuery Schema**: `scripts/bigquery_schema_prod.sql` - Production schema with views
+- **New Directories**:
+  - `data/Stoneman_dispute/chunks/` - Split PDF chunks
+  - `data/Stoneman_dispute/full_text/` - Full text storage
+  - `data/Stoneman_dispute/manifests/` - Chunk manifests
+  - `data/Stoneman_dispute/processing_state.db` - Resume support
+
+### ✅ **Expected Outcomes**
+- **21 failed documents**: Now processable via splitting
+- **Batch errors**: Eliminated with proper schema and merge pattern
+- **Row size errors**: Prevented by excerpt-only BQ storage
+- **Resume capability**: Continue from failures without reprocessing
+- **Better text quality**: Coverage-aware selection policy
+
+### 📈 **Performance Impact**
+- **Near 100% ingestion**: All documents processable with splitting
+- **Clean BigQuery**: No duplicates, proper schema alignment
+- **Faster queries**: Excerpts in BQ, full text on disk
+- **Reliable processing**: Automatic retry and resume
+- **Better analytics**: Coverage metrics for quality assessment
+
+### 🧹 **Script Cleanup**
+- **Archived 11 obsolete scripts** to `scripts/archived_document_ai/`
+- **Kept only**: `process_legal_docs_enhanced.py` (main), `bigquery_schema_prod.sql` (schema), `test_bigquery.py` (diagnostics)
+- **Benefit**: Cleaner codebase, no confusion about which script to use
+
 ## [2025-08-24] - Email Cleanup Success ✅
 
 ### 🎯 **COMPLETED: Email Database Optimization**

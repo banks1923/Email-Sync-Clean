@@ -1,0 +1,34 @@
+{
+  "document_id": "2fa985eddd242b285ec66841c501d15cf3e05453dc4efae92b9b2d97bfa9d661",
+  "filename": "Re- Notice to Enter Dwelling Unit.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/Notices/Re- Notice to Enter Dwelling Unit.pdf",
+  "processing_timestamp": "2025-08-24T23:54:14.319203",
+  "processor_used": "OCR",
+  "content": "M/M Burbank,\nWork is scheduled to begin at 9am Monday, March17, 2025, based on the\ncontractor's schedule/ availability.\nPlease let us know if you prefer to proceed or cancel at this time.\nStoneman Staff\nOn Sun, Mar 16, 2025 at 1:23PM Jen Barreda <jenbarreda@yahoo.com> wrote:\nStaff,\nWe are prepared to accommodate necessary repairs, but a three day, nine hour\nday schedule is excessive given the scope of work described and creates an\nunreasonable burden on our household.\nWe are not available on March 17th, 18th, or 19th during the times you have listed.\nWhile we have consistently worked with you to allow previous repairs, we cannot\naccommodate those dates and times.\nSince these are non-emergency repairs, we will follow up by end of day Tuesday,\nMarch 18th with our availability so that we can coordinate accordingly and come\nto a mutual agreement.\nJennifer Burbank\nFrom: Stoneman 518stoneman@gmail.com\nSubject: Re: Notice to Enter Dwelling Unit\nDate: Mar 16, 2025 at 5:58:26 PM\nTo: Jen Barreda jenbarreda@yahoo.com, jamesburbank91@gmail.com\nOn Mar 14, 2025, at 7:34PM, Stoneman <518stoneman@gmail.com> wrote:\nM/M Burbank,\nA physical copy of this communication has been posted on the front door\nof your rental unit at 518 N. Stoneman Ave.\nThis email serves as a 24-hour notice that the property owner, owner's agent, or\ncontractors, will be entering the rental unit at 518 N. Stoneman Ave. on March\n17th, March 18th and March 19th, 2025 between 8:00 am and 5:00 pm, to\ncomplete the wall repair in the garage stairwell and resolve issues with the front\nentryway flooring.\nPlease contact us via email if you have any questions.\nStoneman Staff\nNotice to Eater Dwelling Unit\n(OC 1950\nPC) Ce S 1154, Ow does boty genoti\nMaces\nThe\nMarch\nPeriodic Property Ipection\n\u2610 Tee willing\n\u2610 The dwelling s\n\u2610 & Pro Court Onder\nbed or d\n3/15\nmarty\n",
+  "page_count": 2,
+  "confidence": 0.7916317582130432,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "locations": [],
+    "dates": [
+      "Mar 14, 2025",
+      "Mar 16, 2025"
+    ],
+    "money_amounts": [],
+    "legal_terms": [
+      "notice"
+    ],
+    "case_numbers": [],
+    "statutes": []
+  },
+  "evidence_classification": {
+    "habitability": 0.2,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.0,
+    "breach_of_contract": 0.0,
+    "harassment": 0.0,
+    "evidence_strength": "strong",
+    "document_category": "notice"
+  }
+}

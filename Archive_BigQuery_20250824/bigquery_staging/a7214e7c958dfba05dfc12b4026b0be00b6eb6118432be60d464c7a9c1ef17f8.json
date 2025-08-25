@@ -1,0 +1,29 @@
+{
+  "document_id": "a7214e7c958dfba05dfc12b4026b0be00b6eb6118432be60d464c7a9c1ef17f8",
+  "filename": "Assessment Report #1 \u2013 Landing area of the stairwell leading to the garage.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/Miscellaneous /Assessment Report #1 \u2013 Landing area of the stairwell leading to the garage.pdf",
+  "processing_timestamp": "2025-08-24T23:54:08.082794",
+  "processor_used": "OCR",
+  "content": "Assessment Report #1 \u2013 Landing area of the stairwell leading to the garage\nAssessed by: Saul Rosado (Flooring Contractor) and Brad Martinez\nAssessment Result: There is a small air pocket under the laminate flooring in an area\napproximately one square foot just outside the door leading to the garage. No structural\nimpairment detected.\nDetail supporting assessment result:\n1. Laminate Flooring is a Surface Layer\nLaminate flooring is a cosmetic feature and does not contribute to the structural integrity of\na building. It functions as a protective and aesthetic covering for the subfloor, but any\nissues with the laminate itself\u2014such as air pockets\u2014do not impact the foundation, walls,\nor load-bearing elements of the structure.\n2. Air Pockets are a Surface Defect\nAir pockets are localized voids beneath the laminate, typically resulting from movement\ndue to temperature changes, installation errors, or subfloor irregularities. These pockets\nare limited to the laminate layer and do not extend to or aect the underlying structural\ncomponents of the building.\n3. No Evidence of Subfloor Damage\nTemperature fluctuations may cause laminate planks to expand, contract, or shift, leading\nto air pockets. However, unless there is direct evidence of moisture infiltration or structural\ndamage to the subfloor itself (e.g., warping, cracks), the issue remains superficial and\nunrelated to the building's structure.\n4. Impact is Limited to Flooring Performance\nWhile air pockets may aect the look and feel of the flooring (e.g., uneven surface, noise\nwhen stepped on), they do not compromise the safety or stability of the building. Resolving\nthe issue would involve repairing or replacing the laminate flooring, rather than addressing\nany structural concerns.\nIn summary, air pockets under laminate flooring due to temperature fluctuations are purely\na surface-level issue. They may be inconvenient or unsightly but do not pose any threat to\nthe structural integrity of the property.\n",
+  "page_count": 1,
+  "confidence": 0.9949682354927063,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "locations": [],
+    "dates": [],
+    "money_amounts": [],
+    "legal_terms": [],
+    "case_numbers": [],
+    "statutes": []
+  },
+  "evidence_classification": {
+    "habitability": 0.2,
+    "quiet_enjoyment": 0.3333333333333333,
+    "retaliation": 0.0,
+    "breach_of_contract": 0.0,
+    "harassment": 0.0,
+    "evidence_strength": "supporting",
+    "document_category": "inspection"
+  }
+}

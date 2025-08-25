@@ -1,0 +1,31 @@
+{
+  "document_id": "1e732d99a56ef8f2c9bcd6e798a2b6750ba5e54ff901f6bf121dcb9e223c2cb3",
+  "filename": "Stoneman HOA Rules Court CCRs.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/Notices/Stoneman HOA Rules Court CCRs.pdf",
+  "processing_timestamp": "2025-08-24T23:54:54.637496",
+  "processor_used": "OCR",
+  "content": "From: Brad Martinez brad_martinez@att.net\nSubject: Stoneman Court CC&Rs\nDate: September 8, 2023 at 8:18AM\nTo: James Burbank jamesburbank91@gmail.com, Jennifer Burbank jenberreda@yahoo.com\nCc: Vicki Martinez vicki_martinez@att.net\nHi James/Jennifer,\nAttached you will find the CC&Rs that govern the Stoneman Court community. Please feel free to contact us anytime if you have any\nquestions related to it.\nRegards,\nBrad & Vicki Martinez\nStonemanCourt-CC&R.pdf\nBM\n",
+  "page_count": 1,
+  "confidence": 0.9942743182182312,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "locations": [],
+    "dates": [
+      "September 8, 2023"
+    ],
+    "money_amounts": [],
+    "legal_terms": [],
+    "case_numbers": [],
+    "statutes": []
+  },
+  "evidence_classification": {
+    "habitability": 0.0,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.0,
+    "breach_of_contract": 0.0,
+    "harassment": 0.0,
+    "evidence_strength": "supporting",
+    "document_category": ""
+  }
+}

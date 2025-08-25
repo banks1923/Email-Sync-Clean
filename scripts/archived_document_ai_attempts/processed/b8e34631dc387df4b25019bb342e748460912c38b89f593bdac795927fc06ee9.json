@@ -1,0 +1,49 @@
+{
+  "document_id": "b8e34631dc387df4b25019bb342e748460912c38b89f593bdac795927fc06ee9",
+  "filename": "3 Day Notice - 07:14:25.pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/3 Day Notice /3 Day Notice - 07:14:25.pdf",
+  "processing_timestamp": "2025-08-25T00:03:59.092946Z",
+  "processor_used": "FORM_PARSER",
+  "dual_processed": false,
+  "content": "THREE DAY NOTICE TO PAY RENT OR QUIT\nTo: JAMES STEVEN BURBANK, JENNIFER BURBANK and ALL OTHER PERSONS IN POSSESSION ofthe PREMISES described as 518 NORTH STONEMAN AVENUE, ALHAMBRA, CA 91801, LOS ANGELESCOUNTY.\nPLEASE TAKE NOTICE that the rent is now due and payable on the above-described premises which you currentlyhold and occupy.\nYour rental account is delinquent in the amount of SIXTEEN-THOUSAND-TWO-HUNDRED-FIFTY-DOLLARS ($16,250.00) itemized as follows:\n\u2022\n\u2022 $3,250.00 due from March 1, 2025, through March 31, 2025$3,250.00 due from April 1, 2025, through April 30, 2025\u2022 $3,250.00 due from May 1, 2025, through May 31, 2025$3,250.00 due from June 1, 2025, through June 30, 2025\u2022 $3,250.00 due from July 1, 2025, through July 31, 2025\n\u2022\nWITHIN THREE (3) DAYS, not including Saturday, Sunday or Judicial Holidays after service of this Notice - but in noevent later than July 17, 2025, you are hereby required to pay the rent amount stated above in full OR quit the subjectpremises, move out, and deliver possession to Owner's authorized agent, BRADFORD M. MARTINEZ AND/ORVICKI L. MARTINEZ AND/OR GAIL DIANE CALHOUN AKA GAIL DIANE HOUSER\nYour payment should be made by payable to BRADFORD M. MARTINEZ and VICKI L. MARTINEZ anddelivered to BRADFORD M. MARTINEZ; and VICKI L. MARTINEZ at the following address: 1113 NHIDALGO AVE, ALHAMBRA, CA 91801 Telephone: (626) 375-5298, which is usually open Monday throughFriday from 9:00a.m. to 5:00 p.m. Acceptable forms of payment are through cash, check, cashier's check, or money order.\nPLEASE TAKE FURTHER NOTICE that unless you pay the rent in full OR vacate the premises WITHIN THREE (3)DAYS, not including Saturday, Sundays or Judicial Holidays as required by this Notice, that the undersigned doeshereby elect to declare a forfeiture of the subject lease and/or rental agreement and will institute legal proceedingsfor the unlawful detainer against you to recover possession of the premises, plus court costs, attorneys' fees, andPENALTY DAMAGES OF $600.00 due as provided by California law.\n1\nState law permits former tenants to reclaim abandoned personal property left at the former address of the tenant,subject to certain conditions. You may or may not be able to reclaim property without incurring additional costs,depending on the cost of storing the property and the length of time before it is reclaimed. In general, these costs will belower the sooner you contact your former landlord after being notified that the property belonging to you was leftbehind after you moved out.\nPursuant to Section 1785.26 of the California Civil Code, as required by law, you are hereby notified that a negativecredit report reflecting on your credit record may be submitted to a credit reporting agency if you fail to fulfill theterms of your credit obligation.\nIMPORTANT CALCULATING YOUR DEADLINE TO COMPLY\n-\nTHIS NOTICE WAS SERVED ONTo calculate the time you have to comply withthis notice:Do not count the day it was served.The first day you count is the next day that is not a Saturday, Sunday, or judicial holiday.Continue counting only days that are not Saturdays, Sundays, judicial holidays until you reach thenumber of days stated in this notice.\n\u2022\n40590\nNumber of Bedrooms: 2\nOwner/Agent: BRADFORD M. MARTINEZ, VICKI L. MARTINEZ AND GAIL DIANE CALHOUN AKAGAIL DIANE HOUSER\nThree Day Notice to Pay Rent or Quit dated: July 14, 2025\n!\n}\n",
+  "page_count": 2,
+  "confidence": 0.8880859613418579,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "dates": [
+      "May 31, 2025",
+      "April 30, 2025",
+      "June 30, 2025",
+      "July 14, 2025",
+      "May 1, 2025",
+      "March 1, 2025",
+      "March 31, 2025",
+      "June 1, 2025",
+      "July 1, 2025",
+      "July 31, 2025",
+      "July 17, 2025",
+      "April 1, 2025"
+    ],
+    "money_amounts": [
+      "$600.00",
+      "$16,250.00",
+      "$3,250.00"
+    ],
+    "legal_terms": [
+      "unlawful detainer"
+    ],
+    "case_numbers": []
+  },
+  "evidence_classification": {
+    "habitability": 0.0,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.0,
+    "evidence_strength": "strong"
+  },
+  "processing_metrics": {
+    "latency_ms": 11332.546949386597,
+    "success": true,
+    "error": ""
+  }
+}

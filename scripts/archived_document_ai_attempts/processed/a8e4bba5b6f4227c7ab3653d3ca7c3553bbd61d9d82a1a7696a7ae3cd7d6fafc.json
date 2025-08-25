@@ -1,0 +1,33 @@
+{
+  "document_id": "a8e4bba5b6f4227c7ab3653d3ca7c3553bbd61d9d82a1a7696a7ae3cd7d6fafc",
+  "filename": "Missing from the Timeline..pdf",
+  "filepath": "data/Stoneman_dispute/pdfs_raw/Analysis & Strategies/Missing from the Timeline..pdf",
+  "processing_timestamp": "2025-08-25T00:04:13.935065Z",
+  "processor_used": "OCR",
+  "dual_processed": false,
+  "content": "A. Missing. From timeline / documents\nB. Time sensitive questions\nC. Immediate Actions\nMissing pieces\n1. Brad and Vicki communications regarding maintenance prior to \u201cshower door.\n- offered to fix toilet, but too busy\n- Dealt with and paid plumber (reimbursed later)\n- Elected to bring item plumber. Mistrust towards tenants sensed. But it was roto\nrooter plumber\n- Photos of sink and drains needed unclogging\n2. Neighbor coming to check notice as soon as it was hung on door\n- Neighbor looking over our wall\n3.\n4.\nUnannounced visits by Gail twice in one week\nSand bags collected by Brad (around August 2024) from the back yard, without being\ngranted entry into the house.\n5. Mold inspector confirming air test was preliminary and not definitive.\n- Ignored email explicitly invalidating the air test, based on Failure to communicate\nnecessity of turning off (3) Hepa Filters and central AC (hepa filter.)\n- Compared to base line results, and health standards, Elevated levels of a few\nharmful mold types were detected in the living room.\n- Levels \u201charmful to allergen sensitive individuals\u201d\n- Denial of tenants to have their own tests completed.\n6. Loose Closet floor boards removed to reveal (what appears to be) mold of various\ntypes, in minor quantities.\n- Mold appears to have taken root at base board edges\n7. The Tenants\u2019 ordered a mold test done and results are pending. Air test and \u201cHair\u201d test.\nQuestions;\n1. By having the neighbor photograph our hung notice of eviction, was that attempting to\ngather another witness and avoid mail, requirement\na. Any merit to the attempt?\n2. Recent work in unit, stated to be in garage, lead to owner and a worker near the closet,\nbut off camera. Implications of owner photographing evidence of closet floor boards\nremoved.\na. No damage to the closet or boards beyond a simple spackle of 2 inch piece of\nplywood and reinstalling boards and one baseboard (water damaged.)\nTo do list:\nb. Legally supposed to look inside closet?\nc. No visible reason for investigating.\n1. Review video of LL and worker near the closet\n1. Sep 8th 2024\n2.\nBrian Gordon threats and statement, they don\u2019t want to deal with you anymore, if you don\u2019t play\nball and stop requesting repairs, 60 day notice\u201d\nInspection approximately Jan 7th, excuses regarding the subsequent work.\n\u201c\nJan 27th. a firm email from tenant regarding no contractors available\u201d and delays.\nJan 28th, Gail emails asking if tenants will be home for repairs on 29th. Won\u2019t be home, was the\nreply. (Disneyland)\nJan 29th. 60 day notice taped to door. A door Which they know tenants don\u2019t use, because\nstairs inside unit lead to private garage. No copy was mailed, no email mention of notice, until\nbrought by Jennifer.\nIrregularity\u2019s noticed in the format, lack of physical signature (typed name), the old contacts are\nissuing notice.\nJan 5th booked two Servpro franchise and showed up unannounced seeming anxious and\nrelieved that they showed up. Really wanted to talk to him and stated she would wait for him to\nleave, 45-60 minutes.\nHuge rain storm was forecasted the following day. No actual repairs were done until the legal\ncases, response windows were coming to a close.\nBrad Vicki Gail all served in early feb. Aggression heightened after.\nRecent work ran over the time frame stated for work to be completed. Tenant emailed LL to say\nthat is against the law. Came back after time window closed, unannounced, and used their key.\nNo additional communication. And left plumbers in unit alone, to complete work. Gail showed up\nunannounced after the window. 2:30ish pm and was about to to let herself in (on camera\nreaching for keys), just as tenant got home. No notice. No text. Tenant let her in politely. She is\non camera, recording the home with her phone all the way out. Children present but not in frame\n(most likely).\nCouple days later emailed saying Tuesday 8-5 and Wednesday. 8-5 needed for repairs\n(Tuesday left by 10:30), but verbally stated, plumber might not make it tmr. We need 8-5\nThursday. Will let you know about Wednesday.\nDidn\u2019t show wed. Thirsday worked until about 11:30.\nOne week of calm. Legal deadlines appeared in cases. Now again claiming 3 days, 9 hours\neach. \u201cWAIVED\u201d last month and they are effectively claiming the unit for 6 days so far. Clearly\nretaliation and infringing on tenants rights. With dog present, someone must be home or\narrangements made. Also children to pick up. With people coming, going, recording, and being\nleft alone in the house.\n",
+  "page_count": 3,
+  "confidence": 0.9949233531951904,
+  "extracted_entities": {
+    "people": [],
+    "organizations": [],
+    "dates": [],
+    "money_amounts": [],
+    "legal_terms": [
+      "retaliation",
+      "eviction"
+    ],
+    "case_numbers": []
+  },
+  "evidence_classification": {
+    "habitability": 0.9,
+    "quiet_enjoyment": 0.0,
+    "retaliation": 0.8,
+    "evidence_strength": "supporting"
+  },
+  "processing_metrics": {
+    "latency_ms": 2760.1850032806396,
+    "success": true,
+    "error": ""
+  }
+}

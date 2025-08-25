@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-08-25T00:07:22.559825",
+  "configuration": {
+    "project_id": "modular-command-466820-p2",
+    "processors": {
+      "form": "projects/1098140055345/locations/us/processors/29975d02da9ab3a2",
+      "ocr": "projects/1098140055345/locations/us/processors/8fadbc185616d041"
+    },
+    "batch_size": 10,
+    "dual_process": true
+  },
+  "summary": {
+    "total_files": 64,
+    "processed": 43,
+    "failed": 21,
+    "low_confidence": 1,
+    "avg_confidence": 0.9561215857603815
+  },
+  "failed_files": [
+    "data/Stoneman_dispute/pdfs_raw/CRD Narrative.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Our Reports/Inspection Report - Blue Ribbon .pdf",
+    "data/Stoneman_dispute/pdfs_raw/Our Reports/Mold Inspection Report.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Civil/Civil - Complaint Files/Complaint - 24NNCV06082.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Notices/Doc - Hoa Laws.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Notices/StonemanCourt-CC&R.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Notices/Lease Termination 8:24.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Notices/Coldwell banker Lease Docs.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Notices/518 N Stoneman Ave Lease .pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwmartinezv_burbankdiscovery/2025-06-06 Plaintiff's RFA (James).pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwmartinezv_burbankdiscovery/2025-06-06 Plaintiffs RFA (Jennifer).pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/UD - Complaint Summons, POS (full).pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/Complaint - 24NNCV06082.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/2025-6-6 Supplemental Response - RFA.pdf.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/Motion for Summary Judgment.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/2025-6-6 Supplemental Response - RFP.pdf.pdf",
+    "data/Stoneman_dispute/pdfs_raw/Unlawful Detainer #1/2025-6-6 Supplemental Response - SROGS.pdf.pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwplaintiffsdiscoveryresponses25pdud00999martinezv/2025-5-30 Plaintiff's Response - RFP.pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwplaintiffsdiscoveryresponses25pdud00999martinezv/2025-5-30 Plaintiff's Responses - FROGS-UD.pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwplaintiffsdiscoveryresponses25pdud00999martinezv/2025-5-30 Plaintiff's Responses - RFA.pdf",
+    "data/Stoneman_dispute/pdfs_raw/fwplaintiffsdiscoveryresponses25pdud00999martinezv/2025-5-30 Plaintiff's Responses - SROGS.pdf"
+  ],
+  "low_confidence_files": [
+    {
+      "file": "data/Stoneman_dispute/pdfs_raw/Notices/Civil - Family Move - Robert L.pdf",
+      "confidence": 0.40106868743896484
+    }
+  ]
+}

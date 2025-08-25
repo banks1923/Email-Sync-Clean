@@ -1,0 +1,17 @@
+{
+  "original_doc_id": "bdc2805f8fd2949d0ae5d9dbab554a740e33742ea9c059ede7b3ed45e619ebfb",
+  "original_filename": "518 N Stoneman Ave Lease .pdf",
+  "total_pages": 34,
+  "chunks": [
+    {
+      "chunk_id": "e9b55e776e9f6edeae25eafa2a3c5c3d98944e267b1e798dd48eae340170ddcb",
+      "filename": "518 N Stoneman Ave Lease __pp_1-25__10bcf03d0091f7b1.pdf",
+      "page_range": "1-25"
+    },
+    {
+      "chunk_id": "d17e54ee2d7f0e25be553c2d0a2b46090e63dfccc13c8b776222ab57d5cf748c",
+      "filename": "518 N Stoneman Ave Lease __pp_26-34__323d811eadfb54db.pdf",
+      "page_range": "26-34"
+    }
+  ]
+}

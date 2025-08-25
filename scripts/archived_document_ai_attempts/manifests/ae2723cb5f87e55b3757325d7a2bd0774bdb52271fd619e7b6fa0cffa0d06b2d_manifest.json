@@ -1,0 +1,27 @@
+{
+  "original_doc_id": "ae2723cb5f87e55b3757325d7a2bd0774bdb52271fd619e7b6fa0cffa0d06b2d",
+  "original_filename": "CRD Narrative.pdf",
+  "total_pages": 44,
+  "chunks": [
+    {
+      "chunk_id": "01ac4583244411ee4db347dac23cbd27f33eff3f905f4b360a6def3f840a247d",
+      "filename": "CRD Narrative__pp_1-14__df8678f6b4378962.pdf",
+      "page_range": "1-14"
+    },
+    {
+      "chunk_id": "716a0336242c6dd21e0c0316e309845dbf1e85a4385e032fc8e6d172cca860a1",
+      "filename": "CRD Narrative__pp_15-28__ffca611e944ca3e3.pdf",
+      "page_range": "15-28"
+    },
+    {
+      "chunk_id": "c983d30aeb613a180b150f8b62f4c570e32c4dc4e0c8ed4f785e5b8cedac1521",
+      "filename": "CRD Narrative__pp_29-42__279720399662ade3.pdf",
+      "page_range": "29-42"
+    },
+    {
+      "chunk_id": "ce41459d84bd994517678b41c12894d8201fc7b1983f2d2cf094e87d9f10a7ba",
+      "filename": "CRD Narrative__pp_43-44__6d6db33abcec7ec2.pdf",
+      "page_range": "43-44"
+    }
+  ]
+}

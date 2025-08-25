@@ -1,0 +1,32 @@
+{
+  "original_doc_id": "7ddb0d2e205c87bc8ca94d8768cfb69799cf7d9616828dade63bdd561ff8c9e6",
+  "original_filename": "2025-6-6 Supplemental Response - SROGS.pdf.pdf",
+  "total_pages": 21,
+  "chunks": [
+    {
+      "chunk_id": "24a93b1a5e2be097bc53fc31968aa213dd45ea38efaec051d94fa2ff053db1b9",
+      "filename": "2025-6-6 Supplemental Response - SROGS.pdf__pp_1-5__18c30954707cadce.pdf",
+      "page_range": "1-5"
+    },
+    {
+      "chunk_id": "fa0bc5c007dc83714e4099c6aef3b9d641da5e4eac71ed327e0da5f66247f530",
+      "filename": "2025-6-6 Supplemental Response - SROGS.pdf__pp_6-10__926ad0cd1534d643.pdf",
+      "page_range": "6-10"
+    },
+    {
+      "chunk_id": "1acfb8c791a68bf51f770f9b3104444f3270c42a9e2d8b885205356537a63580",
+      "filename": "2025-6-6 Supplemental Response - SROGS.pdf__pp_11-15__fa8c11ea1ce577b7.pdf",
+      "page_range": "11-15"
+    },
+    {
+      "chunk_id": "c8aab249c9162717174729e70a82b01b279307fc57faa99b2b9e867f874be751",
+      "filename": "2025-6-6 Supplemental Response - SROGS.pdf__pp_16-20__e180ad6ab0b44880.pdf",
+      "page_range": "16-20"
+    },
+    {
+      "chunk_id": "dbe57e3cc89fd09d6168f0e78cd4a63df1a7cce6fbb2934a333f08a81585c133",
+      "filename": "2025-6-6 Supplemental Response - SROGS.pdf__pp_21-21__e83c3106586ba34d.pdf",
+      "page_range": "21-21"
+    }
+  ]
+}

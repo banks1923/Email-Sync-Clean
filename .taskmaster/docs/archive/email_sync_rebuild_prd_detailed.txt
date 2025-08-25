@@ -1,0 +1,1622 @@
+# Product Requirements Document: Email Sync System v2 - Production-Grade Clean Architecture Rebuild
+
+## Executive Summary
+
+This document specifies a complete architectural rebuild of the Email Sync System to transform a fragmented, manually-coordinated collection of services into a production-grade, unified document intelligence platform. The current system successfully indexes 585 documents but suffers from fundamental architectural inconsistencies that prevent reliable operation at scale.
+
+### Critical Business Context
+The system processes legal documents, emails, and PDFs for a law practice, where data integrity, search accuracy, and processing reliability are non-negotiable. Missing embeddings or failed searches could mean missing critical case information. The rebuild must be production-ready from day one with zero tolerance for data loss or processing failures.
+
+## Problem Statement - Deep Analysis
+
+### Architectural Fragmentation Root Cause Analysis
+
+#### The Dual Table Problem
+The system currently operates with two parallel content storage systems that evolved independently:
+
+```python
+# Gmail Service (developed first) - uses content table
+content table: 453 records
+- ID System: UUID strings (e.g., "ff8b20b4-0f47-46b5-a5bc-06833bf31063")
+- Schema: Older, includes content_type field
+- Used by: Gmail service exclusively
+- Problem: Never integrated with newer embedding system
+
+# PDF Service (developed later) - uses content_unified table
+content_unified table: 1,005 records
+- ID System: Integer auto-increment (1, 2, 3...)
+- Schema: Newer, includes ready_for_embedding flag
+- Used by: PDF service, semantic pipeline, vector system
+- Problem: Incompatible with Gmail's UUID-based system
+```
+
+This fragmentation occurred because:
+1. Gmail service was built first with UUID-based architecture
+2. PDF service was added later with "improved" integer-based design
+3. No refactoring was done to unify the approaches
+4. Each team/developer made independent architectural decisions
+
+#### Configuration-Code Drift Analysis
+
+```python
+# Configuration file says (config/settings.py):
+embedding_model = "nlpaueb/legal-bert-base-uncased"  # 768 dimensions
+embedding_dimension = 768
+
+# Actual code uses (utilities/embeddings/embedding_service.py):
+model_name = "pile-of-law/legalbert-large-1.7M-2"  # 1024 dimensions
+dimensions = 1024
+```
+
+Why this happened:
+1. Initial implementation used 768D model
+2. Developer upgraded to better 1024D model in code
+3. Configuration file was never updated
+4. System "works" because config is ignored
+5. Creates confusion for maintenance and debugging
+
+#### The 997 Missing Embeddings Crisis
+
+Current state analysis:
+```sql
+Total content ready for embedding: 1,003 documents
+Existing embeddings: 8 documents
+Missing embeddings: 995 documents (99.2% failure rate)
+
+Breakdown:
+- PDFs ready: 579 (only 4 have embeddings)
+- Emails ready: 420 (only 2 have embeddings)
+- Uploads ready: 4 (2 have embeddings)
+```
+
+Root cause:
+1. Embedding generation was never integrated into main pipeline
+2. Relies on manual execution of `scripts/backfill_embeddings.py`
+3. No monitoring to detect missing embeddings
+4. No automatic retry for failed embeddings
+5. Silent failures in embedding generation
+
+### Business Impact Analysis
+
+#### Quantifiable Impacts
+- **Search Accuracy**: 99.2% of documents lack semantic search capability
+- **Processing Time**: 30+ minutes of manual coordination per sync
+- **Error Rate**: Unknown due to silent failures
+- **Data Integrity**: 403 emails missing from vector store
+- **Maintenance Cost**: 4-6 hours per incident requiring deep system knowledge
+
+#### Risk Assessment
+- **Legal Risk**: Missing critical case information in searches
+- **Operational Risk**: System requires expert knowledge to operate
+- **Data Risk**: No transactional guarantees, partial processing common
+- **Scalability Risk**: Current architecture cannot handle 10,000+ documents
+
+## Goals and Non-Negotiable Requirements
+
+### Primary Objectives
+
+#### 1. Unified Architecture (Zero Fragmentation)
+- **Single Content Model**: One table, one ID system, one schema
+- **Rationale**: Eliminates coordination complexity, enables atomic operations
+- **Success Metric**: 100% of services use same content model
+
+#### 2. Configuration-Driven Design (Zero Hardcoding)
+- **Single Source of Truth**: All settings from validated configuration
+- **Rationale**: Prevents config-code drift, enables environment-specific deployments
+- **Success Metric**: Zero hardcoded values in service implementations
+
+#### 3. Atomic Pipeline Processing (Zero Partial States)
+- **All-or-Nothing Processing**: Complete success or complete rollback
+- **Rationale**: Ensures data consistency, simplifies error recovery
+- **Success Metric**: Zero documents in partial processing state
+
+#### 4. Fail-Fast Error Handling (Zero Silent Failures)
+- **Immediate Error Detection**: Fail within 100ms of error condition
+- **Rationale**: Prevents cascade failures, enables quick debugging
+- **Success Metric**: 100% of errors logged with full context
+
+#### 5. Production-Grade Reliability (Zero Manual Steps)
+- **Single Command Operation**: `make run` handles everything
+- **Rationale**: Reduces operator error, enables automation
+- **Success Metric**: Zero manual intervention in standard operations
+
+### Non-Functional Requirements - Production Standards
+
+#### Performance Requirements
+```yaml
+Document Processing:
+  Throughput: ≥100 documents/minute
+  Latency_p50: <500ms per document
+  Latency_p95: <2000ms per document
+  Latency_p99: <5000ms per document
+
+Search Performance:
+  Query_Latency_p50: <50ms
+  Query_Latency_p95: <200ms
+  Query_Latency_p99: <500ms
+  Concurrent_Queries: ≥50
+
+Embedding Generation:
+  Batch_Size: 32 documents
+  GPU_Utilization: >80% when available
+  CPU_Fallback: Automatic with warning
+
+Memory Management:
+  Max_Memory_Usage: <4GB for 1000 documents
+  Garbage_Collection: After each batch
+  Memory_Leak_Detection: Automatic profiling
+```
+
+#### Reliability Requirements
+```yaml
+Availability:
+  Uptime_Target: 99.9% (8.76 hours downtime/year)
+  Recovery_Time_Objective: <5 minutes
+  Recovery_Point_Objective: 0 data loss
+
+Error_Handling:
+  Retry_Strategy: Exponential backoff with jitter
+  Max_Retries: 3 with increasing delays
+  Circuit_Breaker: Open after 5 consecutive failures
+  Fallback_Mechanisms: Required for all external services
+
+Data_Integrity:
+  Transactional_Guarantees: ACID compliance
+  Deduplication: SHA-256 content hashing
+  Validation: Schema validation on all inputs
+  Audit_Trail: Complete processing history
+```
+
+#### Observability Requirements
+```yaml
+Logging:
+  Structure: JSON formatted with correlation IDs
+  Levels: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+  Retention: 30 days minimum
+  Searchability: Full-text search on all fields
+
+Monitoring:
+  Metrics: Prometheus-compatible
+  Dashboards: Grafana templates provided
+  Alerts: PagerDuty/Slack integration ready
+  SLI/SLO_Tracking: Automated reporting
+
+Tracing:
+  Implementation: OpenTelemetry spans
+  Coverage: 100% of service boundaries
+  Sampling: Adaptive based on error rate
+```
+
+## Technical Architecture - Production Design
+
+### System Architecture Principles
+
+#### 1. Hexagonal Architecture (Ports and Adapters)
+```python
+# Core domain is isolated from external concerns
+core/
+├── domain/          # Business logic, no external dependencies
+│   ├── models/      # Domain entities
+│   ├── services/    # Domain services
+│   └── ports/       # Interface definitions
+├── application/     # Use cases and orchestration
+└── infrastructure/  # External adapters
+    ├── persistence/ # Database implementations
+    ├── messaging/   # Queue implementations
+    └── external/    # Third-party integrations
+```
+
+#### 2. Domain-Driven Design
+```python
+# Bounded contexts with clear boundaries
+contexts/
+├── content/         # Content management context
+├── processing/      # Document processing context
+├── search/          # Search and retrieval context
+└── analytics/       # Analytics and reporting context
+```
+
+#### 3. SOLID Principles Enforcement
+```python
+# Single Responsibility
+class EmailIngestionService:
+    """Only responsible for fetching emails from Gmail"""
+    
+# Open/Closed
+class ContentProcessor(Protocol):
+    """Open for extension via new processors, closed for modification"""
+    
+# Liskov Substitution
+class PDFProcessor(ContentProcessor):
+    """Can substitute any ContentProcessor without breaking system"""
+    
+# Interface Segregation
+class Searchable(Protocol):
+    """Clients depend only on methods they use"""
+    
+# Dependency Inversion
+class SearchService:
+    def __init__(self, repo: ContentRepository):
+        """Depends on abstraction, not concrete implementation"""
+```
+
+### Detailed Component Design
+
+#### Content Model - The Universal Entity
+```python
+@dataclass(frozen=True)  # Immutable for thread safety
+class Content:
+    """Universal content representation across all services"""
+    
+    # Identity
+    id: UUID = field(default_factory=uuid4)
+    version: int = field(default=1)  # Optimistic locking
+    
+    # Classification
+    source_type: ContentType  # Enum: EMAIL, PDF, UPLOAD
+    source_id: str  # Original ID from source system
+    source_metadata: SourceMetadata  # Type-specific metadata
+    
+    # Content
+    title: str
+    body: str
+    summary: Optional[str] = None
+    language: str = "en"
+    
+    # Processing
+    content_hash: str  # SHA-256 for deduplication
+    processing_state: ProcessingState  # State machine
+    processing_history: List[ProcessingEvent] = field(default_factory=list)
+    
+    # Timestamps
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+    indexed_at: Optional[datetime] = None
+    
+    # Relationships
+    parent_id: Optional[UUID] = None  # For threaded content
+    related_ids: List[UUID] = field(default_factory=list)
+    
+    def __post_init__(self):
+        """Validate content on creation"""
+        if not self.title and not self.body:
+            raise ValueError("Content must have title or body")
+        if len(self.body) > 1_000_000:  # 1MB limit
+            raise ValueError("Content body exceeds maximum size")
+        if not self.content_hash:
+            object.__setattr__(self, 'content_hash', self._calculate_hash())
+    
+    def _calculate_hash(self) -> str:
+        """Generate deterministic content hash"""
+        canonical = f"{self.source_type.value}:{self.title}:{self.body}"
+        return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
+```
+
+#### Processing Pipeline - Atomic and Observable
+```python
+class AtomicProcessingPipeline:
+    """Ensures all-or-nothing processing with full observability"""
+    
+    def __init__(self, 
+                 config: PipelineConfig,
+                 processors: List[ContentProcessor],
+                 transaction_manager: TransactionManager,
+                 telemetry: TelemetryService):
+        self.config = config
+        self.processors = processors
+        self.transaction_manager = transaction_manager
+        self.telemetry = telemetry
+        
+    async def process(self, content: Content) -> ProcessingResult:
+        """Process content through all stages atomically"""
+        
+        # Start distributed tracing
+        with self.telemetry.start_span("pipeline.process") as span:
+            span.set_attribute("content.id", str(content.id))
+            span.set_attribute("content.type", content.source_type.value)
+            
+            # Begin transaction
+            async with self.transaction_manager.begin() as transaction:
+                try:
+                    # Update state to processing
+                    await self._update_state(content, ProcessingState.PROCESSING)
+                    
+                    # Execute each processor in sequence
+                    for processor in self.processors:
+                        processor_span = span.start_span(f"processor.{processor.name}")
+                        
+                        # Check preconditions
+                        if not await processor.can_process(content):
+                            raise ProcessorPreconditionError(
+                                f"{processor.name} preconditions not met"
+                            )
+                        
+                        # Process with timeout
+                        try:
+                            result = await asyncio.wait_for(
+                                processor.process(content),
+                                timeout=self.config.processor_timeout_seconds
+                            )
+                        except asyncio.TimeoutError:
+                            raise ProcessorTimeoutError(
+                                f"{processor.name} exceeded timeout"
+                            )
+                        
+                        # Validate result
+                        if not result.success:
+                            raise ProcessorExecutionError(
+                                f"{processor.name} failed: {result.error}"
+                            )
+                        
+                        # Record metrics
+                        processor_span.set_attribute("duration_ms", result.duration_ms)
+                        processor_span.set_attribute("success", result.success)
+                        processor_span.end()
+                        
+                    # Commit transaction
+                    await transaction.commit()
+                    
+                    # Update state to completed
+                    await self._update_state(content, ProcessingState.COMPLETED)
+                    
+                    return ProcessingResult(
+                        success=True,
+                        content_id=content.id,
+                        duration_ms=span.duration_ms
+                    )
+                    
+                except Exception as e:
+                    # Rollback transaction
+                    await transaction.rollback()
+                    
+                    # Update state to failed
+                    await self._update_state(content, ProcessingState.FAILED)
+                    
+                    # Record error
+                    span.record_exception(e)
+                    span.set_status(Status.ERROR)
+                    
+                    # Trigger alerts if critical
+                    if self._is_critical_error(e):
+                        await self._trigger_alert(content, e)
+                    
+                    return ProcessingResult(
+                        success=False,
+                        content_id=content.id,
+                        error=str(e),
+                        duration_ms=span.duration_ms
+                    )
+```
+
+#### Configuration System - Type-Safe and Validated
+```python
+class SystemConfiguration:
+    """Centralized, validated, type-safe configuration"""
+    
+    def __init__(self, config_path: Path):
+        self.config_path = config_path
+        self._config = self._load_and_validate()
+        self._watch_for_changes()
+    
+    def _load_and_validate(self) -> Dict[str, Any]:
+        """Load configuration with full validation"""
+        
+        # Load from file
+        with open(self.config_path) as f:
+            raw_config = yaml.safe_load(f)
+        
+        # Validate against schema
+        schema = ConfigSchema()
+        validated = schema.load(raw_config)
+        
+        # Verify external services
+        self._verify_database_connection(validated['database'])
+        self._verify_qdrant_connection(validated['vector'])
+        self._verify_gmail_credentials(validated['gmail'])
+        self._verify_model_availability(validated['embedding'])
+        
+        # Check for common misconfigurations
+        self._check_embedding_consistency(validated['embedding'])
+        self._check_batch_size_limits(validated)
+        self._check_timeout_values(validated)
+        
+        return validated
+    
+    def _verify_database_connection(self, db_config: Dict):
+        """Verify database is accessible and has correct schema"""
+        try:
+            conn = sqlite3.connect(db_config['path'])
+            
+            # Check schema version
+            version = conn.execute(
+                "SELECT version FROM schema_version"
+            ).fetchone()[0]
+            
+            if version != EXPECTED_SCHEMA_VERSION:
+                raise ConfigurationError(
+                    f"Database schema version {version} doesn't match "
+                    f"expected version {EXPECTED_SCHEMA_VERSION}"
+                )
+                
+            # Check required tables exist
+            tables = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+            
+            required_tables = {'content', 'embeddings', 'entities', 'processing_log'}
+            existing_tables = {t[0] for t in tables}
+            
+            missing = required_tables - existing_tables
+            if missing:
+                raise ConfigurationError(
+                    f"Required tables missing: {missing}"
+                )
+                
+        except Exception as e:
+            raise ConfigurationError(
+                f"Database verification failed: {e}"
+            )
+    
+    def _check_embedding_consistency(self, embedding_config: Dict):
+        """Ensure model and dimensions match"""
+        model_dimensions = {
+            "nlpaueb/legal-bert-base-uncased": 768,
+            "pile-of-law/legalbert-large-1.7M-2": 1024,
+            "sentence-transformers/all-MiniLM-L6-v2": 384,
+        }
+        
+        model = embedding_config['model_name']
+        configured_dim = embedding_config['dimension']
+        
+        if model in model_dimensions:
+            expected_dim = model_dimensions[model]
+            if configured_dim != expected_dim:
+                raise ConfigurationError(
+                    f"Model {model} requires {expected_dim} dimensions, "
+                    f"but config specifies {configured_dim}"
+                )
+```
+
+### Database Schema - Production Grade
+
+```sql
+-- Enable foreign key constraints and WAL mode for concurrency
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -64000;  -- 64MB cache
+PRAGMA temp_store = MEMORY;
+
+-- Schema version tracking
+CREATE TABLE schema_version (
+    version INTEGER PRIMARY KEY,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description TEXT NOT NULL
+);
+
+-- Main content table with comprehensive constraints
+CREATE TABLE content (
+    -- Identity
+    id TEXT PRIMARY KEY CHECK (length(id) = 36),  -- UUID format
+    version INTEGER NOT NULL DEFAULT 1,           -- Optimistic locking
+    
+    -- Classification
+    source_type TEXT NOT NULL CHECK (source_type IN ('email', 'pdf', 'upload')),
+    source_id TEXT NOT NULL,
+    
+    -- Content
+    title TEXT NOT NULL CHECK (length(title) <= 500),
+    body TEXT NOT NULL CHECK (length(body) <= 1000000),  -- 1MB limit
+    summary TEXT CHECK (length(summary) <= 1000),
+    language TEXT NOT NULL DEFAULT 'en',
+    
+    -- Processing
+    content_hash TEXT UNIQUE NOT NULL CHECK (length(content_hash) = 64),  -- SHA-256
+    processing_state TEXT NOT NULL DEFAULT 'pending' 
+        CHECK (processing_state IN ('pending', 'processing', 'completed', 'failed', 'retry')),
+    processing_attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    
+    -- Metadata
+    source_metadata TEXT NOT NULL CHECK (json_valid(source_metadata)),
+    extracted_metadata TEXT CHECK (json_valid(extracted_metadata) OR extracted_metadata IS NULL),
+    
+    -- Timestamps
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    indexed_at TIMESTAMP,
+    
+    -- Relationships
+    parent_id TEXT REFERENCES content(id) ON DELETE SET NULL,
+    
+    -- Constraints
+    UNIQUE(source_type, source_id),  -- Prevent duplicate imports
+    CHECK (created_at <= updated_at)
+);
+
+-- Indexes for query performance
+CREATE INDEX idx_content_source_type ON content(source_type);
+CREATE INDEX idx_content_processing_state ON content(processing_state);
+CREATE INDEX idx_content_created_at ON content(created_at DESC);
+CREATE INDEX idx_content_updated_at ON content(updated_at DESC);
+CREATE INDEX idx_content_parent_id ON content(parent_id) WHERE parent_id IS NOT NULL;
+CREATE INDEX idx_content_hash ON content(content_hash);
+
+-- Full-text search
+CREATE VIRTUAL TABLE content_fts USING fts5(
+    title, 
+    body, 
+    content=content, 
+    content_rowid=rowid,
+    tokenize='porter unicode61'
+);
+
+-- Triggers to maintain FTS
+CREATE TRIGGER content_fts_insert AFTER INSERT ON content
+BEGIN
+    INSERT INTO content_fts(rowid, title, body) 
+    VALUES (new.rowid, new.title, new.body);
+END;
+
+CREATE TRIGGER content_fts_update AFTER UPDATE ON content
+BEGIN
+    UPDATE content_fts 
+    SET title = new.title, body = new.body 
+    WHERE rowid = new.rowid;
+END;
+
+CREATE TRIGGER content_fts_delete AFTER DELETE ON content
+BEGIN
+    DELETE FROM content_fts WHERE rowid = old.rowid;
+END;
+
+-- Embeddings table with vector storage
+CREATE TABLE embeddings (
+    content_id TEXT PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
+    model_name TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    embedding_vector BLOB NOT NULL,  -- Stored as msgpack binary
+    dimension INTEGER NOT NULL CHECK (dimension > 0),
+    norm REAL NOT NULL CHECK (norm > 0),  -- L2 norm for validation
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Ensure vector dimension matches configuration
+    CHECK (
+        (model_name = 'pile-of-law/legalbert-large-1.7M-2' AND dimension = 1024) OR
+        (model_name = 'nlpaueb/legal-bert-base-uncased' AND dimension = 768) OR
+        dimension > 0  -- Allow other models with validation in application
+    )
+);
+
+-- Entity extraction results
+CREATE TABLE entities (
+    id TEXT PRIMARY KEY CHECK (length(id) = 36),
+    content_id TEXT NOT NULL REFERENCES content(id) ON DELETE CASCADE,
+    entity_type TEXT NOT NULL CHECK (
+        entity_type IN ('PERSON', 'ORG', 'GPE', 'DATE', 'MONEY', 'TIME', 
+                       'PERCENT', 'PRODUCT', 'EVENT', 'FAC', 'LOC', 'NORP',
+                       'WORK_OF_ART', 'LAW', 'LANGUAGE', 'QUANTITY', 'ORDINAL', 'CARDINAL')
+    ),
+    entity_value TEXT NOT NULL,
+    normalized_value TEXT,  -- Canonical form
+    confidence REAL NOT NULL CHECK (confidence BETWEEN 0 AND 1),
+    start_position INTEGER NOT NULL CHECK (start_position >= 0),
+    end_position INTEGER NOT NULL CHECK (end_position > start_position),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Prevent duplicate entities
+    UNIQUE(content_id, entity_type, entity_value, start_position)
+);
+
+CREATE INDEX idx_entities_content_id ON entities(content_id);
+CREATE INDEX idx_entities_type ON entities(entity_type);
+CREATE INDEX idx_entities_value ON entities(normalized_value);
+
+-- Processing audit log
+CREATE TABLE processing_log (
+    id TEXT PRIMARY KEY CHECK (length(id) = 36),
+    content_id TEXT NOT NULL REFERENCES content(id) ON DELETE CASCADE,
+    processor_name TEXT NOT NULL,
+    processor_version TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('started', 'completed', 'failed', 'timeout')),
+    duration_ms INTEGER CHECK (duration_ms >= 0),
+    result_data TEXT CHECK (json_valid(result_data) OR result_data IS NULL),
+    error_message TEXT,
+    error_stack TEXT,
+    correlation_id TEXT,  -- For distributed tracing
+    started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+    
+    CHECK (
+        (status = 'completed' AND completed_at IS NOT NULL) OR
+        (status != 'completed')
+    )
+);
+
+CREATE INDEX idx_processing_log_content_id ON processing_log(content_id);
+CREATE INDEX idx_processing_log_status ON processing_log(status);
+CREATE INDEX idx_processing_log_correlation_id ON processing_log(correlation_id);
+
+-- Vector sync tracking
+CREATE TABLE vector_sync (
+    content_id TEXT PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
+    collection_name TEXT NOT NULL,
+    vector_id TEXT NOT NULL,  -- ID in vector database
+    sync_status TEXT NOT NULL CHECK (sync_status IN ('pending', 'synced', 'failed')),
+    last_sync_attempt TIMESTAMP,
+    sync_error TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(collection_name, vector_id)
+);
+
+-- Configuration audit
+CREATE TABLE configuration_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    config_key TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT NOT NULL,
+    changed_by TEXT NOT NULL,
+    change_reason TEXT,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Update timestamp trigger
+CREATE TRIGGER update_content_timestamp 
+AFTER UPDATE ON content
+FOR EACH ROW
+BEGIN
+    UPDATE content SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
+-- Prevent invalid state transitions
+CREATE TRIGGER check_processing_state_transition
+BEFORE UPDATE OF processing_state ON content
+FOR EACH ROW
+WHEN NEW.processing_state != OLD.processing_state
+BEGIN
+    SELECT CASE
+        -- Valid transitions
+        WHEN OLD.processing_state = 'pending' 
+            AND NEW.processing_state IN ('processing', 'failed') THEN NULL
+        WHEN OLD.processing_state = 'processing' 
+            AND NEW.processing_state IN ('completed', 'failed', 'retry') THEN NULL
+        WHEN OLD.processing_state = 'failed' 
+            AND NEW.processing_state IN ('retry', 'pending') THEN NULL
+        WHEN OLD.processing_state = 'retry' 
+            AND NEW.processing_state IN ('processing', 'failed') THEN NULL
+        -- Invalid transition
+        ELSE RAISE(ABORT, 'Invalid processing state transition')
+    END;
+END;
+```
+
+### Service Implementation Patterns
+
+#### Dependency Injection Container
+```python
+class ServiceContainer:
+    """Production-grade dependency injection container"""
+    
+    def __init__(self, config: SystemConfiguration):
+        self.config = config
+        self._services = {}
+        self._singletons = {}
+        
+    @cached_property
+    def database(self) -> Database:
+        """Database connection with connection pooling"""
+        return Database(
+            path=self.config.database.path,
+            pool_size=self.config.database.pool_size,
+            timeout=self.config.database.timeout
+        )
+    
+    @cached_property
+    def content_repository(self) -> ContentRepository:
+        """Content repository with caching layer"""
+        return CachedContentRepository(
+            repository=SQLiteContentRepository(self.database),
+            cache=RedisCache(self.config.cache),
+            ttl_seconds=self.config.cache.ttl_seconds
+        )
+    
+    @cached_property
+    def embedding_service(self) -> EmbeddingService:
+        """Embedding service with model warmup"""
+        service = LegalBertEmbeddingService(
+            model_name=self.config.embedding.model_name,
+            dimension=self.config.embedding.dimension,
+            device=self.config.embedding.device,
+            batch_size=self.config.embedding.batch_size
+        )
+        service.warmup()  # Pre-load model
+        return service
+    
+    @cached_property
+    def processing_pipeline(self) -> ProcessingPipeline:
+        """Configured processing pipeline"""
+        return AtomicProcessingPipeline(
+            config=self.config.pipeline,
+            processors=[
+                ContentNormalizer(self.config.normalization),
+                self.embedding_service,
+                EntityExtractor(self.config.entity),
+                VectorStorer(self.config.vector)
+            ],
+            transaction_manager=self.transaction_manager,
+            telemetry=self.telemetry_service
+        )
+    
+    def get_service(self, service_type: Type[T]) -> T:
+        """Get service instance with automatic wiring"""
+        if service_type not in self._services:
+            self._services[service_type] = self._create_service(service_type)
+        return self._services[service_type]
+```
+
+#### Circuit Breaker Pattern
+```python
+class CircuitBreaker:
+    """Prevents cascade failures in distributed systems"""
+    
+    def __init__(self,
+                 failure_threshold: int = 5,
+                 recovery_timeout: float = 60.0,
+                 expected_exception: Type[Exception] = Exception):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.expected_exception = expected_exception
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.state = CircuitState.CLOSED
+        
+    async def call(self, func: Callable, *args, **kwargs):
+        """Execute function with circuit breaker protection"""
+        
+        if self.state == CircuitState.OPEN:
+            if self._should_attempt_reset():
+                self.state = CircuitState.HALF_OPEN
+            else:
+                raise CircuitOpenError("Circuit breaker is OPEN")
+        
+        try:
+            result = await func(*args, **kwargs)
+            self._on_success()
+            return result
+            
+        except self.expected_exception as e:
+            self._on_failure()
+            raise
+            
+    def _on_success(self):
+        """Reset failure count on success"""
+        self.failure_count = 0
+        self.state = CircuitState.CLOSED
+        
+    def _on_failure(self):
+        """Increment failure count and open circuit if threshold reached"""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN
+            logger.warning(
+                f"Circuit breaker opened after {self.failure_count} failures"
+            )
+    
+    def _should_attempt_reset(self) -> bool:
+        """Check if enough time has passed to attempt reset"""
+        return (
+            self.last_failure_time and
+            time.time() - self.last_failure_time >= self.recovery_timeout
+        )
+```
+
+#### Retry with Exponential Backoff
+```python
+class RetryStrategy:
+    """Production-grade retry with exponential backoff and jitter"""
+    
+    def __init__(self,
+                 max_retries: int = 3,
+                 base_delay: float = 1.0,
+                 max_delay: float = 60.0,
+                 exponential_base: float = 2.0,
+                 jitter: bool = True):
+        self.max_retries = max_retries
+        self.base_delay = base_delay
+        self.max_delay = max_delay
+        self.exponential_base = exponential_base
+        self.jitter = jitter
+        
+    async def execute(self, 
+                     func: Callable,
+                     *args,
+                     retriable_exceptions: Tuple[Type[Exception]] = (Exception,),
+                     **kwargs):
+        """Execute function with retry logic"""
+        
+        last_exception = None
+        
+        for attempt in range(self.max_retries + 1):
+            try:
+                return await func(*args, **kwargs)
+                
+            except retriable_exceptions as e:
+                last_exception = e
+                
+                if attempt == self.max_retries:
+                    logger.error(
+                        f"Max retries ({self.max_retries}) exceeded for {func.__name__}"
+                    )
+                    raise
+                
+                delay = self._calculate_delay(attempt)
+                logger.warning(
+                    f"Attempt {attempt + 1} failed for {func.__name__}, "
+                    f"retrying in {delay:.2f}s: {e}"
+                )
+                
+                await asyncio.sleep(delay)
+                
+        raise last_exception
+    
+    def _calculate_delay(self, attempt: int) -> float:
+        """Calculate delay with exponential backoff and optional jitter"""
+        delay = min(
+            self.base_delay * (self.exponential_base ** attempt),
+            self.max_delay
+        )
+        
+        if self.jitter:
+            # Add random jitter (±25% of delay)
+            jitter_range = delay * 0.25
+            delay += random.uniform(-jitter_range, jitter_range)
+            
+        return max(0, delay)
+```
+
+## Implementation Roadmap - Production Deployment
+
+### Phase 0: Pre-Development (Week 0)
+
+#### Environment Setup
+```bash
+# Development environment
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements-dev.txt
+
+# Pre-commit hooks
+pre-commit install
+pre-commit run --all-files
+
+# Database setup
+sqlite3 data/emails.db < schema/001_initial.sql
+sqlite3 data/emails.db < schema/002_indexes.sql
+sqlite3 data/emails.db < schema/003_triggers.sql
+
+# Verify external services
+python scripts/verify_environment.py
+```
+
+#### Development Standards
+```yaml
+Code_Quality:
+  Linting: flake8, black, isort
+  Type_Checking: mypy --strict
+  Security: bandit, safety
+  Complexity: radon cc -nc 10
+  Coverage: pytest-cov >=90%
+
+Documentation:
+  Docstrings: Google style
+  Type_Hints: Required for all public APIs
+  README: Per module with examples
+  Changelog: Semantic versioning
+
+Git_Workflow:
+  Branches: feature/*, bugfix/*, hotfix/*
+  Commits: Conventional commits
+  PR_Size: <400 lines changed
+  Reviews: Required before merge
+```
+
+### Phase 1: Foundation (Week 1)
+
+#### Day 1-2: Core Domain Models
+```python
+# Implement and test
+- Content entity with validation
+- ProcessingState state machine
+- ContentType enumeration
+- Metadata value objects
+- Domain events
+
+# Deliverables
+- 100% test coverage on domain models
+- Property-based tests with Hypothesis
+- Performance benchmarks
+```
+
+#### Day 3-4: Repository Pattern
+```python
+# Implement and test
+- ContentRepository interface
+- SQLiteContentRepository implementation
+- In-memory repository for testing
+- Repository decorators (caching, metrics)
+
+# Deliverables
+- Integration tests with real database
+- Transaction support verification
+- Concurrent access testing
+```
+
+#### Day 5: Configuration System
+```python
+# Implement and test
+- Configuration schema with Pydantic
+- Environment variable overrides
+- Configuration validation
+- Hot reload capability
+
+# Deliverables
+- Configuration validation suite
+- Example configurations for dev/staging/prod
+```
+
+### Phase 2: Processing Pipeline (Week 2)
+
+#### Day 1-2: Pipeline Framework
+```python
+# Implement
+- ProcessingPipeline abstract base
+- AtomicProcessingPipeline implementation
+- ProcessorChain with preconditions
+- Pipeline telemetry
+
+# Testing
+- Failure scenario testing
+- Rollback verification
+- Performance under load
+```
+
+#### Day 3-4: Content Processors
+```python
+# Implement processors
+- ContentNormalizer (text cleaning, deduplication)
+- EmbeddingGenerator (Legal BERT integration)
+- EntityExtractor (SpaCy NER)
+- VectorStorer (Qdrant sync)
+
+# Testing
+- Unit tests for each processor
+- Integration tests for pipeline
+- Memory leak detection
+```
+
+#### Day 5: Error Handling
+```python
+# Implement
+- Custom exception hierarchy
+- Error recovery strategies
+- Dead letter queue
+- Alert triggering
+
+# Testing
+- Chaos engineering tests
+- Circuit breaker testing
+- Retry mechanism validation
+```
+
+### Phase 3: Ingestion Services (Week 3)
+
+#### Day 1-2: Gmail Integration
+```python
+# Implement
+- Gmail API client with OAuth2
+- Incremental sync with history API
+- Batch processing with pagination
+- Rate limiting and backoff
+
+# Testing
+- Mock Gmail API responses
+- Rate limit handling
+- Large mailbox simulation
+```
+
+#### Day 3-4: PDF Processing
+```python
+# Implement
+- PDF text extraction (PyPDF2)
+- OCR for scanned documents (Tesseract)
+- Document chunking with overlap
+- Metadata extraction
+
+# Testing
+- Various PDF formats
+- Large document handling
+- OCR accuracy validation
+```
+
+#### Day 5: Upload Service
+```python
+# Implement
+- File upload handling
+- Format validation
+- Virus scanning integration
+- Temporary storage management
+
+# Testing
+- File size limits
+- Malformed file handling
+- Concurrent uploads
+```
+
+### Phase 4: Search and Query (Week 4)
+
+#### Day 1-2: Search Service
+```python
+# Implement
+- Unified search interface
+- Query parsing and validation
+- Result ranking algorithm
+- Search metrics collection
+
+# Testing
+- Relevance testing
+- Performance benchmarks
+- Edge case queries
+```
+
+#### Day 3-4: Vector Search
+```python
+# Implement
+- Qdrant client wrapper
+- Similarity search
+- Hybrid search (keyword + vector)
+- Collection management
+
+# Testing
+- Similarity accuracy
+- Performance at scale
+- Failover to keyword search
+```
+
+#### Day 5: API Layer
+```python
+# Implement
+- REST API with FastAPI
+- GraphQL endpoint
+- WebSocket for real-time updates
+- API rate limiting
+
+# Testing
+- API contract testing
+- Load testing with Locust
+- Security testing
+```
+
+### Phase 5: Production Readiness (Week 5)
+
+#### Day 1-2: Monitoring and Observability
+```python
+# Implement
+- Prometheus metrics
+- Grafana dashboards
+- Log aggregation
+- Distributed tracing
+
+# Deliverables
+- Dashboard templates
+- Alert rules
+- Runbook documentation
+```
+
+#### Day 3-4: Performance Optimization
+```python
+# Optimize
+- Database query optimization
+- Caching strategy
+- Connection pooling
+- Batch processing tuning
+
+# Validation
+- Load testing (1000+ documents)
+- Memory profiling
+- CPU profiling
+```
+
+#### Day 5: Security Hardening
+```python
+# Implement
+- Input validation
+- SQL injection prevention
+- API authentication
+- Secrets management
+
+# Testing
+- Security scanning
+- Penetration testing
+- Dependency scanning
+```
+
+### Phase 6: Deployment (Week 6)
+
+#### Day 1-2: Containerization
+```dockerfile
+# Multi-stage Dockerfile
+FROM python:3.11-slim as builder
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+# Copy from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+```
+
+#### Day 3-4: Orchestration
+```yaml
+# docker-compose.yml for local development
+version: '3.8'
+services:
+  app:
+    build: .
+    depends_on:
+      - qdrant
+      - redis
+    environment:
+      - CONFIG_PATH=/app/config/production.yaml
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8000:8000"
+      
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant_data:/qdrant/storage
+      
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+```
+
+#### Day 5: Production Deployment
+```bash
+# Deployment checklist
+- [ ] Database migrations applied
+- [ ] Secrets configured
+- [ ] Monitoring enabled
+- [ ] Backups configured
+- [ ] SSL certificates
+- [ ] Load balancer configured
+- [ ] Auto-scaling policies
+- [ ] Disaster recovery plan
+```
+
+## Testing Strategy - Comprehensive Coverage
+
+### Unit Testing
+```python
+# Example: Content entity testing
+class TestContent:
+    def test_content_creation_with_valid_data(self):
+        content = Content(
+            source_type=ContentType.EMAIL,
+            source_id="msg_123",
+            title="Test Email",
+            body="Email body"
+        )
+        assert content.id is not None
+        assert content.content_hash == hashlib.sha256(
+            "email:Test Email:Email body".encode()
+        ).hexdigest()
+    
+    def test_content_validation_rejects_empty(self):
+        with pytest.raises(ValueError, match="must have title or body"):
+            Content(
+                source_type=ContentType.EMAIL,
+                source_id="msg_123",
+                title="",
+                body=""
+            )
+    
+    @given(
+        title=st.text(min_size=1, max_size=500),
+        body=st.text(min_size=1, max_size=1000000)
+    )
+    def test_content_property_based(self, title, body):
+        content = Content(
+            source_type=ContentType.EMAIL,
+            source_id="test",
+            title=title,
+            body=body
+        )
+        assert len(content.title) <= 500
+        assert len(content.body) <= 1000000
+```
+
+### Integration Testing
+```python
+# Example: Pipeline integration test
+class TestProcessingPipeline:
+    @pytest.fixture
+    async def pipeline(self, test_config):
+        container = ServiceContainer(test_config)
+        return container.processing_pipeline
+    
+    async def test_pipeline_processes_content_atomically(self, pipeline):
+        content = create_test_content()
+        
+        result = await pipeline.process(content)
+        
+        assert result.success
+        assert result.duration_ms < 5000
+        
+        # Verify all processors ran
+        repo = pipeline.content_repository
+        processed = await repo.get(content.id)
+        assert processed.processing_state == ProcessingState.COMPLETED
+        
+        # Verify embeddings generated
+        embeddings = await repo.get_embeddings(content.id)
+        assert embeddings is not None
+        assert len(embeddings.vector) == 1024
+        
+        # Verify entities extracted
+        entities = await repo.get_entities(content.id)
+        assert len(entities) > 0
+    
+    async def test_pipeline_rollback_on_failure(self, pipeline, monkeypatch):
+        content = create_test_content()
+        
+        # Force processor to fail
+        async def failing_process(content):
+            raise ProcessingError("Simulated failure")
+        
+        monkeypatch.setattr(
+            pipeline.processors[2], 'process', failing_process
+        )
+        
+        result = await pipeline.process(content)
+        
+        assert not result.success
+        assert "Simulated failure" in result.error
+        
+        # Verify rollback
+        repo = pipeline.content_repository
+        processed = await repo.get(content.id)
+        assert processed.processing_state == ProcessingState.FAILED
+        
+        # Verify partial results not saved
+        embeddings = await repo.get_embeddings(content.id)
+        assert embeddings is None
+```
+
+### Performance Testing
+```python
+# Example: Load testing with pytest-benchmark
+class TestPerformance:
+    def test_embedding_generation_performance(self, benchmark):
+        service = LegalBertEmbeddingService()
+        text = "Sample legal text" * 100  # ~1600 chars
+        
+        result = benchmark(service.generate_embedding, text)
+        
+        assert benchmark.stats['mean'] < 0.5  # <500ms average
+        assert benchmark.stats['max'] < 1.0   # <1s worst case
+    
+    @pytest.mark.slow
+    def test_batch_processing_throughput(self):
+        pipeline = create_test_pipeline()
+        contents = [create_test_content() for _ in range(100)]
+        
+        start = time.time()
+        results = asyncio.run(pipeline.batch_process(contents))
+        duration = time.time() - start
+        
+        throughput = len(contents) / duration
+        assert throughput > 1.0  # >1 document/second
+        
+        success_rate = sum(1 for r in results if r.success) / len(results)
+        assert success_rate > 0.95  # >95% success rate
+```
+
+### Contract Testing
+```python
+# Example: API contract testing with Pact
+class TestAPIContract:
+    def test_search_endpoint_contract(self, pact):
+        expected = {
+            "query": "legal document",
+            "limit": 10
+        }
+        
+        pact.given("Content exists in system") \
+            .upon_receiving("A search request") \
+            .with_request("POST", "/api/search", body=expected) \
+            .will_respond_with(200, body={
+                "results": [
+                    {
+                        "id": Like("uuid"),
+                        "title": Like("string"),
+                        "score": Like(0.95),
+                        "snippet": Like("string")
+                    }
+                ],
+                "total": Like(42),
+                "duration_ms": Like(50)
+            })
+        
+        with pact:
+            result = search_client.search("legal document", limit=10)
+            assert len(result['results']) > 0
+```
+
+## Production Operations
+
+### Health Checks
+```python
+# Health check endpoint implementation
+@app.get("/health")
+async def health_check() -> HealthCheckResponse:
+    checks = []
+    
+    # Database check
+    try:
+        await db.execute("SELECT 1")
+        checks.append(HealthCheck(
+            name="database",
+            status="healthy",
+            message="Database connection OK"
+        ))
+    except Exception as e:
+        checks.append(HealthCheck(
+            name="database",
+            status="unhealthy",
+            message=str(e)
+        ))
+    
+    # Qdrant check
+    try:
+        await qdrant_client.get_collection("email_sync")
+        checks.append(HealthCheck(
+            name="qdrant",
+            status="healthy",
+            message="Vector store OK"
+        ))
+    except Exception as e:
+        checks.append(HealthCheck(
+            name="qdrant",
+            status="degraded",
+            message=str(e)
+        ))
+    
+    # Model check
+    try:
+        embedding_service.health_check()
+        checks.append(HealthCheck(
+            name="embedding_model",
+            status="healthy",
+            message="Model loaded"
+        ))
+    except Exception as e:
+        checks.append(HealthCheck(
+            name="embedding_model",
+            status="unhealthy",
+            message=str(e)
+        ))
+    
+    overall_status = "healthy"
+    if any(c.status == "unhealthy" for c in checks):
+        overall_status = "unhealthy"
+    elif any(c.status == "degraded" for c in checks):
+        overall_status = "degraded"
+    
+    return HealthCheckResponse(
+        status=overall_status,
+        checks=checks,
+        timestamp=datetime.utcnow()
+    )
+```
+
+### Monitoring Dashboards
+```yaml
+# Grafana dashboard configuration
+dashboard:
+  title: "Email Sync System"
+  panels:
+    - title: "Document Processing Rate"
+      query: "rate(documents_processed_total[5m])"
+      
+    - title: "Processing Latency"
+      query: "histogram_quantile(0.95, processing_duration_seconds_bucket)"
+      
+    - title: "Error Rate"
+      query: "rate(processing_errors_total[5m])"
+      
+    - title: "Embedding Generation Time"
+      query: "histogram_quantile(0.95, embedding_generation_seconds_bucket)"
+      
+    - title: "Search Latency"
+      query: "histogram_quantile(0.95, search_duration_seconds_bucket)"
+      
+    - title: "System Resources"
+      queries:
+        - "process_resident_memory_bytes"
+        - "rate(process_cpu_seconds_total[5m])"
+        - "python_gc_collections_total"
+```
+
+### Alerting Rules
+```yaml
+# Prometheus alerting rules
+groups:
+  - name: email_sync_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: rate(processing_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second"
+      
+      - alert: SlowProcessing
+        expr: histogram_quantile(0.95, processing_duration_seconds_bucket) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow document processing"
+          description: "95th percentile processing time is {{ $value }} seconds"
+      
+      - alert: VectorStoreDown
+        expr: up{job="qdrant"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vector store is down"
+          description: "Qdrant is not responding"
+      
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining"
+```
+
+### Backup and Recovery
+```bash
+#!/bin/bash
+# backup.sh - Production backup script
+
+set -euo pipefail
+
+BACKUP_DIR="/backups/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+# Backup database
+echo "Backing up database..."
+sqlite3 data/emails.db ".backup '$BACKUP_DIR/emails.db'"
+
+# Backup vector store
+echo "Backing up vector store..."
+curl -X POST "http://localhost:6333/collections/email_sync/snapshots" \
+     -H "Content-Type: application/json" \
+     -d "{\"location\": \"$BACKUP_DIR/qdrant_snapshot\"}"
+
+# Backup configuration
+echo "Backing up configuration..."
+cp -r config "$BACKUP_DIR/config"
+
+# Create manifest
+cat > "$BACKUP_DIR/manifest.json" <<EOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "version": "$(git describe --tags --always)",
+  "database_size": $(stat -f%z data/emails.db),
+  "document_count": $(sqlite3 data/emails.db "SELECT COUNT(*) FROM content"),
+  "checksum": "$(sha256sum data/emails.db | cut -d' ' -f1)"
+}
+EOF
+
+# Compress backup
+tar -czf "$BACKUP_DIR.tar.gz" -C "$(dirname $BACKUP_DIR)" "$(basename $BACKUP_DIR)"
+rm -rf "$BACKUP_DIR"
+
+echo "Backup completed: $BACKUP_DIR.tar.gz"
+
+# Upload to S3 (optional)
+aws s3 cp "$BACKUP_DIR.tar.gz" "s3://backups/email-sync/$BACKUP_DIR.tar.gz"
+
+# Cleanup old backups (keep 30 days)
+find /backups -name "*.tar.gz" -mtime +30 -delete
+```
+
+## Success Criteria and Acceptance
+
+### Functional Acceptance
+- [ ] Single command (`make run`) processes 500+ documents
+- [ ] All ingested content has embeddings within 5 minutes
+- [ ] Search returns relevant results with <500ms latency
+- [ ] System recovers from service failures automatically
+- [ ] Zero manual intervention required for standard operations
+
+### Non-Functional Acceptance
+- [ ] 100 documents processed in <5 minutes
+- [ ] 95th percentile search latency <200ms
+- [ ] Memory usage <4GB for 1000 documents
+- [ ] Automatic retry with exponential backoff working
+- [ ] Circuit breakers preventing cascade failures
+
+### Operational Acceptance
+- [ ] Health checks reporting accurate status
+- [ ] Monitoring dashboards showing key metrics
+- [ ] Alerts firing for critical conditions
+- [ ] Backup/restore procedures tested
+- [ ] Documentation complete and accurate
+
+### Quality Gates
+- [ ] Test coverage >90%
+- [ ] No critical security vulnerabilities
+- [ ] Cyclomatic complexity <10 for all functions
+- [ ] All linting checks passing
+- [ ] Performance benchmarks met
+
+## Risk Mitigation Strategies
+
+### Technical Risk Mitigation
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|------------|--------|-------------------|
+| Embedding model incompatibility | Medium | High | Validate model output dimensions at startup, fallback models configured |
+| Database corruption | Low | Critical | WAL mode, regular backups, transaction logs |
+| Memory exhaustion with large batches | Medium | High | Streaming processing, batch size limits, memory monitoring |
+| Qdrant unavailability | Medium | High | Fallback to keyword search, retry logic, circuit breaker |
+| Gmail API rate limiting | High | Medium | Exponential backoff, rate limit tracking, batch optimization |
+
+### Operational Risk Mitigation
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|------------|--------|-------------------|
+| Configuration drift | Medium | High | Configuration validation at startup, audit logging |
+| Silent failures | Low | High | Comprehensive logging, monitoring, alerting |
+| Data loss during processing | Low | Critical | Atomic transactions, backup before processing |
+| Performance degradation | Medium | Medium | Performance monitoring, auto-scaling, caching |
+
+## Conclusion
+
+This detailed PRD provides a comprehensive blueprint for rebuilding the Email Sync System with production-grade architecture. The design addresses all identified architectural issues while maintaining single responsibility, fail-fast behavior, and zero manual intervention.
+
+The implementation will result in a robust, maintainable system capable of processing thousands of documents with high reliability and performance. Every design decision is backed by specific rationale, and all critical failure points have been addressed with appropriate mitigation strategies.
+
+---
+
+Document Version: 1.0
+Last Updated: 2025-08-21
+Prepared for: Task Master PRD Parsing
+Total Scope: 7-week implementation, production-ready system

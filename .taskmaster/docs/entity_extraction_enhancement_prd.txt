@@ -1,0 +1,280 @@
+# Product Requirements Document: Entity Extraction Search Enhancement
+
+## Executive Summary
+
+The Email Sync system has a fully functional entity extraction service (2,661 lines of code) that has successfully extracted 23,287 entity mappings from 1,163 documents. However, this valuable data is completely unused - the search system ignores entities entirely, missing a 30% opportunity for search improvement and advanced filtering capabilities. This PRD outlines a three-phase plan to fix quality issues and integrate entity extraction into the search pipeline.
+
+## Problem Statement
+
+### Current State Analysis
+- **Infrastructure Built**: Complete entity extraction system with 6 specialized extractors
+- **Data Collected**: 23,287 entity mappings across 1,163 documents
+- **Zero Value Delivered**: Search system doesn't use entity data at all
+- **Quality Issues**: 95% of CASE_NUMBER extractions are garbage (sentence fragments)
+- **Missed Opportunity**: 33% more documents could be found with entity-aware search
+
+### Technical Debt
+- Entity service initialized but never called during search operations
+- Poor extraction patterns capturing sentence fragments as case numbers
+- No quality validation or confidence scoring
+- No entity-based filtering or faceting capabilities
+
+## Solution Architecture
+
+### Core Principle
+Fix the quality issues first, then integrate entities as a third source in the existing RRF (Reciprocal Rank Fusion) search pipeline alongside keyword and semantic search.
+
+## Implementation Plan
+
+### Phase 1: Fix Entity Extraction Quality
+
+#### Task 1.1: Fix CASE_NUMBER Extraction Patterns
+**Description**: Update regex patterns in legal_extractor.py to prevent capturing sentence fragments
+**Technical Requirements**:
+- Modify patterns to require minimum 5 characters, maximum 20 characters
+- Must contain at least one digit
+- Exclude patterns with sentence punctuation or common words
+- Add validation to filter out fragments like "addressed herein" or "you need"
+**File**: entity/extractors/legal_extractor.py
+**Testing**: Validate against known good case numbers (TM01102424, CO0431633)
+
+#### Task 1.2: Create Entity Quality Filter
+**Description**: Build post-processing filter to validate extracted entities
+**Technical Requirements**:
+- Create QualityFilter class with type-specific validation rules
+- Calculate confidence scores (0-1) for each entity
+- Filter entities below confidence threshold (0.7)
+- Handle each entity type with specific validation logic
+**File**: entity/processors/quality_filter.py (new)
+**Testing**: Unit tests for each entity type validation
+
+#### Task 1.3: Clean Existing Bad Entity Data
+**Description**: Remove 500+ garbage CASE_NUMBER entries from database
+**Technical Requirements**:
+- Create backup of entity_content_mapping table
+- Delete entries matching known bad patterns
+- Deduplicate remaining entities
+- Update confidence scores for existing entities
+**Script**: scripts/clean_entity_data.py (new)
+**Testing**: Verify reduction in garbage entries, maintain valid entries
+
+### Phase 2: Integrate Entities into Search Pipeline
+
+#### Task 2.1: Create Entity Search Layer
+**Description**: Add entity-based search as third source in search pipeline
+**Technical Requirements**:
+- Check if query matches any entity values
+- Expand query with entity variations (Jennifer -> Jennifer Burbank)
+- Return documents containing matched entities
+- Score based on entity match quality
+**File**: search_intelligence/entity_search.py (new)
+**Testing**: Verify entity matches return relevant documents
+
+#### Task 2.2: Modify RRF Pipeline for Three Sources
+**Description**: Update search to merge keyword, semantic, and entity results
+**Technical Requirements**:
+- Add entity_search call alongside keyword and semantic
+- Modify _merge_results_rrf to handle three sources
+- Adjust weights: keyword (0.3), semantic (0.4), entity (0.3)
+- Apply entity boost factor (+2x for exact matches)
+**File**: search_intelligence/basic_search.py
+**Testing**: Verify improved recall for person/org queries
+
+#### Task 2.3: Add Entity Facets to Search Results
+**Description**: Enrich search results with extracted entities
+**Technical Requirements**:
+- Query entity_content_mapping for each result
+- Add entities field with top 5 persons, orgs, dates
+- Group entities by type and frequency
+- Include confidence scores in facets
+**File**: search_intelligence/basic_search.py (_enrich_vector_results)
+**Testing**: Verify all results include entity facets
+
+### Phase 3: Enable Advanced Entity Features
+
+#### Task 3.1: Build Entity Query Parser
+**Description**: Parse entity filters from search queries
+**Technical Requirements**:
+- Parse patterns: person:"name", org:company, date:2024
+- Extract filters and clean base query
+- Support quoted values and operators (>, <, range)
+- Handle multiple filters in single query
+**File**: search_intelligence/query_parser.py (new)
+**Testing**: Unit tests for various filter patterns
+
+#### Task 3.2: Apply Entity Filters to Search
+**Description**: Filter search results based on entity criteria
+**Technical Requirements**:
+- Join content_unified with entity_content_mapping
+- Apply entity type and value filters in SQL
+- Maintain performance with proper indexes
+- Support AND/OR logic for multiple filters
+**File**: search_intelligence/basic_search.py (_keyword_search)
+**Testing**: Verify filtered results match criteria
+
+#### Task 3.3: Add Entity Management CLI Commands
+**Description**: Create CLI commands for entity operations
+**Technical Requirements**:
+- entity-status: Show extraction statistics and quality metrics
+- search-entities: Enhanced entity search with wildcards
+- entity-report: Export entity analytics
+- entity-clean: Manual cleanup command
+**File**: tools/scripts/cli/entity_handler.py
+**Testing**: Verify CLI commands function correctly
+
+### Phase 4: Performance Optimization
+
+#### Task 4.1: Create Entity Database Indexes
+**Description**: Add indexes for entity search performance
+**Technical Requirements**:
+- Index on (entity_value, entity_type) for lookups
+- Index on (content_id, entity_type) for faceting
+- Index on confidence for quality filtering
+- Analyze query plans and optimize
+**File**: SQL migration script
+**Testing**: Verify <50ms query times
+
+#### Task 4.2: Implement Entity Caching
+**Description**: Cache frequently accessed entities
+**Technical Requirements**:
+- LRU cache for top 1000 entity lookups
+- Cache entity-to-document mappings
+- TTL of 1 hour for cache entries
+- Cache invalidation on new extractions
+**File**: search_intelligence/entity_cache.py (new)
+**Testing**: Verify cache hit rates >80%
+
+### Phase 5: Monitoring and Analytics
+
+#### Task 5.1: Add Entity Extraction Metrics
+**Description**: Track entity extraction quality and coverage
+**Technical Requirements**:
+- Log extraction rates and error counts
+- Track confidence score distribution
+- Monitor entity type coverage
+- Alert on quality degradation
+**File**: entity/metrics.py (new)
+**Testing**: Verify metrics collection and alerting
+
+#### Task 5.2: Create Entity Analytics Dashboard
+**Description**: Build dashboard for entity system monitoring
+**Technical Requirements**:
+- Show entity extraction trends
+- Display quality metrics by type
+- Track search improvements from entities
+- Export reports for analysis
+**File**: tools/scripts/entity_dashboard.py (new)
+**Testing**: Verify dashboard displays accurate data
+
+## Success Metrics
+
+### Quality Metrics
+- Entity accuracy: >95% valid entities (from 90%)
+- CASE_NUMBER quality: >90% valid (from 5%)
+- Deduplication: <20% duplicates (from 80%)
+
+### Search Performance
+- Recall improvement: +30% for person/org queries
+- Query latency: <300ms p95
+- Entity facets: 100% of results
+
+### User Value
+- Filter usage: >20% of searches use entity filters
+- Click-through rate: +15% with entity results
+
+## Timeline
+
+### Week 1: Quality and Foundation
+- Tasks 1.1-1.3: Fix extraction quality (8 hours)
+- Tasks 4.1-4.2: Performance optimization (6 hours)
+
+### Week 2: Core Integration  
+- Tasks 2.1-2.3: Search integration (12 hours)
+- Testing and validation (4 hours)
+
+### Week 3: Advanced Features
+- Tasks 3.1-3.3: Filtering and CLI (10 hours)
+- Tasks 5.1-5.2: Monitoring (6 hours)
+
+## Technical Specifications
+
+### Database Schema
+```sql
+-- Existing table (no changes needed)
+CREATE TABLE entity_content_mapping (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id TEXT,
+    entity_value TEXT,
+    entity_type TEXT,
+    content_id TEXT,
+    message_id TEXT,
+    confidence REAL DEFAULT 1.0,
+    metadata TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- New indexes for performance
+CREATE INDEX idx_entity_value_type ON entity_content_mapping(entity_value, entity_type);
+CREATE INDEX idx_content_entity ON entity_content_mapping(content_id, entity_type);
+CREATE INDEX idx_confidence ON entity_content_mapping(confidence);
+```
+
+### API Changes
+All changes are backward compatible. Existing search API continues to work with enhanced results.
+
+## Risk Mitigation
+
+### Technical Risks
+1. **Performance degradation**: Feature flag to disable entity search
+2. **Data quality issues**: Gradual rollout with monitoring
+3. **Search relevance impact**: Adjustable weights in RRF
+
+### Rollback Plan
+- All changes behind feature flags
+- Database backup before cleanup
+- Revert to pure hybrid search if needed
+
+## Dependencies
+
+### Required Systems
+- SQLite database with entity_content_mapping table
+- SpaCy NLP models (already installed)
+- Search Intelligence service
+- Vector store (Qdrant)
+
+### External Dependencies
+- No new external dependencies required
+- All functionality uses existing libraries
+
+## Testing Strategy
+
+### Unit Tests
+- Quality filter validation
+- Entity search logic
+- Query parser patterns
+- Cache operations
+
+### Integration Tests
+- End-to-end search with entities
+- RRF merge with three sources
+- Filter application
+- CLI commands
+
+### Performance Tests
+- Search latency with entities
+- Database query optimization
+- Cache effectiveness
+- Extraction throughput
+
+## Alternative MVP Approach
+
+If time constrained, implement minimal version:
+1. Fix CASE_NUMBER patterns only (2 hours)
+2. Add simple entity boost to search (3 hours)
+3. Display entity counts in results (2 hours)
+
+Expected impact: 15-20% search improvement with 7 hours effort.
+
+## Conclusion
+
+The entity extraction infrastructure exists and is collecting valuable data that currently provides zero value. This plan transforms it into a powerful search enhancement that will deliver 30% improvement in search recall and enable advanced filtering capabilities that are impossible with the current system. The phased approach allows for incremental value delivery while maintaining system stability.

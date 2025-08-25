@@ -188,3 +188,40 @@ bfg.jar
 .Spotlight-V100
 .Trashes
 Icon?
+
+# Archive directories - processed data and legacy code
+Archive_*/
+Archive\ */
+*_archive/
+*_archived/
+archive_*/
+archived_*/
+
+# Processing output files - temporary data files
+actual_pdfs.txt
+all_emails.txt
+all_jsons.txt
+document_jsons.txt
+*_pdfs.txt
+*_emails.txt
+*_jsons.txt
+
+# Batch processing scripts - temporary/one-off scripts
+batch_process_*.py
+get_emails.py
+*_batch.py
+
+# Document AI processing artifacts
+scripts/archived_document_ai*/
+chunks/
+full_text/
+manifests/
+processed/
+segregation_log.json
+processing_*.json
+*_manifest.json
+*_docai.*
+
+# BigQuery staging files
+bigquery_staging/
+*_staging/
