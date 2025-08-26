@@ -204,9 +204,7 @@ def intel_summarize_command(
             print("🚫 Cache disabled")
 
         intelligence = get_search_intelligence_service()
-        results = intelligence.auto_summarize_document(
-            doc_id, max_sentences=sentences, max_keywords=keywords, use_cache=use_cache
-        )
+        results = intelligence.auto_summarize_document(doc_id, force_refresh=not use_cache)
 
         if json_output:
             print(json.dumps(results, indent=2, default=str))

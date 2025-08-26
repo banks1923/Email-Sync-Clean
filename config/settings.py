@@ -158,7 +158,7 @@ class PathSettings(BaseSettings):
     @field_validator(
         "data_root",
         "system_data",
-        "logs_path", 
+        "logs_path",
         "config_dir",
     )
     @classmethod
@@ -191,15 +191,17 @@ class SystemSettings(BaseSettings):
     """
 
     # Sequential thinking storage
-    sequential_thinking_dir: str = Field(default="data/system_data/sequential_thinking", env="SEQUENTIAL_THINKING_DIR")
-    
+    sequential_thinking_dir: str = Field(
+        default="data/system_data/sequential_thinking", env="SEQUENTIAL_THINKING_DIR"
+    )
+
     # System cache and temporary files
     cache_dir: str = Field(default="data/system_data/cache", env="SYSTEM_CACHE_DIR")
     temp_dir: str = Field(default="data/system_data/temp", env="SYSTEM_TEMP_DIR")
-    
+
     # Lock files and process management
     locks_dir: str = Field(default="data/system_data/locks", env="SYSTEM_LOCKS_DIR")
-    
+
     @field_validator("sequential_thinking_dir", "cache_dir", "temp_dir", "locks_dir")
     @classmethod
     def ensure_system_directories_exist(cls, v):
@@ -240,23 +242,22 @@ class SemanticSettings(BaseSettings):
     """
     Semantic enrichment pipeline configuration.
     """
-    
+
     # Master switch for semantic processing on ingestion
     semantics_on_ingest: bool = Field(default=True, env="SEMANTICS_ON_INGEST")
-    
+
     # Steps to run in order
     semantics_steps: list[str] = Field(
-        default=["summary", "entities", "embeddings", "timeline"],
-        env="SEMANTICS_STEPS"
+        default=["summary", "entities", "embeddings", "timeline"], env="SEMANTICS_STEPS"
     )
-    
+
     # Batch processing settings
     semantics_max_batch: int = Field(default=200, env="SEMANTICS_MAX_BATCH")
     semantics_timeout_s: int = Field(default=20, env="SEMANTICS_TIMEOUT_S")  # per step
-    
+
     # Cache settings
     entity_cache_days: int = Field(default=7, env="ENTITY_CACHE_DAYS")
-    
+
     class Config:
         env_prefix = "SEMANTIC_"
 

@@ -13,7 +13,7 @@ class FileOperations:
     """
     Encapsulated file operations for dependency injection.
     """
-    
+
     def move_file(self, source: Path, destination: Path) -> bool:
         """Move file from source to destination.
 
@@ -33,7 +33,7 @@ class FileOperations:
         except Exception as e:
             logger.error(f"Failed to move file {source} -> {destination}: {e}")
             return False
-    
+
     def copy_file(self, source: Path, destination: Path) -> bool:
         """Copy file from source to destination.
 
@@ -53,7 +53,7 @@ class FileOperations:
         except Exception as e:
             logger.error(f"Failed to copy file {source} -> {destination}: {e}")
             return False
-    
+
     def delete_file(self, path: Path) -> bool:
         """Delete file at specified path.
 
@@ -71,7 +71,7 @@ class FileOperations:
         except Exception as e:
             logger.error(f"Failed to delete file {path}: {e}")
             return False
-    
+
     def create_directory(self, path: Path) -> bool:
         """Create directory with all parent directories.
 
@@ -88,7 +88,7 @@ class FileOperations:
         except Exception as e:
             logger.error(f"Failed to create directory {path}: {e}")
             return False
-    
+
     def sanitize_path(self, path_str: str) -> str:
         """Sanitize path string for cross-platform compatibility.
 
@@ -101,31 +101,31 @@ class FileOperations:
         # Remove/replace invalid characters
         invalid_chars = '<>:"|?*'
         sanitized = path_str
-        
+
         for char in invalid_chars:
-            sanitized = sanitized.replace(char, '_')
-        
+            sanitized = sanitized.replace(char, "_")
+
         # Remove excessive spaces and dots
-        sanitized = sanitized.strip('. ')
-        
+        sanitized = sanitized.strip(". ")
+
         # Limit length
         if len(sanitized) > 200:
             sanitized = sanitized[:200]
-        
+
         return sanitized
-    
+
     def file_exists(self, path: Path) -> bool:
         """
         Check if file exists.
         """
         return path.exists() and path.is_file()
-    
+
     def directory_exists(self, path: Path) -> bool:
         """
         Check if directory exists.
         """
         return path.exists() and path.is_dir()
-    
+
     def get_file_size(self, path: Path) -> int | None:
         """
         Get file size in bytes.

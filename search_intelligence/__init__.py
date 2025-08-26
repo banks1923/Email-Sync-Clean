@@ -4,7 +4,6 @@ Unified search intelligence layer that consolidates search, entity
 extraction, and document intelligence capabilities.
 """
 
-
 # Singleton instance
 _search_intelligence_service = None
 

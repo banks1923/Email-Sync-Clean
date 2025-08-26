@@ -2,20 +2,20 @@
 
 AI-powered search system with Legal BERT semantic understanding for personal productivity.
 
-> **🎯 Clean Architecture Implementation** - Simplified from 2000+ lines to ~26,883 lines
+> **CURRENT: Clean Architecture Implementation** - Simplified from 2000+ lines to ~26,883 lines
 
-## 📊 PRODUCTION BASELINE STATUS (2025-08-25) ✅
+## STATUS: PRODUCTION BASELINE (2025-08-25) - WORKING
 
-✅ **Gmail Sync v2.0**: 668 emails synced with message-level deduplication (23% efficiency)  
-✅ **Keyword Search**: Fully operational hybrid search system  
-✅ **Vector Service**: Qdrant connected with Legal BERT (1024D) ready for embeddings  
-✅ **Schema Compatibility**: All services aligned to v2.0 architecture  
-✅ **Debug Logging**: Enabled system-wide for troubleshooting  
-✅ **Database Health**: 302 unique messages from 393 occurrences, SQLite WAL mode optimized  
+WORKING: **Gmail Sync v2.0**: Working with message-level deduplication and content reduction  
+WORKING: **Keyword Search**: Fully operational hybrid search system  
+WORKING: **Vector Service**: Qdrant connected with Legal BERT ready for embeddings  
+WORKING: **Schema Compatibility**: All services aligned to v2.0 architecture  
+WORKING: **Debug Logging**: Enabled system-wide for troubleshooting  
+WORKING: **Database Health**: Email deduplication active, SQLite WAL mode optimized  
 
-## 🚀 Quick Start - PRODUCTION READY
+## READY: Quick Start - PRODUCTION READY
 
-### ✅ Validate Current Baseline (30 seconds)
+### VALIDATE: Current Baseline (30 seconds)
 ```bash
 # Quick system health check
 tools/scripts/vsearch info
@@ -61,11 +61,11 @@ tools/scripts/vsearch sync-gmail
 tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 ```
 
-## ✨ Key Features
+## Key Features
 
-### 🔍 AI-Powered Database Search
+### AI-Powered Database Search
 - **Semantic Search**: Legal BERT 1024D embeddings for context understanding
-- **Database Storage**: SQLite with 585+ documents (emails, PDFs, transcripts) - **100% chain integrity**
+- **Database Storage**: SQLite with emails, PDFs, transcripts - **Chain integrity maintained**
 - **Unified Search**: Search all content types in one database
 - **Advanced Filters**: Date ranges, content types, and tag-based filtering
 - **Flexible Dates**: Natural language dates ("last week", "3 days ago", "this month")
@@ -74,7 +74,7 @@ tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 - **Gmail Sync**: Incremental sync with History API and content deduplication
 - **Clean Architecture**: Simplified database-only system (analog removed)
 
-### 🧠 Search Intelligence (✅ COMPLETE: Task 5)
+### Search Intelligence (COMPLETED: Task 5)
 - **Smart Search**: Query preprocessing with abbreviation expansion and synonyms
 - **Query Expansion**: "LLC" → "limited liability company", "Q1" → "first quarter"
 - **Intelligent Ranking**: Entity relevance + recency scoring for better results
@@ -84,7 +84,7 @@ tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 - **Entity Caching**: TTL-based caching for entity extraction results
 - **Auto-Summarization**: Integrated TF-IDF and TextRank summarization
 
-### 📊 Document Intelligence (✅ COMPLETE: Tasks 2, 3, 15)
+### Document Intelligence (COMPLETED: Tasks 2, 3, 15)
 - **Automatic Summarization**: TF-IDF keywords and TextRank key sentences
 - **Smart Processing**: PDFs get 5 sentences/15 keywords, emails get 3/10
 - **Legal BERT Integration**: Semantic similarity for better sentence selection
@@ -92,7 +92,7 @@ tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 - **Batch Operations**: Efficient processing of multiple documents
 - **Production Ready**: Fully integrated with Gmail and PDF services
 
-### 🕸️ Knowledge Graph & Relationships (✅ COMPLETE: Task 9)
+### Knowledge Graph & Relationships (COMPLETED: Task 9)
 - **Document Similarity**: Find related content using Legal BERT embeddings
 - **Timeline Analysis**: Temporal relationships with automatic date extraction
 - **Topic Clustering**: Group similar documents automatically
@@ -100,7 +100,7 @@ tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 - **Graph Traversal**: Find shortest paths between documents
 - **Performance Caching**: 100x speedup with dual-layer cache
 
-### ⚡ Performance Optimization & Caching (✅ COMPLETE: Task 11)
+### PERFORMANCE: Optimization & Caching (COMPLETED: Task 11)
 - **Three-Tier Architecture**: Memory → Database → File caching hierarchy
 - **Automatic Promotion**: Data moves to faster tiers when accessed
 - **Sub-millisecond Access**: 0.002ms average for cached operations
@@ -109,7 +109,7 @@ tools/scripts/quick-note "Meeting Notes" --title "Legal Discussion" --tags legal
 - **Content Invalidation**: Automatic cache invalidation when content changes
 - **Thread-Safe**: Full concurrency support with RLock synchronization
 
-### 🏗️ Clean Architecture
+### ARCHITECTURE: Clean Architecture
 
 ```
 User → CLI → Clean Services → Data
@@ -117,14 +117,14 @@ User → CLI → Clean Services → Data
     ├── EmbeddingService (100 lines)
     ├── VectorStore (150 lines)
     ├── SearchService (200 lines)
-    ├── SearchIntelligence (1600 lines) ✅ NEW
-    ├── LegalIntelligence (700 lines) ✅
-    ├── DocumentSummarizer (300 lines) ✅
-    ├── CacheManager (461 lines) ✅ NEW: Task 11
+    ├── SearchIntelligence (1600 lines) NEW
+    ├── LegalIntelligence (700 lines) WORKING
+    ├── DocumentSummarizer (300 lines) WORKING
+    ├── CacheManager (461 lines) NEW: Task 11
     └── SimpleDB (100 lines + intelligence schema)
 ```
 
-### 📁 Data Pipeline (✅ COMPLETE: Tasks 14, 16)
+### DATA: Pipeline (COMPLETED: Tasks 14, 16)
 ```
 data/
 ├── raw/          # Incoming documents
@@ -143,7 +143,7 @@ data/
 - **SearchService**: Search orchestration
 - **SimpleDB**: Direct SQLite operations without abstractions
 
-## 📋 Prerequisites
+## PREREQUISITES
 
 ### Required
 - Python 3.8+
@@ -154,7 +154,7 @@ data/
 - Gmail API credentials (for email sync)
 - FFmpeg (for audio processing)
 
-## 🛠️ Installation
+## INSTALLATION
 
 ### 1. Clone Repository
 ```bash
@@ -185,7 +185,7 @@ scripts/vsearch info
 scripts/vsearch search "legal contract"
 ```
 
-## 🏗️ Architecture Details
+## ARCHITECTURE: Details
 
 ### Clean Services (~26,883 lines total)
 
@@ -220,7 +220,7 @@ scripts/vsearch search "legal contract"
 - **Small Functions**: Maximum 30 lines per function
 - **No Enterprise Patterns**: No dependency injection, no abstract classes
 
-## 📚 Documentation
+## DOCUMENTATION
 
 ### Primary Documentation
 - **[README.md](README.md)** - User guide and quick start (this file)
@@ -230,18 +230,18 @@ scripts/vsearch search "legal contract"
 ### Developer References
 - **[docs/SERVICES_API.md](docs/SERVICES_API.md)** - Complete API reference for all services
 - **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)** - MCP server integration and tools guide
-- **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)** - Code quality and cleanup tools
+- Code quality and cleanup tools (see Makefile commands)
 
 ### Service-Specific Documentation  
 - **[gmail/CLAUDE.md](gmail/CLAUDE.md)** - Gmail service implementation details
 - **[pdf/CLAUDE.md](pdf/CLAUDE.md)** - PDF processing and OCR functionality
-- **[transcription/CLAUDE.md](transcription/CLAUDE.md)** - Audio transcription service
-- **[knowledge_graph/CLAUDE.md](knowledge_graph/CLAUDE.md)** - Knowledge graph operations
+- Audio transcription service (via document pipeline)
+- Knowledge graph operations (via search intelligence)
 - **[summarization/README.md](summarization/README.md)** - Document summarization engine
 
-> **📖 For developers**: Start with [CLAUDE.md](CLAUDE.md) for core principles, then refer to [docs/SERVICES_API.md](docs/SERVICES_API.md) for detailed API documentation.
+> **For developers**: Start with [CLAUDE.md](CLAUDE.md) for core principles, then refer to [docs/SERVICES_API.md](docs/SERVICES_API.md) for detailed API documentation.
 
-## 📁 Project Structure
+## PROJECT: Structure
 
 ```
 Email Sync/
@@ -285,41 +285,71 @@ Email Sync/
 └── .taskmaster/             # Task management system
 ```
 
-## 🔄 Common Workflows
+## WORKFLOWS: Common Operations
 
-### Email Search
+### Setup & Development (Simplified Make Commands)
 ```bash
-# Sync emails (if using Gmail)
-scripts/vsearch process -n 100
+# Complete setup from scratch
+make setup          # Install everything and get started
 
-# Search with AI
-scripts/vsearch search "important meeting"
-
-# Advanced search with filters (NEW: Task 6)
-scripts/vsearch search "important meeting" --since "last week" --type email
-scripts/vsearch search "contract" --since "2024-01-01" --until "2024-06-30"
-scripts/vsearch search "urgent" --tag priority --tag action-required --tag-logic AND
-
-# View timeline
-scripts/vsearch timeline --types email
+# Daily development
+make test           # Run fast tests
+make format         # Format code
+make lint           # Check code quality
+make fix            # Auto-fix common issues
+make clean          # Clean up cache files
 ```
 
-### Document Processing
+### System Operations
+```bash
+# System health and diagnostics
+make status         # Quick system health check
+make diagnose       # Deep system diagnostic (when broken)
+make backup         # Backup your data
+make reset          # Nuclear reset (use with caution)
+```
+
+### Content Operations
+```bash
+# Search documents
+make search QUERY="lease termination"    # Search with specific terms
+make search QUERY="contract terms"       # Example search
+
+# Upload and sync
+make upload FILE="document.pdf"          # Upload single document
+make sync                                # Sync Gmail emails
+```
+
+### Advanced Email Search (Direct CLI)
+```bash
+# Search with AI
+tools/scripts/vsearch search "important meeting"
+
+# Advanced search with filters
+tools/scripts/vsearch search "important meeting" --since "last week" --type email
+tools/scripts/vsearch search "contract" --since "2024-01-01" --until "2024-06-30"
+tools/scripts/vsearch search "urgent" --tag priority --tag action-required --tag-logic AND
+
+# View timeline
+tools/scripts/vsearch timeline --types email
+```
+
+### Advanced Document Processing (Direct CLI)
 ```bash
 # Upload single PDF (automatic OCR if needed)
-scripts/vsearch upload document.pdf
+tools/scripts/vsearch upload document.pdf
 
 # Batch upload directory of PDFs
-scripts/vsearch upload /path/to/legal/documents/
+tools/scripts/vsearch upload /path/to/legal/documents/
 
 # Check processing stats
-scripts/vsearch info  # Shows OCR vs text extraction counts
+tools/scripts/vsearch info  # Shows OCR vs text extraction counts
 
 # Generate embeddings (if Qdrant running)
-scripts/vsearch embed --content-type document
+tools/scripts/vsearch embed --content-type document
 
 # Search documents
-scripts/vsearch search "contract clause"
+tools/scripts/vsearch search "contract clause"
 ```
 
 ### Transcription
@@ -366,7 +396,7 @@ related = kg.get_related_content("contract_123", ["similar_to"], limit=5)
 path = kg.find_shortest_path("doc_a", "doc_z", max_depth=5)
 ```
 
-## 🧪 Testing
+## TESTING
 
 ### Running Tests
 ```bash
@@ -392,11 +422,11 @@ python3 -m pytest tests/ -m "not broken" --tb=short
 - **Total Tests**: 445 collected (26 with import errors to fix)
 - **Working Tests**: ~419 tests passing
 - **Test Categories**:
-  - ✅ Intelligence Services (search, legal, MCP)
-  - ✅ Caching System (memory, file, database)
-  - ✅ Knowledge Graph & Embeddings
-  - ✅ Document Processing (summarization, timeline)
-  - ⚠️ Legacy tests need import updates (pdf_service, gmail_service)
+  - WORKING: Intelligence Services (search, legal, MCP)
+  - WORKING: Caching System (memory, file, database)
+  - WORKING: Knowledge Graph & Embeddings
+  - WORKING: Document Processing (summarization, timeline)
+  - WARNING: Legacy tests need import updates (pdf_service, gmail_service)
 
 ### Quick Service Validation
 ```bash
@@ -410,22 +440,22 @@ from caching import get_global_cache_manager
 # Test embeddings
 emb = get_embedding_service()
 vec = emb.encode('test')
-print(f'✅ Embeddings: {len(vec)} dimensions')
+print(f'WORKING: Embeddings: {len(vec)} dimensions')
 
 # Test database
 db = SimpleDB()
 stats = db.get_content_stats()
-print(f'✅ Database: {stats}')
+print(f'WORKING: Database: {stats}')
 
 # Test search
 search = get_search_service()
-print('✅ Search service initialized')
+print('WORKING: Search service initialized')
 
 # Test caching
 cache = get_global_cache_manager()
 cache.set('test_key', {'data': 'test'})
 result = cache.get('test_key')
-print(f'✅ Cache: {result}')
+print(f'WORKING: Cache: {result}')
 "
 ```
 
@@ -446,7 +476,7 @@ python3 -m pytest tests/test_<service_name>.py -v
 - `tests/test_core_services_integration.py` - Core service integration tests
 - `tests/TEST_COVERAGE_ANALYSIS.md` - Comprehensive coverage analysis
 
-## 🚨 Troubleshooting
+## TROUBLESHOOTING
 
 ### Semantic Search Not Working
 ```bash
@@ -466,7 +496,7 @@ export PYTHONPATH=/path/to/Email-Sync:$PYTHONPATH
 ### Model Download
 First run downloads Legal BERT (~1.3GB). This is one-time only.
 
-## 📊 Performance
+## PERFORMANCE
 
 ### After Clean Architecture Refactor
 - **Code Reduction**: 75-90% less code
@@ -480,25 +510,25 @@ First run downloads Legal BERT (~1.3GB). This is one-time only.
 - **Disk**: ~2GB for model + your data
 - **CPU**: Minimal except during embedding generation
 
-## 📈 Project Status
+## PROJECT: Status
 
-### ✅ PROJECT COMPLETE! (18/18 tasks - 100%)
-- ✅ **Database Intelligence Schema** (Task 2)
-- ✅ **Document Summarization** (Task 3)
-- ✅ **Legal Intelligence Core** (Task 4)
-- ✅ **Search Intelligence Core** (Task 5)
-- ✅ **Legal Intelligence CLI** (Task 6)
-- ✅ **Search Intelligence CLI** (Task 7)
-- ✅ **Legal Intelligence MCP Server** (Task 9)
-- ✅ **Search Intelligence MCP Server** (Task 10)
-- ✅ **Performance Optimization & Caching** (Task 11)
-- ✅ **Comprehensive Testing & Documentation** (Task 12)
-- ✅ **Migration and Deployment** (Task 13)
-- ✅ **Document Pipeline** (Tasks 14, 16)
-- ✅ **Document Export System** (Task 18)
-- ✅ **Timeline Extraction** (Task 19)
+### COMPLETED: PROJECT (18/18 tasks - 100%)
+- COMPLETED: **Database Intelligence Schema** (Task 2)
+- COMPLETED: **Document Summarization** (Task 3)
+- COMPLETED: **Legal Intelligence Core** (Task 4)
+- COMPLETED: **Search Intelligence Core** (Task 5)
+- COMPLETED: **Legal Intelligence CLI** (Task 6)
+- COMPLETED: **Search Intelligence CLI** (Task 7)
+- COMPLETED: **Legal Intelligence MCP Server** (Task 9)
+- COMPLETED: **Search Intelligence MCP Server** (Task 10)
+- COMPLETED: **Performance Optimization & Caching** (Task 11)
+- COMPLETED: **Comprehensive Testing & Documentation** (Task 12)
+- COMPLETED: **Migration and Deployment** (Task 13)
+- COMPLETED: **Document Pipeline** (Tasks 14, 16)
+- COMPLETED: **Document Export System** (Task 18)
+- COMPLETED: **Timeline Extraction** (Task 19)
 
-### 🎉 Project Milestone Achieved
+### Project Milestone Achieved
 All 18 tasks completed successfully with high quality scores:
 - Average quality score: 9+ out of 10
 - Complete test coverage with 419+ passing tests
@@ -507,7 +537,7 @@ All 18 tasks completed successfully with high quality scores:
 
 See `.taskmaster/TASK_COMPLETION_SUMMARY.md` for detailed status.
 
-## 🤝 Contributing
+## CONTRIBUTING
 
 This is a personal project focused on simplicity. Contributions should:
 - Follow the "Simple > Complex" philosophy
@@ -516,11 +546,11 @@ This is a personal project focused on simplicity. Contributions should:
 - Avoid enterprise patterns
 - Include tests for new features
 
-## 📝 License
+## LICENSE
 
 [Your License Here]
 
-## 🙏 Acknowledgments
+## ACKNOWLEDGMENTS
 
 - Legal BERT model by Pile of Law
 - Qdrant vector database

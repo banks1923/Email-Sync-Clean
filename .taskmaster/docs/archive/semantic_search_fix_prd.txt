@@ -1,0 +1,407 @@
+# Product Requirements Document: Semantic Search Enhancement
+
+## Executive Summary
+
+The current semantic search system suffers from poor recall on long documents and email threads due to character-based chunking (first 2000 chars only). This PRD outlines a comprehensive solution using token-based chunking, quality gating, and improved ranking to deliver 40-60% better recall and 30% better precision.
+
+## Problem Statement
+
+### Current Issues
+1. **Poor Recall**: Only indexing first 2000 characters misses 80%+ of long document content
+2. **Email Thread Noise**: Quoted/forwarded content creates duplicate and low-quality results
+3. **Stub Email Spam**: Short email fragments dominate search results
+4. **No Document-Level Aggregation**: Multiple chunks from same document crowd out diverse results
+5. **Static Ranking**: Same weights regardless of query type (short vs long, exact vs semantic)
+
+### Impact
+- Users missing critical legal information in long documents
+- Search results dominated by email headers and signatures
+- Relevant case documents buried below email stubs
+- Poor user experience requiring manual filtering
+
+## Solution Overview
+
+### Core Improvements
+1. **Token-Based Chunking**: 900-1100 tokens with 15% overlap, sentence-aware
+2. **Quality Gating**: Exclude chunks with quality_score < 0.35
+3. **Document-Level RRF**: Aggregate chunks to document level before ranking
+4. **Dynamic Query Weights**: Adjust semantic vs keyword based on query length
+5. **Result Diversity**: Cap 3 results per source_type in top-10
+
+## Detailed Requirements
+
+### 1. Token-Based Document Chunking
+
+#### 1.1 Chunking Parameters
+- **Target Size**: 900-1100 tokens (not characters)
+- **Overlap**: 15% token overlap between chunks
+- **Boundary Awareness**: Backtrack to nearest sentence/paragraph boundary
+- **Chunk ID Format**: `doc_id:chunk_idx` for stable references
+
+#### 1.2 Document Type Profiles
+
+**Email/Thread Chunking**:
+- Split on reply separators: `On <date>, <name> wrote:`
+- Split on forward markers: `---------- Forwarded message ---------`
+- Then apply token chunking to each segment
+- Preserve quote_depth and context_type metadata
+
+**Legal Document Chunking**:
+- Split on section headers: "INTRODUCTION", "FACTS", "ARGUMENT", "CONCLUSION"
+- Preserve section_title in chunk metadata
+- Apply token chunking within sections
+
+**Scanned/OCR Documents**:
+- Run boilerplate removal before chunking
+- Higher tolerance for irregular boundaries
+- Fall back to sliding window if no clear structure
+
+#### 1.3 Implementation Requirements
+```python
+class DocumentChunker:
+    def chunk_document(
+        text: str,
+        doc_type: str,  # 'email', 'legal_pdf', 'ocr_scan'
+        target_tokens: int = 1000,
+        overlap_ratio: float = 0.15
+    ) -> List[DocumentChunk]:
+        """Returns list of chunks with metadata"""
+        pass
+```
+
+### 2. Quality Gating System
+
+#### 2.1 Quality Score Calculation (0-1 scale)
+
+**Hard Exclusions** (quality_score = 0):
+- Text length < 100 characters
+- Token count < 20
+- Only headers/signatures (no body content)
+
+**Quality Factors**:
+- **Length Score**: Normalized by expected length for doc type
+- **Entropy Score**: Type-token ratio (vocabulary diversity)
+- **Content Score**: Ratio of content vs boilerplate
+- **Quote Penalty**: Reduce score by quote_depth * 0.2
+
+**Formula**:
+```
+quality_score = 0.4 * length_score + 
+                0.3 * entropy_score + 
+                0.2 * content_score + 
+                0.1 * (1 - quote_penalty)
+```
+
+#### 2.2 Gating Thresholds
+- **Index Threshold**: Only index if quality_score ≥ 0.35
+- **Search Boost**: Multiply relevance by quality_score
+- **Result Filter**: Warn if top-10 has any score < 0.35
+
+### 3. Enhanced Database Schema
+
+#### 3.1 New Tables
+
+**content_embeddings** table:
+```sql
+CREATE TABLE content_embeddings (
+    embedding_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id INTEGER NOT NULL,
+    chunk_idx INTEGER NOT NULL,
+    model TEXT NOT NULL,
+    dim INTEGER NOT NULL,
+    quality_score REAL,
+    token_start INTEGER,
+    token_end INTEGER,
+    section_title TEXT,
+    quote_depth INTEGER DEFAULT 0,
+    is_header_only BOOLEAN DEFAULT 0,
+    content_hash TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doc_id) REFERENCES content_unified(id) ON DELETE CASCADE,
+    UNIQUE(doc_id, chunk_idx, model)
+);
+
+CREATE INDEX idx_embeddings_doc ON content_embeddings(doc_id);
+CREATE INDEX idx_embeddings_quality ON content_embeddings(quality_score);
+```
+
+#### 3.2 Schema Updates
+
+**content_unified** additions:
+```sql
+ALTER TABLE content_unified ADD COLUMN quality_score REAL DEFAULT 1.0;
+ALTER TABLE content_unified ADD COLUMN total_chunks INTEGER DEFAULT 1;
+ALTER TABLE content_unified ADD COLUMN avg_chunk_quality REAL;
+```
+
+**individual_messages** additions:
+```sql
+ALTER TABLE individual_messages ADD COLUMN has_embeddings BOOLEAN DEFAULT 0;
+ALTER TABLE individual_messages ADD COLUMN chunk_count INTEGER DEFAULT 0;
+```
+
+### 4. Hybrid Retrieval with Document-Level RRF
+
+#### 4.1 Two-Stage Retrieval
+
+**Stage 1: Parallel Search**
+- BM25 over: title + cleaned_text + extracted entities
+- Semantic search: top-100 chunks from vector store
+- Both searches run in parallel
+
+**Stage 2: Document Aggregation**
+- Group chunks by doc_id
+- Take max score of top-3 chunks per document
+- Apply RRF at document level (not chunk level)
+
+#### 4.2 Dynamic Weight Calculation
+
+```python
+def calculate_weights(query: str) -> tuple[float, float]:
+    tokens = tokenize(query)
+    has_quotes = '"' in query
+    has_boolean = any(op in query.upper() for op in ['AND', 'OR', 'NOT'])
+    
+    if len(tokens) >= 6 and not has_quotes and not has_boolean:
+        # Long, natural language query
+        return 0.65, 0.35  # semantic, keyword
+    else:
+        # Short or structured query
+        return 0.45, 0.55  # semantic, keyword
+```
+
+#### 4.3 Result Diversity Rules
+
+**Per-Type Limits**:
+- Maximum 3 results per source_type in top-10
+- Tie-break by quality_score, then recency
+
+**Exact Match Boosting**:
+- If query term appears exactly in chunk: +0.2 boost
+- If legal entity matches: +0.15 boost
+- If date/number matches: +0.1 boost
+
+### 5. Migration Strategy
+
+#### 5.1 Dual Index Approach
+
+**Phase 1: Parallel Collections**
+- Keep existing `emails` collection
+- Create new `vectors_v2` collection
+- Route via feature flag: `SEARCH_PIPELINE=v2`
+
+**Phase 2: Gradual Migration**
+- Re-embed documents in batches of 1000
+- Track progress in `migration_progress` table
+- Allow A/B testing via query parameter
+
+**Phase 3: Cutover**
+- After validation, make v2 default
+- Keep v1 for 30 days as fallback
+- Then deprecate v1
+
+#### 5.2 Re-Embedding Pipeline
+
+**Processing Requirements**:
+- Idempotent: Can safely re-run any document
+- Checkpointed: Resume from last successful batch
+- Parallel: Process 64-128 chunks per API call
+- Monitored: Log progress, errors, and metrics
+
+**Script Interface**:
+```bash
+python scripts/reembed_v2.py \
+    --batch-size 1000 \
+    --parallel 4 \
+    --checkpoint ./reembed_progress.json \
+    --dry-run  # Test without writing
+```
+
+### 6. Evaluation Framework
+
+#### 6.1 Gold Standard Queries
+
+**Query Categories** (5 each):
+1. **Legal Terms**: "retaliation", "constructive eviction", "habitability"
+2. **Party Names**: "John Smith", "ABC Corporation"  
+3. **Dates**: "January 2024", "filed on 3/15"
+4. **Case Numbers**: "24NNCV06082", "Case No. 123"
+5. **Long Queries**: 20+ token natural language questions
+6. **Exact Phrases**: "unlicensed contractor", "water intrusion"
+
+#### 6.2 Success Metrics
+
+**Primary Metrics**:
+- Recall@10 ≥ 0.7 for gold queries
+- NDCG@10 ≥ 0.65 for gold queries
+- Stub emails in top-10 < 5%
+
+**Quality Guards**:
+- No source_type > 50% of top-10
+- No quality_score < 0.35 in top-10
+- Long document coverage > 60%
+
+#### 6.3 A/B Testing
+
+**Test Groups**:
+- Control: Existing pipeline (v1)
+- Treatment: New pipeline (v2)
+
+**Tracking**:
+- Log query, pipeline version, results
+- Track click-through rates
+- Monitor user satisfaction signals
+
+## Implementation Plan
+
+### Phase 1: Foundation (Days 1-2)
+- [ ] Implement DocumentChunker class
+- [ ] Add quality scoring logic
+- [ ] Create unit tests for chunking
+- [ ] Update database schema
+
+### Phase 2: Integration (Days 3-4)
+- [ ] Integrate chunker into PDF processor
+- [ ] Update semantic pipeline for quality gating
+- [ ] Modify vector store for dual collections
+- [ ] Implement document-level RRF
+
+### Phase 3: Migration (Days 5-6)
+- [ ] Create re-embedding script
+- [ ] Set up dual index infrastructure
+- [ ] Implement feature flags
+- [ ] Create migration monitoring
+
+### Phase 4: Validation (Days 7-8)
+- [ ] Build evaluation framework
+- [ ] Run gold standard tests
+- [ ] Perform A/B testing
+- [ ] Document results
+
+## Success Criteria
+
+### Quantitative Goals
+- **Recall Improvement**: +40-60% for documents > 5 pages
+- **Precision Improvement**: +30% reduction in irrelevant results
+- **Stub Reduction**: <5% stub emails in top-10 (from ~25%)
+- **Query Latency**: <10% increase (target <200ms p95)
+
+### Qualitative Goals
+- Users find relevant case documents consistently
+- Email thread context preserved without duplication
+- Search results feel more relevant and diverse
+- System remains maintainable and debuggable
+
+## Risk Mitigation
+
+### Technical Risks
+
+**Risk**: Storage increase (3-7×)
+- **Mitigation**: Quality gating reduces by 40%, near-dup removal saves 20%
+
+**Risk**: Re-embedding takes too long
+- **Mitigation**: Parallel processing, incremental migration, can run alongside v1
+
+**Risk**: Breaking changes to search API
+- **Mitigation**: Backward compatible, feature flags, gradual rollout
+
+### Operational Risks
+
+**Risk**: Rollback complexity
+- **Mitigation**: Dual index maintained, instant switch via flag
+
+**Risk**: Quality regression
+- **Mitigation**: A/B testing, gold standard validation, monitoring
+
+## Dependencies
+
+### External Dependencies
+- Legal BERT model (existing)
+- Qdrant vector store (existing)
+- SQLite database (existing)
+
+### Internal Dependencies
+- SimpleDB module
+- Embedding service
+- Search intelligence module
+
+## Future Enhancements
+
+### Near Term (Next Sprint)
+- Query expansion with synonyms
+- Cross-lingual search support
+- Personalized ranking based on user history
+
+### Long Term (Next Quarter)
+- Learned ranking models
+- Active learning from user feedback
+- Automatic query intent classification
+- Real-time index updates
+
+## Appendix
+
+### A. Configuration Defaults
+
+```python
+# Chunking defaults
+DEFAULT_CHUNK_TOKENS = 1000
+DEFAULT_OVERLAP_RATIO = 0.15
+MIN_CHUNK_TOKENS = 20
+MIN_CHUNK_CHARS = 100
+
+# Quality thresholds
+MIN_QUALITY_SCORE = 0.35
+HEADER_ONLY_PENALTY = 0.9
+QUOTE_DEPTH_PENALTY = 0.2
+
+# Search weights
+SEMANTIC_WEIGHT_LONG = 0.65
+KEYWORD_WEIGHT_LONG = 0.35
+SEMANTIC_WEIGHT_SHORT = 0.45
+KEYWORD_WEIGHT_SHORT = 0.55
+
+# Result limits
+MAX_PER_SOURCE_TYPE = 3
+TOP_K_SEMANTIC = 100
+TOP_K_FINAL = 10
+```
+
+### B. Sample Chunk Metadata
+
+```json
+{
+  "doc_id": 12345,
+  "chunk_idx": 3,
+  "token_start": 2000,
+  "token_end": 3000,
+  "quality_score": 0.82,
+  "section_title": "FACTUAL BACKGROUND",
+  "source_type": "legal_pdf",
+  "quote_depth": 0,
+  "is_header_only": false,
+  "content_hash": "sha256:abc123..."
+}
+```
+
+### C. Migration Checklist
+
+- [ ] Database backup created
+- [ ] Schema migrations tested on dev
+- [ ] Re-embedding script validated
+- [ ] Feature flags configured
+- [ ] Monitoring dashboards ready
+- [ ] Rollback procedure documented
+- [ ] Team training completed
+- [ ] User communication sent
+
+## Approval
+
+- **Product Owner**: ___________________ Date: ___________
+- **Tech Lead**: _______________________ Date: ___________
+- **QA Lead**: _________________________ Date: ___________
+
+---
+
+*Document Version: 1.0*  
+*Last Updated: 2025-01-26*  
+*Status: DRAFT*

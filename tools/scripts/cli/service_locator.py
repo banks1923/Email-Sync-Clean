@@ -65,7 +65,6 @@ class ServiceLocator:
 
         return build_pdf_service()
 
-
     def get_entity_service(self, **kwargs):
         """
         Get entity service instance.

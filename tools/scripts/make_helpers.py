@@ -19,18 +19,20 @@ def test_basic():
     print("🧪 Testing basic system functionality...")
     try:
         from shared.simple_db import SimpleDB
+
         SimpleDB()
-        print('✅ Database connection works')
-        
+        print("✅ Database connection works")
+
         from utilities.embeddings import get_embedding_service
+
         emb = get_embedding_service()
-        vec = emb.encode('test')
-        print(f'✅ AI embeddings work ({len(vec)} dimensions)')
-        
-        print('✅ Basic functionality test passed!')
+        vec = emb.encode("test")
+        print(f"✅ AI embeddings work ({len(vec)} dimensions)")
+
+        print("✅ Basic functionality test passed!")
         return True
     except Exception as e:
-        print(f'❌ Basic test failed: {e}')
+        print(f"❌ Basic test failed: {e}")
         return False
 
 
@@ -42,17 +44,20 @@ def recent_activity():
     print("==================")
     try:
         from shared.simple_db import SimpleDB
+
         db = SimpleDB()
-        cursor = db.execute('SELECT source_type, COUNT(*) as count FROM documents WHERE extraction_date > datetime("now", "-7 days") GROUP BY source_type ORDER BY count DESC')
+        cursor = db.execute(
+            'SELECT source_type, COUNT(*) as count FROM documents WHERE extraction_date > datetime("now", "-7 days") GROUP BY source_type ORDER BY count DESC'
+        )
         results = cursor.fetchall()
         if results:
-            print('Documents added in last 7 days:')
+            print("Documents added in last 7 days:")
             for source, count in results:
-                print(f'  {source}: {count} documents')
+                print(f"  {source}: {count} documents")
         else:
-            print('No recent activity')
+            print("No recent activity")
     except Exception as e:
-        print(f'Unable to check activity: {e}')
+        print(f"Unable to check activity: {e}")
 
 
 def test_gmail():
@@ -62,11 +67,12 @@ def test_gmail():
     print("📧 Testing Gmail connection...")
     try:
         from gmail.main import GmailService
+
         GmailService()
-        print('✅ Gmail connection works')
+        print("✅ Gmail connection works")
     except Exception as e:
-        print(f'❌ Gmail test failed: {e}')
-        print('Run: make setup-gmail-auth for setup instructions')
+        print(f"❌ Gmail test failed: {e}")
+        print("Run: make setup-gmail-auth for setup instructions")
 
 
 def db_stats():
@@ -77,26 +83,27 @@ def db_stats():
     print("=====================")
     try:
         from shared.simple_db import SimpleDB
+
         db = SimpleDB()
-        
-        cursor = db.execute('SELECT COUNT(DISTINCT sha256) FROM documents')
+
+        cursor = db.execute("SELECT COUNT(DISTINCT sha256) FROM documents")
         total_docs = cursor.fetchone()[0]
-        print(f'Total documents: {total_docs}')
-        
-        cursor = db.execute('SELECT source_type, COUNT(*) FROM documents GROUP BY source_type')
+        print(f"Total documents: {total_docs}")
+
+        cursor = db.execute("SELECT source_type, COUNT(*) FROM documents GROUP BY source_type")
         for source, count in cursor.fetchall():
-            print(f'{source}: {count}')
-        
-        cursor = db.execute('SELECT COUNT(*) FROM content_unified')
+            print(f"{source}: {count}")
+
+        cursor = db.execute("SELECT COUNT(*) FROM content_unified")
         content_count = cursor.fetchone()[0]
-        print(f'Content entries: {content_count}')
-        
+        print(f"Content entries: {content_count}")
+
         # Database size
-        if os.path.exists('data/emails.db'):
-            size_mb = os.path.getsize('data/emails.db') / 1024 / 1024
-            print(f'Database size: {size_mb:.1f} MB')
+        if os.path.exists("data/emails.db"):
+            size_mb = os.path.getsize("data/emails.db") / 1024 / 1024
+            print(f"Database size: {size_mb:.1f} MB")
     except Exception as e:
-        print(f'Error getting stats: {e}')
+        print(f"Error getting stats: {e}")
 
 
 def performance_stats():
@@ -108,23 +115,23 @@ def performance_stats():
     try:
         from shared.simple_db import SimpleDB
         from utilities.embeddings import get_embedding_service
-        
-        print('Testing embedding speed...')
+
+        print("Testing embedding speed...")
         start = time.time()
         emb = get_embedding_service()
-        emb.encode('test query for performance')
+        emb.encode("test query for performance")
         embed_time = time.time() - start
-        print(f'Embedding generation: {embed_time:.3f}s')
-        
-        print('Testing database speed...')
+        print(f"Embedding generation: {embed_time:.3f}s")
+
+        print("Testing database speed...")
         start = time.time()
         db = SimpleDB()
-        cursor = db.execute('SELECT COUNT(*) FROM documents')
+        cursor = db.execute("SELECT COUNT(*) FROM documents")
         cursor.fetchone()
         db_time = time.time() - start
-        print(f'Database query: {db_time:.3f}s')
+        print(f"Database query: {db_time:.3f}s")
     except Exception as e:
-        print(f'Error getting performance stats: {e}')
+        print(f"Error getting performance stats: {e}")
 
 
 def optimize_db():
@@ -134,34 +141,37 @@ def optimize_db():
     print("⚡ Optimizing database...")
     try:
         from shared.simple_db import SimpleDB
+
         db = SimpleDB()
-        db.execute('VACUUM')
-        db.execute('REINDEX')
-        print('✅ Database optimized')
+        db.execute("VACUUM")
+        db.execute("REINDEX")
+        print("✅ Database optimized")
     except Exception as e:
-        print(f'Error optimizing database: {e}')
+        print(f"Error optimizing database: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python make_helpers.py <function_name>")
-        print("Available functions: test_basic, recent_activity, test_gmail, db_stats, performance_stats, optimize_db")
+        print(
+            "Available functions: test_basic, recent_activity, test_gmail, db_stats, performance_stats, optimize_db"
+        )
         sys.exit(1)
-    
+
     function_name = sys.argv[1]
-    
-    if function_name == 'test_basic':
+
+    if function_name == "test_basic":
         success = test_basic()
         sys.exit(0 if success else 1)
-    elif function_name == 'recent_activity':
+    elif function_name == "recent_activity":
         recent_activity()
-    elif function_name == 'test_gmail':
+    elif function_name == "test_gmail":
         test_gmail()
-    elif function_name == 'db_stats':
+    elif function_name == "db_stats":
         db_stats()
-    elif function_name == 'performance_stats':
+    elif function_name == "performance_stats":
         performance_stats()
-    elif function_name == 'optimize_db':
+    elif function_name == "optimize_db":
         optimize_db()
     else:
         print(f"Unknown function: {function_name}")

@@ -20,7 +20,7 @@ class GmailConfig:
             "gaildcalhoun@gmail.com",
         ]
         self.max_results = 500  # Gmail API max per request
-        
+
         # Dates to exclude from sync (format: YYYY/MM/DD)
         self.excluded_dates = [
             "2023/10/03",  # October 3rd, 2023
@@ -39,7 +39,7 @@ class GmailConfig:
 
         # Add date restriction to exclude emails before 2023
         date_filter = "after:2022/12/31"
-        
+
         # Add exclusions for specific dates
         for excluded_date in self.excluded_dates:
             # Gmail doesn't support direct date exclusion, so we use before/after

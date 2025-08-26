@@ -46,11 +46,13 @@ def count_db_eligible(db_path: str) -> int:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     # Count content that has embeddings (already processed)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT COUNT(DISTINCT c.id) 
         FROM content_unified c
         INNER JOIN embeddings e ON c.id = e.content_id
-    """)
+    """
+    )
     n = cur.fetchone()[0]
     conn.close()
     return int(n)
@@ -65,15 +67,15 @@ def qdrant_client():
         from qdrant_client import QdrantClient
     except ImportError:
         raise RuntimeError("qdrant-client not installed. Run: pip install qdrant-client")
-    
+
     url = os.getenv("VSTORE_URL")
     host = os.getenv("VSTORE_HOST", "localhost")
     port = os.getenv("VSTORE_PORT", "6333")
     api_key = os.getenv("VSTORE_API_KEY") or None
-    
+
     if url:
         return QdrantClient(url=url, api_key=api_key)
-    
+
     # Default to localhost:6333 if no specific config
     return QdrantClient(host=host, port=int(port), api_key=api_key)
 
@@ -95,16 +97,16 @@ def qdrant_stats(client, collection: str):
         # Collection check
         meta = client.get_collection(collection)
         info["collection_exists"] = True
-        
+
         # Get vector dimensions
-        if hasattr(meta.config, 'params') and hasattr(meta.config.params, 'vectors'):
+        if hasattr(meta.config, "params") and hasattr(meta.config.params, "vectors"):
             info["dimension"] = meta.config.params.vectors.size
-        
+
         # Exact count
         cnt = client.count(collection, exact=True).count
         info["point_count"] = int(cnt)
         return info
-        
+
     except Exception as e:
         info["error"] = f"{type(e).__name__}: {e}"
         return info
@@ -112,6 +114,7 @@ def qdrant_stats(client, collection: str):
 
 def main():
     from config.settings import DatabaseSettings
+
     db = DatabaseSettings().emails_db_path
     collection = os.getenv("VSTORE_COLLECTION", "emails")  # Default to emails
     allow_empty = _bool("ALLOW_EMPTY_COLLECTION", False)
@@ -135,7 +138,7 @@ def main():
         return 2
 
     delta = eligible - (qstats.get("point_count") or 0)
-    dim_ok = (qstats.get("dimension") == expected_dim)
+    dim_ok = qstats.get("dimension") == expected_dim
 
     out = {
         "ts": datetime.utcnow().isoformat() + "Z",
@@ -143,12 +146,12 @@ def main():
             "db": db,
             "collection": collection,
             "expected_dim": expected_dim,
-            "allow_empty_collection": allow_empty
+            "allow_empty_collection": allow_empty,
         },
         "qdrant": qstats,
         "db": {"eligible_content": eligible},
         "reconciliation": {"delta": delta},
-        "exit": 0
+        "exit": 0,
     }
 
     exit_code = 0
@@ -160,7 +163,7 @@ def main():
         exit_code = 2
     if (qstats.get("point_count") == 0) and (not allow_empty):
         exit_code = 2
-    
+
     # Delta handling: warn for small deltas, fail for large ones
     delta_threshold = int(os.getenv("DELTA_THRESHOLD", "50"))
     if delta != 0:

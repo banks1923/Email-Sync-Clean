@@ -50,11 +50,9 @@ class EntityDatabase:
             ]
 
             # Check which columns already exist
-            existing_columns = self.db.fetch(
-                "PRAGMA table_info(email_entities)"
-            )
-            existing_column_names = {col['name'] for col in existing_columns}
-            
+            existing_columns = self.db.fetch("PRAGMA table_info(email_entities)")
+            existing_column_names = {col["name"] for col in existing_columns}
+
             for column_name, column_def in new_columns:
                 if column_name not in existing_column_names:
                     try:

@@ -25,8 +25,9 @@ except ImportError:
 
 # Import shared database
 try:
-    from shared.simple_db import SimpleDB
     from config.settings import get_db_path
+    from shared.simple_db import SimpleDB
+
     DB_AVAILABLE = True
 except ImportError:
     DB_AVAILABLE = False
@@ -51,7 +52,7 @@ class DocumentPipeline:
         # Use centralized config if no path provided
         if db_path is None:
             db_path = get_db_path()
-            
+
         self.lifecycle = DocumentLifecycleManager(base_path)
         self.naming = NamingConvention()
         self.detector = FormatDetector()
@@ -136,12 +137,10 @@ class DocumentPipeline:
                 "case_name": case_name,
                 "doc_type": doc_type,
                 "format_type": format_type,
-                "processed_at": datetime.now().isoformat()
+                "processed_at": datetime.now().isoformat(),
             }
-            
-            process_result = self.lifecycle.process_file(
-                file_path, content, format_type, metadata
-            )
+
+            process_result = self.lifecycle.process_file(file_path, content, format_type, metadata)
 
             self.stats["processed"] += 1
 
@@ -167,7 +166,6 @@ class DocumentPipeline:
                 pass
 
             return {"success": False, "error": str(e), "file": str(file_path)}
-
 
     def process_directory(
         self,

@@ -346,13 +346,13 @@ EmbedderFactory.PROVIDER_INFO = {
 
 ```
 BaseEmbedder (ABC)
-├── OpenAIEmbedder (formerly EmailEmbedder)
-└── LegalBERTEmbedder
+ OpenAIEmbedder (formerly EmailEmbedder)
+ LegalBERTEmbedder
 
 EmbedderFactory
-├── Provider registry and capabilities
-├── Configuration validation
-└── Instance creation with error handling
+ Provider registry and capabilities
+ Configuration validation
+ Instance creation with error handling
 ```
 
 ### Integration Points

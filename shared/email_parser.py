@@ -10,25 +10,27 @@ from typing import Any
 
 # Compile regex patterns once for performance
 COMPILED_PATTERNS = {
-    'zero_width': re.compile(r"[\u200b\u200c\u200d\ufeff]"),
-    'html_tags': re.compile(r"<[^<]+?>"),
-    'whitespace': re.compile(r"\s+"),
-    'excessive_newlines': re.compile(r"\n{3,}"),
-    'reply_prefixes': re.compile(r"^(RE:|FW:|FWD:|Re:|Fw:|Fwd:)\s*", re.IGNORECASE),
-    'gmail_quote': re.compile(r"^On .+ wrote:$", re.MULTILINE),
-    'outlook_quote': re.compile(r"^From:.*?\nSent:.*?\nTo:.*?\nSubject:", re.MULTILINE | re.DOTALL),
-    'original_message': re.compile(r"^-{3,}\s*Original Message\s*-{3,}", re.MULTILINE),
-    'underscore_sep': re.compile(r"^_{10,}", re.MULTILINE),
-    'quote_markers': re.compile(r"^>{1,}", re.MULTILINE),
-    'message_id': re.compile(r"<[^<>@\s]+@[^<>\s]+>"),
-    'email_address': re.compile(r"<([^>]+)>"),
+    "zero_width": re.compile(r"[\u200b\u200c\u200d\ufeff]"),
+    "html_tags": re.compile(r"<[^<]+?>"),
+    "whitespace": re.compile(r"\s+"),
+    "excessive_newlines": re.compile(r"\n{3,}"),
+    "reply_prefixes": re.compile(r"^(RE:|FW:|FWD:|Re:|Fw:|Fwd:)\s*", re.IGNORECASE),
+    "gmail_quote": re.compile(r"^On .+ wrote:$", re.MULTILINE),
+    "outlook_quote": re.compile(r"^From:.*?\nSent:.*?\nTo:.*?\nSubject:", re.MULTILINE | re.DOTALL),
+    "original_message": re.compile(r"^-{3,}\s*Original Message\s*-{3,}", re.MULTILINE),
+    "underscore_sep": re.compile(r"^_{10,}", re.MULTILINE),
+    "quote_markers": re.compile(r"^>{1,}", re.MULTILINE),
+    "message_id": re.compile(r"<[^<>@\s]+@[^<>\s]+>"),
+    "email_address": re.compile(r"<([^>]+)>"),
 }
+
 
 @dataclass
 class QuotedMessage:
     """
     Represents an individual message extracted from quoted content.
     """
+
     content: str
     sender: str | None = None
     date: str | None = None
@@ -46,12 +48,12 @@ def clean_text(text: str, max_length: int | None = None) -> str:
     """
     if not text:
         return ""
-        
+
     # Remove extra whitespace using compiled pattern
-    text = COMPILED_PATTERNS['whitespace'].sub(" ", text)
+    text = COMPILED_PATTERNS["whitespace"].sub(" ", text)
 
     # Remove zero-width characters using compiled pattern
-    text = COMPILED_PATTERNS['zero_width'].sub("", text)
+    text = COMPILED_PATTERNS["zero_width"].sub("", text)
 
     # Truncate if needed
     if max_length and len(text) > max_length:
@@ -76,12 +78,12 @@ def normalize_email(email: str) -> str:
     """
     if not email:
         return ""
-    
+
     # Remove name part and angle brackets
-    match = COMPILED_PATTERNS['email_address'].search(email)
+    match = COMPILED_PATTERNS["email_address"].search(email)
     if match:
         email = match.group(1)
-    
+
     return email.lower().strip()
 
 
@@ -95,33 +97,33 @@ def extract_reply_content(email_body: str) -> str:
 
     # Split on common reply boundaries
     boundaries = [
-        COMPILED_PATTERNS['gmail_quote'],
-        COMPILED_PATTERNS['outlook_quote'], 
-        COMPILED_PATTERNS['original_message'],
-        COMPILED_PATTERNS['underscore_sep']
+        COMPILED_PATTERNS["gmail_quote"],
+        COMPILED_PATTERNS["outlook_quote"],
+        COMPILED_PATTERNS["original_message"],
+        COMPILED_PATTERNS["underscore_sep"],
     ]
-    
-    lines = email_body.split('\n')
+
+    lines = email_body.split("\n")
     reply_lines = []
-    
+
     for line in lines:
         # Stop at quote markers
-        if COMPILED_PATTERNS['quote_markers'].match(line):
+        if COMPILED_PATTERNS["quote_markers"].match(line):
             break
-            
+
         # Check boundary patterns
         skip_line = False
         for boundary in boundaries:
             if boundary.search(line):
                 skip_line = True
                 break
-        
+
         if skip_line:
             break
-            
+
         reply_lines.append(line)
-    
-    return clean_text('\n'.join(reply_lines))
+
+    return clean_text("\n".join(reply_lines))
 
 
 def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
@@ -136,7 +138,7 @@ def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
     messages = []
     lines = email_body.split("\n")
     current_message: dict[str, Any] = {"content": [], "depth": 0}
-    
+
     # Enhanced patterns for different email clients
     header_patterns = [
         # Gmail style: "On Mon, Jan 15, 2024 at 2:30 PM John Doe <john@example.com> wrote:"
@@ -146,60 +148,62 @@ def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
         # Original message separator
         re.compile(r"^-{3,}\s*Original Message\s*-{3,}$", re.IGNORECASE),
         # Forwarded message
-        re.compile(r"^-{3,}\s*Forwarded message\s*-{3,}$", re.IGNORECASE)
+        re.compile(r"^-{3,}\s*Forwarded message\s*-{3,}$", re.IGNORECASE),
     ]
-    
+
     in_header = False
     header_lines = []
     quote_depth = 0
-    
+
     for i, line in enumerate(lines):
         # Count quote depth (> markers)
         stripped_line = line.lstrip()
-        len(line) - len(stripped_line.lstrip('>'))
-        
-        if stripped_line.startswith('>'):
-            quote_depth = stripped_line.count('>')
+        len(line) - len(stripped_line.lstrip(">"))
+
+        if stripped_line.startswith(">"):
+            quote_depth = stripped_line.count(">")
         else:
             quote_depth = 0
-        
+
         # Check for message headers
         is_header = False
         sender = None
-        
+
         for pattern in header_patterns:
             match = pattern.search(line)
             if match:
                 is_header = True
                 if match.groups():
                     sender = match.group(1).strip()
-                
+
                 # Save current message before starting new one
                 if current_message["content"]:
                     content_text = "\n".join(current_message["content"]).strip()
                     if content_text:
-                        messages.append(QuotedMessage(
-                            content=clean_text(content_text),
-                            sender=current_message.get("sender"),
-                            date=current_message.get("date"), 
-                            depth=current_message["depth"],
-                            raw_header=current_message.get("raw_header")
-                        ))
-                
+                        messages.append(
+                            QuotedMessage(
+                                content=clean_text(content_text),
+                                sender=current_message.get("sender"),
+                                date=current_message.get("date"),
+                                depth=current_message["depth"],
+                                raw_header=current_message.get("raw_header"),
+                            )
+                        )
+
                 # Start new message
                 current_message = {
                     "content": [],
                     "depth": quote_depth,
                     "sender": sender,
-                    "raw_header": line
+                    "raw_header": line,
                 }
                 in_header = True
                 header_lines = [line]
                 break
-        
+
         if is_header:
             continue
-            
+
         # Collect header lines
         if in_header:
             header_lines.append(line)
@@ -208,37 +212,37 @@ def parse_conversation_chain(email_body: str) -> list[QuotedMessage]:
                 date_match = re.search(r"Sent:\s*(.+)|Date:\s*(.+)", line)
                 if date_match:
                     current_message["date"] = (date_match.group(1) or date_match.group(2)).strip()
-            
+
             # End header when we hit empty line or content
             if line.strip() == "" or (_count_header_lines(header_lines) >= 3):
                 in_header = False
                 current_message["raw_header"] = "\n".join(header_lines)
                 continue
-        
+
         # Regular content line
         if not in_header and line.strip():
             current_message["content"].append(line)
-    
+
     # Save final message
     if current_message["content"]:
         content_text = "\n".join(current_message["content"]).strip()
         if content_text:
-            messages.append(QuotedMessage(
-                content=clean_text(content_text),
-                sender=current_message.get("sender"),
-                date=current_message.get("date"),
-                depth=current_message["depth"],
-                raw_header=current_message.get("raw_header")
-            ))
-    
+            messages.append(
+                QuotedMessage(
+                    content=clean_text(content_text),
+                    sender=current_message.get("sender"),
+                    date=current_message.get("date"),
+                    depth=current_message["depth"],
+                    raw_header=current_message.get("raw_header"),
+                )
+            )
+
     # If no messages found, treat entire body as single message
     if not messages and email_body.strip():
-        messages.append(QuotedMessage(
-            content=clean_text(email_body),
-            message_type="original",
-            depth=0
-        ))
-    
+        messages.append(
+            QuotedMessage(content=clean_text(email_body), message_type="original", depth=0)
+        )
+
     return messages
 
 
@@ -249,7 +253,7 @@ def _parse_message_header(header_lines: list[str]) -> tuple[str | None, str | No
     sender = None
     date = None
     subject = None
-    
+
     for line in header_lines:
         if line.startswith("From:"):
             sender = line[5:].strip()
@@ -257,7 +261,7 @@ def _parse_message_header(header_lines: list[str]) -> tuple[str | None, str | No
             date = line.split(":", 1)[1].strip()
         elif line.startswith("Subject:"):
             subject = line[8:].strip()
-    
+
     return sender, date, subject
 
 
@@ -267,7 +271,10 @@ def _count_header_lines(lines: list[str]) -> int:
     """
     header_count = 0
     for line in lines:
-        if any(line.startswith(prefix) for prefix in ["From:", "To:", "Sent:", "Date:", "Subject:", "Cc:", "Bcc:"]):
+        if any(
+            line.startswith(prefix)
+            for prefix in ["From:", "To:", "Sent:", "Date:", "Subject:", "Cc:", "Bcc:"]
+        ):
             header_count += 1
     return header_count
 
@@ -279,7 +286,7 @@ def _is_signature_line(line: str) -> bool:
     line = line.strip()
     if len(line) < 3:
         return False
-    
+
     # Common signature patterns
     signature_indicators = ["--", "Best regards", "Sincerely", "Thanks", "Phone:", "Email:", "www."]
     return any(indicator in line for indicator in signature_indicators)

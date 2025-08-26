@@ -76,7 +76,7 @@ class PDFHealthManager:
         # Extract database health to determine component status
         db_health = metrics["database"]
         system_health = metrics["system"]
-        
+
         return {
             "available": healthy,  # Overall service availability - FIXED: Added missing key
             "components": {  # Component-specific health status
@@ -88,7 +88,7 @@ class PDFHealthManager:
             "version": "1.0",  # Health contract schema version
             # Legacy keys for backward compatibility
             "success": True,
-            "service": "pdf_service", 
+            "service": "pdf_service",
             "healthy": healthy,
             "timestamp": datetime.now().isoformat(),
             "database_health": db_health,
@@ -110,7 +110,7 @@ class PDFHealthManager:
             "available": False,  # FIXED: Added missing key for error response
             "components": {  # All components considered unavailable on error
                 "db": False,
-                "storage": False, 
+                "storage": False,
                 "pdf_processor": False,
             },
             "ts": datetime.now().timestamp(),  # Timestamp as float for consistency

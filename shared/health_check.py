@@ -59,15 +59,16 @@ class HealthCheck:
         try:
             # Basic connectivity test without importing higher-layer modules
             import requests
+
             response = requests.get("http://localhost:6333/collections", timeout=2)
             if response.status_code == 200:
                 return {"healthy": True, "service": "qdrant", "status": "connected"}
             else:
                 return {
                     "healthy": True,  # Still healthy, just degraded
-                    "service": "qdrant", 
+                    "service": "qdrant",
                     "status": "unavailable (using keyword search)",
-                    "error": f"HTTP {response.status_code}"
+                    "error": f"HTTP {response.status_code}",
                 }
         except Exception as e:
             # Qdrant is optional, so not being available is okay
@@ -109,7 +110,7 @@ class HealthCheck:
         try:
             # Check for basic model dependencies without importing higher-layer modules
             models_status = {}
-            
+
             # Check if sentence-transformers is available (for embeddings)
             try:
                 models_status["sentence_transformers"] = "available"

@@ -4,9 +4,10 @@ Test BigQuery connection and setup.
 """
 
 import os
-from google.cloud import bigquery
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from google.cloud import bigquery
 
 # Set credentials
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'

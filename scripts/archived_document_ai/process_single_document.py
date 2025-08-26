@@ -12,6 +12,7 @@ Examples:
 import os
 import sys
 from pathlib import Path
+
 from google.cloud import documentai_v1 as documentai
 
 # Set credentials

@@ -15,6 +15,7 @@ from pathlib import Path
 try:
     # Use Pydantic config for path management if available
     from config.settings import settings
+
     project_root = Path(settings.paths.data_root).parent
 except ImportError:
     # Fallback to path calculation (3 levels deep: infrastructure/mcp_servers/*.py)
@@ -31,6 +32,7 @@ from mcp.types import TextContent, Tool
 # Import only infrastructure layer dependencies
 try:
     from shared.simple_db import SimpleDB
+
     SERVICES_AVAILABLE = True
 except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
@@ -51,6 +53,7 @@ def search_smart(
     try:
         # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
+
         service = get_search_intelligence_service()
 
         # Add content type filter if specified
@@ -109,6 +112,7 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
     try:
         # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
+
         service = get_search_intelligence_service()
 
         # Find similar documents
@@ -160,6 +164,7 @@ def search_entities(
     try:
         # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
+
         service = get_search_intelligence_service()
 
         if document_id:
@@ -172,6 +177,7 @@ def search_entities(
             # Extract from provided text
             # Direct import following clean architecture pattern
             from entity import EntityService
+
             entity_service = EntityService()
 
             result = entity_service.extract_email_entities("temp_doc", text)
@@ -265,6 +271,7 @@ def search_summarize(
         # Get summarizer and extract summary
         # Direct import following clean architecture pattern
         from summarization import get_document_summarizer
+
         summarizer = get_document_summarizer()
         summary = summarizer.extract_summary(
             text=text,
@@ -310,6 +317,7 @@ def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: i
     try:
         # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
+
         service = get_search_intelligence_service()
 
         # Perform clustering
@@ -375,6 +383,7 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
     try:
         # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
+
         service = get_search_intelligence_service()
         db = SimpleDB()
 
@@ -406,9 +415,10 @@ def search_process_all(operation: str, content_type: str | None = None, limit: i
 
         elif operation == "generate_summaries":
             output += f"📝 Generating summaries for {len(documents)} documents...\n\n"
-            
+
             # Direct import following clean architecture pattern
             from summarization import get_document_summarizer
+
             summarizer = get_document_summarizer()
 
             for doc in documents:

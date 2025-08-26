@@ -5,21 +5,21 @@ ingestion success.
 Implements: pre-screening, PDF splitting, coverage metrics, stage->merge pattern, and operational guardrails.
 """
 
-import os
-import json
 import hashlib
+import json
 import logging
-import time
+import os
 import sqlite3
-from pathlib import Path
-from datetime import datetime
+import time
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
-from google.cloud import documentai_v1 as documentai
-from google.cloud import bigquery
-from google.api_core.client_options import ClientOptions
 from google.api_core import exceptions as api_exceptions
 from google.api_core import retry
+from google.api_core.client_options import ClientOptions
+from google.cloud import bigquery
+from google.cloud import documentai_v1 as documentai
 from pypdf import PdfReader, PdfWriter
 
 # ============= CONFIGURATION =============

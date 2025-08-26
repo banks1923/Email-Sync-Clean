@@ -119,9 +119,7 @@ def parse_date_filter(date_input: str) -> datetime | None:
     return None
 
 
-def get_date_range(
-    since: str = None, until: str = None
-) -> tuple[datetime | None, datetime | None]:
+def get_date_range(since: str = None, until: str = None) -> tuple[datetime | None, datetime | None]:
     """Get date range for filtering.
 
     Args:
@@ -152,17 +150,17 @@ def parse_date_from_filename(filename: str) -> datetime | None:
     """
     if not filename:
         return None
-    
+
     # Common filename date patterns
     patterns = [
         r"(\d{4})-(\d{2})-(\d{2})",  # YYYY-MM-DD
         r"(\d{4})_(\d{2})_(\d{2})",  # YYYY_MM_DD
-        r"(\d{4})(\d{2})(\d{2})",    # YYYYMMDD
+        r"(\d{4})(\d{2})(\d{2})",  # YYYYMMDD
         r"(\d{2})-(\d{2})-(\d{4})",  # MM-DD-YYYY
         r"(\d{2})_(\d{2})_(\d{4})",  # MM_DD_YYYY
         r"(\d{2})/(\d{2})/(\d{4})",  # MM/DD/YYYY
     ]
-    
+
     for pattern in patterns:
         match = re.search(pattern, filename)
         if match:
@@ -174,11 +172,11 @@ def parse_date_from_filename(filename: str) -> datetime | None:
                         year, month, day = int(groups[0]), int(groups[1]), int(groups[2])
                     else:  # MM-DD-YYYY format
                         month, day, year = int(groups[0]), int(groups[1]), int(groups[2])
-                    
+
                     # Validate date components
                     if 1 <= month <= 12 and 1 <= day <= 31 and 1900 <= year <= 2100:
                         return datetime(year, month, day)
             except (ValueError, TypeError):
                 continue
-    
+
     return None

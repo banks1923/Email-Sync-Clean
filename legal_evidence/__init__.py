@@ -10,10 +10,10 @@ from .report_generator import LegalReportGenerator, get_report_generator
 from .thread_analyzer import ThreadAnalyzer, get_thread_analyzer
 
 __all__ = [
-    'EvidenceTracker',
-    'get_evidence_tracker',
-    'LegalReportGenerator',
-    'get_report_generator',
-    'ThreadAnalyzer',
-    'get_thread_analyzer'
+    "EvidenceTracker",
+    "get_evidence_tracker",
+    "LegalReportGenerator",
+    "get_report_generator",
+    "ThreadAnalyzer",
+    "get_thread_analyzer",
 ]

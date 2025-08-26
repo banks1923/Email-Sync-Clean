@@ -1,9 +1,145 @@
 {
   "master": {
-    "tasks": [],
+    "tasks": [
+      {
+        "id": 21,
+        "title": "Project & Environment Setup + Dependency Pinning",
+        "description": "Update existing project dependencies and verify compatibility for semantic-search v2 token-based chunking and document-level retrieval.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "• Add missing dependencies to existing requirements.txt/pyproject.toml:\n  - tiktoken==0.5.1 (tokenizer for chunk sizing)\n  - spacy==3.7.2 + en_core_web_sm (sentence boundary detection)\n  - sentencepiece==0.1.99 (fallback tokenizer)\n  - whoosh==2.7.4 (BM25 indexing for hybrid search)\n  - boilerpy3==1.0.6 (OCR scan preprocessing)\n• Verify existing Qdrant vector store compatibility:\n  - Check current qdrant-client version (upgrade to 1.7.3 if needed)\n  - Ensure support for multiple collections (vectors_v2)\n  - Test connection and existing collection integrity\n• Audit current database setup:\n  - Verify SQLAlchemy version (upgrade to 2.0.29 if needed)\n  - Check if schema can accommodate content_embeddings table\n  - Ensure foreign key support is enabled\n• Update existing tools/scripts:\n  - Identify scripts that interact with vector store\n  - Plan migration path for scripts to use new chunking pipeline\n  - Document which scripts need v2 compatibility updates\n• Add quality scoring dependencies:\n  - scikit-learn==1.5.0 (RRF, metrics, quality scoring)\n  - numpy==1.26.4, scipy==1.12.0 (mathematical operations)\n• Verify testing infrastructure:\n  - Ensure pytest==8.2.0, pytest-asyncio==0.23.5 installed\n  - Check if CI/CD pipeline needs adjustments for new dependencies\n• Create migration checklist for existing functionality",
+        "testStrategy": "1. Run `pip list` or `poetry show` to verify all new dependencies installed with correct versions.\n2. Test Qdrant connection: verify existing collections intact and can create new `vectors_v2` collection.\n3. Database compatibility: run test migration creating content_embeddings table schema.\n4. Import tests: `python -c \"import tiktoken, spacy, whoosh\"` should succeed.\n5. Existing functionality: run current test suite to ensure no regressions.\n6. Performance baseline: measure current search latency for comparison with v2.",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Implement Token-Based DocumentChunker",
+        "description": "Create reusable class to split documents into 900-1100-token, sentence-aware chunks with 15 % overlap and doc-type specific pre-splitting logic.",
+        "details": "• File: /src/chunker/document_chunker.py\n• Use tiktoken (cl100k_base) for token counting (≈OpenAI tokenizer) — fall back to sentencepiece for unknown model.\n• Sentence detection via spaCy. `nlp.add_pipe(\"sentencizer\")` for speed.\n• Algorithm:\n 1. Pre-split by doc_type:\n    - email → regex on forward/reply separators\n    - legal_pdf → regex on ^[A-Z ]{3,}$ section headers\n    - ocr_scan → run `boilerpy3` (pip install boilerpy3==1.0.6) to drop boilerplate.\n 2. Iterate segments, sliding window: target_tokens=1000, overlap_ratio=0.15.\n 3. Backtrack to nearest sentence boundary when chunk_len>target and >MIN_CHUNK_TOKENS.\n 4. Produce DocumentChunk dataclass containing metadata (token_start/end, section_title, quote_depth, etc.)\n 5. Deterministic chunk_idx numbering, id format `f\"{doc_id}:{chunk_idx}\"`.\n• Provide streaming generator mode for memory efficiency.\n• Expose CLI: `python -m chunker.cli --file examples/email.eml --doc-type email`.\n",
+        "testStrategy": "Unit tests (/tests/test_chunker.py):\n• Parametrized fixtures for 3 doc types (sample files in /tests/fixtures).\n• Assert:\n  - All chunks 900-1100 tokens except final ones.\n  - Consecutive token ranges overlap ≈15 %.\n  - Sentence boundaries preserved (`chunk_text[-1] in '.?!'`).\n  - Chunk IDs stable across runs.\n• Fuzz test 100 random long strings with hypothesis.\n• Bench test: chunk 50-page PDF < 2 s on M1.\n",
+        "priority": "high",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Quality Scoring & Gating Module",
+        "description": "Compute quality_score for chunks and enforce gating threshold (≥0.35).",
+        "details": "• File: /src/quality/quality_score.py\n• Implement `ChunkQualityScorer` with method `score(chunk: DocumentChunk) -> float` using formula in PRD.\n• Use numpy for vectorised math; shannon entropy via `scipy.stats.entropy` on token frequencies.\n• Quote depth passed from chunk metadata; headers-only detection via regexes (`^From:|^Sent:` lines >80 %?)\n• Provide hard exclusions first – returns 0.\n• Integrate with Chunker: `chunk.quality_score = scorer.score(chunk)`.\n• Expose config via Pydantic `Settings` class; env var override MIN_QUALITY_SCORE.\n• Provide decorator `@quality_gate` to wrap generators and drop low-score chunks.\n",
+        "testStrategy": "Unit tests (/tests/test_quality.py):\n• Craft chunks with varying length, entropy, quote_depth → assert scores against manual expectations ±0.01.\n• Property test: scores in [0,1].\n• Integration test with chunker: feed email thread; assert stub/signature chunks removed.\n",
+        "priority": "high",
+        "dependencies": [
+          22
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Database Schema Migration Scripts",
+        "description": "Verify existing schema and implement content_embeddings table if needed for chunk-level embeddings using SimpleDB pattern.",
+        "status": "pending",
+        "dependencies": [
+          21
+        ],
+        "priority": "high",
+        "details": "• Analyze current schema state - content_unified already has embedding_generated and ready_for_embedding columns (663 ready, 23 embedded).\n• Determine if content_embeddings table is needed for chunk-level vs document-level embeddings:\n  - If needed: Create table with schema for chunk embeddings (doc_id, chunk_idx, model, vector_id, etc.)\n  - If not needed: Document why current schema is sufficient\n• Use SimpleDB pattern for any schema updates (no Alembic):\n  - Direct SQLite operations with PRAGMA foreign_keys=ON\n  - Add indices: idx_embeddings_doc, idx_embeddings_quality if creating new table\n• Update SimpleDB with any new table methods if content_embeddings is added\n• Ensure compatibility with existing 663 items ready for embedding",
+        "testStrategy": "• Query existing schema to verify current state (content_unified columns, existing data counts)\n• If new table created:\n  - Test table creation with proper constraints and indices\n  - Validate UNIQUE constraint on (doc_id, chunk_idx, model) if applicable\n  - Test foreign key relationships work correctly\n• Test SimpleDB methods can interact with schema changes\n• Verify no disruption to existing 663 ready items and 23 embedded items\n• Run scripts/verify_semantic_wiring.py to ensure pipeline compatibility",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Pipeline Integration: Chunking, Quality Gating & Embedding Ingestion",
+        "description": "Integrate the new DocumentChunker and quality scoring modules with existing embedding services (utilities/embeddings/) and vector store (utilities/vector_store/) to process the 663 items ready for embedding.",
+        "status": "pending",
+        "dependencies": [
+          22,
+          23,
+          24
+        ],
+        "priority": "high",
+        "details": "• Integrate with existing infrastructure/pipelines/service_orchestrator.py:\n 1. Fetch document text & metadata from content_unified table (663 items with ready_for_embedding=true).\n 2. Apply DocumentChunker from task #22 → quality gate with ChunkQualityScorer from task #23 (score ≥0.35).\n 3. Use existing utilities/embeddings/embedding_service.py to generate embeddings (batch 64-128 chunks).\n 4. Store chunk metadata in new content_embeddings table via shared/simple_db.py.\n 5. Upsert vectors to Qdrant via utilities/vector_store/ into new `vectors_v2` collection.\n• Extend utilities/semantic_pipeline.py to coordinate the chunking→quality→embedding flow.\n• Ensure idempotency: check for existing (doc_id, chunk_idx, model) before processing.\n• Update individual_messages.chunk_count and processing flags.\n• CLI integration: Extend existing vsearch tool or add new command for chunk-based ingestion.\n• Add metrics tracking: chunks_processed, chunks_dropped_quality, embed_latency.",
+        "testStrategy": "Integration test using existing test infrastructure:\n• Process sample documents through the pipeline; verify chunks in content_embeddings table match vectors in Qdrant vectors_v2.\n• Re-run ingestion → verify idempotency (no duplicates).\n• Assert quality_gate filters chunks below 0.35 threshold.\n• Verify compatibility with existing 23 already-embedded items.",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Document-Level Retrieval, RRF Aggregation & Dynamic Weighting",
+        "description": "Enhance existing search_intelligence service with two-stage hybrid retrieval, chunk aggregation and reciprocal rank fusion at document granularity.",
+        "status": "pending",
+        "dependencies": [
+          25
+        ],
+        "priority": "high",
+        "details": "• Enhance search_intelligence/main.py and search_intelligence/similarity.py:\n  - Extend existing hybrid search with RRF aggregation\n  - Leverage existing BM25 implementation and Qdrant integration\n• Stage 1 (enhance existing):\n  - BM25: Use existing keyword search over title+body+entities\n  - Semantic: Query Qdrant via utilities/vector_store/ with top_k=100, filter quality_score>=0.35\n• Dynamic weights via new `calculate_weights(query)` method in search_intelligence/\n• Stage 2 (new aggregation logic):\n  - Group semantic chunks by document_id, keep max top-3 scores each\n  - Combine BM25 + semantic scores with calculated weights\n  - Apply RRF (rrf_score = Σ 1/(k+rank_i) where k=60) using custom implementation\n  - Enforce result diversity (≤3 per source_type) & exact match boosts\n• Output top-10 docs with aggregated metadata including highest_quality_chunk\n• Extend tools/scripts/vsearch with new --rrf flag for RRF-based search\n• Ensure p95 latency <200ms using existing async patterns from utilities/vector_store/",
+        "testStrategy": "Unit tests in tests/unit/test_search_intelligence_rrf.py for weight calculator (short vs long query scenarios).\nIntegration test in tests/integration/: mock vector + BM25 scores, assert RRF ordering.\nEnd-to-end test using existing test infrastructure; compare standard vs RRF recall/precision on sample queries.\nBenchmark script in tests/performance/ records latency over 100 requests; assert p95<200ms.",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Feature Flags & Dual Index Routing",
+        "description": "Implement environment-based feature flags to toggle between v1 and v2 search pipelines for CLI tools.",
+        "status": "pending",
+        "dependencies": [
+          24,
+          25
+        ],
+        "priority": "medium",
+        "details": "• Add feature flag support to `config/settings.py` using Pydantic settings:\n  - `SEARCH_PIPELINE`: 'v1' | 'v2' (default: 'v1')\n  - `EMBEDDING_MODEL`: 'legal-bert-v1' | 'legal-bert-v2'\n  - `CHUNK_QUALITY_THRESHOLD`: float (default: 0.35)\n• Update `tools/scripts/vsearch` CLI to accept `--pipeline` flag:\n  - `vsearch search \"query\" --pipeline v2` overrides env var\n  - `vsearch config get SEARCH_PIPELINE` shows current setting\n  - `vsearch config set SEARCH_PIPELINE v2` updates setting\n• Routing in search_intelligence/main.py:\n  - Check settings.SEARCH_PIPELINE value\n  - Route to appropriate retriever (existing vs new chunked/embedded content)\n  - v1: Direct content_unified search\n  - v2: Vector search through content_embeddings + Qdrant vectors_v2\n• Store persistent flags in `.config/feature_flags.json` (name, value, updated_at)\n• Admin commands via Makefile:\n  - `make set-pipeline PIPELINE=v2`\n  - `make show-flags`\n• Update README.md with flag documentation.",
+        "testStrategy": "Unit test settings.py flag loading from env and config file.\nIntegration test: Set SEARCH_PIPELINE=v2 env var, run `vsearch search \"test\"`, assert it queries content_embeddings table and vectors_v2 collection.\nTest CLI flag override: `vsearch search \"test\" --pipeline v1` should use v1 even when env is v2.\nTest config persistence: `vsearch config set` should persist across sessions.",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Re-Embedding & Migration Script",
+        "description": "Build batch re-embedding script for historical documents with checkpointing, parallel processing, and monitoring using existing project infrastructure.",
+        "status": "pending",
+        "dependencies": [
+          27,
+          25
+        ],
+        "priority": "medium",
+        "details": "• File: scripts/batch_reembed.py (following scripts/parse_messages.py pattern)\n• Arguments: --batch-size (default 100), --parallel (worker threads, default 4), --checkpoint (resume file path), --dry-run, --validate-only\n• Query SimpleDB for documents where ready_for_embedding=true but embedding_generated=false (663 items currently)\n• Use ThreadPoolExecutor from concurrent.futures for parallel processing\n• Call utilities/semantic_pipeline.py for actual embedding generation (leverages existing infrastructure)\n• Store checkpoint JSON every 60 seconds to resume on interruption (like parse_messages.py resume pattern)\n• Use loguru for logging (project standard), no Prometheus\n• Calculate and display ETA based on (processed/total) rate\n• --validate-only mode to compare embedded vs non-embedded counts\n• Integration with tools/scripts/vsearch for monitoring progress",
+        "testStrategy": "• Test with subset of 50 documents first using --dry-run flag\n• Verify checkpoint/resume functionality by interrupting with Ctrl-C and restarting\n• Confirm no duplicate embeddings created on resume\n• Validate dry-run produces no database writes using SimpleDB\n• Check loguru output captures all progress milestones\n• Test parallel processing with --parallel 1, 2, 4 to verify thread safety\n• Verify --validate-only correctly reports embedding status counts",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Evaluation Framework & Gold Standard Test Harness",
+        "description": "Create CLI-based evaluation framework using existing vsearch tools to measure search quality metrics on gold standard queries.",
+        "status": "pending",
+        "dependencies": [
+          26,
+          28
+        ],
+        "priority": "medium",
+        "details": "• Directory: tests/evaluation/ (following existing test structure)\n• Store gold_queries.json with expected results grouped by category (email, legal, general)\n• Main script: tests/evaluation/eval_search_quality.py\n  - Load gold queries and expected document IDs\n  - Execute queries via tools/scripts/vsearch search command\n  - Parse CLI output to extract returned document IDs\n  - Calculate precision@10, recall@10, and F1 scores\n  - Track stub ratio (documents with minimal content)\n  - Output results to CSV and Markdown report files\n• Integration with Make commands:\n  - make test-search-quality: Run evaluation suite\n  - make test-search-report: Generate comparison report\n• Store baseline metrics in tests/evaluation/baseline_metrics.json for regression detection\n• Use existing SimpleDB for storing evaluation results history",
+        "testStrategy": "• Create minimal test fixture with 10 gold queries and known-good results\n• Unit test metric calculation functions with synthetic rankings\n• Integration test using tools/scripts/vsearch against test database\n• Verify CSV/Markdown output format matches expected structure\n• Add to existing test suite via pytest to ensure metrics don't regress",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "A/B Testing, Monitoring Dashboards & Cutover Readiness",
+        "description": "Implement CLI-based monitoring and testing procedures to safely validate v2 pipeline before cutover in single-user system.",
+        "status": "pending",
+        "dependencies": [
+          29,
+          27,
+          26
+        ],
+        "priority": "medium",
+        "details": "• Create monitoring script: scripts/monitor_pipeline.py\n  - Track query performance metrics (latency, result count, quality scores)\n  - Compare v1 vs v2 results side-by-side using feature flags from task 27\n  - Log metrics to CSV/JSON for trend analysis\n  - Display results via rich console tables\n\n• Metrics to track:\n  - Query execution time (p50, p95)\n  - Result relevance scores (from task 29 evaluation)\n  - Recall@10 and precision metrics\n  - Token usage and chunk quality distribution\n  - Error rates and failure modes\n\n• Testing procedure:\n  - Run parallel queries through both pipelines using vsearch\n  - Collect metrics over 1-week testing period\n  - Generate daily comparison reports\n  - Manual quality spot-checks on key queries\n\n• Cutover readiness:\n  - Create scripts/cutover_checklist.py to verify all components\n  - Rollback script using feature flags to instantly revert\n  - Documentation of manual test cases\n  - Backup current vector store before migration",
+        "testStrategy": "• Test feature flag switching: rapidly toggle between v1/v2 and verify correct pipeline selection\n• Monitoring script validation: inject known test queries and verify metric collection accuracy\n• Rollback testing: simulate v2 failure and confirm clean reversion to v1\n• Performance regression: ensure monitoring catches intentionally degraded queries\n• Run full test suite from tests/evaluation/ against both pipelines",
+        "subtasks": []
+      }
+    ],
     "metadata": {
-      "created": "2025-08-14T20:57:32.199Z",
-      "updated": "2025-08-20T03:01:11.725Z",
+      "created": "2025-08-26T12:35:13.360Z",
+      "updated": "2025-08-26T14:30:08.301Z",
       "description": "Tasks for master context"
     }
   }

@@ -40,7 +40,7 @@ class DocumentLifecycleManager:
         file_path: Path,
         content: str,
         file_type: str = "document",
-        metadata: dict | None = None
+        metadata: dict | None = None,
     ) -> dict[str, Any]:
         """Process file in place and save clean version.
 
@@ -58,11 +58,7 @@ class DocumentLifecycleManager:
         except Exception as e:
             logger.error(f"Failed to process {file_path.name}: {e}")
             quarantine_path = self.quarantine_file(file_path, str(e))
-            return {
-                "success": False,
-                "error": str(e),
-                "quarantine_path": str(quarantine_path)
-            }
+            return {"success": False, "error": str(e), "quarantine_path": str(quarantine_path)}
 
     def quarantine_file(self, file_path: Path, error_msg: str = "") -> Path:
         """
@@ -75,17 +71,17 @@ class DocumentLifecycleManager:
         Get statistics about processed and quarantined files.
         """
         stats = {}
-        
+
         for folder_name, folder_path in self.folders.items():
             if folder_path.exists():
                 files = [f for f in folder_path.iterdir() if f.is_file()]
                 stats[folder_name] = {
                     "count": len(files),
-                    "total_size_mb": sum(f.stat().st_size for f in files) / (1024 * 1024)
+                    "total_size_mb": sum(f.stat().st_size for f in files) / (1024 * 1024),
                 }
             else:
                 stats[folder_name] = {"count": 0, "total_size_mb": 0}
-        
+
         return stats
 
 

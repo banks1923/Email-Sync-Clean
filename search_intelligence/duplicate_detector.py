@@ -486,5 +486,5 @@ def detect_all_duplicates(content_type: str = None, similarity_threshold: float 
     """
     detector = DuplicateDetector()
     return detector.detect_duplicates(
-        source_type =content_type, similarity_threshold=similarity_threshold, check_semantic=True
+        source_type=content_type, similarity_threshold=similarity_threshold, check_semantic=True
     )

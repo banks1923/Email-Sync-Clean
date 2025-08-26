@@ -32,22 +32,27 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     # Lazy provider factories (imports only on first call)
     def make_ocr():
         from pdf.ocr.ocr_coordinator import OCRCoordinator
+
         return OCRCoordinator()
 
     def make_validator():
         from pdf.pdf_validator import PDFValidator
+
         return PDFValidator()
 
     def make_health_monitor():
         from pdf.database_health_monitor import DatabaseHealthMonitor
+
         return DatabaseHealthMonitor(db_path)
 
     def make_error_recovery():
         from pdf.database_error_recovery import DatabaseErrorRecovery
+
         return DatabaseErrorRecovery(db_path)
 
     def make_summarizer():
         from summarization import get_document_summarizer
+
         return get_document_summarizer()
 
     # Pipeline and exporter removed - using direct processing now
@@ -55,10 +60,12 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     def make_health_manager():
         """Special case: needs other components assembled. Reuse core instances."""
         from pdf.pdf_health import PDFHealthManager
+
         try:
             from loguru import logger  # optional dependency
         except Exception:  # fallback to stdlib logger if loguru not present
             import logging
+
             logger = logging.getLogger("pdf.health")
 
         validator = make_validator()
@@ -66,6 +73,7 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
         return PDFHealthManager(processor, storage, validator, monitor, logger)
 
     from collections.abc import Callable
+
     providers: dict[str, Callable[[], object]] = {
         "ocr": make_ocr,
         "validator": make_validator,
@@ -77,6 +85,7 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
 
     # Create facade with only 3 core dependencies + providers
     from pdf.main import PDFService
+
     return PDFService(
         db=db,
         processor=processor,

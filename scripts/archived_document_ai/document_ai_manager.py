@@ -24,9 +24,10 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from scripts.process_single_document import process_document
 from scripts.batch_process_documents import batch_process
+from scripts.process_single_document import process_document
 from scripts.test_document_ai_connection import test_document_ai_auth
+
 
 def list_processors():
     """

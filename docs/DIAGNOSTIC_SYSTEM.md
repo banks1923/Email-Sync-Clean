@@ -6,10 +6,10 @@ Comprehensive diagnostic system for validating Email Sync wiring, performance, a
 
 ```bash
 # Full system diagnostic (recommended)
-make diag-wiring
+make diagnose
 
-# Quick smoke test (50 vectors)
-make vector-smoke
+# Quick system health check
+make status
 
 # Direct script execution
 python3 tools/diag_wiring.py
@@ -17,38 +17,38 @@ python3 tools/diag_wiring.py
 
 ## What It Validates
 
-### ✅ Alignment Check
+### WORKING: Alignment Check
 - **Qdrant Connection**: Validates connection to localhost:6333
 - **Collection Existence**: Ensures 'emails' collection exists with correct dimensions
 - **Dimension Matching**: Verifies embedding dimensions (1024) match collection dimensions
 - **Vector Store Health**: Confirms Qdrant service is responsive
 
-### ✅ Embeddings Performance
+### WORKING: Embeddings Performance
 - **Device Detection**: Reports device (mps/cuda/cpu) being used
 - **Batch Processing**: Tests batch_encode with 256 strings (batch size 16)
 - **Throughput**: Measures items/sec processing rate (budget: ≥600/min)
 - **Latency**: P95 latency per item (budget: ≤25ms)
 - **Normalization**: Validates L2-normalized embeddings
 
-### ✅ Vector Store Operations
+### WORKING: Vector Store Operations
 - **Method Availability**: Confirms batch_upsert and iter_ids methods exist
 - **Batch Performance**: Tests 1000 vector upsert throughput (budget: ≥2000/min)
 - **API Compatibility**: Validates expected method signatures
 - **Cleanup**: Automatically removes test data after validation
 
-### ✅ Search User Experience
+### WORKING: Search User Experience
 - **Query Testing**: Runs searches for "invoice", "schedule", "legal"
 - **Latency Measurement**: P95 search latency (budget: ≤80ms)
 - **Relevance Scoring**: Validates semantic similarity scores
 - **Result Quality**: Ensures at least 1 hit per query
 
-### ✅ Maintenance Operations
+### WORKING: Maintenance Operations
 - **Database Health**: Tests WAL checkpoint functionality
 - **Batch Configuration**: Validates batch_size=500, progress_every=100
 - **Performance**: Measures checkpoint timing
 - **Policy Compliance**: Confirms maintenance policies are implemented
 
-### ✅ Reconciliation Scanning (Optional)
+### WORKING: Reconciliation Scanning (Optional)
 - **ID Pagination**: Tests iter_ids pagination performance
 - **Scan Rate**: Measures IDs/min processing (budget: ≥10k/min)
 - **Memory Efficiency**: Validates paginated approach over list_all_ids
@@ -60,18 +60,18 @@ The diagnostic outputs a standardized one-screen report:
 ```
 REPO: Email-Sync-Clean-Backup
 QDRANT: localhost:6333 | collection=emails
-ALIGNMENT: dim_embed=1024 dim_collection=1024 dim_match=True l2_norm=True  ✅
-EMBEDDINGS: device=mps:0 batch=16 throughput=247/s p95=4.0 ms  ✅
-VECTORS: batch_upsert=YES iter_ids=YES upsert=1021/s  ✅
-SEARCH: k=10 q=['invoice','schedule','legal'] p95=5.1 ms top1=0.525  ✅
-MAINTENANCE: batch=500 progress=100 wal_checkpoint=0.4 ms  ✅
-RECONCILE (opt): scan_rate=5850k ids/min  ✅
-VERDICT: ✅ OK
+ALIGNMENT: dim_embed=1024 dim_collection=1024 dim_match=True l2_norm=True  WORKING:
+EMBEDDINGS: device=mps:0 batch=16 throughput=247/s p95=4.0 ms  WORKING:
+VECTORS: batch_upsert=YES iter_ids=YES upsert=1021/s  WORKING:
+SEARCH: k=10 q=['invoice','schedule','legal'] p95=5.1 ms top1=0.525  WORKING:
+MAINTENANCE: batch=500 progress=100 wal_checkpoint=0.4 ms  WORKING:
+RECONCILE (opt): scan_rate=5850k ids/min  WORKING:
+VERDICT: WORKING: OK
 ```
 
 ### Status Indicators
-- **✅**: Check passed
-- **❌**: Check failed
+- **WORKING:**: Check passed
+- ****: Check failed
 - **N/A**: Feature not available (non-critical)
 
 ## Performance Budgets
@@ -86,14 +86,14 @@ VERDICT: ✅ OK
 
 ## Exit Codes
 
-- **0**: All checks passed (✅ OK)
-- **1**: One or more checks failed (❌ MISWIRED)
+- **0**: All checks passed (WORKING: OK)
+- **1**: One or more checks failed ( MISWIRED)
 
 ## Usage Patterns
 
 ### Daily Health Check
 ```bash
-make diag-wiring
+make diagnose
 # Quick validation before development work
 ```
 
@@ -110,14 +110,14 @@ fi
 ### Performance Monitoring
 ```bash
 # Benchmark after changes
-make diag-wiring > diagnostic_$(date +%Y%m%d).log
+make diagnose > diagnostic_$(date +%Y%m%d).log
 ```
 
 ### Troubleshooting
 ```bash
 # When search seems slow
-make vector-smoke  # Quick validation
-make diag-wiring   # Full analysis
+make status  # Quick validation
+make diagnose   # Full analysis
 ```
 
 ## Architecture
@@ -176,7 +176,7 @@ vector-smoke: ## Quick vector smoke test - upsert 50 points & run 2 searches
 ```bash
 # System health
 make check          # Code quality + fast tests
-make diag-wiring    # System wiring validation
+make diagnose    # System wiring validation
 make vector-status  # Vector store sync status
 
 # Maintenance
@@ -202,7 +202,7 @@ make maintenance-all # Run all maintenance checks
 
 ## Troubleshooting Guide
 
-### ❌ Qdrant Connection Failures
+###  Qdrant Connection Failures
 
 **Symptom**: `ALIGNMENT: FAILED - Qdrant unreachable`
 
@@ -225,7 +225,7 @@ nc -z localhost 6333
 - Firewall blocking local connections
 - Wrong path to qdrant binary
 
-### ❌ Dimension Mismatch
+###  Dimension Mismatch
 
 **Symptom**: `dim_match=False` with different embed_dim vs collection_dim
 
@@ -237,7 +237,7 @@ make vector-sync  # Will recreate with correct dimensions
 
 **Root Cause**: Collection was created with different embedding model
 
-### ❌ Embeddings Performance Issues
+###  Embeddings Performance Issues
 
 **Symptom**: `EMBEDDINGS: FAILED - throughput_ok=False` or `latency_ok=False`
 
@@ -257,7 +257,7 @@ print(f'Device count: {torch.cuda.device_count() if torch.cuda.is_available() el
 - **CPU Fallback**: Install proper PyTorch for your platform
 - **Memory Issues**: Reduce EMBED_BATCH_SIZE in tools/diag_wiring.py
 
-### ❌ Vector Store API Issues  
+###  Vector Store API Issues  
 
 **Symptom**: `VECTORS: FAILED - batch_upsert not implemented`
 
@@ -276,7 +276,7 @@ print(f'iter_ids: {hasattr(vs, \"iter_ids\")}')
 - Update vector store implementation to include missing methods
 - Check import paths in diagnostic script
 
-### ❌ Search Performance Issues
+###  Search Performance Issues
 
 **Symptom**: `SEARCH: FAILED` with high p95 latency or no hits
 
@@ -297,7 +297,7 @@ print(f'Collection health: {vs.health()}')
 - **Cold Start**: First search after restart is slower
 - **Network Issues**: High latency to Qdrant
 
-### ❌ Database Maintenance Issues
+###  Database Maintenance Issues
 
 **Symptom**: `MAINTENANCE: FAILED - db_maintenance not implemented`
 
@@ -311,7 +311,7 @@ print(f'db_maintenance available: {hasattr(db, \"db_maintenance\")}')
 "
 ```
 
-### ❌ Import/Module Issues
+###  Import/Module Issues
 
 **Symptom**: `ImportError` or `ModuleNotFoundError`
 
@@ -326,9 +326,9 @@ try:
     from utilities.embeddings import get_embedding_service
     from utilities.vector_store import get_vector_store
     from shared.simple_db import SimpleDB
-    print('✓ All modules importable')
+    print(' All modules importable')
 except ImportError as e:
-    print(f'✗ Import error: {e}')
+    print(f' Import error: {e}')
 "
 ```
 
@@ -350,7 +350,7 @@ test_count = 500  # Instead of 1000
 ### Search Optimization
 ```bash
 # Warm up search cache
-make vector-smoke  # Run before diag-wiring for faster results
+make status  # Run before diag-wiring for faster results
 ```
 
 ## Monitoring & Alerts
@@ -358,7 +358,7 @@ make vector-smoke  # Run before diag-wiring for faster results
 ### Automated Health Checks
 ```bash
 # Add to cron for daily health monitoring
-0 9 * * * cd /path/to/project && make diag-wiring > /tmp/health_$(date +\%Y\%m\%d).log 2>&1
+0 9 * * * cd /path/to/project && make diagnose > /tmp/health_$(date +\%Y\%m\%d).log 2>&1
 ```
 
 ### CI/CD Integration
@@ -366,7 +366,7 @@ make vector-smoke  # Run before diag-wiring for faster results
 # GitHub Actions example
 - name: System Diagnostics
   run: |
-    make diag-wiring
+    make diagnose
     if [ $? -ne 0 ]; then
       echo "::error::System diagnostic failed"
       exit 1
@@ -376,7 +376,7 @@ make vector-smoke  # Run before diag-wiring for faster results
 ### Performance Regression Detection
 ```bash
 # Baseline performance tracking
-make diag-wiring 2>&1 | grep "throughput\|p95" > perf_baseline.txt
+make diagnose 2>&1 | grep "throughput\|p95" > perf_baseline.txt
 ```
 
 ## Advanced Debugging
@@ -407,9 +407,9 @@ print(f'Embeddings: {embed_ok}, {embed_data}')
 ### Log Analysis
 ```bash
 # Filter diagnostic logs for specific issues
-make diag-wiring 2>&1 | grep -E "(ERROR|FAILED|❌)"
+make diagnose 2>&1 | grep -E "(ERROR|FAILED|)"
 
 # Check system logs during diagnostic
 tail -f ~/.local/share/qdrant/logs/qdrant.log &
-make diag-wiring
+make diagnose
 ```

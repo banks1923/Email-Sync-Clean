@@ -154,7 +154,7 @@ class TestVectorStoreService:
         # Setup mock
         client = Mock()
         mock_qdrant.return_value = client
-        
+
         # Mock collection info with proper structure
         collection_info = Mock()
         collection_info.config.params.vectors.size = 1024
@@ -170,11 +170,11 @@ class TestVectorStoreService:
 
         # Verify upsert was called on the client
         assert client.upsert.called
-        
+
         # Test additional methods exist
-        assert hasattr(store, 'add_email_vector')
-        assert hasattr(store, 'health')
-        assert hasattr(store, 'iter_ids')
+        assert hasattr(store, "add_email_vector")
+        assert hasattr(store, "health")
+        assert hasattr(store, "iter_ids")
 
 
 class TestSimpleDBIntegration:
@@ -292,7 +292,7 @@ class TestServiceIntegration:
         from shared.simple_db import SimpleDB
         from summarization.main import DocumentSummarizer
         from utilities.embeddings.embedding_service import EmbeddingService
-        
+
         return {
             "embeddings": EmbeddingService(),
             "search": search,
@@ -363,6 +363,7 @@ class TestServiceIntegration:
 
         # Generate embeddings for query
         from utilities.embeddings.embedding_service import EmbeddingService
+
         embedding_service = EmbeddingService()
         query = "contract agreement"
         query_embedding = embedding_service.encode(query)

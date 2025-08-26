@@ -63,31 +63,34 @@ class PDFService:
         if logger is None:
             try:
                 from loguru import logger as _loguru_logger  # type: ignore
+
                 self.logger = _loguru_logger
             except Exception:  # pragma: no cover
                 import logging
+
                 self.logger = logging.getLogger("pdf.service")
         else:
             self.logger = logger
 
         # Lazily created components will attach callbacks on first creation
-        
+
         # Enable idempotent writes with SHA256 deduplication
         self._enable_idempotent_writes()
 
     @classmethod
     def from_db_path(cls, db_path: str = "data/emails.db") -> "PDFService":
         """Legacy compatibility constructor - creates PDFService with all dependencies.
-        
+
         Args:
             db_path: Path to database file
-            
+
         Returns:
             Configured PDFService instance
         """
         from pdf.wiring import build_pdf_service
+
         return build_pdf_service(db_path)
-    
+
     # --- Provider resolution helpers ---
     def _get(self, key: str) -> object:
         if key in self._provider_cache:
@@ -141,9 +144,7 @@ class PDFService:
         """
         return self.health_manager.perform_health_check()
 
-    def upload_single_pdf(
-        self, pdf_path: str, source: str = "upload"
-    ) -> dict[str, Any]:
+    def upload_single_pdf(self, pdf_path: str, source: str = "upload") -> dict[str, Any]:
         """
         Upload single PDF with integrated processing.
         """
@@ -220,7 +221,9 @@ class PDFService:
 
         return results
 
-    def _update_results(self, results: dict[str, Any], pdf_file: str, result: dict[str, Any]) -> None:
+    def _update_results(
+        self, results: dict[str, Any], pdf_file: str, result: dict[str, Any]
+    ) -> None:
         """
         Update results counters based on processing result.
         """
@@ -366,6 +369,7 @@ class PDFService:
         """
         try:
             from pdf.pdf_idempotent_writer import make_pdf_write_idempotent
+
             make_pdf_write_idempotent(self)
             logger.info("✅ Idempotent writes enabled with SHA256 deduplication")
         except ImportError as e:

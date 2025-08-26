@@ -50,20 +50,24 @@ def process_all_embeddings(batch_size: int = 10):
     # Check if ready_for_embedding column exists
     cursor.execute("PRAGMA table_info(content_unified)")
     columns = {col[1] for col in cursor.fetchall()}
-    
-    if 'ready_for_embedding' in columns:
+
+    if "ready_for_embedding" in columns:
         where_clause = "WHERE ready_for_embedding = 0 OR ready_for_embedding IS NULL"
     else:
         # Add the column if it doesn't exist
-        cursor.execute("ALTER TABLE content_unified ADD COLUMN ready_for_embedding INTEGER DEFAULT 0")
+        cursor.execute(
+            "ALTER TABLE content_unified ADD COLUMN ready_for_embedding INTEGER DEFAULT 0"
+        )
         where_clause = "WHERE ready_for_embedding = 0 OR ready_for_embedding IS NULL"
-    
-    cursor.execute(f"""
+
+    cursor.execute(
+        f"""
         SELECT id, source_type, title, body
         FROM content_unified
         {where_clause}
         ORDER BY created_at DESC
-    """)
+    """
+    )
 
     unprocessed = cursor.fetchall()
     total = len(unprocessed)

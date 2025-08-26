@@ -23,20 +23,20 @@ def generate_mcp_json(output_path: Path | None = None, dry_run: bool = False) ->
     """
     config = get_mcp_config()
     servers = config.get_mcp_servers()
-    
+
     if output_path is None:
         output_path = Path(".mcp.json")
-    
+
     mcp_config = {"mcpServers": servers}
-    
+
     if dry_run:
         print("📋 MCP Configuration Preview (.mcp.json):")
         print(json.dumps(mcp_config, indent=2))
         return
-    
-    with open(output_path, 'w') as f:
+
+    with open(output_path, "w") as f:
         json.dump(mcp_config, f, indent=2)
-    
+
     print(f"✅ MCP configuration written to: {output_path}")
 
 
@@ -46,23 +46,23 @@ def generate_claude_desktop_config(output_path: Path | None = None, dry_run: boo
     """
     config = get_mcp_config()
     servers = config.get_claude_desktop_servers()
-    
+
     if output_path is None:
         output_path = Path(".config/claude_desktop_config.json")
-    
+
     claude_config = {"mcpServers": servers}
-    
+
     if dry_run:
         print("📋 Claude Desktop Configuration Preview:")
         print(json.dumps(claude_config, indent=2))
         return
-    
+
     # Ensure directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(output_path, 'w') as f:
+
+    with open(output_path, "w") as f:
         json.dump(claude_config, f, indent=2)
-    
+
     print(f"✅ Claude Desktop configuration written to: {output_path}")
 
 
@@ -71,19 +71,19 @@ def show_status() -> None:
     Show MCP configuration status.
     """
     config = get_mcp_config()
-    
+
     print("🔧 MCP Configuration Status:")
     status = config.validate_config()
     for key, value in status.items():
         print(f"  {key}: {value}")
-    
+
     # Show security warnings
     warnings = config.check_security()
     if warnings:
         print("\n🚨 Security Warnings:")
         for warning in warnings:
             print(f"  {warning}")
-    
+
     # Show server counts
     mcp_servers = config.get_mcp_servers()
     claude_servers = config.get_claude_desktop_servers()
@@ -98,16 +98,16 @@ def validate_servers() -> bool:
     """
     config = get_mcp_config()
     servers = config.get_mcp_servers()
-    
+
     print("🔍 Validating MCP Servers:")
     all_valid = True
-    
+
     for name, server_config in servers.items():
         if server_config.get("command") == "python3":
             # Python-based server
             script_path = server_config["args"][0]
             full_path = config.project_root / script_path
-            
+
             if full_path.exists():
                 print(f"  ✅ {name}: {script_path}")
             else:
@@ -119,7 +119,7 @@ def validate_servers() -> bool:
             print(f"  ⚠️ {name}: {package} (npm package - not validated)")
         else:
             print(f"  ❓ {name}: Unknown command type")
-    
+
     return all_valid
 
 
@@ -127,18 +127,15 @@ def clean_configs() -> None:
     """
     Remove generated MCP configuration files.
     """
-    files_to_remove = [
-        Path(".mcp.json"),
-        Path(".config/claude_desktop_config.json")
-    ]
-    
+    files_to_remove = [Path(".mcp.json"), Path(".config/claude_desktop_config.json")]
+
     removed_count = 0
     for file_path in files_to_remove:
         if file_path.exists():
             file_path.unlink()
             print(f"🗑️ Removed: {file_path}")
             removed_count += 1
-    
+
     if removed_count == 0:
         print("ℹ️ No MCP configuration files found to remove")
     else:
@@ -160,45 +157,52 @@ Examples:
   python generate.py validate                  # Validate server files exist
   python generate.py clean                     # Remove generated configs
   python generate.py generate --dry-run        # Preview configuration
-        """
+        """,
     )
-    
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
     # Status command
-    subparsers.add_parser('status', help='Show MCP configuration status')
-    
+    subparsers.add_parser("status", help="Show MCP configuration status")
+
     # Generate command
-    gen_parser = subparsers.add_parser('generate', help='Generate MCP configurations')
-    gen_parser.add_argument('--claude-desktop', action='store_true',
-                           help='Generate Claude Desktop config instead of .mcp.json')
-    gen_parser.add_argument('--output', type=Path,
-                           help='Output file path (default: .mcp.json or .config/claude_desktop_config.json)')
-    gen_parser.add_argument('--dry-run', action='store_true',
-                           help='Preview configuration without writing files')
-    
+    gen_parser = subparsers.add_parser("generate", help="Generate MCP configurations")
+    gen_parser.add_argument(
+        "--claude-desktop",
+        action="store_true",
+        help="Generate Claude Desktop config instead of .mcp.json",
+    )
+    gen_parser.add_argument(
+        "--output",
+        type=Path,
+        help="Output file path (default: .mcp.json or .config/claude_desktop_config.json)",
+    )
+    gen_parser.add_argument(
+        "--dry-run", action="store_true", help="Preview configuration without writing files"
+    )
+
     # Validate command
-    subparsers.add_parser('validate', help='Validate MCP server files exist')
-    
+    subparsers.add_parser("validate", help="Validate MCP server files exist")
+
     # Clean command
-    subparsers.add_parser('clean', help='Remove generated MCP configuration files')
-    
+    subparsers.add_parser("clean", help="Remove generated MCP configuration files")
+
     args = parser.parse_args()
-    
-    if args.command == 'status':
+
+    if args.command == "status":
         show_status()
-    elif args.command == 'generate':
+    elif args.command == "generate":
         if args.claude_desktop:
             generate_claude_desktop_config(args.output, args.dry_run)
         else:
             generate_mcp_json(args.output, args.dry_run)
-    elif args.command == 'validate':
+    elif args.command == "validate":
         if validate_servers():
             print("✅ All servers validated successfully")
         else:
             print("❌ Some servers failed validation")
             exit(1)
-    elif args.command == 'clean':
+    elif args.command == "clean":
         clean_configs()
     else:
         parser.print_help()

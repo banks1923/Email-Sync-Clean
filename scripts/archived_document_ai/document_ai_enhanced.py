@@ -10,12 +10,13 @@ This script handles:
 - Legal document specific processing
 """
 
-import os
 import json
+import os
 import sys
-from pathlib import Path
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from pathlib import Path
+
 from google.cloud import documentai_v1 as documentai
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'

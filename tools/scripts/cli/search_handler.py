@@ -16,7 +16,7 @@ from tools.scripts.cli.service_locator import get_locator
 
 def search_emails(query, limit=5, hybrid=True, mode="database"):
     """AI-Powered Database Search: Searches across emails, PDFs, and transcriptions
-    
+
     Args:
         query: Search query string
         limit: Maximum number of results
@@ -56,17 +56,14 @@ def search_emails(query, limit=5, hybrid=True, mode="database"):
     # Use search intelligence service with new unified search
     print(f"🔍 Running {mode} search...")
     search_service = locator.get_search_service()
-    
+
     # Check if the service has the new unified_search method
-    if hasattr(search_service, 'unified_search'):
+    if hasattr(search_service, "unified_search"):
         # Use the new unified search with mode support
         results = search_service.unified_search(
-            query=query,
-            mode=mode,
-            limit=limit,
-            use_expansion=True
+            query=query, mode=mode, limit=limit, use_expansion=True
         )
-        
+
         if results:
             print(f"✅ Found {len(results)} results in {mode} mode")
             display_unified_search_results(results, f"🔍 {mode.capitalize()} Search", limit)
@@ -205,38 +202,39 @@ def display_unified_search_results(results, search_type, limit=None):
     """
     if limit:
         results = results[:limit]
-    
+
     print(f"\n=== {search_type} Results ===")
-    
+
     for i, result in enumerate(results, 1):
         score = result.get("score", 0.0)
         source = result.get("search_source", "unknown")
-        
+
         print(f"\n--- Result {i} (Score: {score:.3f}, Source: {source}) ---")
         print(f"Title: {result.get('title', 'Untitled')}")
-        
+
         # Show type-specific fields
         content_type = result.get("content_type", "document")
         if content_type == "email":
             print(f"From: {result.get('sender', 'Unknown')}")
             print(f"To: {result.get('recipient', 'Unknown')}")
-        
+
         print(f"Date: {result.get('created_time', 'Unknown')}")
-        
+
         # Show file path for analog results
         if result.get("file_path"):
             print(f"File: {result.get('file_path')}")
-        
+
         # Show content preview
         content = result.get("content", "")
         if content:
             print(f"Preview: {content[:150]}...")
-        
+
         if i >= 5:  # Limit display to top 5 results
             remaining = len(results) - i
             if remaining > 0:
                 print(f"\n... and {remaining} more results")
             break
+
 
 def display_results(emails, search_type, limit=None):
     """

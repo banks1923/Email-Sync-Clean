@@ -29,21 +29,24 @@ class DBMetrics:
     """
     Simple metrics tracking for database operations.
     """
+
     def __init__(self) -> None:
         self.slow_sql_count = 0
         self.busy_events = 0
         self.checkpoint_ms = 0.0  # Changed to float for time calculations
         self.total_queries = 0
-    
+
     def report(self):
         """
         Report metrics on exit or demand.
         """
         if self.total_queries > 0:
-            logger.info(f"DB Metrics: {self.total_queries} queries, "
-                       f"{self.slow_sql_count} slow (>{100}ms), "
-                       f"{self.busy_events} busy events, "
-                       f"{self.checkpoint_ms:.0f}ms in checkpoints")
+            logger.info(
+                f"DB Metrics: {self.total_queries} queries, "
+                f"{self.slow_sql_count} slow (>{100}ms), "
+                f"{self.busy_events} busy events, "
+                f"{self.checkpoint_ms:.0f}ms in checkpoints"
+            )
 
 
 class SimpleDB:
@@ -88,41 +91,43 @@ class SimpleDB:
         """
         # Enable foreign keys (already had this)
         conn.execute("PRAGMA foreign_keys=ON")
-        
+
         # Performance optimizations for single-user system
-        conn.execute("PRAGMA journal_mode=WAL")        # Persists per DB file
-        conn.execute("PRAGMA synchronous=NORMAL")      # Safe for single-user, faster
-        conn.execute("PRAGMA busy_timeout=5000")       # 5 second timeout
-        
+        conn.execute("PRAGMA journal_mode=WAL")  # Persists per DB file
+        conn.execute("PRAGMA synchronous=NORMAL")  # Safe for single-user, faster
+        conn.execute("PRAGMA busy_timeout=5000")  # 5 second timeout
+
         # Cache size from environment or default to 64MB
         cache_kb = int(os.getenv("SIMPLEDB_CACHE_KB", "64000"))
         conn.execute(f"PRAGMA cache_size=-{abs(cache_kb)}")
-        
+
         # Memory for temp tables
         conn.execute("PRAGMA temp_store=MEMORY")
-        
+
         # Memory-mapped I/O (opt-in via environment variable)
         mmap_bytes = int(os.getenv("SIMPLEDB_MMAP_BYTES", "0"))
         if mmap_bytes > 0:
             conn.execute(f"PRAGMA mmap_size={mmap_bytes}")
-        
+
         # Verify settings on first connection
         if verify:
             jm = conn.execute("PRAGMA journal_mode").fetchone()[0].upper()
             if jm != "WAL":
                 logger.warning(f"Failed to set WAL mode, got: {jm}. May be on network FS.")
-            
+
             sync = conn.execute("PRAGMA synchronous").fetchone()[0]
             cache = conn.execute("PRAGMA cache_size").fetchone()[0]
             mmap = conn.execute("PRAGMA mmap_size").fetchone()[0]
-            
-            logger.info(f"SQLite config: mode={jm}, sync={sync}, cache={abs(cache)}KB, mmap={mmap}B")
+
+            logger.info(
+                f"SQLite config: mode={jm}, sync={sync}, cache={abs(cache)}KB, mmap={mmap}B"
+            )
 
     def _ensure_data_directories(self) -> None:
         """
         Ensure basic /data/ directory structure exists.
         """
-        # Get project root (parent of shared directory)  
+        # Get project root (parent of shared directory)
         project_root = Path(__file__).parent.parent
         data_dir = project_root / "data"
 
@@ -164,19 +169,21 @@ class SimpleDB:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 self._configure_connection(conn)
-                
+
                 # Track metrics
                 self.metrics.total_queries += 1
-                
+
                 # Slow-query logging
                 t0 = time.perf_counter()
                 cursor = conn.execute(query, params) if params else conn.execute(query)
                 dt_ms = (time.perf_counter() - t0) * 1000
-                
+
                 if dt_ms > 100:  # Log queries slower than 100ms
                     self.metrics.slow_sql_count += 1
-                    logger.info(f"Slow SQL: {dt_ms:.1f}ms, rows={cursor.rowcount}, query={query[:50]}")
-                
+                    logger.info(
+                        f"Slow SQL: {dt_ms:.1f}ms, rows={cursor.rowcount}, query={query[:50]}"
+                    )
+
                 conn.commit()
                 return cursor
         except sqlite3.OperationalError as e:
@@ -198,19 +205,19 @@ class SimpleDB:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 self._configure_connection(conn)
-                
+
                 # Track metrics
                 self.metrics.total_queries += 1
-                
+
                 # Slow-query logging
                 t0 = time.perf_counter()
                 results = conn.execute(query, params).fetchall()
                 dt_ms = (time.perf_counter() - t0) * 1000
-                
+
                 if dt_ms > 100:  # Log queries slower than 100ms
                     self.metrics.slow_sql_count += 1
                     logger.info(f"Slow SQL: {dt_ms:.1f}ms, rows={len(results)}, query={query[:50]}")
-                
+
                 return [dict(row) for row in results]
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e) or "SQLITE_BUSY" in str(e):
@@ -239,7 +246,7 @@ class SimpleDB:
         message_hash: str | None = None,  # New parameter for email messages
     ) -> str:
         """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID.
-        
+
         Args:
             content_type: Type of content ('email_message', 'pdf', 'transcript', etc.)
             title: Content title or email subject
@@ -247,7 +254,7 @@ class SimpleDB:
             metadata: Optional metadata dict
             source_path: Optional source file path
             message_hash: For email_message type, the SHA256 hash to use as source_id
-        
+
         Returns:
             Content ID as string
         """
@@ -263,13 +270,11 @@ class SimpleDB:
         )
 
         if existing:
-            logger.info(
-                f"Duplicate content detected, returning existing ID: {existing['id']}"
-            )
+            logger.info(f"Duplicate content detected, returning existing ID: {existing['id']}")
             return existing["id"]
 
         # Generate source_id based on content type
-        if content_type == 'email_message':
+        if content_type == "email_message":
             # For email messages, use the provided message_hash as TEXT source_id
             if not message_hash:
                 raise ValueError("message_hash is required for email_message type")
@@ -277,7 +282,7 @@ class SimpleDB:
         else:
             # Legacy: Generate numeric source_id from hash for other types
             source_id = abs(hash(content_hash)) % 2147483647  # INTEGER for backward compatibility
-        
+
         cursor = self.execute(
             """
             INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
@@ -289,10 +294,10 @@ class SimpleDB:
                 title,
                 content,  # Maps to body
                 content_hash,  # Maps to sha256
-                1  # Mark ready for embedding
+                1,  # Mark ready for embedding
             ),
         )
-        
+
         # Get the auto-generated ID
         if cursor.lastrowid:
             return str(cursor.lastrowid)
@@ -312,7 +317,7 @@ class SimpleDB:
         date: str | None = None,
         subject: str | None = None,
         depth: int = 0,
-        message_type: str = "extracted"
+        message_type: str = "extracted",
     ) -> str:
         """Add individual email message from thread parsing.
 
@@ -322,22 +327,28 @@ class SimpleDB:
         # This ensures repeated identical messages from same sender are preserved as evidence
         hash_input = f"email_message:{sender}:{date}:{message_content}"
         content_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
-        
+
         # Check for existing message
         existing = self.fetch_one(
             "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
         )
-        
+
         if existing:
-            logger.info(f"Duplicate message detected from {sender} at {date}, returning existing ID: {existing['id']}")
+            logger.info(
+                f"Duplicate message detected from {sender} at {date}, returning existing ID: {existing['id']}"
+            )
             return existing["id"]
-        
+
         # Generate source_id
         source_id = abs(hash(content_hash)) % 2147483647
-        
+
         # Create descriptive title
-        title = f"{subject} - {sender}" if subject and sender else f"Message from {sender}" if sender else "Email Message"
-        
+        title = (
+            f"{subject} - {sender}"
+            if subject and sender
+            else f"Message from {sender}" if sender else "Email Message"
+        )
+
         cursor = self.execute(
             """
             INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
@@ -349,10 +360,10 @@ class SimpleDB:
                 title,
                 message_content,
                 content_hash,
-                1  # Ready for embedding
+                1,  # Ready for embedding
             ),
         )
-        
+
         # Get the auto-generated ID
         if cursor.lastrowid:
             message_id = str(cursor.lastrowid)
@@ -364,7 +375,7 @@ class SimpleDB:
                 "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
             )
             return str(existing["id"]) if existing else str(source_id)
-    
+
     def upsert_content(
         self,
         source_type: str,
@@ -373,7 +384,7 @@ class SimpleDB:
         title: str,
         content: str,
         metadata: dict | None = None,
-        parent_content_id: str | None = None
+        parent_content_id: str | None = None,
     ) -> str:
         """Upsert content using business key (source_type, external_id).
 
@@ -399,7 +410,8 @@ class SimpleDB:
 
         # UPSERT operation using actual content_unified schema
         # Columns: id, source_type, source_id, title, body, created_at, ready_for_embedding, sha256, chunk_index
-        self.execute("""
+        self.execute(
+            """
             INSERT INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding)
             VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(source_type, source_id) DO UPDATE SET
@@ -407,17 +419,19 @@ class SimpleDB:
                 body = excluded.body,
                 sha256 = excluded.sha256,
                 ready_for_embedding = excluded.ready_for_embedding
-        """, (source_type, source_id, title, content, content_hash, 1))
+        """,
+            (source_type, source_id, title, content, content_hash, 1),
+        )
 
         # Get the ID of the upserted record
         result = self.fetch_one(
             "SELECT id FROM content_unified WHERE source_type = ? AND source_id = ?",
-            (source_type, source_id)
+            (source_type, source_id),
         )
 
         if result:
             logger.info(f"Content upserted: {source_type}:{external_id} -> {result['id']}")
-            return str(result['id'])
+            return str(result["id"])
         else:
             logger.error(f"Failed to upsert content: {source_type}:{external_id}")
             return str(source_id)
@@ -429,33 +443,33 @@ class SimpleDB:
         """
         if not kwargs:
             return False
-            
+
         # Build dynamic update query
         set_clauses = []
         params = []
-        
+
         for field, value in kwargs.items():
             if field in ["title", "content", "content_type", "metadata", "source_path"]:
                 if field == "metadata" and isinstance(value, dict):
                     value = json.dumps(value)
                 set_clauses.append(f"{field} = ?")
                 params.append(value)
-        
+
         if not set_clauses:
             return False
-            
+
         # Add updated timestamp
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
-        
+
         # Recalculate content-derived fields if content changed
         if "content" in kwargs:
             content = kwargs["content"]
             set_clauses.extend(["word_count = ?", "char_count = ?"])
             params.extend([len(content.split()) if content else 0, len(content) if content else 0])
-        
+
         params.append(content_id)
         query = f"UPDATE content_unified SET {', '.join(set_clauses)} WHERE id = ?"
-        
+
         cursor = self.execute(query, tuple(params))
         return cursor.rowcount > 0
 
@@ -468,7 +482,9 @@ class SimpleDB:
         return cursor.rowcount > 0
 
     # Simple thread tracking methods
-    def add_thread_tracking(self, thread_id: str, message_count: int, status: str = "processed") -> bool:
+    def add_thread_tracking(
+        self, thread_id: str, message_count: int, status: str = "processed"
+    ) -> bool:
         """Add or update thread processing status.
 
         Simple and direct.
@@ -479,7 +495,7 @@ class SimpleDB:
             (thread_id, message_count, status, last_updated)
             VALUES (?, ?, ?, CURRENT_TIMESTAMP)
             """,
-            (thread_id, message_count, status)
+            (thread_id, message_count, status),
         )
         return True
 
@@ -487,18 +503,14 @@ class SimpleDB:
         """
         Get thread processing status.
         """
-        return self.fetch_one(
-            "SELECT * FROM thread_tracking WHERE thread_id = ?", 
-            (thread_id,)
-        )
+        return self.fetch_one("SELECT * FROM thread_tracking WHERE thread_id = ?", (thread_id,))
 
     def list_processed_threads(self, limit: int = 100) -> list[dict]:
         """
         List recently processed threads.
         """
         return self.fetch(
-            "SELECT * FROM thread_tracking ORDER BY last_updated DESC LIMIT ?",
-            (limit,)
+            "SELECT * FROM thread_tracking ORDER BY last_updated DESC LIMIT ?", (limit,)
         )
 
     def add_document_chunk(self, chunk_data: dict) -> str:
@@ -548,8 +560,30 @@ class SimpleDB:
         limit: int = 50,
         filters: dict | None = None,
     ) -> list[dict]:
-        """
-        Search content with optional filters.
+        """Search content with keyword matching and advanced filtering.
+
+        Searches title and body fields using SQL LIKE with case-insensitive matching.
+        Results ordered by created_at DESC (newest first).
+
+        Args:
+            keyword: Search term for title/body (wrapped in % wildcards)
+            content_type: Filter by source_type (e.g., 'email_message', 'document')
+            limit: Maximum results to return (default: 50)
+            filters: Advanced filtering options:
+                - since/until: Date range (natural language or ISO format)
+                - content_types: List of source_types to include
+                - tags: String or list for tag matching in metadata/title/body
+                - tag_logic: "AND" or "OR" for multiple tags (default: "OR")
+
+        Returns:
+            List of content_unified records as dictionaries, newest first.
+
+        Example:
+            db.search_content("contract", filters={
+                "since": "last week",
+                "tags": ["urgent", "review"],
+                "tag_logic": "AND"
+            })
         """
         from .date_utils import get_date_range
 
@@ -592,25 +626,23 @@ class SimpleDB:
                     tag_logic = filters.get("tag_logic", "OR").upper()
                     if tag_logic == "AND":
                         for tag in tags:
-                            where_clauses.append(
-                                "(metadata LIKE ? OR title LIKE ? OR body LIKE ?)"
-                            )
+                            where_clauses.append("(title LIKE ? OR body LIKE ?)")
                             tag_pattern = f"%{tag}%"
-                            params.extend([tag_pattern, tag_pattern, tag_pattern])
+                            params.extend([tag_pattern, tag_pattern])
                     else:  # OR logic
                         tag_conditions = []
                         for tag in tags:
-                            tag_conditions.append(
-                                "(metadata LIKE ? OR title LIKE ? OR body LIKE ?)"
-                            )
+                            tag_conditions.append("(title LIKE ? OR body LIKE ?)")
                             tag_pattern = f"%{tag}%"
-                            params.extend([tag_pattern, tag_pattern, tag_pattern])
+                            params.extend([tag_pattern, tag_pattern])
                         if tag_conditions:
                             where_clauses.append(f"({' OR '.join(tag_conditions)})")
 
         # Build final query
         where_clause = " AND ".join(where_clauses)
-        query = f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_at DESC LIMIT ?"
+        query = (
+            f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_at DESC LIMIT ?"
+        )
         params.append(limit)
 
         return self.fetch(query, tuple(params))
@@ -620,30 +652,45 @@ class SimpleDB:
         Get simple stats.
         """
         stats = {}
-        
+
         # Get content count from the CORRECT table (content_unified not content)
         content_result = self.fetch_one("SELECT COUNT(*) as count FROM content_unified")
         stats["total_content"] = content_result["count"] if content_result else 0
-        
+
         # Get content by type from content_unified
         type_results = self.fetch(
             "SELECT source_type, COUNT(*) as count FROM content_unified GROUP BY source_type"
         )
-        stats["content_by_type"] = {row["source_type"]: row["count"] for row in type_results} if type_results else {}
-        
+        stats["content_by_type"] = (
+            {row["source_type"]: row["count"] for row in type_results} if type_results else {}
+        )
+
         # Get actual document count from documents table
         doc_result = self.fetch_one("SELECT COUNT(*) as count FROM documents")
         stats["total_documents"] = doc_result["count"] if doc_result else 0
-        
-        # Get breakdown by source type (v2.0 uses email_message not email)
-        stats["total_emails"] = stats["content_by_type"].get("email_message", 0) + stats["content_by_type"].get("email", 0)
+
+        # Get breakdown by source type - SHOW ACTUAL COUNTS, NOT PARSING ARTIFACTS
+        # For emails: Use individual_messages for accurate deduplicated count, fallback to emails table
+        individual_msg_result = self.fetch_one("SELECT COUNT(*) as count FROM individual_messages")
+        emails_table_result = self.fetch_one("SELECT COUNT(*) as count FROM emails")
+
+        # Prioritize individual_messages count (deduplicated), fallback to emails table
+        stats["total_emails"] = (
+            individual_msg_result["count"]
+            if individual_msg_result and individual_msg_result["count"] > 0
+            else (emails_table_result["count"] if emails_table_result else 0)
+        )
+
+        # For documents: Use actual document sources
         stats["total_pdfs"] = stats["content_by_type"].get("pdf", 0)
         stats["total_transcripts"] = stats["content_by_type"].get("transcript", 0)
-            
+
         # Add database size
-        db_info = self.fetch_one("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
+        db_info = self.fetch_one(
+            "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()"
+        )
         stats["database_size_bytes"] = db_info["size"] if db_info else 0
-        
+
         return stats
 
     def get_content_count(self, content_type: str | None = None) -> int:
@@ -660,10 +707,10 @@ class SimpleDB:
         if content_type is not None:
             # Map plural collection names to singular content types (v2.0 compatibility)
             type_mapping = {
-                'emails': 'email_message',  # v2.0 uses email_message
-                'pdfs': 'pdf',
-                'transcriptions': 'transcript',
-                'notes': 'note'
+                "emails": "email_message",  # v2.0 uses email_message
+                "pdfs": "pdf",
+                "transcriptions": "transcript",
+                "notes": "note",
             }
             # Use mapped type if available, otherwise use as-is
             mapped_type = type_mapping.get(content_type, content_type)
@@ -671,7 +718,7 @@ class SimpleDB:
             return int(stats.get("content_by_type", {}).get(mapped_type, 0))
         # Return total count
         return int(stats.get("total_content", 0))
-    
+
     def get_connection(self):
         """Get database connection for direct SQL operations.
 
@@ -878,14 +925,14 @@ class SimpleDB:
             prepared_data.append(
                 (
                     content_type,  # source_type
-                    source_id,     # source_id
-                    title,         # title  
-                    content,       # body
+                    source_id,  # source_id
+                    title,  # title
+                    content,  # body
                     content_hash,  # sha256
-                    1,             # ready_for_embedding
+                    1,  # ready_for_embedding
                 )
             )
-            
+
             # Store the auto-generated ID for returning
             content_ids.append(str(source_id))
 
@@ -893,22 +940,21 @@ class SimpleDB:
                 logger.debug(f"Prepared {idx + 1}/{len(content_list)} content items")
 
         prep_time = time.time() - start_time
-        logger.info(
-            f"Data preparation complete: {prep_time:.2f}s, "
-            f"{total_chars} chars"
-        )
+        logger.info(f"Data preparation complete: {prep_time:.2f}s, " f"{total_chars} chars")
 
         # Use batch_insert with content_unified table columns
         columns = [
             "source_type",
-            "source_id", 
+            "source_id",
             "title",
             "body",
             "sha256",
             "ready_for_embedding",
         ]
 
-        stats = self.batch_insert("content_unified", columns, prepared_data, batch_size, progress_callback)
+        stats = self.batch_insert(
+            "content_unified", columns, prepared_data, batch_size, progress_callback
+        )
 
         # Log content-specific stats
         logger.info(
@@ -999,9 +1045,7 @@ class SimpleDB:
             "extraction_method",
         ]
 
-        stats = self.batch_insert(
-            "content", columns, prepared_data, batch_size, progress_callback
-        )
+        stats = self.batch_insert("content", columns, prepared_data, batch_size, progress_callback)
 
         # Log document-specific stats
         logger.info(
@@ -1193,21 +1237,57 @@ class SimpleDB:
         tf_idf_keywords: dict | None = None,
         textrank_sentences: list | None = None,
     ) -> str:
-        """
-        Add a document summary.
+        """Add a document summary.
+
+        Note: This method can handle both documents.id and content_unified.id
+        by temporarily disabling foreign key constraints for content summaries.
         """
         summary_id = str(uuid.uuid4())
         keywords_json = json.dumps(tf_idf_keywords) if tf_idf_keywords else None
         sentences_json = json.dumps(textrank_sentences) if textrank_sentences else None
 
-        self.execute(
-            """
-            INSERT INTO document_summaries
-            (summary_id, document_id, summary_type, summary_text, tf_idf_keywords, textrank_sentences)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """,
-            (summary_id, document_id, summary_type, summary_text, keywords_json, sentences_json),
-        )
+        # Check if this is a content_unified ID (not in documents table)
+        doc_exists = self.fetch("SELECT 1 FROM documents WHERE id = ?", (document_id,))
+
+        if not doc_exists:
+            # This is likely a content_unified record - temporarily disable foreign keys
+            with self.get_connection() as conn:
+                conn.execute("PRAGMA foreign_keys=OFF")
+                conn.execute(
+                    """
+                    INSERT INTO document_summaries
+                    (summary_id, document_id, summary_type, summary, summary_text, tf_idf_keywords, textrank_sentences)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        summary_id,
+                        document_id,
+                        summary_type,
+                        summary_text or "",
+                        summary_text,
+                        keywords_json,
+                        sentences_json,
+                    ),
+                )
+                conn.execute("PRAGMA foreign_keys=ON")
+        else:
+            # Regular document - use normal insert
+            self.execute(
+                """
+                INSERT INTO document_summaries
+                (summary_id, document_id, summary_type, summary, summary_text, tf_idf_keywords, textrank_sentences)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    summary_id,
+                    document_id,
+                    summary_type,
+                    summary_text or "",
+                    summary_text,
+                    keywords_json,
+                    sentences_json,
+                ),
+            )
 
         return summary_id
 
@@ -1302,10 +1382,9 @@ class SimpleDB:
         Get a single document summary by summary ID.
         """
         result = self.fetch_one(
-            "SELECT * FROM document_summaries WHERE summary_id = ?",
-            (summary_id,)
+            "SELECT * FROM document_summaries WHERE summary_id = ?", (summary_id,)
         )
-        
+
         if result and result.get("tf_idf_keywords"):
             try:
                 result["tf_idf_keywords"] = json.loads(result["tf_idf_keywords"])
@@ -1316,7 +1395,7 @@ class SimpleDB:
                 result["textrank_sentences"] = json.loads(result["textrank_sentences"])
             except json.JSONDecodeError:
                 pass
-                
+
         return result
 
     def get_summaries_for_document(self, document_id: str) -> list[dict]:
@@ -1325,7 +1404,9 @@ class SimpleDB:
         """
         return self.get_document_summaries(document_id)
 
-    def get_intelligence_for_document(self, document_id: str, intelligence_type: str | None = None) -> list[dict]:
+    def get_intelligence_for_document(
+        self, document_id: str, intelligence_type: str | None = None
+    ) -> list[dict]:
         """
         Get intelligence data for a document (alias for
         get_document_intelligence).
@@ -1337,16 +1418,15 @@ class SimpleDB:
         Get a single document intelligence record by intelligence ID.
         """
         result = self.fetch_one(
-            "SELECT * FROM document_intelligence WHERE intelligence_id = ?",
-            (intelligence_id,)
+            "SELECT * FROM document_intelligence WHERE intelligence_id = ?", (intelligence_id,)
         )
-        
+
         if result and result.get("intelligence_data"):
             try:
                 result["intelligence_data"] = json.loads(result["intelligence_data"])
             except json.JSONDecodeError:
                 pass
-                
+
         return result
 
     # Relationship Cache Operations
@@ -1382,7 +1462,10 @@ class SimpleDB:
         return cache_id
 
     def get_relationship_cache(
-        self, source_id: str | None = None, target_id: str | None = None, relationship_type: str | None = None
+        self,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        relationship_type: str | None = None,
     ) -> list[dict]:
         """
         Get cached relationships with flexible filtering.
@@ -1764,8 +1847,8 @@ class SimpleDB:
         Get file counts for main data directories.
         """
         stats = {}
-        data_dir = Path(self.db_path).parent / "data" 
-        # Only stats for system directories - user_data is case-specific  
+        data_dir = Path(self.db_path).parent / "data"
+        # Only stats for system directories - user_data is case-specific
         pipeline_dirs = ["system_data"]
 
         for dir_name in pipeline_dirs:
@@ -1792,7 +1875,7 @@ class SimpleDB:
     def db_maintenance(self, wal_threshold_mb: int = 64) -> dict:
         """Perform database maintenance: optimize and checkpoint WAL.
         Run this after large batch operations.
-        
+
         Args:
             wal_threshold_mb: Only checkpoint if WAL file exceeds this size (MB)
         """
@@ -1801,18 +1884,18 @@ class SimpleDB:
             wal_path = Path(f"{self.db_path}-wal")
             wal_size_mb: float = 0
             should_checkpoint = True
-            
+
             if wal_path.exists():
                 wal_size_mb = wal_path.stat().st_size / (1024 * 1024)
                 should_checkpoint = wal_size_mb > wal_threshold_mb
                 logger.debug(f"WAL size: {wal_size_mb:.1f}MB, threshold: {wal_threshold_mb}MB")
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 self._configure_connection(conn)
-                
+
                 # Always optimize query planner statistics
                 conn.execute("PRAGMA optimize")
-                
+
                 checkpoint_result = None
                 if should_checkpoint:
                     # Checkpoint and truncate WAL file
@@ -1820,30 +1903,30 @@ class SimpleDB:
                     result = conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
                     checkpoint_ms = (time.perf_counter() - t0) * 1000
                     self.metrics.checkpoint_ms += checkpoint_ms
-                    
+
                     checkpoint_result = {
                         "wal_pages_moved": result[0] if result else 0,
                         "wal_pages_total": result[1] if result else 0,
-                        "checkpoint_ms": round(checkpoint_ms, 1)
+                        "checkpoint_ms": round(checkpoint_ms, 1),
                     }
                     logger.info(f"WAL checkpoint completed in {checkpoint_ms:.1f}ms")
-                
+
                 # Get database stats after maintenance
                 page_count = conn.execute("PRAGMA page_count").fetchone()[0]
                 page_size = conn.execute("PRAGMA page_size").fetchone()[0]
                 db_size_mb = (page_count * page_size) / (1024 * 1024)
-                
+
                 maintenance_stats = {
                     "success": True,
                     "db_size_mb": round(db_size_mb, 2),
                     "wal_size_mb": round(wal_size_mb, 2),
                     "checkpoint": checkpoint_result,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
-                
+
                 logger.info(f"Database maintenance completed: {maintenance_stats}")
                 return maintenance_stats
-                
+
         except Exception as e:
             logger.error(f"Database maintenance failed: {e}")
             return {"success": False, "error": str(e)}
@@ -1892,7 +1975,7 @@ class SimpleDB:
         return self.batch_insert("document_summaries", columns, prepared_data, batch_size)
 
     # Vector processing methods
-    
+
     def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
         """Get all content IDs, optionally filtered by type.
 
@@ -1900,77 +1983,78 @@ class SimpleDB:
         """
         query = "SELECT id FROM content_unified"
         params = ()
-        
+
         if content_type:
             query += " WHERE source_type = ?"
             params = (content_type,)
-        
+
         query += " ORDER BY id"
-        
+
         cursor = self.execute(query, params)
         return [row[0] for row in cursor.fetchall()]
-    
+
     def get_content_by_ids(self, ids: list[str]) -> list[dict]:
         """
         Get content by IDs, batching ≤500 to avoid SQLite 999 limit.
         """
         if not ids:
             return []
-        
+
         results = []
         # Batch to avoid SQLite's 999 variable limit
         batch_size = 500
-        
+
         for i in range(0, len(ids), batch_size):
-            batch_ids = ids[i:i + batch_size]
+            batch_ids = ids[i : i + batch_size]
             placeholders = ",".join("?" * len(batch_ids))
             query = f"SELECT * FROM content_unified WHERE id IN ({placeholders})"
-            
+
             cursor = self.execute(query, tuple(batch_ids))
             # Convert sqlite3.Row objects to dictionaries
             batch_results = [dict(row) for row in cursor.fetchall()]
             results.extend(batch_results)
-        
+
         return results
-    
+
     def mark_content_vectorized(self, content_id: str) -> bool:
         """
         Mark single content as vectorized.
         """
         try:
             cursor = self.execute(
-                "UPDATE content_unified SET ready_for_embedding = 1 WHERE id = ?",
-                (content_id,)
+                "UPDATE content_unified SET ready_for_embedding = 1 WHERE id = ?", (content_id,)
             )
             return cursor.rowcount > 0
         except Exception as e:
             logger.error(f"Failed to mark content {content_id} as vectorized: {e}")
             return False
-    
+
     def batch_mark_vectorized(self, content_ids: list[str]) -> int:
         """
         Batch mark content as vectorized, chunking to ≤500.
         """
         if not content_ids:
             return 0
-        
+
         total_updated = 0
         batch_size = 500
-        
+
         for i in range(0, len(content_ids), batch_size):
-            batch_ids = content_ids[i:i + batch_size]
+            batch_ids = content_ids[i : i + batch_size]
             placeholders = ",".join("?" * len(batch_ids))
-            query = f"UPDATE content_unified SET ready_for_embedding = 1 WHERE id IN ({placeholders})"
-            
+            query = (
+                f"UPDATE content_unified SET ready_for_embedding = 1 WHERE id IN ({placeholders})"
+            )
+
             try:
                 cursor = self.execute(query, tuple(batch_ids))
                 total_updated += cursor.rowcount
             except Exception as e:
                 logger.error(f"Failed to batch mark vectorized for {len(batch_ids)} items: {e}")
                 continue
-        
+
         return total_updated
-    
+
     # Email message operations for new deduplication schema
     def add_individual_message(
         self,
@@ -1984,7 +2068,7 @@ class SimpleDB:
         message_id: str | None = None,
         parent_message_id: str | None = None,
         thread_id: str | None = None,
-        content_type: str = 'original',
+        content_type: str = "original",
         first_seen_email_id: str | None = None,
     ) -> bool:
         """Add a unique individual message to the new deduplication schema.
@@ -2009,10 +2093,10 @@ class SimpleDB:
         try:
             # Convert recipients list to JSON if provided
             recipients_json = json.dumps(recipients) if recipients else None
-            
+
             # Convert datetime to string if provided
             date_sent_str = date_sent.isoformat() if date_sent else None
-            
+
             cursor = self.execute(
                 """
                 INSERT OR IGNORE INTO individual_messages (
@@ -2022,29 +2106,38 @@ class SimpleDB:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    message_hash, content, subject, sender_email, sender_name,
-                    recipients_json, date_sent_str, message_id, parent_message_id,
-                    thread_id, content_type, first_seen_email_id
-                )
+                    message_hash,
+                    content,
+                    subject,
+                    sender_email,
+                    sender_name,
+                    recipients_json,
+                    date_sent_str,
+                    message_id,
+                    parent_message_id,
+                    thread_id,
+                    content_type,
+                    first_seen_email_id,
+                ),
             )
-            
+
             if cursor.rowcount > 0:
                 logger.debug(f"Added new individual message: {message_hash[:8]}...")
                 return True
             else:
                 logger.debug(f"Message already exists: {message_hash[:8]}...")
                 return False
-                
+
         except Exception as e:
             logger.error(f"Failed to add individual message: {e}")
             raise
-    
+
     def add_message_occurrence(
         self,
         message_hash: str,
         email_id: str,
         position_in_email: int = 0,
-        context_type: str = 'original',
+        context_type: str = "original",
         quote_depth: int = 0,
     ) -> bool:
         """Record where a message appears in an email (audit trail).
@@ -2067,27 +2160,26 @@ class SimpleDB:
                     context_type, quote_depth
                 ) VALUES (?, ?, ?, ?, ?)
                 """,
-                (message_hash, email_id, position_in_email, context_type, quote_depth)
+                (message_hash, email_id, position_in_email, context_type, quote_depth),
             )
-            
+
             if cursor.rowcount > 0:
                 logger.debug(f"Recorded message occurrence: {message_hash[:8]}... in {email_id}")
                 return True
             return False
-                
+
         except Exception as e:
             logger.error(f"Failed to add message occurrence: {e}")
             raise
-    
+
     def get_message_by_hash(self, message_hash: str) -> dict | None:
         """
         Retrieve an individual message by its hash.
         """
         return self.fetch_one(
-            "SELECT * FROM individual_messages WHERE message_hash = ?",
-            (message_hash,)
+            "SELECT * FROM individual_messages WHERE message_hash = ?", (message_hash,)
         )
-    
+
     def get_message_occurrences(self, message_hash: str) -> list[dict]:
         """
         Get all occurrences of a message across emails.
@@ -2098,9 +2190,9 @@ class SimpleDB:
             WHERE message_hash = ? 
             ORDER BY created_at, position_in_email
             """,
-            (message_hash,)
+            (message_hash,),
         )
-    
+
     def get_thread_messages(self, thread_id: str) -> list[dict]:
         """
         Get all messages in a thread, ordered chronologically.
@@ -2111,7 +2203,7 @@ class SimpleDB:
             WHERE thread_id = ? 
             ORDER BY date_sent, message_hash
             """,
-            (thread_id,)
+            (thread_id,),
         )
 
 

@@ -5,15 +5,17 @@ preserving individual messages.
 SAFE: Keeps 426 email_message records, removes 416 email thread records.
 """
 
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from shared.simple_db import SimpleDB
 from loguru import logger
+
+from shared.simple_db import SimpleDB
+
 
 def execute_cleanup():
     """

@@ -44,17 +44,21 @@ class SearchIntelligenceService:
             self.vector_store = get_vector_store()
         except Exception as e:
             logger.error(f"Vector store initialization failed: {e}")
-            raise RuntimeError(f"Cannot initialize SearchIntelligenceService without vector store: {e}")
-            
+            raise RuntimeError(
+                f"Cannot initialize SearchIntelligenceService without vector store: {e}"
+            )
+
         self.entity_service = EntityService()
-        
+
         # Fail-fast: Embedding service is required for semantic search
         try:
             self.embedding_service = get_embedding_service()
         except Exception as e:
             logger.error(f"Embedding service initialization failed: {e}")
-            raise RuntimeError(f"Cannot initialize SearchIntelligenceService without embedding service: {e}")
-            
+            raise RuntimeError(
+                f"Cannot initialize SearchIntelligenceService without embedding service: {e}"
+            )
+
         self.summarizer = get_document_summarizer()
 
         # Query expansion configuration
@@ -86,15 +90,15 @@ class SearchIntelligenceService:
         }
 
         logger.info("SearchIntelligenceService initialized")
-    
+
     def search(self, query: str, limit: int = 10, **kwargs) -> list[dict[str, Any]]:
         """Main search method - uses hybrid search (keyword + semantic).
-        
+
         Args:
             query: Search query string
             limit: Maximum number of results
             **kwargs: Additional parameters (filters, etc.)
-        
+
         Returns:
             List of search results from hybrid search
         """
@@ -102,14 +106,16 @@ class SearchIntelligenceService:
         from .basic_search import search as hybrid_search
 
         # Extract filters if present
-        filters = kwargs.get('filters', None)
-        
+        filters = kwargs.get("filters", None)
+
         # Log hybrid search invocation for visibility
-        logger.info(f"Hybrid search invoked: query='{query}', limit={limit}, filters_present={filters is not None}")
-        
+        logger.info(
+            f"Hybrid search invoked: query='{query}', limit={limit}, filters_present={filters is not None}"
+        )
+
         # Perform hybrid search (keyword + semantic with RRF merging)
         return hybrid_search(query, limit=limit, filters=filters)
-    
+
     def health(self) -> dict:
         """Health probe for SearchIntelligenceService.
 
@@ -121,35 +127,38 @@ class SearchIntelligenceService:
             - status: Overall health status
         """
         health_status = {}
-        
+
         try:
             # Check embedding service
             test_text = "health check"
             test_embedding = self.embedding_service.encode(test_text)
-            
+
             # Calculate L2 norm
             import numpy as np
+
             l2_norm = float(np.linalg.norm(test_embedding))
-            
-            health_status['embed_dim'] = len(test_embedding)
-            health_status['embed_l2'] = round(l2_norm, 3)
-            
+
+            health_status["embed_dim"] = len(test_embedding)
+            health_status["embed_l2"] = round(l2_norm, 3)
+
             # Check vector store
             collection_stats = self.vector_store.get_collection_stats("emails")
-            health_status['qdrant_points'] = collection_stats.get('points_count', 0)
-            
+            health_status["qdrant_points"] = collection_stats.get("points_count", 0)
+
             # Overall status
-            health_status['status'] = 'healthy'
-            
-            logger.info(f"Health probe: embed_dim={health_status['embed_dim']}, "
-                       f"embed_l2≈{health_status['embed_l2']}, "
-                       f"qdrant_points={health_status['qdrant_points']}")
-            
+            health_status["status"] = "healthy"
+
+            logger.info(
+                f"Health probe: embed_dim={health_status['embed_dim']}, "
+                f"embed_l2≈{health_status['embed_l2']}, "
+                f"qdrant_points={health_status['qdrant_points']}"
+            )
+
         except Exception as e:
-            health_status['status'] = 'unhealthy'
-            health_status['error'] = str(e)
+            health_status["status"] = "unhealthy"
+            health_status["error"] = str(e)
             logger.error(f"Health probe failed: {e}")
-        
+
         return health_status
 
     def unified_search(
@@ -173,14 +182,14 @@ class SearchIntelligenceService:
         # Preprocess query if needed
         if use_expansion:
             query = self._preprocess_and_expand_query(query)
-        
+
         # Search SQLite database
         results = self.smart_search_with_preprocessing(
             query, limit, use_expansion=False, filters=filters
         )
-        
+
         return results[:limit]
-    
+
     def _preprocess_and_expand_query(self, query: str) -> str:
         """
         Preprocess and expand query with synonyms.
@@ -190,7 +199,6 @@ class SearchIntelligenceService:
         if expanded_terms:
             processed = f"{processed} {' '.join(expanded_terms)}"
         return processed
-    
 
     def smart_search_with_preprocessing(
         self,
@@ -212,22 +220,28 @@ class SearchIntelligenceService:
                 if expanded_terms:
                     # Create proper OR query for database
                     all_terms = [processed_query] + expanded_terms
-                    or_conditions = " OR ".join([f"(title LIKE '%{term}%' OR body LIKE '%{term}%')" for term in all_terms])
-                    
+                    or_conditions = " OR ".join(
+                        [f"(title LIKE '%{term}%' OR body LIKE '%{term}%')" for term in all_terms]
+                    )
+
                     # Execute custom OR query
                     query_sql = f"SELECT * FROM content_unified WHERE ({or_conditions}) ORDER BY created_at DESC LIMIT ?"
                     params = [limit]
-                    
+
                     # Add filters if provided
                     if filters:
                         # This is a simplified version - full filter support would need more work
                         content_types = filters.get("content_types")
                         if content_types:
-                            type_conditions = " OR ".join([f"source_type = '{ct}'" for ct in content_types])
+                            type_conditions = " OR ".join(
+                                [f"source_type = '{ct}'" for ct in content_types]
+                            )
                             query_sql = f"SELECT * FROM content_unified WHERE ({or_conditions}) AND ({type_conditions}) ORDER BY created_at DESC LIMIT ?"
-                    
+
                     results = self.db.fetch(query_sql, tuple(params))
-                    logger.debug(f"OR query executed: {len(all_terms)} terms, {len(results)} results")
+                    logger.debug(
+                        f"OR query executed: {len(all_terms)} terms, {len(results)} results"
+                    )
                 else:
                     results = self.db.search_content(processed_query, limit=limit, filters=filters)
             else:
@@ -238,7 +252,9 @@ class SearchIntelligenceService:
                 results = self._enhance_search_results(results, query)
             else:
                 # Debug logging for no-result queries to aid diagnostics
-                logger.debug(f"No results found for query: '{query}' (processed: '{processed_query}', expanded: {expanded_terms if use_expansion and expanded_terms else 'none'})")
+                logger.debug(
+                    f"No results found for query: '{query}' (processed: '{processed_query}', expanded: {expanded_terms if use_expansion and expanded_terms else 'none'})"
+                )
 
             return results
 
@@ -495,7 +511,7 @@ class SearchIntelligenceService:
             if not doc:
                 return None
 
-            content = doc.get("content", "")
+            content = doc.get("body", "") or doc.get("content", "")
             if not content:
                 return None
 

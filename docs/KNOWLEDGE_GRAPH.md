@@ -9,12 +9,12 @@ The Knowledge Graph Service provides intelligent content relationship discovery 
 ### Module Structure
 ```
 knowledge_graph/
-├── __init__.py                  # Service exports
-├── main.py                      # Core graph operations (403 lines)
-├── similarity_analyzer.py       # Document similarity (292 lines)
-├── similarity_integration.py    # Auto-discovery (355 lines)
-├── timeline_relationships.py    # Temporal analysis (473 lines)
-└── CLAUDE.md                    # Comprehensive API documentation (522 lines)
+ __init__.py                  # Service exports
+ main.py                      # Core graph operations (403 lines)
+ similarity_analyzer.py       # Document similarity (292 lines)
+ similarity_integration.py    # Auto-discovery (355 lines)
+ timeline_relationships.py    # Temporal analysis (473 lines)
+ CLAUDE.md                    # Comprehensive API documentation (522 lines)
 ```
 
 ### Database Schema
@@ -271,7 +271,7 @@ python3 -m pytest tests/test_knowledge_graph.py -v -m "not slow"
 ## API Reference
 
 For complete API documentation with all methods and parameters, see:
-- `knowledge_graph/CLAUDE.md` - Comprehensive API guide with examples
+- Comprehensive API guide available in search intelligence documentation
 - `tests/test_legal_bert_integration.py` - Real-world usage examples
 
 ## Performance Metrics

@@ -11,8 +11,8 @@ Combines functionality from:
 
 import argparse
 import sys
-from typing import Any
 from collections.abc import Generator
+from typing import Any
 
 from loguru import logger
 
@@ -26,23 +26,24 @@ BATCH_SIZE = 500
 EMBED_BATCH_SIZE = 16
 ID_PAGE_SIZE = 1000
 
+
 def _chunked(seq: list[Any], size: int) -> Generator[list[Any], None, None]:
     for i in range(0, len(seq), size):
-        yield seq[i:i + size]
+        yield seq[i : i + size]
 
 
 class VectorMaintenance:
     """
     Unified vector store maintenance operations.
     """
-    
+
     def __init__(self) -> None:
         # Direct SimpleDB usage (VectorMaintenanceAdapter removed 2025-08-20)
         self.db = SimpleDB()
         self.embedding_service = get_embedding_service()
         self.vector_store = get_vector_store()
         self.gmail_service = GmailService()
-        
+
     # --- Direct SimpleDB methods (replaced adapter) --------------------------
     def get_all_content_ids(self, content_type: str | None = None) -> list[str]:
         """
@@ -52,21 +53,21 @@ class VectorMaintenance:
             if content_type:
                 # Map collection names to content types
                 type_mapping = {
-                    'emails': 'email',
-                    'pdfs': 'pdf', 
-                    'transcriptions': 'transcription',
-                    'notes': 'note',
-                    'documents': 'document'
+                    "emails": "email",
+                    "pdfs": "pdf",
+                    "transcriptions": "transcription",
+                    "notes": "note",
+                    "documents": "document",
                 }
                 db_type = type_mapping.get(content_type, content_type)
-                
+
                 query = "SELECT id FROM content_unified WHERE content_type = ?"
                 result = self.db.execute(query, (db_type,))
             else:
                 query = "SELECT id FROM content_unified"
                 result = self.db.execute(query)
-            
-            return [row['id'] for row in result.fetchall()]
+
+            return [row["id"] for row in result.fetchall()]
         except Exception as e:
             logger.error(f"Failed to get content IDs for type {content_type}: {e}")
             return []
@@ -77,9 +78,9 @@ class VectorMaintenance:
         """
         try:
             query = """
-                SELECT id, message_id, subject, content 
+                SELECT id, source_id, title, body 
                 FROM content_unified 
-                WHERE content_type = 'email' 
+                WHERE source_type = 'email_message' 
                 AND id NOT IN (
                     SELECT DISTINCT content_id 
                     FROM embeddings 
@@ -103,7 +104,7 @@ class VectorMaintenance:
         except Exception as e:
             logger.error(f"Direct content ID lookup failed: {e}")
             return []
-    
+
     def _db_get_emails_without_vectors(self) -> list[dict[str, Any]]:
         """
         Get emails without vectors with fallback compatibility.
@@ -182,7 +183,11 @@ class VectorMaintenance:
         get_missing = getattr(self.db, "get_emails_without_vectors", None)
         if not get_missing:
             logger.error("DB compat: get_emails_without_vectors() not found")
-            return {"synced": 0, "errors": ["missing API: get_emails_without_vectors"], "status": "error"}
+            return {
+                "synced": 0,
+                "errors": ["missing API: get_emails_without_vectors"],
+                "status": "error",
+            }
 
         emails = get_missing(limit=limit)
         total = len(emails) if emails else 0
@@ -197,27 +202,30 @@ class VectorMaintenance:
         for batch in _chunked(emails, BATCH_SIZE):
             batch_idx += 1
             logger.info(f"Processing batch {batch_idx} ({synced_count}/{total} done)")
-            ids = [e['id'] for e in batch]
-            texts = [e.get('body') or '' for e in batch]
+            ids = [e["id"] for e in batch]
+            texts = [e.get("body") or "" for e in batch]
             metas = [
-                {
-                    'subject': e.get('subject'),
-                    'from': e.get('sender'),
-                    'date': e.get('date')
-                } for e in batch
+                {"subject": e.get("subject"), "from": e.get("sender"), "date": e.get("date")}
+                for e in batch
             ]
 
             # Embeddings (batch preferred)
             try:
-                if hasattr(self.embedding_service, 'batch_encode'):
-                    embeddings = self.embedding_service.batch_encode(texts, batch_size=EMBED_BATCH_SIZE)
+                if hasattr(self.embedding_service, "batch_encode"):
+                    embeddings = self.embedding_service.batch_encode(
+                        texts, batch_size=EMBED_BATCH_SIZE
+                    )
                 else:
-                    get_emb = getattr(self.embedding_service, 'get_embedding', None) or getattr(self.embedding_service, 'encode')
+                    get_emb = getattr(self.embedding_service, "get_embedding", None) or getattr(
+                        self.embedding_service, "encode"
+                    )
                     embeddings = [get_emb(t) for t in texts]
             except Exception as e:
                 logger.error(f"Batch embedding failed: {e}")
                 embeddings = []
-                get_emb = getattr(self.embedding_service, 'get_embedding', None) or getattr(self.embedding_service, 'encode')
+                get_emb = getattr(self.embedding_service, "get_embedding", None) or getattr(
+                    self.embedding_service, "encode"
+                )
                 for i, t in enumerate(texts):
                     try:
                         embeddings.append(get_emb(t))
@@ -230,32 +238,36 @@ class VectorMaintenance:
             for i, emb in enumerate(embeddings):
                 if emb is None:
                     continue
-                valid_points.append({
-                    'id': ids[i],
-                    'vector': emb,
-                    'metadata': metas[i],
-                    'collection': 'emails'
-                })
+                valid_points.append(
+                    {"id": ids[i], "vector": emb, "metadata": metas[i], "collection": "emails"}
+                )
 
             if not valid_points:
                 continue
 
             try:
-                if hasattr(self.vector_store, 'batch_upsert'):
-                    self.vector_store.batch_upsert(collection='emails', points=valid_points)
+                if hasattr(self.vector_store, "batch_upsert"):
+                    self.vector_store.batch_upsert(collection="emails", points=valid_points)
                 else:
-                    add_email = getattr(self.vector_store, 'add_email_vector', None)
-                    add_vec = getattr(self.vector_store, 'add_vector', None)
+                    add_email = getattr(self.vector_store, "add_email_vector", None)
+                    add_vec = getattr(self.vector_store, "add_vector", None)
                     for pt in valid_points:
                         if add_email:
-                            add_email(email_id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'])
+                            add_email(
+                                email_id=pt["id"], embedding=pt["vector"], metadata=pt["metadata"]
+                            )
                         elif add_vec:
-                            add_vec(id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'], collection='emails')
+                            add_vec(
+                                id=pt["id"],
+                                embedding=pt["vector"],
+                                metadata=pt["metadata"],
+                                collection="emails",
+                            )
                         else:
                             raise RuntimeError("VectorStore compat: no add_* method available")
 
                 # Mark vectorized in DB (bulk if possible)
-                self._db_mark_emails_vectorized([pt['id'] for pt in valid_points])
+                self._db_mark_emails_vectorized([pt["id"] for pt in valid_points])
 
                 synced_count += len(valid_points)
 
@@ -263,27 +275,34 @@ class VectorMaintenance:
                 logger.error(f"Failed batch upsert: {e}")
                 for pt in valid_points:
                     try:
-                        add_email = getattr(self.vector_store, 'add_email_vector', None)
-                        add_vec = getattr(self.vector_store, 'add_vector', None)
+                        add_email = getattr(self.vector_store, "add_email_vector", None)
+                        add_vec = getattr(self.vector_store, "add_vector", None)
                         if add_email:
-                            add_email(email_id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'])
+                            add_email(
+                                email_id=pt["id"], embedding=pt["vector"], metadata=pt["metadata"]
+                            )
                         elif add_vec:
-                            add_vec(id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'], collection='emails')
+                            add_vec(
+                                id=pt["id"],
+                                embedding=pt["vector"],
+                                metadata=pt["metadata"],
+                                collection="emails",
+                            )
                         else:
                             raise RuntimeError("VectorStore compat: no add_* method available")
-                        self._db_mark_emails_vectorized([pt['id']])
+                        self._db_mark_emails_vectorized([pt["id"]])
                         synced_count += 1
                     except Exception as ie:
-                        errors.append({"email_id": pt['id'], "error": str(ie)})
+                        errors.append({"email_id": pt["id"], "error": str(ie)})
 
         logger.info(f"Synced {synced_count} / {total} emails to vector store")
         return {
             "synced": synced_count,
             "errors": errors,
             "batches": batch_idx,
-            "status": "completed"
+            "status": "completed",
         }
-    
+
     def sync_missing_vectors(self, collection: str = "emails") -> dict[str, Any]:
         """
         Find and sync content missing from vector store.
@@ -315,23 +334,29 @@ class VectorMaintenance:
                 if not c:
                     continue
                 contents.append(c)
-                ids.append(c.get('id', cid))
-                texts.append(c.get('text') or '')
-                metadatas.append(c.get('metadata', {}))
+                ids.append(c.get("id", cid))
+                texts.append(c.get("text") or "")
+                metadatas.append(c.get("metadata", {}))
 
             if not ids:
                 continue
 
             try:
-                if hasattr(self.embedding_service, 'batch_encode'):
-                    embeddings = self.embedding_service.batch_encode(texts, batch_size=EMBED_BATCH_SIZE)
+                if hasattr(self.embedding_service, "batch_encode"):
+                    embeddings = self.embedding_service.batch_encode(
+                        texts, batch_size=EMBED_BATCH_SIZE
+                    )
                 else:
-                    get_emb = getattr(self.embedding_service, 'get_embedding', None) or getattr(self.embedding_service, 'encode')
+                    get_emb = getattr(self.embedding_service, "get_embedding", None) or getattr(
+                        self.embedding_service, "encode"
+                    )
                     embeddings = [get_emb(t) for t in texts]
             except Exception as e:
                 logger.error(f"Batch embedding failed: {e}")
                 embeddings = []
-                get_emb = getattr(self.embedding_service, 'get_embedding', None) or getattr(self.embedding_service, 'encode')
+                get_emb = getattr(self.embedding_service, "get_embedding", None) or getattr(
+                    self.embedding_service, "encode"
+                )
                 for t in texts:
                     try:
                         embeddings.append(get_emb(t))
@@ -343,73 +368,90 @@ class VectorMaintenance:
                 if emb is None:
                     errors.append({"id": ids[i], "error": "embedding failed"})
                     continue
-                points.append({'id': ids[i], 'vector': emb, 'metadata': metadatas[i], 'collection': collection})
+                points.append(
+                    {
+                        "id": ids[i],
+                        "vector": emb,
+                        "metadata": metadatas[i],
+                        "collection": collection,
+                    }
+                )
 
             try:
-                if hasattr(self.vector_store, 'batch_upsert'):
+                if hasattr(self.vector_store, "batch_upsert"):
                     self.vector_store.batch_upsert(collection=collection, points=points)
                 else:
-                    add_vec = getattr(self.vector_store, 'add_vector', None)
+                    add_vec = getattr(self.vector_store, "add_vector", None)
                     for pt in points:
                         if add_vec:
-                            add_vec(id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'], collection=collection)
+                            add_vec(
+                                id=pt["id"],
+                                embedding=pt["vector"],
+                                metadata=pt["metadata"],
+                                collection=collection,
+                            )
                         else:
                             raise RuntimeError("VectorStore compat: add_vector missing")
                 synced += len(points)
             except Exception as e:
                 logger.error(f"Vector upsert failed: {e}")
-                add_vec = getattr(self.vector_store, 'add_vector', None)
+                add_vec = getattr(self.vector_store, "add_vector", None)
                 for pt in points:
                     try:
                         if add_vec:
-                            add_vec(id=pt['id'], embedding=pt['vector'], metadata=pt['metadata'], collection=collection)
+                            add_vec(
+                                id=pt["id"],
+                                embedding=pt["vector"],
+                                metadata=pt["metadata"],
+                                collection=collection,
+                            )
                             synced += 1
                         else:
-                            errors.append({"id": pt['id'], "error": "add_vector missing"})
+                            errors.append({"id": pt["id"], "error": "add_vector missing"})
                     except Exception as ie:
-                        errors.append({"id": pt['id'], "error": str(ie)})
+                        errors.append({"id": pt["id"], "error": str(ie)})
 
         return {
             "missing_found": len(missing_list),
             "synced": synced,
             "errors": errors,
-            "status": "completed"
+            "status": "completed",
         }
-    
+
     def reconcile_vectors(self, fix: bool = False) -> dict[str, Any]:
         """
         Reconcile vector store with database.
         """
         logger.info("Starting vector reconciliation")
-        
+
         results = {
             "orphaned_vectors": [],
             "missing_vectors": [],
             "mismatched_metadata": [],
-            "fixes_applied": 0
+            "fixes_applied": 0,
         }
-        
+
         # Check all collections
         collections = ["emails", "pdfs", "transcriptions", "notes"]
-        
+
         for collection in collections:
             logger.info(f"Checking {collection}")
-            
+
             # Get IDs from both sources
             db_ids = set(self.db.get_all_content_ids(content_type=collection))
             vector_ids = set(self._vs_iter_ids(collection))
-            
+
             # Find discrepancies
             orphaned = vector_ids - db_ids  # In vectors but not DB
-            missing = db_ids - vector_ids   # In DB but not vectors
-            
-            results["orphaned_vectors"].extend([
-                {"collection": collection, "id": id} for id in orphaned
-            ])
-            results["missing_vectors"].extend([
-                {"collection": collection, "id": id} for id in missing
-            ])
-            
+            missing = db_ids - vector_ids  # In DB but not vectors
+
+            results["orphaned_vectors"].extend(
+                [{"collection": collection, "id": id} for id in orphaned]
+            )
+            results["missing_vectors"].extend(
+                [{"collection": collection, "id": id} for id in missing]
+            )
+
             if fix:
                 # Remove orphaned vectors
                 for vector_id in orphaned:
@@ -418,73 +460,69 @@ class VectorMaintenance:
                         results["fixes_applied"] += 1
                     except Exception as e:
                         logger.error(f"Failed to delete orphaned vector {vector_id}: {e}")
-                        
+
                 # Add missing vectors
                 for content_id in missing:
                     try:
                         content = self.db.get_content_by_id(content_id)
                         if content:
-                            embedding = self.embedding_service.get_embedding(content['text'])
+                            embedding = self.embedding_service.get_embedding(content["text"])
                             self.vector_store.add_vector(
                                 id=content_id,
                                 embedding=embedding,
-                                metadata=content.get('metadata', {}),
-                                collection=collection
+                                metadata=content.get("metadata", {}),
+                                collection=collection,
                             )
                             results["fixes_applied"] += 1
                     except Exception as e:
                         logger.error(f"Failed to add missing vector {content_id}: {e}")
-                        
+
         return results
-    
+
     def verify_sync(self) -> dict[str, Any]:
         """
         Verify vector sync status across all collections.
         """
         logger.info("Verifying vector sync status")
-        
+
         status = {}
-        
+
         collections = ["emails", "pdfs", "transcriptions", "notes"]
-        
+
         for collection in collections:
             db_count = self.db.get_content_count(content_type=collection)
-            vector_count = self.vector_store.get_collection_stats(collection).get('vectors_count', 0)
-            
+            vector_count = self.vector_store.get_collection_stats(collection).get(
+                "vectors_count", 0
+            )
+
             status[collection] = {
                 "database_count": db_count,
                 "vector_count": vector_count,
                 "synced": db_count == vector_count,
-                "difference": abs(db_count - vector_count)
+                "difference": abs(db_count - vector_count),
             }
-            
+
         # Overall health
         all_synced = all(s["synced"] for s in status.values())
-        
+
         return {
             "collections": status,
             "all_synced": all_synced,
-            "status": "healthy" if all_synced else "needs_sync"
+            "status": "healthy" if all_synced else "needs_sync",
         }
-    
+
     def purge_test_vectors(self, dry_run: bool = True) -> dict[str, Any]:
         """
         Remove test vectors from production collections.
         """
         logger.info(f"Purging test vectors (dry_run={dry_run})")
-        
-        test_patterns = [
-            "test_",
-            "tmp_",
-            "temp_",
-            "_test",
-            "_tmp"
-        ]
-        
+
+        test_patterns = ["test_", "tmp_", "temp_", "_test", "_tmp"]
+
         purged = []
-        
+
         collections = ["emails", "pdfs", "transcriptions", "notes"]
-        
+
         for collection in collections:
             for vector_id in self._vs_iter_ids(collection):
                 # Check if it's a test vector
@@ -497,75 +535,70 @@ class VectorMaintenance:
                             logger.error(f"Failed to purge {vector_id}: {e}")
                     else:
                         purged.append({"collection": collection, "id": vector_id})
-                        
+
         return {
             "purged_count": len(purged),
             "purged_vectors": purged,
             "dry_run": dry_run,
-            "status": "completed"
+            "status": "completed",
         }
-    
+
     def renormalize_vectors(self, collection: str = None, dry_run: bool = True) -> dict[str, Any]:
         """
         Re-normalize existing vectors to unit length (L2 norm = 1.0).
         """
         import numpy as np
-        
+
         logger.info(f"Re-normalizing vectors (collection={collection}, dry_run={dry_run})")
-        
+
         collections = [collection] if collection else ["emails", "pdfs", "transcriptions", "notes"]
         normalized_count = 0
         already_normalized = 0
         errors = []
-        
+
         for coll in collections:
             try:
                 # Get all vectors from collection
                 vectors = self.vector_store.client.scroll(
-                    collection_name=coll,
-                    limit=100,
-                    with_vectors=True
+                    collection_name=coll, limit=100, with_vectors=True
                 )
-                
+
                 for batch in vectors:
                     for point in batch:
                         vector = np.array(point.vector)
                         norm = np.linalg.norm(vector)
-                        
+
                         # Check if already normalized (close to 1.0)
                         if abs(norm - 1.0) < 0.01:
                             already_normalized += 1
                             continue
-                        
+
                         # Normalize the vector
                         if norm > 0:
                             normalized_vector = vector / norm
-                            
+
                             if not dry_run:
                                 # Update the vector in Qdrant
                                 self.vector_store.client.update_vectors(
                                     collection_name=coll,
-                                    points=[{
-                                        "id": point.id,
-                                        "vector": normalized_vector.tolist()
-                                    }]
+                                    points=[{"id": point.id, "vector": normalized_vector.tolist()}],
                                 )
-                            
+
                             normalized_count += 1
-                            
+
                             if normalized_count % 100 == 0:
                                 logger.info(f"Normalized {normalized_count} vectors...")
-                                
+
             except Exception as e:
                 logger.error(f"Error processing collection {coll}: {e}")
                 errors.append({"collection": coll, "error": str(e)})
-        
+
         return {
             "normalized_count": normalized_count,
             "already_normalized": already_normalized,
             "errors": errors,
             "dry_run": dry_run,
-            "status": "completed" if not errors else "completed_with_errors"
+            "status": "completed" if not errors else "completed_with_errors",
         }
 
 
@@ -574,66 +607,66 @@ def main():
     CLI interface for vector maintenance.
     """
     parser = argparse.ArgumentParser(description="Vector Store Maintenance")
-    
-    subparsers = parser.add_subparsers(dest='command', help='Commands')
-    
+
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
+
     # Sync emails command
-    sync_emails = subparsers.add_parser('sync-emails', help='Sync emails to vectors')
-    sync_emails.add_argument('--limit', type=int, help='Limit number of emails to sync')
-    
+    sync_emails = subparsers.add_parser("sync-emails", help="Sync emails to vectors")
+    sync_emails.add_argument("--limit", type=int, help="Limit number of emails to sync")
+
     # Sync missing command
-    sync_missing = subparsers.add_parser('sync-missing', help='Sync missing vectors')
-    sync_missing.add_argument('--collection', default='emails', help='Collection to check')
-    
+    sync_missing = subparsers.add_parser("sync-missing", help="Sync missing vectors")
+    sync_missing.add_argument("--collection", default="emails", help="Collection to check")
+
     # Reconcile command
-    reconcile = subparsers.add_parser('reconcile', help='Reconcile vectors with database')
-    reconcile.add_argument('--fix', action='store_true', help='Apply fixes')
-    
+    reconcile = subparsers.add_parser("reconcile", help="Reconcile vectors with database")
+    reconcile.add_argument("--fix", action="store_true", help="Apply fixes")
+
     # Verify command
-    subparsers.add_parser('verify', help='Verify sync status')
-    
+    subparsers.add_parser("verify", help="Verify sync status")
+
     # Purge command
-    purge = subparsers.add_parser('purge-test', help='Purge test vectors')
-    purge.add_argument('--execute', action='store_true', help='Actually delete (not dry run)')
-    
+    purge = subparsers.add_parser("purge-test", help="Purge test vectors")
+    purge.add_argument("--execute", action="store_true", help="Actually delete (not dry run)")
+
     # Renormalize command
-    renorm = subparsers.add_parser('renormalize', help='Re-normalize vectors to unit length')
-    renorm.add_argument('--collection', help='Specific collection to renormalize')
-    renorm.add_argument('--execute', action='store_true', help='Actually update (not dry run)')
-    
+    renorm = subparsers.add_parser("renormalize", help="Re-normalize vectors to unit length")
+    renorm.add_argument("--collection", help="Specific collection to renormalize")
+    renorm.add_argument("--execute", action="store_true", help="Actually update (not dry run)")
+
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         sys.exit(1)
-        
+
     maintenance = VectorMaintenance()
-    
-    if args.command == 'sync-emails':
+
+    if args.command == "sync-emails":
         result = maintenance.sync_emails_to_vectors(limit=args.limit)
-    elif args.command == 'sync-missing':
+    elif args.command == "sync-missing":
         result = maintenance.sync_missing_vectors(collection=args.collection)
-    elif args.command == 'reconcile':
+    elif args.command == "reconcile":
         result = maintenance.reconcile_vectors(fix=args.fix)
-    elif args.command == 'verify':
+    elif args.command == "verify":
         result = maintenance.verify_sync()
-    elif args.command == 'purge-test':
+    elif args.command == "purge-test":
         result = maintenance.purge_test_vectors(dry_run=not args.execute)
-    elif args.command == 'renormalize':
+    elif args.command == "renormalize":
         result = maintenance.renormalize_vectors(
-            collection=args.collection,
-            dry_run=not args.execute
+            collection=args.collection, dry_run=not args.execute
         )
     else:
         parser.print_help()
         sys.exit(1)
-        
+
     # Print results
     import json
+
     print(json.dumps(result, indent=2))
-    
+
     # Exit with error if not healthy
-    if result.get('status') not in ['completed', 'healthy', 'all synced', 'no emails to sync']:
+    if result.get("status") not in ["completed", "healthy", "all synced", "no emails to sync"]:
         sys.exit(1)
 
 

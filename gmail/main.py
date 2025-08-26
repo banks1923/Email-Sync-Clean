@@ -3,14 +3,15 @@ from typing import Any
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
 from config.settings import get_db_path
+from shared.simple_db import SimpleDB
 from summarization import get_document_summarizer
 
 # Import advanced email parsing modules
 try:
     from shared.email_cleaner import EmailCleaner
     from shared.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
+
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")
 except ImportError:
@@ -42,13 +43,13 @@ class GmailService:
         # Use centralized config if no path provided
         if db_path is None:
             db_path = get_db_path()
-            
+
         self.gmail_api = GmailAPI(timeout=gmail_timeout)
         self.storage = EmailStorage(db_path)
         self.config = GmailConfig()
         self.db = SimpleDB(db_path)
         self.summarizer = get_document_summarizer()
-        
+
         # Initialize advanced parsing services
         if ADVANCED_PARSING_AVAILABLE:
             self.thread_service = ThreadService()
@@ -57,9 +58,9 @@ class GmailService:
         else:
             self.thread_service = None
             self.email_cleaner = None
-        
+
         # Legacy EmailThreadProcessor removed - using advanced parsing only
-            
+
         self._setup_logging()
 
     def _setup_logging(self) -> None:
@@ -67,7 +68,7 @@ class GmailService:
         Set up log directory for Gmail service.
         """
         os.makedirs("logs", exist_ok=True)
-    
+
     def _should_exclude_email(self, email_data: dict) -> bool:
         """Check if email should be excluded based on date.
 
@@ -77,30 +78,30 @@ class GmailService:
         Returns:
             bool: True if email should be excluded, False otherwise
         """
-        if not hasattr(self.config, 'excluded_dates'):
+        if not hasattr(self.config, "excluded_dates"):
             return False
-            
-        email_date = email_data.get('datetime_utc', '')
+
+        email_date = email_data.get("datetime_utc", "")
         if not email_date:
             return False
-            
+
         # Convert email date to YYYY/MM/DD format for comparison
         # Email dates are in format like "2023-10-03T12:39:32-07:00"
         try:
             pass
             # Parse the datetime string
-            if 'T' in email_date:
-                date_part = email_date.split('T')[0]  # Get YYYY-MM-DD part
-                year, month, day = date_part.split('-')
+            if "T" in email_date:
+                date_part = email_date.split("T")[0]  # Get YYYY-MM-DD part
+                year, month, day = date_part.split("-")
                 formatted_date = f"{year}/{month}/{day}"
-                
+
                 # Check if this date is in our exclusion list
                 if formatted_date in self.config.excluded_dates:
                     logger.info(f"Excluding email from {formatted_date} (in exclusion list)")
                     return True
         except Exception as e:
             logger.debug(f"Could not parse date {email_date}: {e}")
-            
+
         return False
 
     def sync_emails(
@@ -175,25 +176,27 @@ class GmailService:
                     continue
 
                 email_data = self.gmail_api.parse_message(detail_result["data"])
-                
+
                 # Check if email should be excluded based on date
                 if self._should_exclude_email(email_data):
-                    logger.info(f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}")
+                    logger.info(
+                        f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}"
+                    )
                     total_duplicates += 1  # Count as duplicate for reporting
                     continue
-                    
+
                 email_list.append(email_data)
 
             # Group emails by thread for processing
             if email_list:
                 threads_grouped = self._group_messages_by_thread(email_list)
                 logger.info(f"Grouped {len(email_list)} emails into {len(threads_grouped)} threads")
-                
+
                 # Process threads and save to both systems
                 chunk_result = self._process_thread_batch(threads_grouped, email_list)
-                
+
                 total_processed += chunk_result["processed"]
-                total_duplicates += chunk_result["duplicates"] 
+                total_duplicates += chunk_result["duplicates"]
                 total_errors += chunk_result["errors"]
 
         logger.info(
@@ -227,12 +230,14 @@ class GmailService:
                 continue
 
             email_data = self.gmail_api.parse_message(detail_result["data"])
-            
+
             # Check if email should be excluded based on date
             if self._should_exclude_email(email_data):
-                logger.info(f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}")
+                logger.info(
+                    f"Skipping email from excluded date: {email_data.get('subject', 'Unknown')}"
+                )
                 continue
-            
+
             save_result = self.storage.save_email(email_data)
 
             if save_result["success"]:
@@ -389,15 +394,15 @@ class GmailService:
             Dict mapping thread_id to list of emails in that thread
         """
         threads = {}
-        
+
         for email in email_list:
             # Try to get thread_id from message data
             thread_id = email.get("thread_id") or email.get("message_id")
-            
+
             if thread_id not in threads:
                 threads[thread_id] = []
             threads[thread_id].append(email)
-        
+
         return threads
 
     def _process_threads_advanced(self, threads_grouped: dict[str, list[dict]]) -> dict[str, Any]:
@@ -410,30 +415,33 @@ class GmailService:
         if not ADVANCED_PARSING_AVAILABLE:
             logger.warning("Advanced parsing not available, skipping individual message extraction")
             return {"processed": 0, "messages_extracted": 0, "errors": 0}
-        
+
         total_messages = 0
         total_processed = 0
         errors = 0
-        
+
         logger.info(f"Processing {len(threads_grouped)} threads with advanced parsing")
-        
+
         for thread_id, thread_emails in threads_grouped.items():
             try:
                 # Extract individual messages from this thread
                 all_messages = extract_thread_messages(thread_emails)
-                
+
                 if not all_messages:
                     continue
-                
+
                 # Convert QuotedMessage objects to dictionaries for deduplication
                 message_dicts = []
                 for msg in all_messages:
                     from shared.thread_manager import quoted_message_to_dict
+
                     message_dicts.append(quoted_message_to_dict(msg))
-                
+
                 # Deduplicate messages (preserve evidence while removing exact duplicates)
-                unique_message_dicts = deduplicate_messages(message_dicts, similarity_threshold=0.95)
-                
+                unique_message_dicts = deduplicate_messages(
+                    message_dicts, similarity_threshold=0.95
+                )
+
                 # Convert back to QuotedMessage objects for processing
                 unique_messages = []
                 for msg_dict in unique_message_dicts:
@@ -442,9 +450,11 @@ class GmailService:
                         if orig_msg.content == msg_dict.get("content"):
                             unique_messages.append(orig_msg)
                             break
-                
-                logger.info(f"Thread {thread_id}: {len(all_messages)} raw messages -> {len(unique_messages)} unique messages")
-                
+
+                logger.info(
+                    f"Thread {thread_id}: {len(all_messages)} raw messages -> {len(unique_messages)} unique messages"
+                )
+
                 # Store each unique message individually
                 for message in unique_messages:
                     try:
@@ -457,36 +467,40 @@ class GmailService:
                             date=message.date,
                             subject=message.subject,
                             depth=message.depth,
-                            message_type=message.message_type
+                            message_type=message.message_type,
                         )
-                        
+
                         total_processed += 1
-                        
+
                         # Log important patterns for legal case
                         if message.sender and "stoneman staff" in message.sender.lower():
-                            logger.info(f"Detected anonymous signature: {message.sender} in message {message_id}")
-                        
+                            logger.info(
+                                f"Detected anonymous signature: {message.sender} in message {message_id}"
+                            )
+
                     except Exception as e:
                         logger.error(f"Failed to store message from {message.sender}: {e}")
                         errors += 1
-                
+
                 total_messages += len(all_messages)
-                
+
             except Exception as e:
                 logger.error(f"Failed to process thread {thread_id}: {e}")
                 errors += 1
-        
+
         result = {
             "processed": total_processed,
             "messages_extracted": total_messages,
             "unique_messages": total_processed,
-            "errors": errors
+            "errors": errors,
         }
-        
+
         logger.info(f"Advanced thread processing complete: {result}")
         return result
 
-    def _process_thread_batch(self, threads_grouped: dict[str, list[dict]], email_list: list[dict]) -> dict[str, Any]:
+    def _process_thread_batch(
+        self, threads_grouped: dict[str, list[dict]], email_list: list[dict]
+    ) -> dict[str, Any]:
         """Process grouped threads and save to both email storage and analog
         DB.
 
@@ -500,69 +514,72 @@ class GmailService:
         processed = 0
         duplicates = 0
         errors = 0
-        
+
         # First, maintain backward compatibility with existing email storage
         save_result = self.storage.save_emails_batch(email_list, batch_size=len(email_list))
-        
+
         if save_result["success"]:
             processed += save_result["inserted"]
             duplicates += save_result["ignored"]
             errors += save_result["validation_errors"]
-            
+
             logger.info(
                 f"Email storage: {save_result['inserted']} new, "
                 f"{save_result['ignored']} duplicates, "
                 f"{save_result['validation_errors']} errors"
             )
-            
+
             # Process and store summaries for new emails
             if save_result["inserted"] > 0:
                 self._process_email_summaries(email_list)
-                
+
                 # Run semantic enrichment pipeline if enabled
                 from config.settings import semantic_settings
+
                 if semantic_settings.semantics_on_ingest:
                     from utilities.semantic_pipeline import get_semantic_pipeline
 
                     # Extract message IDs from saved emails
-                    message_ids = [email.get("message_id") for email in email_list 
-                                 if email.get("message_id")]
-                    
+                    message_ids = [
+                        email.get("message_id") for email in email_list if email.get("message_id")
+                    ]
+
                     if message_ids:
-                        logger.info(f"Running semantic enrichment for {len(message_ids)} new emails")
-                        
+                        logger.info(
+                            f"Running semantic enrichment for {len(message_ids)} new emails"
+                        )
+
                         pipeline = get_semantic_pipeline(
                             db=self.db,
                             embedding_service=None,  # Will be created as needed
                             vector_store=None,  # Will be created as needed
-                            entity_service=None  # Will be created as needed
+                            entity_service=None,  # Will be created as needed
                         )
-                        
+
                         pipeline_result = pipeline.run_for_messages(
-                            message_ids=message_ids,
-                            steps=semantic_settings.semantics_steps
+                            message_ids=message_ids, steps=semantic_settings.semantics_steps
                         )
-                        
-                        logger.info(f"Semantic enrichment complete: {pipeline_result.get('step_results', {})}")
+
+                        logger.info(
+                            f"Semantic enrichment complete: {pipeline_result.get('step_results', {})}"
+                        )
         else:
             logger.error(f"Email storage failed: {save_result.get('error')}")
             errors += len(email_list)
-        
+
         # NEW: Process threads using advanced parsing to extract individual messages
         if save_result["success"] and save_result["inserted"] > 0:
             try:
                 advanced_result = self._process_threads_advanced(threads_grouped)
-                logger.info(f"Advanced parsing: {advanced_result['processed']} messages stored from {advanced_result['messages_extracted']} extracted")
+                logger.info(
+                    f"Advanced parsing: {advanced_result['processed']} messages stored from {advanced_result['messages_extracted']} extracted"
+                )
             except Exception as e:
                 logger.error(f"Advanced thread processing failed: {e}")
-        
+
         # Legacy EmailThreadProcessor code removed - using advanced parsing only
-        
-        return {
-            "processed": processed,
-            "duplicates": duplicates,
-            "errors": errors
-        }
+
+        return {"processed": processed, "duplicates": duplicates, "errors": errors}
 
     def _fetch_and_save_messages(
         self, message_ids: list[str], account_email: str
@@ -607,16 +624,20 @@ class GmailService:
         if email_list:
             # Group emails by thread for consistent processing
             threads_grouped = self._group_messages_by_thread(email_list)
-            
+
             # Use the same thread processing logic as batch mode
             result = self._process_thread_batch(threads_grouped, email_list)
-            
+
             # Save attachments directly to database
             for message_id, attachments in attachments_by_message.items():
                 # Save attachment metadata to database
                 self.storage.save_attachments(message_id, attachments)
-            
-            save_result = {"success": True, "inserted": result["processed"], "ignored": result["duplicates"]}
+
+            save_result = {
+                "success": True,
+                "inserted": result["processed"],
+                "ignored": result["duplicates"],
+            }
 
             if save_result["success"]:
                 logger.info(
@@ -656,10 +677,10 @@ class GmailService:
 
                 # First, check if email already exists in content_unified
                 existing = self.db.fetch(
-                    "SELECT id FROM content_unified WHERE source_id = ? AND source_type = 'email'",
-                    (email_data.get("message_id"),)
+                    "SELECT id FROM content_unified WHERE source_id = ? AND source_type = 'email_message'",
+                    (email_data.get("message_id"),),
                 )
-                
+
                 if not existing:
                     # Use upsert_content which properly handles content_unified
                     content_id = self.db.upsert_content(

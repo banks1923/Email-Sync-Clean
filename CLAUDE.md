@@ -4,7 +4,7 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 
 > **For user documentation, see [README.md](README.md)**
 
-<!-- ⚠️ CRITICAL CUSTOM INSTRUCTIONS - DO NOT MODIFY ⚠️ -->
+<!-- WARNING: CRITICAL CUSTOM INSTRUCTIONS - DO NOT MODIFY -->
 <!-- REQUIRES 3X CONFIRMATION TO CHANGE THIS SECTION -->
 <!-- PROTECTED WORKFLOW INSTRUCTIONS BELOW -->
 
@@ -49,7 +49,7 @@ Core Development Principles
 > **For detailed API documentation, see [docs/SERVICES_API.md](docs/SERVICES_API.md)**
 > **For MCP server documentation, see [docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)**
 
-## Current Architecture Status - PRODUCTION BASELINE (2025-08-25) ✅
+## Current Architecture Status - PRODUCTION BASELINE (2025-08-25) - WORKING
 
 - **Structure**: Flat Pythonic layout (no more `src/app/core/` nesting!)
 - **Services**: 26,883 total lines (20,201 code lines) across 15 active services
@@ -57,30 +57,28 @@ Core Development Principles
 - **Documentation**: Consolidated to core files only
 - **Testing**: Focus on real functionality, 89% less mocks
 
-### 🎯 NEW PRODUCTION BASELINE (2025-08-25 3:05 PM)
-- **Gmail Sync**: ✅ WORKING - 668 emails synced with v2.0 message-level deduplication  
-- **Email Processing**: ✅ 302 unique messages from 393 occurrences (23% reduction)
-- **Search System**: ✅ Keyword search fully functional, semantic search ready
-- **Vector Store**: ✅ Qdrant connected (1024D Legal BERT embeddings ready)
-- **Schema Compatibility**: ✅ All services aligned to v2.0 architecture
-- **Debug Logging**: ✅ Enabled and working (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
+### CURRENT: NEW PRODUCTION BASELINE (2025-08-25 3:05 PM)
+- **Gmail Sync**: WORKING with v2.0 message-level deduplication  
+- **Email Processing**: WORKING - Significant content deduplication in email threads
+- **Search System**: WORKING - Keyword search fully functional, semantic search ready
+- **Vector Store**: WORKING - Qdrant connected (Legal BERT embeddings ready)
+- **Schema Compatibility**: WORKING - All services aligned to v2.0 architecture
+- **Debug Logging**: WORKING - Enabled and working (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
 
-### 📊 System Health (Current Metrics)
-- **Content unified**: 668 records total
-- **Email messages**: 663 email records  
-- **Individual messages**: 302 unique messages
-- **Message occurrences**: 393 total occurrences
-- **Deduplication efficiency**: 23% content reduction
-- **Vector dimensions**: 1024 (Legal BERT model)
+### STATUS: System Health (Current Status)
 - **Database status**: SQLite WAL mode, 64MB cache, healthy
+- **Email deduplication**: Active message-level processing
+- **Vector service**: Connected and ready for embeddings
+- **Search functionality**: Keyword search operational
+- **Schema version**: v2.0 with TEXT source_ids
 
-- **Pipeline Status**: ✅ Working - Gmail sync + keyword search operational
-- **Code Quality**: ✅ Major technical debt resolution completed (2025-08-22)
+- **Pipeline Status**: WORKING - Gmail sync + keyword search operational
+- **Code Quality**: COMPLETED - Major technical debt resolution completed (2025-08-22)
   - Type safety: 4 critical modules 100% or significantly improved
   - Complexity: 95% reduction in high-complexity functions
   - Dependencies: All packages updated, deprecations resolved
 
-## 🚀 Quick Start (Development)
+## READY: Quick Start (Development)
 
 ### Enable Vector Search (Required)
 ```bash
@@ -97,25 +95,30 @@ QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant &
 tools/scripts/vsearch info  # Should show "Vector Service: Connected"
 ```
 
-### Command Reference
+### Command Reference (Simplified Makefile + Direct CLI)
 
 | Category | Command | Description |
 |----------|---------|-------------|
-| **Search** | `tools/scripts/vsearch search "query"` | Basic search |
+| **Setup** | `make setup` | Complete setup from scratch |
+| | `make install` | Install dependencies only |
+| **Development** | `make test` | Run fast tests |
+| | `make format` | Format code |
+| | `make lint` | Check code quality |
+| | `make fix` | Auto-fix common issues |
+| | `make clean` | Clean up cache files |
+| **System** | `make status` | Quick system health check |
+| | `make diagnose` | Deep system diagnostic |
+| | `make backup` | Backup your data |
+| | `make reset` | Nuclear reset (when broken) |
+| **Content** | `make search QUERY="terms"` | Search documents |
+| | `make upload FILE="doc.pdf"` | Upload document |
+| | `make sync` | Sync Gmail emails |
+| **Advanced Search** | `tools/scripts/vsearch search "query"` | Basic search |
 | | `tools/scripts/vsearch search "query" --type email --limit 10` | Filtered search |
 | | `tools/scripts/vsearch info` | System status |
-| **Ingestion** | `tools/scripts/vsearch ingest` | Process all content |
+| **Advanced Ingestion** | `tools/scripts/vsearch ingest` | Process all content |
 | | `tools/scripts/vsearch ingest --docs` | Process documents only |
 | | `tools/scripts/vsearch upload document.pdf` | Single document |
-| **Quality** | `make cleanup` | Complete automated cleanup |
-| | `make fix-all` | Auto-fix all issues |
-| | `make check` | Quality checks |
-| **System** | `make full-run` | Complete pipeline |
-| | `make diag-wiring` | System diagnostic |
-| | `make vector-smoke` | Quick validation |
-| **Maintenance** | `make db-validate` | Schema integrity |
-| | `make vector-sync` | Sync vectors |
-| | `make maintenance-all` | All checks |
 | **Email Parsing** | `python3 scripts/parse_messages.py` | Parse emails with deduplication |
 | | `python3 scripts/parse_messages.py --reset` | Fresh parse (clear resume state) |
 | | `python3 scripts/backup_database.py create` | Backup before migration |
@@ -127,12 +130,11 @@ tools/scripts/vsearch info  # Should show "Vector Service: Connected"
 | **Entities** | `tools/scripts/vsearch extract-entities --missing-only` | Extract entities |
 | | `tools/scripts/vsearch entity-status` | Check status |
 | **Verification** | `python3 scripts/verify_pipeline.py` | Full verification |
-| | `make preflight-vector-parity` | Vector sync check |
 | | `python3 tests/test_email_parser.py` | Validate email parsing |
 
 For detailed command documentation, see [docs/SERVICES_API.md](docs/SERVICES_API.md)
 
-## 🏗️ Clean Flat Architecture
+## ARCHITECTURE: Clean Flat Architecture
 
 ### Project Structure (Clean Organized Architecture)
 
@@ -152,7 +154,7 @@ Email Sync/
 ├── utilities/          # Organized utility services [NEW: Reorganized 2025-08-17]
 │   ├── embeddings/     # Embedding service (Legal BERT)
 │   ├── vector_store/   # Vector store service
-│   ├── ~~notes/~~      # **REMOVED** - Migrated to document pipeline
+│   ├── notes/          # REMOVED - Migrated to document pipeline
 │   └── timeline/       # Timeline service
 
 # Infrastructure Services
@@ -226,7 +228,7 @@ Email Sync/
 - **Rationale**: Keeps AI development focused and prevents monster files
 These are guidance targets to prevent monster files; they are not hard caps.
 
-##### Code Quality Achievements (2025-08-22) ✅
+##### Code Quality Achievements (2025-08-22) - COMPLETED
 - **Type Safety**: Critical modules now properly type-annotated with modern Python syntax
 - **Complexity Reduction**: High-complexity functions refactored following clean architecture
 - **Function Compliance**: All new extracted functions under 30 lines (goal achieved)
@@ -273,7 +275,7 @@ These are guidance targets to prevent monster files; they are not hard caps.
 - **No God Modules**: Each module has ONE purpose
 
 
-## 📊 Key Services Overview
+## STATUS: Key Services Overview
 
 <!-- AUTO-GENERATED SERVICE COUNTS - DO NOT EDIT BY HAND -->
 <!-- Generated by make docs-audit - data from tools/docs/audit.py -->
@@ -282,7 +284,6 @@ These are guidance targets to prevent monster files; they are not hard caps.
 |---------|-----------|-------------|------------|
 | Shared | `shared/` | 6,123 | 4,592 |
 | PDF | `pdf/` | 3,523 | 2,642 |
-| Knowledge Graph | `knowledge_graph/` | 2,839 | 2,129 |
 | Entity | `entity/` | 2,661 | 1,995 |
 | Infrastructure/Documents | `infrastructure/documents/` | 1,993 | 1,494 |
 | Gmail | `gmail/` | 1,883 | 1,412 |
@@ -293,24 +294,23 @@ These are guidance targets to prevent monster files; they are not hard caps.
 | Utilities/Vector Store | `utilities/vector_store/` | 413 | 309 |
 | Utilities/Timeline | `utilities/timeline/` | 399 | 299 |
 | Utilities/Embeddings | `utilities/embeddings/` | 157 | 117 |
-| **TOTAL** | **All Services** | **24,713** | **18,528** |
+| **TOTAL** | **All Services** | **21,874** | **16,399** |
 
 <!-- END AUTO-GENERATED SERVICE COUNTS -->
 
 
 For detailed service descriptions and APIs, see [docs/SERVICES_API.md](docs/SERVICES_API.md)
 
-## 📊 Database Schema
+## DATABASE: Schema
 
-### Core Architecture: Message-Level Deduplication (v2.0) ✅ PRODUCTION BASELINE
+### Core Architecture: Message-Level Deduplication (v2.0) - PRODUCTION BASELINE
 The system implements advanced message-level email deduplication with TEXT source_ids and full schema compatibility.
 
 **Current Production Status (2025-08-25)**:
-- **302 unique messages** from **393 occurrences** (23% deduplication efficiency)
-- **668 total email records** in content_unified with source_type='email_message'  
+- **Email deduplication**: Significant reduction in duplicate content from email threads
 - **Gmail sync**: Fully operational with v2.0 schema
-- **Test Coverage**: 97%+ on email_parsing module, 34 tests passing
-- **Schema fixes**: All tables compatible, semantic pipeline working
+- **Test Coverage**: 97%+ on email_parsing module, comprehensive test suite
+- **Schema compatibility**: All tables compatible, semantic pipeline working
 
 **Primary Tables:**
 
@@ -370,23 +370,19 @@ The system implements advanced message-level email deduplication with TEXT sourc
 - `scripts/verify_semantic_wiring.py` - Verification tools
 - `tests/test_semantic_pipeline_comprehensive.py` - Full test suite
 
-## 🔍 System Status Verification - CURRENT BASELINE ✅
+## VERIFICATION: System Status - CURRENT BASELINE
 
-**Current verified metrics (2025-08-25 3:05 PM):**
+**Current verified status (2025-08-25 3:05 PM):**
 
 ```bash
-# ✅ PRODUCTION VERIFIED COUNTS
-# Content unified: 668 records
-# Email messages: 663 records  
-# Individual messages: 302 unique
-# Message occurrences: 393 total
+# PRODUCTION VERIFICATION
 
 # Quick status check
 tools/scripts/vsearch info                       # System overview
 tools/scripts/vsearch search "lease" --limit 3  # Test keyword search
 
 # Database verification
-sqlite3 data/system_data/emails.db "SELECT 'content_unified:' || COUNT(*) FROM content_unified UNION ALL SELECT 'email_messages:' || COUNT(*) FROM content_unified WHERE source_type='email_message' UNION ALL SELECT 'individual_messages:' || COUNT(*) FROM individual_messages UNION ALL SELECT 'message_occurrences:' || COUNT(*) FROM message_occurrences;"
+sqlite3 data/system_data/emails.db "SELECT 'content_unified total:' || COUNT(*) FROM content_unified UNION ALL SELECT 'email_messages:' || COUNT(*) FROM content_unified WHERE source_type='email_message';"
 
 # Gmail sync test (with debug logging)  
 export LOG_LEVEL=DEBUG && export USE_LOGURU=true && python3 -m gmail.main
@@ -400,7 +396,7 @@ make diag-wiring
 
 For detailed API documentation and usage examples, see **[docs/SERVICES_API.md](docs/SERVICES_API.md)**
 
-## 🔄 Unified Ingestion Pipeline
+## PIPELINE: Unified Ingestion
 
 **Manual ingestion for emails and documents through unified processing pipeline.**
 
@@ -414,7 +410,7 @@ tools/scripts/vsearch ingest --emails            # Process emails
 tools/scripts/vsearch ingest --docs --dir /path  # Custom directory
 ```
 
-## 🔧 MCP Server Integration
+## TOOLS: MCP Server Integration
 
 The system provides 2 active MCP servers for Claude Desktop with 12+ intelligence tools.
 
@@ -442,7 +438,7 @@ tools/scripts/vsearch search-entities --entity-type PERSON --entity-value "Smith
 
 For complete documentation, see **[docs/ENTITY_EXTRACTION_INTEGRATION.md](docs/ENTITY_EXTRACTION_INTEGRATION.md)**
 
-## 📝 Logging System
+## LOGGING: System
 
 **Uses loguru for superior logging** - Config: `shared/loguru_config.py`
 
@@ -453,7 +449,7 @@ logger.info("Message")  # Simple API, automatic rotation, structured logging
 
 Environment: `LOG_LEVEL=INFO`, `USE_LOGURU=true`
 
-## 🔍 System Verification
+## VERIFICATION: System
 
 ```bash
 python3 scripts/verify_pipeline.py              # Complete pipeline verification
@@ -466,7 +462,7 @@ Runs 6 test suites: Preflight, Smoke, Integrity, Performance, Quarantine, Docume
 
 For detailed verification documentation, see **[docs/PIPELINE_VERIFICATION.md](docs/PIPELINE_VERIFICATION.md)**
 
-## 🧪 Testing & Validation
+## TESTING: Testing & Validation
 
 ### Testing Philosophy
 - **Test Real Functionality**: Avoid mocks when possible
@@ -490,7 +486,7 @@ python3 tests/simple_mcp_validation.py          # MCP validation
 python3 tests/run_mcp_tests.py                  # All MCP tests
 
 # Quick service test
-python3 -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('✅ DB working')"
+python3 -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('WORKING: DB working')"
 ```
 
 ### Test Coverage
@@ -504,7 +500,7 @@ python3 -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('✅ D
 
 For detailed testing documentation, see **[docs/PIPELINE_VERIFICATION.md](docs/PIPELINE_VERIFICATION.md)**
 
-## 🛠️ Development Tools
+## TOOLS: Development Tools
 
 ### Automated Code Cleanup
 ```bash
@@ -518,9 +514,9 @@ make check          # Quality checks + tests (no modifications)
 - **SonarQube**: IDE quality analysis (`SonarSource.sonarlint-vscode`)
 - **Commands**: `make sonar-check`, `make sonar-fix`, `make sonar-report`
 
-For complete cleanup documentation: **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)**
+For cleanup tools: Use `make cleanup` and `make fix-all` commands
 
-## 📋 Development Guidelines
+## GUIDELINES: Development
 
 ### Adding Features
 1. **Check if it already exists** - We have a lot already
@@ -543,15 +539,15 @@ class SearchFactory:
 
 ### File Organization
 - **Root level services**: gmail/, pdf/, search_intelligence/, legal_intelligence/
-- **Utilities**: utilities/embeddings/, utilities/vector_store/, ~~utilities/notes/~~ (removed)
+- **Utilities**: utilities/embeddings/, utilities/vector_store/ (utilities/notes/ removed)
 - **Infrastructure**: infrastructure/pipelines/, infrastructure/documents/, infrastructure/mcp_servers/
 - **Tools**: tools/cli/, tools/scripts/
 - **shared/**: Shared utilities (keep minimal)
 - **tests/**: All test files
 
-## 📈 Performance Metrics
+## PERFORMANCE: Metrics
 
-## 🎯 Philosophy
+## PHILOSOPHY
 
 > Your system should be as simple as possible for YOUR needs.
 
@@ -563,7 +559,7 @@ This is a **single-user project**, important use case, not for profit, not enter
 3. **Less code > More features**
 4. **Today's solution > Tomorrow's possibility**
 
-## 📚 Documentation Index
+## DOCUMENTATION: Index
 
 ### Primary Documentation
 - **[README.md](README.md)** - User guide and quick start
@@ -575,25 +571,25 @@ This is a **single-user project**, important use case, not for profit, not enter
 - **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)** - MCP server integration guide
 - **[docs/ENTITY_EXTRACTION_INTEGRATION.md](docs/ENTITY_EXTRACTION_INTEGRATION.md)** - Entity extraction system guide **UPDATED**
 - **[docs/DIAGNOSTIC_SYSTEM.md](docs/DIAGNOSTIC_SYSTEM.md)** - System diagnostic tools and troubleshooting
-- **[docs/AUTOMATED_CLEANUP.md](docs/AUTOMATED_CLEANUP.md)** - Code cleanup tools
+- Code cleanup tools (via Make commands)
 - **[docs/CLEANUP_QUICK_REFERENCE.md](docs/CLEANUP_QUICK_REFERENCE.md)** - Quick cleanup reference
 
 ### Service-Specific Documentation
 - **[gmail/CLAUDE.md](gmail/CLAUDE.md)** - Gmail service implementation
 - **[pdf/CLAUDE.md](pdf/CLAUDE.md)** - PDF processing details
-- **[knowledge_graph/CLAUDE.md](knowledge_graph/CLAUDE.md)** - Knowledge graph API
+- Knowledge graph functionality (via search intelligence service)
 - **[summarization/README.md](summarization/README.md)** - Document summarization
 
-## 🚀 Next Steps - FROM PRODUCTION BASELINE ✅
+## NEXT: Steps - FROM PRODUCTION BASELINE
 
 ### CURRENT STATUS: Production Ready with Keyword Search
-✅ **Gmail sync working**  
-✅ **Keyword search operational**  
-✅ **Vector service connected**  
+WORKING: **Gmail sync working**  
+WORKING: **Keyword search operational**  
+WORKING: **Vector service connected**  
 ⏳ **Semantic search ready** (needs embedding generation)
 
 ### Immediate Next Actions
-1. **Enable Semantic Search**: `tools/scripts/vsearch ingest --emails` - Generate embeddings for 668 emails
+1. **Enable Semantic Search**: `tools/scripts/vsearch ingest --emails` - Generate embeddings for all emails
 2. **Test Both Search Types**: 
    - Keyword: `tools/scripts/vsearch search "lease" --limit 5`
    - Semantic: `tools/scripts/vsearch search "tenant rights" --limit 5` (after embeddings)

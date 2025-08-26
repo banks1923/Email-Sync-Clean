@@ -44,19 +44,19 @@ This is a single-user system built for practical email and document search. The 
 
 ## Anti-Patterns to Avoid
 
-❌ **Over-Engineering**
+ **Over-Engineering**
 - Complex patterns for simple problems
 - Abstract factories when if/else works
 - Deep inheritance hierarchies
 - Multiple layers of indirection
 
-❌ **Unnecessary Abstraction**
+ **Unnecessary Abstraction**
 - Wrapping standard library without adding value
 - Interfaces for single implementations
 - Building frameworks instead of solving problems
 - Adding complexity for hypothetical future needs
 
-❌ **Premature Optimization**
+ **Premature Optimization**
 - Caching before measuring
 - Async everything
 - Complex connection pooling for local services
@@ -64,26 +64,26 @@ This is a single-user system built for practical email and document search. The 
 
 ## Good Patterns That Work
 
-✅ **Simple Functions**
+WORKING: **Simple Functions**
 - Pure functions where possible
 - Clear input/output
 - Single responsibility
 - Under 35 lines (ENFORCED)
 - Cyclomatic complexity < 10 (ENFORCED)
 
-✅ **Flat Structure**
+WORKING: **Flat Structure**
 - Services at top level
 - Minimal nesting
 - Direct imports
 - Clear file purposes
 
-✅ **Standard Library First**
+WORKING: **Standard Library First**
 - Use built-in solutions
 - Avoid heavy frameworks
 - Minimal dependencies
 - Well-known libraries only
 
-✅ **Practical Error Handling**
+WORKING: **Practical Error Handling**
 - Return {"success": bool, "error": str}
 - Log and continue when reasonable
 - Fail fast when corrupted

@@ -56,9 +56,14 @@ class EmbeddingService:
             raise
 
     def encode(self, text: str) -> np.ndarray:
-        """Convert text to vector.
+        """Convert text to L2-normalized 1024D vector.
 
-        Simple.
+        Args:
+            text: Input text to encode (truncated to 512 tokens)
+
+        Returns:
+            L2-normalized numpy array (unit vector, norm=1.0).
+            Returns zeros vector for empty/whitespace-only text.
         """
         if not text or not text.strip():
             return np.zeros(self.dimensions)
@@ -76,12 +81,12 @@ class EmbeddingService:
             # Move to CPU and convert to numpy
             embeddings = outputs.last_hidden_state.mean(dim=1)
             embedding = embeddings.cpu().numpy().flatten()
-            
+
             # Normalize to unit vector (L2 norm = 1.0)
             norm = np.linalg.norm(embedding)
             if norm > 0:
                 embedding = embedding / norm
-            
+
             return embedding
 
     def batch_encode(self, texts: list[str], batch_size: int = 16) -> list[np.ndarray]:
@@ -125,7 +130,7 @@ class EmbeddingService:
         Alias for encode() to maintain API compatibility.
         """
         return self.encode(text)
-    
+
     def get_embeddings(self, texts: list[str]) -> list[np.ndarray]:
         """
         Alias for batch_encode() to maintain API compatibility.

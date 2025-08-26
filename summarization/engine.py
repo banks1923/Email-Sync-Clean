@@ -203,9 +203,28 @@ class TextRankSummarizer:
             return []
 
         abbrevs = [
-            "e.g.", "i.e.", "etc.", "Mr.", "Mrs.", "Ms.", "Dr.", "Prof.",
-            "Jr.", "Sr.", "St.", "vs.", "No.", "Sec.", "Art.", "Inc.", "Ltd.",
-            "U.S.", "U.K.", "Cal.", "Gov.", "Dept."
+            "e.g.",
+            "i.e.",
+            "etc.",
+            "Mr.",
+            "Mrs.",
+            "Ms.",
+            "Dr.",
+            "Prof.",
+            "Jr.",
+            "Sr.",
+            "St.",
+            "vs.",
+            "No.",
+            "Sec.",
+            "Art.",
+            "Inc.",
+            "Ltd.",
+            "U.S.",
+            "U.K.",
+            "Cal.",
+            "Gov.",
+            "Dept.",
         ]
         placeholder = "§DOT§"
         protected = text

@@ -347,7 +347,7 @@ def cluster_similar_content(
 
     # Find clusters
     clusters = clusterer.find_content_clusters(
-        source_type =content_type, limit=limit, threshold=threshold
+        source_type=content_type, limit=limit, threshold=threshold
     )
 
     # Store relationships if requested

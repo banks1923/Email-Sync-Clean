@@ -90,15 +90,15 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Verify content record exists (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT * FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT * FROM content_unified WHERE title = ?", (self.test_email["subject"],)
         )
 
         self.assertIsNotNone(content, "Content record not found in database")
 
         # Verify content fields
-        self.assertEqual(content["content_type"], "email")
+        self.assertEqual(content["source_type"], "email_message")
         self.assertEqual(content["title"], self.test_email["subject"])
-        self.assertIn("ABC Corporation", content["content"])  # Check for actual content from body
+        self.assertIn("ABC Corporation", content["body"])  # Check for actual content from body
         self.assertGreater(content["word_count"], 0)
         self.assertGreater(content["char_count"], 0)
 
@@ -124,7 +124,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record to find content_id (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content_unified WHERE title = ?", (self.test_email["subject"],)
         )
 
         self.assertIsNotNone(content, "Content record not found")
@@ -163,7 +163,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content_unified WHERE title = ?", (self.test_email["subject"],)
         )
 
         # Get summary
@@ -215,7 +215,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record (use gmail_service's db)
         content = self.gmail_service.db.fetch_one(
-            "SELECT id FROM content WHERE title = ?", (self.test_email["subject"],)
+            "SELECT id FROM content_unified WHERE title = ?", (self.test_email["subject"],)
         )
 
         # Get summary
@@ -264,7 +264,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         # Verify all emails have summaries
         for email in email_list:
             content = self.gmail_service.db.fetch_one(
-                "SELECT id FROM content WHERE title = ?", (email["subject"],)
+                "SELECT id FROM content_unified WHERE title = ?", (email["subject"],)
             )
             if content:  # Some might be None if deduplication occurs
                 summary = get_summary_for_document(self.gmail_service.db, content["content_id"])
@@ -300,7 +300,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
 
         # Get content record
         content = self.gmail_service.db.fetch_one(
-            "SELECT * FROM content WHERE title = ?", (html_email["subject"],)
+            "SELECT * FROM content_unified WHERE title = ?", (html_email["subject"],)
         )
 
         if content:

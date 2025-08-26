@@ -3,7 +3,7 @@ Consolidated Timeline tests - Essential functionality only.
 
 Combines the most important tests from:
 - test_timeline_database.py (28 tests)
-- test_timeline_service.py (25 tests) 
+- test_timeline_service.py (25 tests)
 - test_timeline_integration.py (14 tests)
 
 Focuses on core timeline operations, not edge cases.
@@ -20,25 +20,26 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from utilities.timeline.database import TimelineDatabase
+from utilities.timeline.main import TimelineService
 
 
 class TestTimelineCore:
     """
     Essential timeline functionality tests.
     """
-    
+
     def test_timeline_service_initialization(self, isolated_timeline_db_path):
         """
         Test TimelineService initializes with required tables.
         """
         service = TimelineService(db_path=isolated_timeline_db_path)
-        
+
         # Verify tables were created
         db = TimelineDatabase(db_path=isolated_timeline_db_path)
         tables = db.fetch("SELECT name FROM sqlite_master WHERE type='table'")
-        table_names = [t['name'] for t in tables]
-        
-        assert 'timeline_events' in table_names
+        table_names = [t["name"] for t in tables]
+
+        assert "timeline_events" in table_names
         assert service.db_path == isolated_timeline_db_path
 
     def test_create_timeline_event(self, timeline_database_with_tables):
@@ -49,9 +50,9 @@ class TestTimelineCore:
             event_id="evt_001",
             event_type="email",
             title="Test Event",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         assert result["success"] is True
         assert result["event_id"] == "evt_001"
 
@@ -60,7 +61,7 @@ class TestTimelineCore:
         Test retrieving timeline events.
         """
         result = populated_timeline_database.get_timeline_events(limit=10)
-        
+
         assert result["success"] is True
         assert "events" in result
         assert len(result["events"]) > 0
@@ -71,12 +72,9 @@ class TestTimelineCore:
         """
         start = (datetime.now() - timedelta(days=7)).isoformat()
         end = datetime.now().isoformat()
-        
-        result = populated_timeline_database.get_timeline_events(
-            start_date=start,
-            end_date=end
-        )
-        
+
+        result = populated_timeline_database.get_timeline_events(start_date=start, end_date=end)
+
         assert result["success"] is True
         assert all(start <= e["event_date"] <= end for e in result["events"])
 
@@ -85,9 +83,9 @@ class TestTimelineCore:
         Test syncing emails to timeline events.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         result = service.sync_emails_to_timeline(limit=5)
-        
+
         assert result["success"] is True
         assert result["processed"] > 0
 
@@ -96,17 +94,17 @@ class TestTimelineCore:
         Test syncing documents to timeline events.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         # Add test document
         service.db.add_content(
             content_type="pdf",
             title="Test Document",
             content="Document content",
-            metadata={"date": datetime.now().isoformat()}
+            metadata={"date": datetime.now().isoformat()},
         )
-        
+
         result = service.sync_documents_to_timeline(limit=5)
-        
+
         assert result["success"] is True
 
     def test_build_case_timeline(self, populated_timeline_database):
@@ -114,17 +112,25 @@ class TestTimelineCore:
         Test building timeline for a specific case.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         # Add case-specific events
-        service.db.execute("""
+        service.db.execute(
+            """
             INSERT INTO timeline_events 
             (event_id, event_type, title, event_date, metadata)
             VALUES (?, ?, ?, ?, ?)
-        """, ("case_001", "legal", "Case 24NNCV Filing", datetime.now().isoformat(), 
-              '{"case_number": "24NNCV"}'))
-        
+        """,
+            (
+                "case_001",
+                "legal",
+                "Case 24NNCV Filing",
+                datetime.now().isoformat(),
+                '{"case_number": "24NNCV"}',
+            ),
+        )
+
         result = service.build_case_timeline("24NNCV")
-        
+
         assert result["success"] is True
         assert result["case_number"] == "24NNCV"
 
@@ -138,13 +144,11 @@ class TestTimelineCore:
             event_type="legal",
             title="Court Order",
             event_date=datetime.now().isoformat(),
-            importance_score=9
+            importance_score=9,
         )
-        
-        result = timeline_database_with_tables.get_timeline_events(
-            min_importance=7
-        )
-        
+
+        result = timeline_database_with_tables.get_timeline_events(min_importance=7)
+
         assert result["success"] is True
         assert all(e.get("importance_score", 0) >= 7 for e in result["events"])
 
@@ -157,18 +161,18 @@ class TestTimelineCore:
             event_id="parent_001",
             event_type="email",
             title="Original Email",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         # Create related event
         child = timeline_database_with_tables.create_timeline_event(
             event_id="child_001",
             event_type="email",
             title="Reply Email",
             event_date=datetime.now().isoformat(),
-            metadata='{"parent_id": "parent_001"}'
+            metadata='{"parent_id": "parent_001"}',
         )
-        
+
         assert parent["success"] is True
         assert child["success"] is True
 
@@ -177,9 +181,9 @@ class TestTimelineCore:
         Test exporting timeline to JSON format.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         result = service.export_timeline(format="json")
-        
+
         assert result["success"] is True
         assert "timeline" in result
         assert isinstance(result["timeline"], list)
@@ -189,7 +193,7 @@ class TestTimelineCore:
         Test getting timeline statistics.
         """
         result = populated_timeline_database.get_timeline_statistics()
-        
+
         assert result["success"] is True
         assert "total_events" in result
         assert "event_types" in result
@@ -200,9 +204,9 @@ class TestTimelineCore:
         Test detecting gaps in timeline.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         result = service.detect_timeline_gaps(gap_days=30)
-        
+
         assert result["success"] is True
         assert "gaps" in result
 
@@ -211,7 +215,7 @@ class TestTimelineCore:
         Test searching timeline events.
         """
         result = populated_timeline_database.search_timeline_events("test")
-        
+
         assert result["success"] is True
         assert "events" in result
 
@@ -221,10 +225,10 @@ class TestTimelineCore:
         """
         # Get first page
         page1 = populated_timeline_database.get_timeline_events(limit=5, offset=0)
-        
+
         # Get second page
         page2 = populated_timeline_database.get_timeline_events(limit=5, offset=5)
-        
+
         assert page1["success"] is True
         assert page2["success"] is True
         # Events should be different
@@ -240,15 +244,14 @@ class TestTimelineCore:
             event_id="upd_001",
             event_type="email",
             title="Original Title",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         # Update it
         result = timeline_database_with_tables.update_timeline_event(
-            event_id="upd_001",
-            title="Updated Title"
+            event_id="upd_001", title="Updated Title"
         )
-        
+
         assert result["success"] is True
 
     def test_delete_timeline_event(self, timeline_database_with_tables):
@@ -260,12 +263,12 @@ class TestTimelineCore:
             event_id="del_001",
             event_type="email",
             title="To Delete",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         # Delete it
         result = timeline_database_with_tables.delete_timeline_event("del_001")
-        
+
         assert result["success"] is True
 
     def test_timeline_service_error_handling(self):
@@ -274,11 +277,11 @@ class TestTimelineCore:
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             invalid_path = os.path.join(tmpdir, "nonexistent", "timeline.db")
-            
+
             # Should handle invalid path gracefully
             service = TimelineService(db_path=invalid_path)
             result = service.get_timeline_events()
-            
+
             # Should return error, not crash
             assert result["success"] is False
 
@@ -287,15 +290,15 @@ class TestTimelineCore:
         Test extracting timeline from document content.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         content = """
         On January 15, 2024, the complaint was filed.
         The hearing is scheduled for February 20, 2024.
         Settlement conference set for March 1, 2024.
         """
-        
+
         result = service.extract_dates_from_content(content)
-        
+
         assert result["success"] is True
         assert len(result["dates"]) >= 3
 
@@ -308,17 +311,17 @@ class TestTimelineCore:
             event_id="dup_001",
             event_type="email",
             title="Test Event",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         # Try to create duplicate
         result2 = timeline_database_with_tables.create_timeline_event(
             event_id="dup_001",  # Same ID
             event_type="email",
             title="Test Event",
-            event_date=datetime.now().isoformat()
+            event_date=datetime.now().isoformat(),
         )
-        
+
         assert result1["success"] is True
         assert result2["success"] is False  # Should fail on duplicate
 
@@ -327,16 +330,16 @@ class TestTimelineCore:
         Test complete workflow from data to timeline.
         """
         service = TimelineService(db_path=populated_timeline_database.db_path)
-        
+
         # Sync emails
         sync_result = service.sync_emails_to_timeline(limit=5)
-        
+
         # Get timeline
         timeline_result = service.get_timeline_events(limit=10)
-        
+
         # Export
         export_result = service.export_timeline(format="json")
-        
+
         assert sync_result["success"] is True
-        assert timeline_result["success"] is True  
+        assert timeline_result["success"] is True
         assert export_result["success"] is True

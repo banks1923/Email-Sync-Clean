@@ -1,53 +1,52 @@
 # Testing Guide - Email Sync System
 
-## Quick Start - Fast Testing
+## Quick Start - Simplified Commands
 
-For daily development and CI/CD, use the categorized test commands:
+For daily development, use the streamlined make commands:
 
 ```bash
-# Fast unit tests (recommended for TDD)
-make test-unit        # 77 tests in ~10-15 seconds
-
-# System health checks
-make test-smoke       # 22 tests in ~8 seconds
-
-# Fast quality pipeline (CI/CD optimized)
-make test-fast        # Unit + Integration tests
-
-# Standard quality check
-make check            # Format + Lint + Type-check + Fast tests
+# Daily development workflow
+make test           # Run fast tests
+make format         # Format code
+make lint           # Check code quality
+make fix            # Auto-fix common issues
+make clean          # Clean up cache files
 ```
 
 ## Complete Command Reference
 
-### Testing Commands
+### Essential Commands (Makefile v2.0)
 
-| Command | Description | Tests | Duration |
-|---------|-------------|-------|----------|
-| `make test-unit` | Unit tests (fast, isolated) | 77 | ~10-15s |
-| `make test-smoke` | System health checks | 22 | ~8s |
-| `make test-integration` | Cross-service tests | 1 | ~5s |
-| `make test-slow` | Performance, AI models | Variable | Minutes |
-| `make test-fast` | **CI/CD optimized pipeline** | 78 | ~15-20s |
-| `make test` | Full test suite | 405 | 2+ minutes |
-| `make test-coverage` | Tests with coverage report | 405 | 3+ minutes |
-
-### Quality Commands
-
-| Command | Description | Speed |
+| Command | Description | Usage |
 |---------|-------------|-------|
-| `make check` | **Fast quality checks (recommended)** | ~1-2 minutes |
-| `make check-full` | Comprehensive quality checks (all tests) | ~5+ minutes |
-| `make lint-all` | Run all linters | ~10s |
-| `make lint-fix` | Auto-fix linting issues | ~15s |
-| `make type-check` | Type checking with mypy | ~10s |
-| `make format-advanced` | Complete code formatting | ~30s |
+| `make setup` | Complete setup from scratch | First-time setup |
+| `make test` | Run fast tests (no slow AI tests) | Daily development |
+| `make format` | Format code (black, isort, docformatter) | Before commits |
+| `make lint` | Check code quality (flake8, ruff, mypy) | Quality checks |
+| `make fix` | Auto-fix issues and format | Fix problems |
+| `make clean` | Clean up cache files | Maintenance |
+| `make status` | Quick system health check | Diagnostics |
+| `make diagnose` | Deep system diagnostic | Troubleshooting |
 
-### Utility Commands
+### Advanced Testing (Direct CLI)
 
-| Command | Description |
-|---------|-------------|
-| `make cleanup` | Complete code cleanup pipeline |
+For more detailed testing, use pytest directly:
+
+```bash
+# Fast tests (excludes slow AI/integration tests)
+pytest -c .config/pytest.ini -m "not slow" -v --tb=short
+
+# Full test suite (including slow tests)
+pytest -c .config/pytest.ini -v
+
+# Specific test categories
+pytest tests/test_search_intelligence.py -v      # Search tests
+pytest tests/test_legal_intelligence.py -v      # Legal tests
+pytest tests/test_email_parser.py -v            # Email parsing tests
+
+# With coverage
+pytest tests/ --cov=. --cov-report=html
+```
 | `make fix-all` | Auto-fix all possible issues |
 | `make clean` | Clean caches and generated files |
 | `make security-check` | Run security analysis |
@@ -132,8 +131,8 @@ make check
 ### Fast Development Cycle
 ```bash
 # Make code changes...
-make test-unit              # ✅ 77 tests in 15s
-make lint-fix               # ✅ Auto-fix issues  
+make test-unit              # WORKING: 77 tests in 15s
+make lint-fix               # WORKING: Auto-fix issues  
 git commit -m "feature: ..."
 ```
 
@@ -219,7 +218,7 @@ Generated: 2025-08-16
 
 ### Test Categories
 
-#### 1. ✅ Working Tests (23 files)
+#### 1. WORKING: Working Tests (23 files)
 Tests that should be working with the new architecture:
 
 ##### Core Service Tests
@@ -257,7 +256,7 @@ Tests that should be working with the new architecture:
 - `test_context_binding.py` - Context binding
 - `shared_test_fixtures.py` - Shared test fixtures
 
-#### 2. ❌ Broken Tests (26 files with import errors)
+#### 2.  Broken Tests (26 files with import errors)
 Tests failing due to old architecture imports (`src.app.core.*`):
 
 ##### Integration Tests (Deprecated Structure)
@@ -403,22 +402,22 @@ python3 -m pytest tests/ -k "not integration and not pdf_service and not gmail_s
 ## Test Infrastructure Improvements
 
 ### Recommended Tools
-- `pytest-cov` - Coverage reporting ✅ (installed)
-- `pytest-mock` - Better mocking support ✅ (installed)
-- `pytest-benchmark` - Performance testing ✅ (installed)
-- `pytest-asyncio` - Async test support ✅ (installed)
+- `pytest-cov` - Coverage reporting WORKING: (installed)
+- `pytest-mock` - Better mocking support WORKING: (installed)
+- `pytest-benchmark` - Performance testing WORKING: (installed)
+- `pytest-asyncio` - Async test support WORKING: (installed)
 - `tox` - Multi-environment testing (consider adding)
-- `hypothesis` - Property-based testing ✅ (installed)
+- `hypothesis` - Property-based testing WORKING: (installed)
 
 ### Test Organization
 ```
 tests/
-├── unit/           # Pure unit tests
-├── integration/    # Integration tests
-├── e2e/           # End-to-end tests
-├── performance/   # Performance benchmarks
-├── fixtures/      # Shared test data
-└── mocks/         # Mock implementations
+ unit/           # Pure unit tests
+ integration/    # Integration tests
+ e2e/           # End-to-end tests
+ performance/   # Performance benchmarks
+ fixtures/      # Shared test data
+ mocks/         # Mock implementations
 ```
 
 ## Conclusion

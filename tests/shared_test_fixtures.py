@@ -213,10 +213,10 @@ class TestDatabase:
 
         self.conn.execute(
             """
-            INSERT INTO content (id, content_type, title, content, metadata)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO content_unified (source_id, source_type, title, body)
+            VALUES (?, ?, ?, ?)
         """,
-            (content_id, content_type, title, content, metadata_json),
+            (content_id, content_type, title, content),
         )
         self.conn.commit()
 
@@ -229,14 +229,14 @@ class TestDatabase:
         Simple keyword search in content.
         """
         sql = """
-            SELECT id, content_type, title, content, metadata
-            FROM content
-            WHERE (title LIKE ? OR content LIKE ?)
+            SELECT id, source_type, title, body
+            FROM content_unified
+            WHERE (title LIKE ? OR body LIKE ?)
         """
         params = [f"%{query}%", f"%{query}%"]
 
         if content_type:
-            sql += " AND content_type = ?"
+            sql += " AND source_type = ?"
             params.append(content_type)
 
         sql += " LIMIT ?"

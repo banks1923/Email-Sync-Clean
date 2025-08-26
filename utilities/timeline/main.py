@@ -8,8 +8,8 @@ from typing import Any
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
 from config.settings import get_db_path
+from shared.simple_db import SimpleDB
 
 
 class TimelineService:

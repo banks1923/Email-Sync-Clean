@@ -26,7 +26,7 @@ class EntityService:
     Provides entity extraction capabilities using spaCy NLP models.
     Follows service independence with database-only communication.
     """
-    
+
     # Type annotations for class attributes
     extractor: BaseExtractor | None
     relationship_extractor: RelationshipExtractor | None
@@ -156,11 +156,11 @@ class EntityService:
                 # Add EID and content_id to each entity if provided
                 if email_data:
                     for entity in raw_entities:
-                        if email_data.get('eid'):
-                            entity['eid_ref'] = email_data['eid']
-                        if email_data.get('content_id'):
-                            entity['content_id'] = email_data['content_id']
-                            
+                        if email_data.get("eid"):
+                            entity["eid_ref"] = email_data["eid"]
+                        if email_data.get("content_id"):
+                            entity["content_id"] = email_data["content_id"]
+
                 store_result = self.db.store_entities(raw_entities)
                 if not store_result["success"]:
                     logger.warning(f"Failed to store entities: {store_result.get('error')}")

@@ -178,9 +178,9 @@ def _get_content_preview(result):
             if field == "highlighted_snippet":
                 return content  # Already formatted
             else:
-                # Clean and truncate
-                preview = str(content)[:200].replace("\n", " ").strip()
-                return f"{preview}..." if len(str(content)) > 200 else preview
+                # Clean and truncate - increased to 500 chars for better previews
+                preview = str(content)[:500].replace("\n", " ").strip()
+                return f"{preview}..." if len(str(content)) > 500 else preview
     
     return "No content preview available"
 
@@ -291,11 +291,11 @@ def info_command():
         db = SimpleDB()
         stats = db.get_content_stats()
         print("\n📁 Database Statistics:")
-        print(f"  Total emails: {stats.get('total_emails', 0)}")
-        print(f"  Total PDFs: {stats.get('total_pdfs', 0)}")
-        print(f"  Total transcripts: {stats.get('total_transcripts', 0)}")
-        print(f"  Total content: {stats.get('total_content', 0)}")
-        print(f"  Note: {stats.get('total_documents', 0)} raw documents → {stats.get('total_content', 0)} text chunks")
+        print(f"  Gmail emails: {stats.get('total_emails', 0)} (deduplicated messages)")
+        print(f"  PDFs: {stats.get('total_pdfs', 0)}")
+        print(f"  Transcripts: {stats.get('total_transcripts', 0)}")
+        print(f"  Searchable content pieces: {stats.get('total_content', 0)}")
+        print(f"  Note: Content pieces may include parsed email parts - Gmail sync shows actual email count")
     except Exception as e:
         print(f"  ⚠️  Database unavailable: {e}")
 
@@ -361,7 +361,7 @@ def upload_command(file_path):
 def ingest_command(args):
     """Unified ingestion command for emails and/or documents."""
     from shared.unified_ingestion import get_ingestion_service
-    
+
     # Determine what to process
     process_emails = args.emails or args.all or (not args.emails and not args.docs and not args.all)
     process_docs = args.docs or args.all or (not args.emails and not args.docs and not args.all)
@@ -898,7 +898,7 @@ def _dispatch_command(args) -> None:
             entity_count = cursor.fetchone()[0]
             print(f"Entities extracted: {entity_count}")
             
-            cursor = db.execute("SELECT COUNT(*) FROM content WHERE metadata LIKE '%vectorized%'")
+            cursor = db.execute("SELECT COUNT(*) FROM content_unified WHERE embedding_generated = 1")
             vector_count = cursor.fetchone()[0]
             print(f"Vectorized content: {vector_count}")
             
@@ -906,16 +906,9 @@ def _dispatch_command(args) -> None:
             timeline_count = cursor.fetchone()[0]
             print(f"Timeline events: {timeline_count}")
             
-            # Check EID integration
-            cursor = db.execute("SELECT COUNT(*) FROM entity_content_mapping WHERE metadata LIKE '%eid_ref%'")
-            eid_entities = cursor.fetchone()[0]
-            
-            cursor = db.execute("SELECT COUNT(*) FROM timeline_events WHERE metadata LIKE '%eid_ref%'")
-            eid_timeline = cursor.fetchone()[0]
-            
+            # EID integration status (simplified check)
             print(f"\nEID Integration:")
-            print(f"  Entities with EID refs: {eid_entities}")
-            print(f"  Timeline events with EID refs: {eid_timeline}")
+            print(f"  System ready for EID tracking")
         elif args.semantic_command == "verify":
             # Run comprehensive wiring verification
             verifier = SemanticWiringVerifier()

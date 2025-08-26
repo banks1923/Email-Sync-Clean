@@ -3,8 +3,10 @@
 Test Google Document AI authentication and connection.
 """
 
-from google.cloud import documentai_v1 as documentai
 import os
+
+from google.cloud import documentai_v1 as documentai
+
 
 def test_document_ai_auth():
     """

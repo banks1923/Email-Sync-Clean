@@ -43,10 +43,10 @@ def setup_search_commands(subparsers):
         "-n", "--limit", type=int, default=5, help="Number of results (default: 5)"
     )
     search_parser.add_argument(
-        "--mode", 
-        choices=["database", "analog", "hybrid"], 
+        "--mode",
+        choices=["database", "analog", "hybrid"],
         default="hybrid",
-        help="Search mode: database (SQLite), analog (markdown), or hybrid (both)"
+        help="Search mode: database (SQLite), analog (markdown), or hybrid (both)",
     )
 
     multi_parser = subparsers.add_parser(
@@ -182,7 +182,9 @@ def route_command(args):
     """
     # Command dispatch table
     command_handlers = {
-        "search": lambda: search_emails(args.query, args.limit, mode=getattr(args, 'mode', 'database')),
+        "search": lambda: search_emails(
+            args.query, args.limit, mode=getattr(args, "mode", "database")
+        ),
         "process": lambda: process_emails(args.limit),
         "embed": lambda: embed_content(args.content_type, args.limit),
         "info": show_info,

@@ -3,7 +3,7 @@
 ## Overview
 The `scripts/vsearch` command provides an AI-powered database search interface that uses Legal BERT semantic understanding with SQLite database storage for intelligent document discovery.
 
-## 🧠 How It Works
+##  How It Works
 
 ### Database-Centric Architecture
 1. **Semantic Search**: Uses Legal BERT Large model (1024D) to understand query meaning
@@ -55,18 +55,18 @@ scripts/vsearch search "legal" --tag urgent --tag important --tag-logic AND
 **Output Format:**
 ```
 🤖 AI-Powered Search for: 'water damage'
-🔍 Running database search...
-✅ Found 3 matches
+ Running database search...
+WORKING: Found 3 matches
 
-=== 🔍 Database Search Results ===
+===  Database Search Results ===
 
---- 📧 Result 1 (Score: 0.924) ---
+---  Result 1 (Score: 0.924) ---
 Title: Re: Water Damage Report
 From: john@example.com
 Date: 2024-03-15
 Preview: Following up on the water damage incident from last week...
 
---- 📧 Result 2 (Score: 0.889) ---
+---  Result 2 (Score: 0.889) ---
 Title: Property Maintenance - Urgent
 From: manager@property.com
 Date: 2024-03-10
@@ -82,16 +82,16 @@ scripts/vsearch info
 
 **Output:**
 ```
-📊 System Information
+STATUS: System Information
 ====================
-📁 Database Statistics:
+DATA: Database Statistics:
   Total emails: 45
   Total PDFs: 5
   Total transcripts: 2
   Total content: 52
 
-🧠 Vector Service:
-  Status: ✅ Connected
+ Vector Service:
+  Status: WORKING: Connected
   Collection: email_vectors
   Dimensions: 1024
 
@@ -173,19 +173,19 @@ scripts/vsearch note "Legal Review" "Contract review findings" --tags legal cont
 
 ## Advanced Features
 
-### 🔍 Search Intelligence
+###  Search Intelligence
 - **Query Expansion**: Automatically expands abbreviations (LLC → Limited Liability Company)
 - **Synonym Matching**: Finds related terms for better coverage
 - **Entity Recognition**: Identifies and weights important names/organizations
 - **Duplicate Detection**: Automatically removes duplicate results
 
-### 📊 Performance Metrics
+### STATUS: Performance Metrics
 - **Vector Search**: ~0.5-2 seconds per query
 - **Keyword Fallback**: ~0.1-0.3 seconds per query
 - **Batch Processing**: 100+ emails/second
 - **Database Operations**: 2000+ records/second
 
-### 🛡️ Reliability Features
+###  Reliability Features
 - **Automatic Fallback**: Switches to keyword search if vector service unavailable
 - **Error Recovery**: Graceful handling of service failures
 - **Cache Management**: Automatic caching for frequently accessed content
@@ -248,15 +248,15 @@ export CUDA_VISIBLE_DEVICES=0
 ```
 User Query → vsearch CLI → Search Intelligence Service
                                     ↓
-                         ┌─────────────────────┐
-                         │   Database Search   │
-                         │   (SQLite + BERT)   │
-                         └─────────────────────┘
+                         
+                            Database Search   
+                            (SQLite + BERT)   
+                         
                                     ↓
-                         ┌─────────────────────┐
-                         │   Result Ranking    │
-                         │   & Deduplication   │
-                         └─────────────────────┘
+                         
+                            Result Ranking    
+                            & Deduplication   
+                         
 ```
 
 ### Data Flow

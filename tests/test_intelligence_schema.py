@@ -48,15 +48,15 @@ class TestIntelligenceSchema(unittest.TestCase):
         self.test_content_id2 = "test-doc-002"
         self.db.execute(
             """
-            INSERT INTO content (id, content_type, title, content)
-            VALUES (?, 'test', 'Test Document', 'Test content')
+            INSERT INTO content_unified (source_id, source_type, title, body)
+            VALUES (?, 'document', 'Test Document', 'Test content')
         """,
             (self.test_content_id,),
         )
         self.db.execute(
             """
-            INSERT INTO content (id, content_type, title, content)
-            VALUES (?, 'test', 'Test Document 2', 'Test content 2')
+            INSERT INTO content_unified (source_id, source_type, title, body)
+            VALUES (?, 'document', 'Test Document 2', 'Test content 2')
         """,
             (self.test_content_id2,),
         )

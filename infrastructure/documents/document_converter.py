@@ -12,11 +12,13 @@ from typing import Any
 
 import frontmatter
 from loguru import logger
+
 from config.settings import get_db_path
 
 # PDF service factories - to be injected from higher layers
 _pdf_service_factories = None
 PDF_AVAILABLE = True
+
 
 def set_pdf_service_factories(factories):
     """Inject PDF service factories from higher layers.
@@ -41,25 +43,24 @@ class DocumentConverter:
         # Use centralized config if no path provided
         if db_path is None:
             db_path = get_db_path()
-            
+
         if not PDF_AVAILABLE:
             raise ImportError("PDF infrastructure required for DocumentConverter")
-        
+
         if not _pdf_service_factories:
-            raise ImportError("PDF service factories not configured - must be injected from higher layer")
-        
+            raise ImportError(
+                "PDF service factories not configured - must be injected from higher layer"
+            )
+
         # Use injected factories to create service instances
-        self.validator = _pdf_service_factories['validator']()
-        self.storage = _pdf_service_factories['storage'](db_path)
-        self.ocr_coordinator = _pdf_service_factories['ocr_coordinator']()
-        self.processor = _pdf_service_factories['processor']()
+        self.validator = _pdf_service_factories["validator"]()
+        self.storage = _pdf_service_factories["storage"](db_path)
+        self.ocr_coordinator = _pdf_service_factories["ocr_coordinator"]()
+        self.processor = _pdf_service_factories["processor"]()
         logger.info("DocumentConverter initialized with injected PDF services")
 
     def convert_pdf_to_markdown(
-        self, 
-        pdf_path: Path, 
-        output_path: Path | None = None,
-        include_metadata: bool = True
+        self, pdf_path: Path, output_path: Path | None = None, include_metadata: bool = True
     ) -> dict[str, Any]:
         """Convert PDF to markdown with YAML frontmatter.
 
@@ -92,19 +93,18 @@ class DocumentConverter:
 
             # Format content as markdown
             markdown_content = self._format_as_markdown(
-                extraction_result["text"], 
-                metadata if include_metadata else None
+                extraction_result["text"], metadata if include_metadata else None
             )
 
             # Determine output path
             if not output_path:
-                output_path = pdf_path.with_suffix('.md')
+                output_path = pdf_path.with_suffix(".md")
 
             # Write markdown file
-            output_path.write_text(markdown_content, encoding='utf-8')
-            
+            output_path.write_text(markdown_content, encoding="utf-8")
+
             logger.info(f"Converted {pdf_path.name} to {output_path.name}")
-            
+
             return {
                 "success": True,
                 "input_file": str(pdf_path),
@@ -112,7 +112,7 @@ class DocumentConverter:
                 "metadata": metadata,
                 "extraction_method": extraction_result["extraction_method"],
                 "page_count": extraction_result.get("page_count", 1),
-                "file_size_mb": round(pdf_path.stat().st_size / (1024 * 1024), 2)
+                "file_size_mb": round(pdf_path.stat().st_size / (1024 * 1024), 2),
             }
 
         except Exception as e:
@@ -126,7 +126,7 @@ class DocumentConverter:
         try:
             # Use OCR coordinator for automatic text/OCR detection
             ocr_result = self.ocr_coordinator.process_pdf_with_ocr(str(pdf_path))
-            
+
             if not ocr_result["success"]:
                 return ocr_result
 
@@ -138,7 +138,7 @@ class DocumentConverter:
                     "extraction_method": "ocr",
                     "page_count": ocr_result.get("page_count", 1),
                     "ocr_confidence": ocr_result.get("confidence", 0.0),
-                    "legal_metadata": ocr_result.get("metadata", {})
+                    "legal_metadata": ocr_result.get("metadata", {}),
                 }
             else:
                 # Use enhanced processor for regular text extraction
@@ -149,13 +149,13 @@ class DocumentConverter:
                 # Combine chunks into full text
                 chunks = processor_result.get("chunks", [])
                 full_text = "\n\n".join([chunk.get("text", "") for chunk in chunks])
-                
+
                 return {
                     "success": True,
                     "text": full_text,
                     "extraction_method": "pypdf2",
                     "page_count": len(chunks) if chunks else 1,
-                    "legal_metadata": {}
+                    "legal_metadata": {},
                 }
 
         except Exception as e:
@@ -169,10 +169,10 @@ class DocumentConverter:
         try:
             # Calculate file hash
             file_hash = self._calculate_file_hash(pdf_path)
-            
+
             # Get file stats
             stat = pdf_path.stat()
-            
+
             # Basic metadata
             metadata = {
                 "title": pdf_path.stem,
@@ -183,7 +183,7 @@ class DocumentConverter:
                 "page_count": extraction_result.get("page_count", 1),
                 "extraction_method": extraction_result.get("extraction_method", "unknown"),
                 "processed_at": datetime.now().isoformat(),
-                "document_type": "pdf"
+                "document_type": "pdf",
             }
 
             # Add OCR-specific metadata if available
@@ -244,13 +244,13 @@ class DocumentConverter:
                 return ""
 
             # Basic text cleaning
-            lines = text.split('\n')
+            lines = text.split("\n")
             cleaned_lines = []
 
             for line in lines:
                 # Strip excessive whitespace
                 cleaned_line = line.strip()
-                
+
                 # Skip empty lines (but preserve paragraph breaks)
                 if not cleaned_line:
                     if cleaned_lines and cleaned_lines[-1] != "":
@@ -261,11 +261,11 @@ class DocumentConverter:
                 cleaned_lines.append(cleaned_line)
 
             # Join lines and normalize paragraph breaks
-            cleaned_text = '\n'.join(cleaned_lines)
-            
+            cleaned_text = "\n".join(cleaned_lines)
+
             # Remove excessive empty lines (more than 2 consecutive)
-            while '\n\n\n' in cleaned_text:
-                cleaned_text = cleaned_text.replace('\n\n\n', '\n\n')
+            while "\n\n\n" in cleaned_text:
+                cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
 
             return cleaned_text.strip()
 
@@ -274,10 +274,7 @@ class DocumentConverter:
             return text
 
     def convert_directory(
-        self, 
-        directory_path: Path, 
-        output_dir: Path | None = None,
-        recursive: bool = False
+        self, directory_path: Path, output_dir: Path | None = None, recursive: bool = False
     ) -> dict[str, Any]:
         """Convert all PDFs in a directory to markdown.
 
@@ -311,22 +308,26 @@ class DocumentConverter:
             error_count = 0
 
             for pdf_file in pdf_files:
-                output_file = output_dir / pdf_file.with_suffix('.md').name
+                output_file = output_dir / pdf_file.with_suffix(".md").name
                 result = self.convert_pdf_to_markdown(pdf_file, output_file)
-                
+
                 if result["success"]:
                     success_count += 1
                 else:
                     error_count += 1
 
-                results.append({
-                    "file": pdf_file.name,
-                    "success": result["success"],
-                    "output": str(output_file) if result["success"] else None,
-                    "error": result.get("error")
-                })
+                results.append(
+                    {
+                        "file": pdf_file.name,
+                        "success": result["success"],
+                        "output": str(output_file) if result["success"] else None,
+                        "error": result.get("error"),
+                    }
+                )
 
-            logger.info(f"Directory conversion complete: {success_count} success, {error_count} errors")
+            logger.info(
+                f"Directory conversion complete: {success_count} success, {error_count} errors"
+            )
 
             return {
                 "success": True,
@@ -334,7 +335,7 @@ class DocumentConverter:
                 "success_count": success_count,
                 "error_count": error_count,
                 "output_directory": str(output_dir),
-                "results": results
+                "results": results,
             }
 
         except Exception as e:
@@ -349,7 +350,7 @@ class DocumentConverter:
             validation_result = {
                 "pdf_available": PDF_AVAILABLE,
                 "frontmatter_available": True,  # We imported it successfully
-                "dependencies": {}
+                "dependencies": {},
             }
 
             if PDF_AVAILABLE:
@@ -357,14 +358,16 @@ class DocumentConverter:
                     "validator": self.validator is not None,
                     "storage": self.storage is not None,
                     "ocr_coordinator": self.ocr_coordinator is not None,
-                    "processor": self.processor is not None
+                    "processor": self.processor is not None,
                 }
 
-            validation_result["ready"] = all([
-                PDF_AVAILABLE,
-                validation_result["dependencies"].get("validator", False),
-                validation_result["dependencies"].get("ocr_coordinator", False)
-            ])
+            validation_result["ready"] = all(
+                [
+                    PDF_AVAILABLE,
+                    validation_result["dependencies"].get("validator", False),
+                    validation_result["dependencies"].get("ocr_coordinator", False),
+                ]
+            )
 
             return validation_result
 

@@ -35,7 +35,7 @@ class OCREngine:
     def enhance_image_for_ocr(self, image: Image.Image) -> Image.Image:
         """
         Minimal image enhancement for OCR - research shows over-processing hurts accuracy.
-        
+
         Args:
             image: PIL Image to enhance
 

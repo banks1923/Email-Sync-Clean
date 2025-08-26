@@ -8,8 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from loguru import logger
 
-from gmail.validators import DateValidator, EmailValidator, InputSanitizer
 from config.settings import get_db_path
+from gmail.validators import DateValidator, EmailValidator, InputSanitizer
 
 # Logger is now imported globally from loguru
 

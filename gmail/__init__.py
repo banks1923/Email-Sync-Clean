@@ -24,4 +24,11 @@ def get_gmail_service():
     return GmailService()
 
 
-__all__ = ["GmailService", "EmailStorage", "GmailAuth", "GmailAPI", "GmailConfig", "get_gmail_service"]
+__all__ = [
+    "GmailService",
+    "EmailStorage",
+    "GmailAuth",
+    "GmailAPI",
+    "GmailConfig",
+    "get_gmail_service",
+]

@@ -1,5 +1,7 @@
-"""Pipeline infrastructure for Email Sync system."""
+"""
+Pipeline infrastructure for Email Sync system.
+"""
 
 from .service_orchestrator import ServiceOrchestrator
 
-__all__ = ['ServiceOrchestrator']
+__all__ = ["ServiceOrchestrator"]

@@ -9,9 +9,4 @@ from .near_duplicate_detector import (
     get_duplicate_detector,
 )
 
-__all__ = [
-    'NearDuplicateDetector',
-    'get_duplicate_detector',
-    'MinHasher',
-    'LSHIndex'
-]
+__all__ = ["NearDuplicateDetector", "get_duplicate_detector", "MinHasher", "LSHIndex"]

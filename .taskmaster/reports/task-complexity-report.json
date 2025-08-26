@@ -1,181 +1,93 @@
 {
 	"meta": {
-		"generatedAt": "2025-08-20T04:07:10.689Z",
-		"tasksAnalyzed": 21,
-		"totalTasks": 21,
-		"analysisCount": 21,
-		"thresholdScore": 3,
+		"generatedAt": "2025-08-26T15:22:24.836Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
 		"projectName": "Email Sync",
 		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
+			"taskId": 21,
+			"taskTitle": "Project & Environment Setup + Dependency Pinning",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the dependency management and compatibility verification into discrete subtasks: 1) Dependency version audit and updates, 2) Qdrant vector store compatibility verification, 3) Database schema compatibility check, 4) Testing infrastructure updates, 5) Existing script migration planning, 6) Integration validation and rollback preparation.",
+			"reasoning": "Moderate-high complexity due to coordination across multiple systems (vector store, database, CI/CD) with risk of breaking existing functionality. Requires careful sequencing and compatibility validation across different components."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Implement Token-Based DocumentChunker",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Decompose the chunker implementation into specialized components: 1) Tokenizer integration (tiktoken + sentencepiece fallback), 2) spaCy sentence detection setup, 3) Document type-specific pre-processing logic, 4) Core sliding window chunking algorithm, 5) Chunk metadata and ID generation, 6) Streaming generator implementation, 7) CLI interface and testing framework.",
+			"reasoning": "High complexity due to sophisticated algorithm combining multiple tokenizers, document-specific logic, sliding window with overlap calculations, and sentence boundary preservation. Multiple edge cases and performance considerations for different document types."
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Quality Scoring & Gating Module",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Structure the quality scoring implementation: 1) Mathematical scoring algorithm implementation using numpy/scipy, 2) Chunk metadata integration for contextual scoring, 3) Configuration management with Pydantic settings, 4) Quality gate decorator and filtering logic, 5) Integration testing with chunker output validation.",
+			"reasoning": "Moderate complexity focused on mathematical implementation. Well-defined requirements with clear scoring formula, but requires integration with multiple components and proper configuration management."
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Database Schema Migration Scripts",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Structure the schema migration systematically: 1) Current schema state analysis and documentation, 2) content_embeddings table design and necessity evaluation, 3) SimpleDB migration script implementation, 4) Index creation and foreign key constraint validation, 5) Data integrity testing with existing 663 items.",
+			"reasoning": "Moderate-high complexity due to data migration risks and working with existing production data. SimpleDB pattern reduces complexity but requires careful handling of 663 existing items ready for embedding."
+		},
+		{
+			"taskId": 25,
+			"taskTitle": "Pipeline Integration: Chunking, Quality Gating & Embedding Ingestion",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break down the complex integration: 1) Service orchestrator integration with existing infrastructure, 2) Batch processing implementation for 663 items, 3) Chunking and quality gating pipeline coordination, 4) Embedding service integration with batch optimization, 5) Vector store upsert operations, 6) Idempotency and error handling, 7) Metrics tracking and CLI integration.",
+			"reasoning": "High complexity due to integration of multiple sophisticated components, processing large data volume (663 items), and requiring idempotency. Coordination between chunker, quality scorer, embedding service, and vector store with existing infrastructure."
+		},
+		{
+			"taskId": 26,
+			"taskTitle": "Document-Level Retrieval, RRF Aggregation & Dynamic Weighting",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Decompose the advanced search implementation: 1) Dynamic weight calculation algorithm for query analysis, 2) Two-stage hybrid search enhancement, 3) Chunk-to-document aggregation logic, 4) RRF scoring implementation and ranking, 5) Result diversity enforcement and exact match boosting, 6) Performance optimization for <200ms p95 latency, 7) Integration with existing search_intelligence service.",
+			"reasoning": "High complexity involving sophisticated search algorithms, mathematical RRF aggregation, dynamic weighting, and strict performance requirements. Requires deep integration with existing search infrastructure while maintaining backward compatibility."
+		},
+		{
+			"taskId": 27,
+			"taskTitle": "Feature Flags & Dual Index Routing",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Structure the feature flag system: 1) Pydantic settings configuration with environment variable support, 2) CLI integration and command extensions for vsearch, 3) Pipeline routing logic implementation, 4) Persistent configuration storage and management, 5) Documentation and testing of flag switching behavior.",
+			"reasoning": "Moderate complexity with well-defined configuration management requirements. Standard feature flag implementation with CLI integration, but requires careful routing logic and persistence across sessions."
+		},
+		{
+			"taskId": 28,
+			"taskTitle": "Re-Embedding & Migration Script",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Structure the batch processing system: 1) CLI argument parsing and configuration setup, 2) Database query optimization for 663 items selection, 3) ThreadPoolExecutor parallel processing implementation, 4) Checkpoint/resume functionality with JSON persistence, 5) Progress monitoring and ETA calculation with loguru, 6) Validation modes and error handling.",
+			"reasoning": "High complexity due to parallel processing coordination, checkpoint/resume functionality, and processing large data volume. Requires robust error handling and state management for long-running batch operations."
+		},
+		{
 			"taskId": 29,
-			"taskTitle": "Create migration system directory structure",
-			"complexityScore": 3,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down migration system setup into: 1) Create migrations directory structure, 2) Generate initial schema baseline SQL from existing database, 3) Create empty migration files for new columns, 4) Set up tracking mechanism for applied migrations",
-			"reasoning": "Simple directory creation and file setup task. The codebase already has established patterns for directory structure (seen in utilities/, infrastructure/). No existing migrations directory found. Requires creating 4-5 files and directories with basic SQL content."
+			"taskTitle": "Evaluation Framework & Gold Standard Test Harness",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Build the evaluation system: 1) Gold standard query dataset creation and categorization, 2) CLI-based query execution and result parsing, 3) Metrics calculation engine (precision@10, recall@10, F1), 4) Report generation in CSV and Markdown formats, 5) Baseline metrics storage and regression detection, 6) Make command integration and automation.",
+			"reasoning": "Moderate-high complexity requiring comprehensive evaluation framework design. Integration with existing CLI tools and need for robust metrics calculation and reporting system with regression detection capabilities."
 		},
 		{
 			"taskId": 30,
-			"taskTitle": "Implement core SimpleDB missing methods",
-			"complexityScore": 2,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Split into: 1) Implement get_all_content_ids method with optional content_type filtering, 2) Add comprehensive tests to verify the method works with different scenarios",
-			"reasoning": "Very straightforward task. SimpleDB already has 47 methods and established patterns. The adapter shows the exact implementation needed (lines 21-44). Just needs to be moved into SimpleDB proper - about 15 lines of code."
-		},
-		{
-			"taskId": 31,
-			"taskTitle": "Implement batch content retrieval methods",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Divide into: 1) Implement get_content_by_ids with SQLite 500-item chunking logic, 2) Add helper method for chunk iteration, 3) Write tests for edge cases including large batches over 1500 items",
-			"reasoning": "Slightly more complex due to SQLite chunking requirement. The adapter already shows the pattern (lines 46-74). SimpleDB has existing batch methods to reference (batch_insert at line 549). Requires proper chunking implementation."
-		},
-		{
-			"taskId": 32,
-			"taskTitle": "Add vectorization marking methods",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into: 1) Implement mark_content_vectorized for single updates, 2) Implement batch_mark_vectorized with 500-item chunking, 3) Add tests for both methods including idempotency checks",
-			"reasoning": "Similar complexity to task 31. Follows established patterns in SimpleDB for update operations (update_content at line 341). Adapter shows the needed functionality. Requires chunking for batch operations."
-		},
-		{
-			"taskId": 33,
-			"taskTitle": "Create SQL migration for missing columns",
-			"complexityScore": 2,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Split into: 1) Write ALTER TABLE statements for the three new columns, 2) Add CREATE INDEX statements for performance, 3) Include safety checks and rollback considerations",
-			"reasoning": "Simple SQL file creation. The content table structure is visible in tests/conftest.py. Just needs ALTER TABLE statements for 3 columns. Very straightforward SQL work."
-		},
-		{
-			"taskId": 34,
-			"taskTitle": "Implement migration runner script",
-			"complexityScore": 4,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Implement as: 1) Create basic migrate.py structure with file discovery, 2) Add tracking file reading/writing logic, 3) Implement SQL execution with error handling, 4) Add dry-run mode for testing, 5) Include logging and progress reporting",
-			"reasoning": "More complex standalone script. Needs file I/O, SQL execution, error handling, and tracking. SimpleDB's execute method can be referenced. Must be under 30 lines which requires concise implementation."
-		},
-		{
-			"taskId": 35,
-			"taskTitle": "Remove save_to_db parameter from gmail service",
-			"complexityScore": 1,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "Single atomic change - remove save_to_db=True parameter from line 416",
-			"reasoning": "Trivial one-line change. Just delete the parameter from the method call. No subtasks needed for such a simple fix."
-		},
-		{
-			"taskId": 36,
-			"taskTitle": "Remove adapter imports from gmail",
-			"complexityScore": 2,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Split into: 1) Remove EmailThreadAdapter import and instantiation, 2) Update process_thread call to use thread_processor directly",
-			"reasoning": "Simple refactoring. Remove 2 lines (import and adapter creation) and change 1 line (method call). Code shows exact location at lines 411-417."
-		},
-		{
-			"taskId": 37,
-			"taskTitle": "Remove VectorMaintenanceAdapter usage",
-			"complexityScore": 2,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Implement as: 1) Remove adapter import and change initialization to use SimpleDB directly, 2) Verify all vector maintenance operations still work",
-			"reasoning": "Simple change at lines 38-39 of vector_maintenance.py. Just remove adapter wrapper. Depends on SimpleDB having the required methods from tasks 30-32."
-		},
-		{
-			"taskId": 38,
-			"taskTitle": "Delete compatibility helper methods",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into: 1) Remove _db_get_all_content_ids helper method, 2) Remove other compatibility helpers and update references, 3) Test all vector operations still function",
-			"reasoning": "Need to remove helper methods (lines 44-72) and update all references throughout the file. Requires finding and updating multiple call sites."
-		},
-		{
-			"taskId": 39,
-			"taskTitle": "Remove save_to_db from test files",
-			"complexityScore": 1,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "Remove save_to_db=True from two test method calls at lines 342 and 379",
-			"reasoning": "Trivial two-line change in test file. Just remove the parameter from two locations. No subtasks needed."
-		},
-		{
-			"taskId": 40,
-			"taskTitle": "Delete adapters directory completely",
-			"complexityScore": 2,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Execute as: 1) Verify no remaining adapter imports in codebase, 2) Delete the adapters/ directory and all files, 3) Run full test suite to confirm no breakage",
-			"reasoning": "Simple deletion task but needs verification. Found 4 adapter files to remove. Must ensure no imports remain after deletion."
-		},
-		{
-			"taskId": 41,
-			"taskTitle": "Create comprehensive preflight check system",
-			"complexityScore": 5,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Implement incrementally: 1) Create preflight.py with basic structure, 2) Add Qdrant connection check, 3) Add embedding service validation, 4) Add database schema checks, 5) Add SimpleDB method verification, 6) Implement error aggregation and reporting",
-			"reasoning": "Most complex task. Needs to check multiple services, handle various failure modes, and provide clear error messages. Requires integration with multiple components (Qdrant, embeddings, database)."
-		},
-		{
-			"taskId": 42,
-			"taskTitle": "Verify Qdrant connection in preflight",
-			"complexityScore": 2,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Implement as: 1) Add Qdrant health check with connection attempt, 2) Provide actionable error message with startup command",
-			"reasoning": "Simple addition to preflight system. Just needs to attempt connection and catch exceptions. Clear pattern exists in vector_store service."
-		},
-		{
-			"taskId": 43,
-			"taskTitle": "Validate embedding dimensions in preflight",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into: 1) Test embedding generation with sample text, 2) Verify 1024 dimensions and L2 normalization, 3) Add specific error messages for dimension/normalization failures",
-			"reasoning": "Moderate complexity. Embedding service already has L2 normalization (lines 80-83). Needs to verify output characteristics and provide clear diagnostics."
-		},
-		{
-			"taskId": 44,
-			"taskTitle": "Check database schema completeness",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Implement as: 1) Query database schema using PRAGMA table_info, 2) Check for all required columns, 3) Provide migration command in error message if columns missing",
-			"reasoning": "Requires PRAGMA queries and column validation. Test fixtures show expected schema structure. Need to compare actual vs expected columns."
-		},
-		{
-			"taskId": 45,
-			"taskTitle": "Create contract tests for services",
-			"complexityScore": 4,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Create comprehensive tests: 1) Test EmbeddingService contract for dimensions and normalization, 2) Test SimpleDB contract for required methods, 3) Test VectorStore contract for core operations, 4) Add edge case testing for each service",
-			"reasoning": "New test file creation. No existing test_contracts.py found. Needs to test multiple services with various assertions. Moderate complexity for comprehensive coverage."
-		},
-		{
-			"taskId": 46,
-			"taskTitle": "Test embedding service normalization",
-			"complexityScore": 2,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Test thoroughly: 1) Verify normal text produces L2-normalized vectors, 2) Test edge cases like empty strings, 3) Verify batch processing maintains normalization",
-			"reasoning": "Straightforward test additions. Embedding service already does normalization (lines 80-83). Just needs test coverage to verify behavior."
-		},
-		{
-			"taskId": 47,
-			"taskTitle": "Test SimpleDB batch operations",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Test batch limits: 1) Create test with 1500+ IDs for chunking verification, 2) Test batch_mark_vectorized doesn't hit SQLite limits, 3) Verify performance is acceptable",
-			"reasoning": "Testing SQLite variable limits. Needs to create large test datasets and verify chunking works correctly. Moderate complexity for proper edge case coverage."
-		},
-		{
-			"taskId": 48,
-			"taskTitle": "Run full integration test",
-			"complexityScore": 2,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Execute and verify: 1) Run make full-run command, 2) Check logs for any adapter warnings or errors, 3) Verify all pipeline stages complete successfully",
-			"reasoning": "Simple execution and verification task. Just running existing make command and checking output. Low complexity but important validation step."
-		},
-		{
-			"taskId": 49,
-			"taskTitle": "Document migration process",
-			"complexityScore": 2,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Document clearly: 1) Add migration instructions to appropriate documentation file, 2) Include examples of running migrations, 3) Document how to add new migrations",
-			"reasoning": "Simple documentation task. Just needs clear, concise instructions added to existing docs. Low complexity writing task."
+			"taskTitle": "A/B Testing, Monitoring Dashboards & Cutover Readiness",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Structure the monitoring and cutover system: 1) Monitoring script development with metrics collection, 2) Side-by-side pipeline comparison logic, 3) Performance metrics tracking and trend analysis, 4) Report generation with rich console output, 5) Testing procedure automation, 6) Cutover readiness checklist and validation, 7) Rollback procedures and safety mechanisms.",
+			"reasoning": "High complexity due to comprehensive monitoring system requirements, A/B testing coordination, and critical cutover procedures. Requires robust performance tracking, comparison logic, and fail-safe mechanisms for production system migration."
 		}
 	]
 }

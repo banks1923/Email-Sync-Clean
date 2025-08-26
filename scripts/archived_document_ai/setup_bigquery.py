@@ -4,6 +4,7 @@ Set up BigQuery dataset and tables for legal document processing.
 """
 
 import os
+
 from google.cloud import bigquery
 
 # Set up credentials

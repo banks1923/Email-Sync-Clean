@@ -11,9 +11,11 @@ Examples:
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from scripts.process_single_document import process_document
+
 
 def batch_process(directory, output_dir=None, recursive=False):
     """Process all PDFs in a directory.

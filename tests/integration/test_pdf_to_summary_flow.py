@@ -67,7 +67,7 @@ class TestPDFToSummaryFlow(unittest.TestCase):
 
         # Get content record
         content = self.db.fetch_one(
-            "SELECT * FROM content WHERE id = ?", (result["content_id"],)
+            "SELECT * FROM content_unified WHERE id = ?", (result["content_id"],)
         )
 
         # Verify content fields
@@ -201,9 +201,7 @@ class TestPDFToSummaryFlow(unittest.TestCase):
         content_id = result.get("content_id")
 
         # Get content and summary
-        content = self.db.fetch_one(
-            "SELECT content FROM content WHERE id = ?", (content_id,)
-        )
+        content = self.db.fetch_one("SELECT body FROM content_unified WHERE id = ?", (content_id,))
         summary = get_summary_for_document(self.db, content_id)
 
         self.assertIsNotNone(content)

@@ -3,6 +3,7 @@
 import sqlite3
 import sys
 
+
 def extract_stoneman_emails():
     """
     Extract emails containing 'Stoneman' from the database.

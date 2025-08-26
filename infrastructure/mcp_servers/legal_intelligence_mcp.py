@@ -15,6 +15,7 @@ from pathlib import Path
 try:
     # Use Pydantic config for path management if available
     from config.settings import settings
+
     project_root = Path(settings.paths.data_root).parent
 except ImportError:
     # Fallback to path calculation (3 levels deep: infrastructure/mcp_servers/*.py)
@@ -31,6 +32,7 @@ from mcp.types import TextContent, Tool
 # Import only infrastructure layer dependencies
 try:
     from shared.simple_db import SimpleDB
+
     SERVICES_AVAILABLE = True
 except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
@@ -49,6 +51,7 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
     try:
         # Direct import following clean architecture pattern
         from entity import EntityService
+
         entity_service = EntityService()
 
         # Extract entities using the entity service
@@ -111,10 +114,11 @@ def legal_timeline_events(
     """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
+
     try:
         # Direct import following clean architecture pattern
         from legal_intelligence import get_legal_intelligence_service
+
         legal_service = get_legal_intelligence_service()
 
         # Generate case timeline using the legal intelligence service
@@ -212,10 +216,11 @@ def legal_knowledge_graph(case_number: str, include_relationships: bool = True) 
     """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
+
     try:
         # Direct import following clean architecture pattern
         from legal_intelligence import get_legal_intelligence_service
+
         legal_service = get_legal_intelligence_service()
 
         # Build relationship graph using the legal intelligence service
@@ -302,10 +307,11 @@ def legal_document_analysis(case_number: str, analysis_type: str = "comprehensiv
     """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
+
     try:
         # Direct import following clean architecture pattern
         from legal_intelligence import get_legal_intelligence_service
+
         legal_service = get_legal_intelligence_service()
 
         # Perform document pattern analysis
@@ -422,10 +428,11 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
     """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
+
     try:
         # Direct import following clean architecture pattern
         from legal_intelligence import get_legal_intelligence_service
+
         legal_service = get_legal_intelligence_service()
 
         # Get case documents for analysis
@@ -548,10 +555,11 @@ def legal_relationship_discovery(case_number: str, entity_focus: str | None = No
     """
     if not SERVICES_AVAILABLE:
         return "Legal intelligence services not available"
-    
+
     try:
         # Direct import following clean architecture pattern
         from legal_intelligence import get_legal_intelligence_service
+
         legal_service = get_legal_intelligence_service()
 
         # Get case documents

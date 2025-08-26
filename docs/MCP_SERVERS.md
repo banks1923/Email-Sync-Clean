@@ -2,7 +2,7 @@
 
 Complete guide to all Model Context Protocol (MCP) servers available in the Email Sync system.
 
-## 🎯 Overview
+## CURRENT: Overview
 
 The Email Sync system provides 40+ specialized tools through MCP servers for Claude Desktop integration.
 
@@ -13,14 +13,14 @@ The Email Sync system provides 40+ specialized tools through MCP servers for Cla
 - **Content Management**: 10 content handling tools
 - **Infrastructure**: Service integration and filesystem tools
 
-## 🏛️ Legal Intelligence MCP Server
+##  Legal Intelligence MCP Server
 
 **Purpose**: Unified legal document analysis, timeline generation, and case intelligence using Legal BERT embeddings.
 
 ### Configuration
 - **Server**: `legal-intelligence` in `.mcp.json`
 - **File**: `infrastructure/mcp_servers/legal_intelligence_mcp.py`
-- **Status**: ✅ Fully Implemented
+- **Status**: WORKING: Fully Implemented
 - **Dependencies**: Legal Intelligence Service, Entity Service, Timeline Service
 
 ### Available Tools
@@ -107,14 +107,14 @@ mcp__legal-intelligence__legal_extract_entities(
 )
 ```
 
-## 🔍 Search Intelligence MCP Server
+##  Search Intelligence MCP Server
 
 **Purpose**: Comprehensive search and document intelligence including smart search, similarity analysis, and clustering.
 
 ### Configuration
 - **Server**: `search-intelligence` in `.mcp.json`
 - **File**: `infrastructure/mcp_servers/search_intelligence_mcp.py`
-- **Status**: ✅ Fully Implemented
+- **Status**: WORKING: Fully Implemented
 - **Dependencies**: Search Intelligence Service, Entity Service, Document Summarizer
 
 ### Available Tools
@@ -213,14 +213,14 @@ mcp__search-intelligence__search_process_all(
 )
 ```
 
-## 🧠 Sequential Thinking MCP Server
+##  Sequential Thinking MCP Server
 
 **Purpose**: Structured thinking framework for complex problem-solving with progress tracking.
 
 ### Configuration
 - **Server**: `sequential-thinking` in `.mcp.json`
 - **Storage**: `/Users/jim/Projects/Email Sync/data/sequential_thinking`
-- **Status**: ✅ Fully Operational
+- **Status**: WORKING: Fully Operational
 
 ### Key Features
 - **Structured Thinking**: Numbered thoughts with stages (Problem Definition → Research → Analysis → Synthesis → Conclusion)
@@ -255,14 +255,14 @@ mcp__sequential-thinking__clear_history()
 - **Planning implementation**: Think through approaches systematically
 - **Debugging complex issues**: Maintain context while investigating
 
-## 💾 Memory MCP Server
+##  Memory MCP Server
 
 **Purpose**: Persistent memory using knowledge graph structure that maintains context across sessions.
 
 ### Configuration
 - **Server**: `memory` in `.mcp.json`
 - **Package**: `@modelcontextprotocol/server-memory` (v2025.8.4)
-- **Status**: ✅ Configured and Operational
+- **Status**: WORKING: Configured and Operational
 
 ### Key Features
 - **Knowledge Graph**: Store entities, relationships, and observations
@@ -309,14 +309,14 @@ observation = {
 "John Smith is the lead attorney on the Johnson case"
 ```
 
-## 🕸️ Web Scraping MCP Servers
+##  Web Scraping MCP Servers
 
 ### Firecrawl MCP Server
 **Purpose**: Advanced web scraping and content extraction capabilities.
 
 - **Server**: `firecrawl` in `.mcp.json`
 - **Package**: `firecrawl-mcp` (v1.12.0)
-- **Status**: 🔧 Available (requires API key)
+- **Status**: TOOLS: Available (requires API key)
 - **API Key**: Get from <https://www.firecrawl.dev/app/api-keys>
 
 **Key Features**:
@@ -333,14 +333,14 @@ observation = {
 - **Use Cases**: Dynamic content interaction, form filling, screenshot capture
 - **Integration**: Complements Firecrawl for interactive web tasks
 
-## 🗃️ Vector Storage MCP Server
+##  Vector Storage MCP Server
 
 ### Qdrant MCP Server
 **Purpose**: Semantic memory layer and vector database integration.
 
 - **Server**: `qdrant` in `.mcp.json`
 - **Package**: `mcp-server-qdrant` (v0.8.0)
-- **Status**: ✅ Available (Qdrant running on port 6333)
+- **Status**: WORKING: Available (Qdrant running on port 6333)
 - **Qdrant**: Running locally with QDRANT__STORAGE__PATH=./qdrant_data
 
 **Key Features**:
@@ -380,15 +380,15 @@ Since Email Sync already uses Qdrant for vector storage, the MCP server can:
 - Store code snippets and technical documentation
 - Complement existing Legal BERT embeddings with general-purpose embeddings
 
-## 🚫 Deprecated Servers
+##  Deprecated Servers
 
 The following servers are deprecated and will be removed:
-- ⚠️ `legal_mcp_server.py` → Use `legal_intelligence_mcp.py`
-- ⚠️ `timeline_mcp_server.py` → Use `legal_timeline_events` tool
-- ⚠️ `search_mcp_server.py` → Use `search_intelligence_mcp.py`
-- ⚠️ `entity_mcp_server.py` → Use `search_entities` tool
+-  `legal_mcp_server.py` → Use `legal_intelligence_mcp.py`
+-  `timeline_mcp_server.py` → Use `legal_timeline_events` tool
+-  `search_mcp_server.py` → Use `search_intelligence_mcp.py`
+-  `entity_mcp_server.py` → Use `search_entities` tool
 
-## 📝 Best Practices
+##  Best Practices
 
 ### Server Selection Guide
 1. **Legal Analysis**: Use Legal Intelligence MCP Server

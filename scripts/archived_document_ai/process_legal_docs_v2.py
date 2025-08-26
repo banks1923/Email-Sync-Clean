@@ -4,16 +4,16 @@
 Using correct processor types: FORM_PARSER_PROCESSOR and OCR_PROCESSOR
 """
 
-import os
-import json
 import hashlib
-from pathlib import Path
-from datetime import datetime
+import json
+import os
 import time
+from datetime import datetime
+from pathlib import Path
 
-from google.cloud import documentai_v1 as documentai
-from google.cloud import bigquery
 from google.api_core.client_options import ClientOptions
+from google.cloud import bigquery
+from google.cloud import documentai_v1 as documentai
 
 # Set up credentials
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/jim/Secrets/modular-command-466820-p2-bc0974cd5852.json'
@@ -283,7 +283,7 @@ class DocumentAIProcessor:
         }
         
         import re
-        
+
         # Extract dates (multiple formats)
         date_patterns = [
             r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',

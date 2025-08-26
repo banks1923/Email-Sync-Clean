@@ -25,14 +25,16 @@ class EnhancedPDFProcessor:
     PDF processor with OCR and legal metadata capabilities.
     """
 
-    def __init__(self, chunk_size: int = 900, chunk_overlap: int = 100, use_enhanced_ocr: bool = True) -> None:
+    def __init__(
+        self, chunk_size: int = 900, chunk_overlap: int = 100, use_enhanced_ocr: bool = True
+    ) -> None:
         """
         Initialize with OCR support.
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.use_enhanced_ocr = use_enhanced_ocr
-        
+
         # Initialize both coordinators for fallback capability
         if use_enhanced_ocr:
             self.enhanced_ocr_coordinator = EnhancedOCRCoordinator()
@@ -40,7 +42,7 @@ class EnhancedPDFProcessor:
         else:
             self.enhanced_ocr_coordinator = None
             self.ocr_coordinator = OCRCoordinator()
-            
+
         self.pdf_processor = PDFProcessor(chunk_size, chunk_overlap)
         # Logger is now imported globally from loguru
 
@@ -62,10 +64,10 @@ class EnhancedPDFProcessor:
             standard_validation = self.ocr_coordinator.validate_setup()
             ocr_ready = standard_validation.get("ready", False)
             ocr_details = standard_validation
-        
+
         pdf_validation = self.pdf_processor.validate_dependencies()
         pdf_ready = pdf_validation.get("success", False)
-        
+
         result = {
             "ocr": ocr_details,
             "pdf": pdf_validation,
@@ -73,12 +75,12 @@ class EnhancedPDFProcessor:
             "enhanced_ocr_enabled": self.use_enhanced_ocr,
         }
         # Legal metadata is optional - don't make it a hard requirement
-        result["all_available"] = (
-            ocr_ready and pdf_ready
-        )
+        result["all_available"] = ocr_ready and pdf_ready
         return result
 
-    def extract_and_chunk_pdf(self, pdf_path: str, force_ocr: bool = False, quality_gates_enabled: bool = True) -> dict[str, Any]:
+    def extract_and_chunk_pdf(
+        self, pdf_path: str, force_ocr: bool = False, quality_gates_enabled: bool = True
+    ) -> dict[str, Any]:
         """
         Extract text and create chunks with enhanced OCR and quality gates
         support.
@@ -105,7 +107,9 @@ class EnhancedPDFProcessor:
             # Use OCR text if available, otherwise use regular extraction
             if ocr_result.get("ocr_used"):
                 text = ocr_result["text"]
-                extraction_method = ocr_result.get("method", "enhanced_ocr" if self.use_enhanced_ocr else "ocr")
+                extraction_method = ocr_result.get(
+                    "method", "enhanced_ocr" if self.use_enhanced_ocr else "ocr"
+                )
                 ocr_confidence = ocr_result.get("confidence", 0.0)
             else:
                 # Use regular text extraction (born-digital fast-path)
@@ -142,7 +146,7 @@ class EnhancedPDFProcessor:
 
                 if legal_metadata:
                     chunk_dict["legal_metadata"] = json.dumps(legal_metadata)
-                
+
                 # Add enhanced OCR metadata if available
                 if validation_status:
                     chunk_dict["validation_status"] = validation_status
