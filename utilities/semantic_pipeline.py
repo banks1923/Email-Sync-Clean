@@ -18,6 +18,7 @@ from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.timeline import TimelineService
 from utilities.vector_store import get_vector_store
+from utilities.chunk_pipeline import ChunkPipeline
 
 
 class SemanticPipeline:
@@ -32,6 +33,7 @@ class SemanticPipeline:
         vector_store=None,
         entity_service=None,
         timeline_service=None,
+        chunk_pipeline=None,
     ):
         """
         Initialize with services (allows dependency injection for testing).
@@ -41,6 +43,7 @@ class SemanticPipeline:
         self.vector_store = vector_store
         self.entity_service = entity_service or EntityService()
         self.timeline_service = timeline_service or TimelineService()
+        self.chunk_pipeline = chunk_pipeline or ChunkPipeline(db=self.db)
         self.timeout_s = semantic_settings.semantics_timeout_s
 
     def run_for_messages(
@@ -85,6 +88,8 @@ class SemanticPipeline:
                     step_result = self._run_embeddings(emails_data)
                 elif step == "timeline":
                     step_result = self._run_timeline(emails_data)
+                elif step == "chunks":
+                    step_result = self._run_chunking(emails_data)
                 else:
                     logger.warning(f"Unknown step: {step}")
                     continue
@@ -390,6 +395,54 @@ class SemanticPipeline:
                 logger.error(f"Timeline extraction failed for {email['message_id']}: {e}")
                 result["errors"] += 1
 
+        return result
+
+    def _run_chunking(self, emails_data: List[Dict]) -> Dict[str, Any]:
+        """
+        Process emails through chunking pipeline for v2 semantic search.
+        """
+        result = {"processed": 0, "skipped": 0, "errors": 0, "chunks_created": 0, "chunks_dropped": 0}
+        
+        # Get source IDs for the emails
+        source_ids = []
+        for email in emails_data:
+            if email.get("content_id"):
+                # Get source_id from content_unified
+                cursor = self.db.execute(
+                    "SELECT source_id FROM content_unified WHERE id = ?",
+                    (email["content_id"],)
+                )
+                row = cursor.fetchone()
+                if row and row["source_id"]:
+                    source_ids.append(row["source_id"])
+        
+        if not source_ids:
+            logger.warning("No valid source_ids found for chunking")
+            return result
+        
+        # Process through chunk pipeline
+        try:
+            # Process emails with specific source_ids
+            chunk_result = self.chunk_pipeline.process_documents(
+                limit=len(source_ids),
+                source_types=["email_message"],
+                dry_run=False
+            )
+            
+            result["processed"] = chunk_result.get("documents_processed", 0)
+            result["chunks_created"] = chunk_result.get("chunks_created", 0)
+            result["chunks_dropped"] = chunk_result.get("chunks_dropped_quality", 0)
+            result["skipped"] = chunk_result.get("chunks_already_exist", 0)
+            
+            logger.info(
+                f"Chunking complete: {result['chunks_created']} chunks created, "
+                f"{result['chunks_dropped']} dropped (low quality)"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in chunking pipeline: {e}")
+            result["errors"] = len(emails_data)
+        
         return result
 
     def _extract_temporal_events(self, email: Dict) -> List[Dict]:

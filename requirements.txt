@@ -25,3 +25,10 @@ transformers>=4.30.0
 torch>=2.0.0
 
 pydantic[dotenv]>=1.10.0
+
+# Semantic Search v2 Dependencies (Added 2025-08-26)
+whoosh==2.7.4             # BM25 indexing for hybrid search
+sentencepiece==0.1.99     # Fallback tokenizer for unknown models
+boilerpy3==1.0.6         # OCR scan preprocessing to remove boilerplate
+scikit-learn>=1.5.0      # RRF, metrics, and quality scoring
+# Note: tiktoken, spacy, numpy, scipy already installed above

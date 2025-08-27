@@ -50,7 +50,7 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
 
     try:
         # Direct import following clean architecture pattern
-        from entity import EntityService
+        from entity.main import EntityService
 
         entity_service = EntityService()
 

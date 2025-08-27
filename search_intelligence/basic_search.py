@@ -5,6 +5,7 @@ implementation following CLAUDE.md principles: Simple > Complex, Working
 > Perfect.
 """
 
+import os
 from typing import Any
 
 from loguru import logger
@@ -13,13 +14,143 @@ from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 
+# Feature flag for dynamic weighting
+ENABLE_DYNAMIC_WEIGHTS = os.getenv("ENABLE_DYNAMIC_WEIGHTS", "true").lower() == "true"
+ENABLE_CHUNK_AGGREGATION = os.getenv("ENABLE_CHUNK_AGGREGATION", "true").lower() == "true"
+MIN_CHUNK_QUALITY = float(os.getenv("MIN_CHUNK_QUALITY", "0.35"))
+MAX_RESULTS_PER_SOURCE = int(os.getenv("MAX_RESULTS_PER_SOURCE", "3"))
+
+
+def calculate_weights(query: str) -> tuple[float, float]:
+    """Calculate dynamic weights based on query characteristics.
+    
+    Short queries (1-3 words) benefit from keyword search precision.
+    Long queries (4+ words) benefit from semantic understanding.
+    Special patterns (emails, dates, quotes) favor keyword matching.
+    
+    Args:
+        query: Search query string
+        
+    Returns:
+        (keyword_weight, semantic_weight) tuple, summing to 1.0
+    """
+    # Clean and analyze query
+    query_clean = query.strip().lower()
+    words = query_clean.split()
+    word_count = len(words)
+    
+    # Pattern detection
+    has_email = '@' in query
+    has_date = any(char.isdigit() for char in query)
+    has_quotes = '"' in query
+    
+    # Base weights on word count
+    if word_count <= 2:
+        keyword_w, semantic_w = 0.7, 0.3
+    elif word_count == 3:
+        keyword_w, semantic_w = 0.5, 0.5
+    else:  # 4+ words - favor semantic understanding
+        keyword_w, semantic_w = 0.3, 0.7
+    
+    # Adjust for special patterns that need exact matching
+    if has_email or has_quotes:  # Exact match likely wanted
+        keyword_w += 0.15
+        semantic_w -= 0.15
+    elif has_date:  # Dates/numbers often need keyword precision
+        keyword_w += 0.05
+        semantic_w -= 0.05
+    
+    # Normalize to sum to 1.0 and clamp to valid range
+    total = keyword_w + semantic_w
+    keyword_w = max(0.1, min(0.9, keyword_w / total))
+    semantic_w = 1.0 - keyword_w
+    
+    return (keyword_w, semantic_w)
+
+
+def _group_chunks_by_document(chunks: list[dict]) -> dict[str, list[dict]]:
+    """Group chunks by document ID extracted from source_id."""
+    doc_groups = {}
+    
+    for chunk in chunks:
+        source_id = chunk.get("source_id", "")
+        # Extract document ID from chunk source_id format "doc_id:chunk_idx"
+        doc_id = source_id.split(":")[0] if ":" in source_id else source_id
+        
+        if doc_id not in doc_groups:
+            doc_groups[doc_id] = []
+        doc_groups[doc_id].append(chunk)
+    
+    return doc_groups
+
+
+def _aggregate_document_chunks(doc_groups: dict, top_chunks_per_doc: int = 3) -> list[dict]:
+    """Aggregate chunks into document-level results."""
+    aggregated_docs = []
+    
+    for doc_id, chunks in doc_groups.items():
+        if not chunks:
+            continue
+            
+        # Sort chunks by semantic score (highest first)
+        sorted_chunks = sorted(chunks, 
+                             key=lambda x: x.get("semantic_score", 0.0), 
+                             reverse=True)
+        
+        # Take top N chunks per document
+        top_chunks = sorted_chunks[:top_chunks_per_doc]
+        best_chunk = top_chunks[0]
+        
+        # Create aggregated document result
+        doc_result = {
+            "content_id": best_chunk.get("content_id"),
+            "source_id": doc_id,  # Use document ID, not chunk ID
+            "source_type": "document",  # Aggregate as document-level
+            "title": best_chunk.get("title", "No title"),
+            "content": best_chunk.get("content", "No content"),
+            "semantic_rank": best_chunk.get("semantic_rank", 999),
+            "semantic_score": best_chunk.get("semantic_score", 0.0),
+            "chunk_count": len(chunks),
+            "top_chunks": [
+                {
+                    "chunk_id": chunk.get("source_id"),
+                    "score": chunk.get("semantic_score", 0.0),
+                    "preview": chunk.get("content", "")[:200] + "..."
+                }
+                for chunk in top_chunks
+            ],
+            "highest_quality_chunk": max(chunks, 
+                                       key=lambda x: x.get("quality_score", 0.0))
+        }
+        
+        aggregated_docs.append(doc_result)
+    
+    return aggregated_docs
+
+
+def _enforce_result_diversity(results: list[dict]) -> list[dict]:
+    """Enforce diversity by limiting results per source_type."""
+    source_counts = {}
+    filtered_results = []
+    
+    for result in results:
+        source_type = result.get("source_type", "unknown")
+        current_count = source_counts.get(source_type, 0)
+        
+        if current_count < MAX_RESULTS_PER_SOURCE:
+            filtered_results.append(result)
+            source_counts[source_type] = current_count + 1
+    
+    return filtered_results
+
 
 def search(
     query: str,
     limit: int = 10,
     filters: dict | None = None,
-    keyword_weight: float = 0.4,
-    semantic_weight: float = 0.6,
+    keyword_weight: float | None = None,
+    semantic_weight: float | None = None,
+    use_chunk_aggregation: bool = None,
 ) -> list[dict[str, Any]]:
     """Coordinate keyword + semantic search with RRF merging.
 
@@ -27,13 +158,23 @@ def search(
         query: Search query string
         limit: Maximum results to return
         filters: Optional filters (date, content_type, etc.)
-        keyword_weight: Weight for keyword results in RRF (0-1)
-        semantic_weight: Weight for semantic results in RRF (0-1)
+        keyword_weight: Weight for keyword results in RRF (0-1), auto-calculated if None
+        semantic_weight: Weight for semantic results in RRF (0-1), auto-calculated if None
+        use_chunk_aggregation: Enable chunk-to-document aggregation, uses env var if None
 
     Returns:
-        Merged and ranked search results
+        Merged and ranked search results with optional chunk aggregation
     """
     logger.debug(f"Search request: '{query}' limit={limit}")
+
+    # Calculate dynamic weights if not provided and feature enabled
+    if ENABLE_DYNAMIC_WEIGHTS and (keyword_weight is None or semantic_weight is None):
+        keyword_weight, semantic_weight = calculate_weights(query)
+        logger.debug(f"Dynamic weights: keyword={keyword_weight:.2f}, semantic={semantic_weight:.2f}")
+    elif keyword_weight is None or semantic_weight is None:
+        # Fallback to default weights if dynamic weighting disabled
+        keyword_weight, semantic_weight = 0.4, 0.6
+        logger.debug("Using default weights: keyword=0.4, semantic=0.6")
 
     # Get keyword results
     keyword_results = _keyword_search(query, limit * 2, filters)
@@ -43,7 +184,7 @@ def search(
     semantic_results = []
     if vector_store_available():
         try:
-            semantic_results = semantic_search(query, limit * 2, filters)
+            semantic_results = semantic_search(query, limit * 2, filters, use_chunk_aggregation)
             logger.debug(f"Semantic search returned {len(semantic_results)} results")
         except Exception as e:
             logger.warning(f"Semantic search failed, using keyword only: {e}")
@@ -67,37 +208,76 @@ def semantic_search(
     query: str,
     limit: int = 10,
     filters: dict | None = None,
+    use_chunk_aggregation: bool = None,
 ) -> list[dict[str, Any]]:
-    """Perform semantic vector search.
+    """Perform semantic vector search with optional chunk aggregation.
 
     Args:
         query: Search query string
         limit: Maximum results to return
         filters: Optional filters for vector search
+        use_chunk_aggregation: Override chunk aggregation setting
 
     Returns:
-        List of semantically similar documents
+        List of semantically similar documents or aggregated chunks
     """
     try:
+        # Determine if chunk aggregation should be used
+        if use_chunk_aggregation is None:
+            use_chunk_aggregation = ENABLE_CHUNK_AGGREGATION
+            
         # Generate query embedding
         embedding_service = get_embedding_service()
         query_vector = embedding_service.encode(query).tolist()
 
-        # Search vector store
+        # Search vector store - request more results if aggregating chunks
+        search_limit = limit * 4 if use_chunk_aggregation else limit
         vector_store = get_vector_store()
 
         # Build vector filters from search filters
         vector_filters = _build_vector_filters(filters) if filters else None
+        
+        # Add quality filter for chunks if aggregation enabled
+        if use_chunk_aggregation and MIN_CHUNK_QUALITY > 0:
+            quality_filter = {"quality_score": {"gte": MIN_CHUNK_QUALITY}}
+            if vector_filters:
+                vector_filters = {"must": [vector_filters, quality_filter]}
+            else:
+                vector_filters = quality_filter
 
         vector_results = vector_store.search(
-            vector=query_vector, limit=limit, filter=vector_filters
+            vector=query_vector, limit=search_limit, filter=vector_filters
         )
 
         # Enrich results with database content
         enriched_results = _enrich_vector_results(vector_results)
+        
+        # Apply chunk aggregation if enabled
+        if use_chunk_aggregation and enriched_results:
+            # Check if we have chunks (source_type='document_chunk')
+            chunks = [r for r in enriched_results if r.get("source_type") == "document_chunk"]
+            non_chunks = [r for r in enriched_results if r.get("source_type") != "document_chunk"]
+            
+            if chunks:
+                # Group chunks by document and aggregate
+                doc_groups = _group_chunks_by_document(chunks)
+                aggregated_docs = _aggregate_document_chunks(doc_groups)
+                
+                # Combine aggregated documents with non-chunk results
+                final_results = aggregated_docs + non_chunks
+                
+                # Sort by semantic score and apply diversity
+                final_results.sort(key=lambda x: x.get("semantic_score", 0.0), reverse=True)
+                final_results = _enforce_result_diversity(final_results)
+                
+                logger.debug(f"Chunk aggregation: {len(chunks)} chunks -> {len(aggregated_docs)} documents")
+                return final_results[:limit]
+        
+        # Apply diversity enforcement even without chunk aggregation
+        enriched_results = _enforce_result_diversity(enriched_results)
 
         logger.debug(f"Semantic search found {len(enriched_results)} results")
-        return enriched_results
+        return enriched_results[:limit]
 
     except Exception as e:
         logger.error(f"Semantic search failed: {e}")

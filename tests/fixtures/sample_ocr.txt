@@ -1,0 +1,45 @@
+Page 1 of 3
+
+Header: Document Scan - Property Inspection Report
+Footer: Confidential - Page 1
+
+=======================================
+PROPERTY INSPECTION REPORT
+=======================================
+
+Date: March 15, 2024
+Inspector: Michael Johnson, Certified Inspector #12345
+Property Address: 789 Oak Street, Somewhere, ST 67890
+
+[Some OCR artifacts and noise here]
+############################
+
+EXECUTIVE SUMMARY:
+The property located at 789 Oak Street was inspected on March 15, 2024. This report presents findings from a visual inspection of readily accessible areas of the property. The inspection revealed several areas requiring attention, as detailed below.
+
+STRUCTURAL SYSTEMS:
+Foundation: The foundation appears to be in satisfactory condition with no visible cracks or settlement issues observed. Minor efflorescence noted on basement walls, which is common and not structurally significant.
+
+Framing: Visible framing members in the attic and basement show no signs of significant damage, rot, or pest infestation. Adequate structural support observed throughout.
+
+[PAGE BREAK - Scanner artifact]
+================================
+
+ROOFING SYSTEM:
+Type: Architectural shingle
+Age: Approximately 8-10 years
+Condition: Good overall condition with normal wear for age. Minor granule loss observed. No missing or damaged shingles noted. Gutters and downspouts functioning properly.
+
+PLUMBING SYSTEM:
+Water Supply: Municipal
+Distribution: Copper and PEX piping observed
+Drainage: PVC and cast iron
+Water Heater: 50-gallon gas unit, manufactured 2018
+
+All visible plumbing components appear to be in working order. Water pressure tested at 65 PSI, which is within normal range. No active leaks observed.
+
+[More OCR noise and formatting artifacts]
+*********************************
+
+Footer: Copyright 2024 - Inspection Services Inc.
+Page 2 of 3

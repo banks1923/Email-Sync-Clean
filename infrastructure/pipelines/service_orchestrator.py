@@ -19,6 +19,9 @@ from utilities.embeddings import get_embedding_service
 # Import all services
 from utilities.timeline import TimelineService
 from utilities.vector_store import get_vector_store
+from utilities.chunk_pipeline import ChunkPipeline
+from src.chunker.document_chunker import DocumentChunker
+from src.quality.quality_score import ChunkQualityScorer
 
 
 class ServiceOrchestrator:
@@ -45,6 +48,7 @@ class ServiceOrchestrator:
         self.services = {}
         self.results = {}
         self.start_time = None
+        self.chunk_pipeline = None
 
     def initialize_services(self) -> Dict[str, bool]:
         """
@@ -60,6 +64,7 @@ class ServiceOrchestrator:
             ("timeline", lambda: TimelineService()),
             ("summarizer", lambda: get_document_summarizer()),
             ("search", lambda: get_search_intelligence_service()),
+            ("chunk_pipeline", lambda: ChunkPipeline()),
         ]
 
         for service_name, initializer in initialization_order:
@@ -100,6 +105,7 @@ class ServiceOrchestrator:
                 "summarization",
                 "vector_sync",
                 "search_index",
+                "chunk_processing",
             ]
 
         logger.info(f"Processing {content_type} content (limit={limit})")
@@ -124,6 +130,9 @@ class ServiceOrchestrator:
 
         if "search_index" in operations:
             self._run_search_index()
+
+        if "chunk_processing" in operations:
+            self._run_chunk_processing(content_type, limit)
 
         # Summary
         elapsed = time.time() - self.start_time
@@ -242,6 +251,40 @@ class ServiceOrchestrator:
         except Exception as e:
             logger.error(f"Search index update failed: {e}")
             self.results["search_index"] = {"success": False, "error": str(e)}
+
+    def _run_chunk_processing(self, content_type: str, limit: int):
+        """
+        Run document chunking and quality filtering.
+        """
+        try:
+            logger.debug("Running chunk processing...")
+            
+            # Map content type to source type for chunking
+            source_type_map = {
+                "email": ["email_message"],
+                "pdf": ["document"],
+                "document": ["document"],
+                "transcript": ["transcript"],
+            }
+            source_types = source_type_map.get(content_type, ["email_message"])
+            
+            # Process documents through chunk pipeline
+            result = self.services["chunk_pipeline"].process_documents(
+                limit=limit,
+                source_types=source_types,
+                dry_run=False
+            )
+            
+            self.results["chunk_processing"] = {
+                "success": True,
+                "documents_processed": result.get("documents_processed", 0),
+                "chunks_created": result.get("chunks_created", 0),
+                "chunks_dropped": result.get("chunks_dropped_quality", 0),
+            }
+            
+        except Exception as e:
+            logger.error(f"Chunk processing failed: {e}")
+            self.results["chunk_processing"] = {"success": False, "error": str(e)}
 
     def get_pipeline_status(self) -> Dict[str, Any]:
         """

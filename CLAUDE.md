@@ -1,4 +1,4 @@
-# Email Sync System - Development Guide
+# Legal Document Search System - Development Guide
 
 Clean architecture implementation with Legal BERT semantic search and simplified services.
 
@@ -12,33 +12,30 @@ Clean architecture implementation with Legal BERT semantic search and simplified
 
 ## **CORE**: 
 
-1. **Smooth is steady** steady is fast. 
+1. *Smooth is steady* steady is fast. 
 2. Build it right, build it once. Build it fast, build it again. 
-3. **PLAN** and investigate assumptions before finalizing 
-4. **CLARIFY** - *STOP* If design choices or conflicts arise
+3. *PLAN* and investigate assumptions 
+4. **CLARIFY** - *STOP* If choices or conflicts arise
 
 Core Development Principles
 
 ## Anti-Patterns (NEVER DO)
 
 - NO **Needless Complexity** unless *high ROI* and practical
-- No **No Monster Files**: *IF* modular approach is best practices choice
-- NO **Bandaids**: Fix it *right* unless time is a constraint
-- NO **Redesign**: Without *USER Explicit approval* SAME for massive changes to files or functionality
+- No *No Monster Files*: *IF* best practices
+- NO **Bandaids**: Fix it *right*
+- NO **Redesign**: *USER Explicit approval*
 
 ## Good Patterns (ALWAYS DO)
 
-- **Atomic Tasks** break tasks down into small steps
-- **GREP** Libraries and extentions are your friend.
-- **Single responsibility** Clean modular build
-- *Read CLAUDE.md*:
-- **Changelog.md**: Log all changes to changelog.md + update References across repo
-- *Use TodoWrite*
+- *Atomic Tasks* break todo small steps
+- *GREP* Libraries and extentions are your friend.
+- Single responsibility: Clean modular build
+- *Read CLAUDE.md*
+- *Changelog.md*: Log all changes to changelog.md + update References across repo
 
 ## Guidelines (consider)
-- **Best practices** Seperation of concerns, clean repo, clean code
 - **Future proof**: no quick sloppy fix AND **Docstring/Documentation**
-- *GREP* Libraries and extentions are your friend.
 - *Organize* repo: scripts, tests, and configurables go: into proper directory.
 - *Research* Best Practices, dependencies, tools, solutions, libraries, Etc.
 - *Parallel* Use Subagents for grunt work, investigation, simple tasks.
@@ -46,53 +43,39 @@ Core Development Principles
 
 <!-- END PROTECTED SECTION - DO NOT MODIFY WITHOUT 3X CONFIRMATION -->
 
-> **For detailed API documentation, see [docs/SERVICES_API.md](docs/SERVICES_API.md)**
-> **For MCP server documentation, see [docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)**
+> **For detailed API documentation, see: docs/SERVICES_API.md**
+> **For MCP server documentation, see: docs/MCP_SERVERS.md**
 
-## Current Architecture Status - PRODUCTION BASELINE (2025-08-25) - WORKING
+## Current System Status
 
-- **Structure**: Flat Pythonic layout (no more `src/app/core/` nesting!)
-- **Services**: 26,883 total lines (20,201 code lines) across 15 active services
-- **Scripts**: 13 essential scripts (down from 35)
-- **Documentation**: Consolidated to core files only
-- **Testing**: Focus on real functionality, 89% less mocks
+**Core Services Working**:
+- Gmail sync with v2.0 message deduplication (302 emails processed)
+- Keyword search operational, semantic search ready
+- Legal BERT embeddings via Qdrant vector store
+- Entity extraction with 97% email parsing coverage
+- SQLite database with WAL mode, foreign key integrity
 
-### CURRENT: NEW PRODUCTION BASELINE (2025-08-25 3:05 PM)
-- **Gmail Sync**: WORKING with v2.0 message-level deduplication  
-- **Email Processing**: WORKING - Significant content deduplication in email threads
-- **Search System**: WORKING - Keyword search fully functional, semantic search ready
-- **Vector Store**: WORKING - Qdrant connected (Legal BERT embeddings ready)
-- **Schema Compatibility**: WORKING - All services aligned to v2.0 architecture
-- **Debug Logging**: WORKING - Enabled and working (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
-
-### STATUS: System Health (Current Status)
-- **Database status**: SQLite WAL mode, 64MB cache, healthy
-- **Email deduplication**: Active message-level processing
-- **Vector service**: Connected and ready for embeddings
-- **Search functionality**: Keyword search operational
-- **Schema version**: v2.0 with TEXT source_ids
-
-- **Pipeline Status**: WORKING - Gmail sync + keyword search operational
-- **Code Quality**: COMPLETED - Major technical debt resolution completed (2025-08-22)
-  - Type safety: 4 critical modules 100% or significantly improved
-  - Complexity: 95% reduction in high-complexity functions
-  - Dependencies: All packages updated, deprecations resolved
+**Development State**:
+- Clean flat architecture, no complex abstractions
+- Email parsing pipeline stable and tested
+- Chunk pipeline implemented (Task 25 complete)
+- Debug logging enabled (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
 
 ## READY: Quick Start (Development)
 
-### Enable Vector Search (Required)
+### Quick Development Setup
 ```bash
-# Install Qdrant locally (no Docker required)
-curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-aarch64-apple-darwin.tar.gz
-tar -xzf /tmp/qdrant.tar.gz -C /tmp
-mkdir -p ~/bin && cp /tmp/qdrant ~/bin/qdrant
+# Check system status
+tools/scripts/vsearch info
 
-# Start Qdrant with local storage
-cd /path/to/Email\ Sync
-QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant &
+# Test search (working now)
+tools/scripts/vsearch search "lease" --limit 5
 
-# Verify connection
-tools/scripts/vsearch info  # Should show "Vector Service: Connected"
+# Gmail sync when needed
+python3 -m gmail.main
+
+# Generate embeddings for semantic search
+tools/scripts/vsearch ingest --emails
 ```
 
 ### Command Reference (Simplified Makefile + Direct CLI)
@@ -146,7 +129,7 @@ Email Sync/
 ├── entity/             # Entity extraction
 ├── summarization/      # Document summarization
 ├── search_intelligence/ # Unified search intelligence
-├── knowledge_graph/    # Knowledge graph service
+# knowledge_graph/ - functionality distributed across search_intelligence and utilities
 ├── legal_intelligence/ # Legal analysis service
 ├── shared/             # Shared utilities & database
 
@@ -223,9 +206,9 @@ Email Sync/
 #### File Size Guidelines
 
 ##### For New Development (GOALS, NOT ENFORCED)
-- **New Files (Goal)**: Aim to keep files under 450 lines to prevent unmaintainable monster files.
-- **Function Size (Goal)**: Try to keep functions ~30 lines for readability.
-- **Rationale**: Keeps AI development focused and prevents monster files
+- *New Files (Goal)*: Aim to keep files under 450 lines to prevent unmaintainable monster files.
+- *Function Size (Goal)*: Try to keep functions ~30 lines for readability.
+- *Rationale*: Keeps AI development focused and prevents monster files
 These are guidance targets to prevent monster files; they are not hard caps.
 
 ##### Code Quality Achievements (2025-08-22) - COMPLETED
@@ -240,7 +223,6 @@ These are guidance targets to prevent monster files; they are not hard caps.
 - **Refactor Triggers**:
   - Maintenance difficulties
   - Clear functional separation opportunities
-  - Multiple developers working on same areas
 
 ##### SimpleDB Specific (DOCUMENTED TRIGGERS)
 **SimpleDB will remain as-is unless these specific triggers occur:**
@@ -250,16 +232,21 @@ These are guidance targets to prevent monster files; they are not hard caps.
 4. **Method count exceeds 60 or complexity exceeds agreed caps** - Currently 47 methods
 5. **p95 write latency >2× baseline for 2 weeks OR busy_events >0.5% of writes** - Objective SLO
 
-**SQLite Optimizations Applied (2025-08-19):**
+**SQLite Optimizations Applied (2025-08-19, Updated 2025-08-26):**
 - WAL mode enabled for better concurrency
 - 64MB cache for batch operations
 - NORMAL synchronous mode (safe for single-user)
 - 5-second busy timeout for resilience
 - Slow-query logging (>100ms)
 - `db_maintenance()` method for WAL checkpointing after large batches
+- **Foreign Keys ENFORCED** (2025-08-26): Referential integrity active via triggers
+  - Only applies to `source_type='email_message'` records
+  - Email summaries (`source_type='email_summary'`) exempt from FK constraints
+  - CASCADE DELETE enabled for automatic cleanup
+  - Migration tool: `scripts/enable_foreign_keys_comprehensive.py`
 
 #### Other Hard Limits (ENFORCED)
-- **Cyclomatic Complexity**: Maximum 10 per function
+- **Cyclomatic Complexity**: 10 per function
 - **Service Independence**: No cross-service imports
 
 #### Good Patterns (ALWAYS DO)
@@ -316,14 +303,17 @@ The system implements advanced message-level email deduplication with TEXT sourc
 
 #### `content_unified` - Single Source of Truth
 - `id` (INTEGER PRIMARY KEY) - Auto-generated ID
-- `source_type` (TEXT) - Type: 'email_message', 'document', 'document_chunk'
-- `source_id` (TEXT) - **NEW**: TEXT-based IDs (message_hash for emails, doc_uuid for documents)
+- `source_type` (TEXT) - Type: 'email_message', 'email_summary', 'document', 'document_chunk'
+  - **NEW (2025-08-26)**: Added 'email_summary' type for summaries without FK constraints
+- `source_id` (TEXT) - TEXT-based IDs (message_hash for emails, doc_uuid for documents, various for summaries)
 - `title` (TEXT) - Document title or email subject
 - `body` (TEXT) - Full text content
 - `sha256` (TEXT UNIQUE) - Content hash for deduplication
 - `ready_for_embedding` (BOOLEAN) - Flag for embedding pipeline
 - `validation_status` (TEXT) - 'pending', 'validated', 'failed'
-- Additional metadata columns for quality tracking
+- `quality_score` (REAL) - Quality metric for content
+- `metadata` (TEXT) - JSON metadata
+- **Foreign Key**: Conditional - only enforced for `source_type='email_message'` via triggers
 
 #### `individual_messages` - Unique Email Messages
 - `message_hash` (TEXT PRIMARY KEY) - SHA256 of normalized content
@@ -394,7 +384,7 @@ sqlite3 data/system_data/emails.db ".schema document_summaries"  # Verify all co
 make diag-wiring
 ```
 
-For detailed API documentation and usage examples, see **[docs/SERVICES_API.md](docs/SERVICES_API.md)**
+For detailed API documentation and usage examples, see **docs/SERVICES_API.md**
 
 ## PIPELINE: Unified Ingestion
 
@@ -417,18 +407,18 @@ The system provides 2 active MCP servers for Claude Desktop with 12+ intelligenc
 **Configuration**: `make mcp-status` | `make mcp-generate` | `make mcp-validate`
 
 **Active Servers**:
-- **Legal Intelligence**: 6 legal analysis tools (entity extraction, timeline, knowledge graph)
+- **Legal Intelligence**: 6 legal analysis tools (entity extraction, timeline, document analysis)
 - **Search Intelligence**: 6 search tools (smart search, similarity, clustering)
 
 For complete MCP documentation and tool details, see **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)**
 
 ## 🔬 Entity Extraction System
 
-**Unified entity extraction with quality filtering (95.3% quality score)**
+**Entity extraction across all content types**
 
-- **Processing**: All content types through single pipeline with OCR garbage detection
-- **Statistics**: 719 entities extracted, 685 high-quality (275 entities/second)
+- **Processing**: Unified pipeline with OCR garbage detection
 - **Entity Types**: PERSON, ORG, DATE, COURT, STATUTE, MONEY, LEGAL_CONCEPT
+- **Current**: 719 entities extracted from processed content
 
 ```bash
 tools/scripts/vsearch extract-entities --missing-only  # Extract entities
@@ -490,13 +480,10 @@ python3 -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('WORKI
 ```
 
 ### Test Coverage
-- **Email Parsing** (v2.0): 97%+ coverage, 34 tests total
-  - `tests/test_email_parser.py` - Core functionality (16 tests)
-  - `tests/test_email_integration.py` - End-to-end workflows (4 tests)
-  - `tests/test_email_coverage.py` - Edge cases & error conditions (18 tests)
-- **Unit Tests**: `tests/unit/` - Query expansion, parameter validation
-- **Integration Tests**: `tests/integration/` - MCP parameter mapping
-- **System Tests**: `scripts/verify_pipeline.py` - Full pipeline validation
+- **Email Parsing**: Comprehensive test suite with 34 tests
+- **Integration Tests**: MCP parameter mapping and workflows
+- **System Tests**: Full pipeline validation via `verify_pipeline.py`
+- **Coverage Focus**: Email parsing at 97%, integration over unit tests
 
 For detailed testing documentation, see **[docs/PIPELINE_VERIFICATION.md](docs/PIPELINE_VERIFICATION.md)**
 
@@ -577,7 +564,7 @@ This is a **single-user project**, important use case, not for profit, not enter
 ### Service-Specific Documentation
 - **[gmail/CLAUDE.md](gmail/CLAUDE.md)** - Gmail service implementation
 - **[pdf/CLAUDE.md](pdf/CLAUDE.md)** - PDF processing details
-- Knowledge graph functionality (via search intelligence service)
+- Document similarity and clustering (via search intelligence service)
 - **[summarization/README.md](summarization/README.md)** - Document summarization
 
 ## NEXT: Steps - FROM PRODUCTION BASELINE

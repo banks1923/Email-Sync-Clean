@@ -14,7 +14,7 @@ import uuid
 from collections.abc import Callable, Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Dict, List
 
 # Import new error handling and retry utilities
 from loguru import logger
@@ -2204,6 +2204,185 @@ class SimpleDB:
             ORDER BY date_sent, message_hash
             """,
             (thread_id,),
+        )
+
+    # === V2 Chunk Methods for Semantic Search ===
+    
+    def add_document_chunk(
+        self,
+        doc_id: str,
+        chunk_idx: int,
+        text: str,
+        token_count: int,
+        quality_score: float = 1.0,
+        section_title: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Optional[int]:
+        """Store a document chunk in content_unified.
+        
+        Args:
+            doc_id: Parent document ID
+            chunk_idx: Chunk index within document
+            text: Chunk text content
+            token_count: Number of tokens in chunk
+            quality_score: Quality score (0-1)
+            section_title: Optional section title
+            metadata: Optional metadata dict
+            
+        Returns:
+            Row ID if successful, None otherwise
+        """
+        import hashlib
+        import json
+        
+        # Generate chunk ID
+        chunk_id = f"{doc_id}:{chunk_idx}"
+        
+        # Calculate SHA256 for deduplication
+        sha256 = hashlib.sha256(text.encode()).hexdigest()
+        
+        # Prepare metadata
+        meta_dict = metadata or {}
+        meta_dict.update({
+            "chunk_idx": chunk_idx,
+            "token_count": token_count,
+            "section_title": section_title,
+        })
+        meta_json = json.dumps(meta_dict) if meta_dict else None
+        
+        try:
+            cursor = self.execute(
+                """
+                INSERT OR IGNORE INTO content_unified (
+                    source_type, source_id, title, body, sha256,
+                    quality_score, ready_for_embedding, metadata
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "document_chunk",
+                    chunk_id,
+                    section_title or f"Chunk {chunk_idx}",
+                    text,
+                    sha256,
+                    quality_score,
+                    1 if quality_score >= 0.35 else 0,  # Auto-gate by quality
+                    meta_json,
+                ),
+            )
+            
+            if cursor.rowcount > 0:
+                logger.debug(f"Added chunk {chunk_id} (quality={quality_score:.2f})")
+                return cursor.lastrowid
+            else:
+                logger.debug(f"Chunk {chunk_id} already exists (duplicate sha256)")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to add chunk {chunk_id}: {e}")
+            raise
+    
+    def get_chunks_for_document(self, doc_id: str) -> List[Dict[str, Any]]:
+        """Retrieve all chunks for a document.
+        
+        Args:
+            doc_id: Document ID
+            
+        Returns:
+            List of chunk records
+        """
+        return self.fetch(
+            """
+            SELECT * FROM content_unified 
+            WHERE source_type = 'document_chunk' 
+            AND source_id LIKE ? || ':%'
+            ORDER BY CAST(SUBSTR(source_id, INSTR(source_id, ':') + 1) AS INTEGER)
+            """,
+            (doc_id,),
+        )
+    
+    def update_chunk_quality_score(self, chunk_id: str, quality_score: float) -> bool:
+        """Update quality score for a chunk.
+        
+        Args:
+            chunk_id: Chunk ID (format: doc_id:chunk_idx)
+            quality_score: New quality score
+            
+        Returns:
+            True if updated, False otherwise
+        """
+        try:
+            cursor = self.execute(
+                """
+                UPDATE content_unified 
+                SET quality_score = ?,
+                    ready_for_embedding = CASE WHEN ? >= 0.35 THEN 1 ELSE 0 END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE source_type = 'document_chunk' AND source_id = ?
+                """,
+                (quality_score, quality_score, chunk_id),
+            )
+            
+            if cursor.rowcount > 0:
+                logger.debug(f"Updated quality score for {chunk_id}: {quality_score:.2f}")
+                return True
+            return False
+            
+        except Exception as e:
+            logger.error(f"Failed to update quality score for {chunk_id}: {e}")
+            return False
+    
+    def mark_chunk_embedded(self, chunk_id: str) -> bool:
+        """Mark a chunk as having embeddings generated.
+        
+        Args:
+            chunk_id: Chunk ID
+            
+        Returns:
+            True if updated, False otherwise
+        """
+        try:
+            cursor = self.execute(
+                """
+                UPDATE content_unified 
+                SET embedding_generated = 1,
+                    embedding_generated_at = CURRENT_TIMESTAMP,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE source_type = 'document_chunk' AND source_id = ?
+                """,
+                (chunk_id,),
+            )
+            
+            return cursor.rowcount > 0
+            
+        except Exception as e:
+            logger.error(f"Failed to mark chunk embedded: {e}")
+            return False
+    
+    def get_chunks_for_embedding(
+        self, 
+        min_quality: float = 0.35, 
+        limit: int = 1000
+    ) -> List[Dict[str, Any]]:
+        """Get chunks ready for embedding that meet quality threshold.
+        
+        Args:
+            min_quality: Minimum quality score
+            limit: Maximum number of chunks to return
+            
+        Returns:
+            List of chunk records ready for embedding
+        """
+        return self.fetch(
+            """
+            SELECT * FROM content_unified 
+            WHERE source_type = 'document_chunk'
+            AND ready_for_embedding = 1
+            AND embedding_generated = 0
+            AND quality_score >= ?
+            ORDER BY quality_score DESC, created_at
+            LIMIT ?
+            """,
+            (min_quality, limit),
         )
 
 

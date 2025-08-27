@@ -5,7 +5,7 @@
         "id": 21,
         "title": "Project & Environment Setup + Dependency Pinning",
         "description": "Update existing project dependencies and verify compatibility for semantic-search v2 token-based chunking and document-level retrieval.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "details": "• Add missing dependencies to existing requirements.txt/pyproject.toml:\n  - tiktoken==0.5.1 (tokenizer for chunk sizing)\n  - spacy==3.7.2 + en_core_web_sm (sentence boundary detection)\n  - sentencepiece==0.1.99 (fallback tokenizer)\n  - whoosh==2.7.4 (BM25 indexing for hybrid search)\n  - boilerpy3==1.0.6 (OCR scan preprocessing)\n• Verify existing Qdrant vector store compatibility:\n  - Check current qdrant-client version (upgrade to 1.7.3 if needed)\n  - Ensure support for multiple collections (vectors_v2)\n  - Test connection and existing collection integrity\n• Audit current database setup:\n  - Verify SQLAlchemy version (upgrade to 2.0.29 if needed)\n  - Check if schema can accommodate content_embeddings table\n  - Ensure foreign key support is enabled\n• Update existing tools/scripts:\n  - Identify scripts that interact with vector store\n  - Plan migration path for scripts to use new chunking pipeline\n  - Document which scripts need v2 compatibility updates\n• Add quality scoring dependencies:\n  - scikit-learn==1.5.0 (RRF, metrics, quality scoring)\n  - numpy==1.26.4, scipy==1.12.0 (mathematical operations)\n• Verify testing infrastructure:\n  - Ensure pytest==8.2.0, pytest-asyncio==0.23.5 installed\n  - Check if CI/CD pipeline needs adjustments for new dependencies\n• Create migration checklist for existing functionality",
@@ -22,7 +22,7 @@
         "dependencies": [
           21
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -35,14 +35,14 @@
         "dependencies": [
           22
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
         "id": 24,
         "title": "Database Schema Migration Scripts",
         "description": "Verify existing schema and implement content_embeddings table if needed for chunk-level embeddings using SimpleDB pattern.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           21
         ],
@@ -55,14 +55,14 @@
         "id": 25,
         "title": "Pipeline Integration: Chunking, Quality Gating & Embedding Ingestion",
         "description": "Integrate the new DocumentChunker and quality scoring modules with existing embedding services (utilities/embeddings/) and vector store (utilities/vector_store/) to process the 663 items ready for embedding.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           22,
           23,
           24
         ],
         "priority": "high",
-        "details": "• Integrate with existing infrastructure/pipelines/service_orchestrator.py:\n 1. Fetch document text & metadata from content_unified table (663 items with ready_for_embedding=true).\n 2. Apply DocumentChunker from task #22 → quality gate with ChunkQualityScorer from task #23 (score ≥0.35).\n 3. Use existing utilities/embeddings/embedding_service.py to generate embeddings (batch 64-128 chunks).\n 4. Store chunk metadata in new content_embeddings table via shared/simple_db.py.\n 5. Upsert vectors to Qdrant via utilities/vector_store/ into new `vectors_v2` collection.\n• Extend utilities/semantic_pipeline.py to coordinate the chunking→quality→embedding flow.\n• Ensure idempotency: check for existing (doc_id, chunk_idx, model) before processing.\n• Update individual_messages.chunk_count and processing flags.\n• CLI integration: Extend existing vsearch tool or add new command for chunk-based ingestion.\n• Add metrics tracking: chunks_processed, chunks_dropped_quality, embed_latency.",
+        "details": "• Integrate with existing infrastructure/pipelines/service_orchestrator.py:\n 1. Fetch document text & metadata from content_unified table (663 items with ready_for_embedding=true).\n 2. Apply DocumentChunker from task #22 → quality gate with ChunkQualityScorer from task #23 (score ≥0.35).\n 3. Use existing utilities/embeddings/embedding_service.py to generate embeddings (batch 64-128 chunks).\n 4. Store chunk metadata in new content_embeddings table via shared/simple_db.py.\n 5. Upsert vectors to Qdrant via utilities/vector_store/ into new `vectors_v2` collection.\n• Extend utilities/semantic_pipeline.py to coordinate the chunking→quality→embedding flow.\n• Ensure idempotency: check for existing (doc_id, chunk_idx, model) before processing.\n• Update individual_messages.chunk_count and processing flags.\n• CLI integration: Extend existing vsearch tool or add new command for chunk-based ingestion.\n• Add metrics tracking: chunks_processed, chunks_dropped_quality, embed_latency.\n<info added on 2025-08-26T22:32:27.414Z>\n• **Important Database Constraint Update (2025-08-26)**: Foreign key enforcement is now active in the database with conditional FK constraints properly enforced. Records with source_type='email_message' must have valid FK relationships to the individual_messages table via message_hash. However, source_type='email_summary' records (362 total) are exempt from FK constraints. This referential integrity enforcement prevents orphaned records and ensures data consistency during pipeline operations. The migration has been completed successfully using scripts/enable_foreign_keys_comprehensive.py.\n• When fetching from content_unified for processing, be aware that FK constraints will automatically cascade deletions for email_message records if parent records in individual_messages are removed.\n</info added on 2025-08-26T22:32:27.414Z>",
         "testStrategy": "Integration test using existing test infrastructure:\n• Process sample documents through the pipeline; verify chunks in content_embeddings table match vectors in Qdrant vectors_v2.\n• Re-run ingestion → verify idempotency (no duplicates).\n• Assert quality_gate filters chunks below 0.35 threshold.\n• Verify compatibility with existing 23 already-embedded items.",
         "subtasks": []
       },
@@ -70,7 +70,7 @@
         "id": 26,
         "title": "Document-Level Retrieval, RRF Aggregation & Dynamic Weighting",
         "description": "Enhance existing search_intelligence service with two-stage hybrid retrieval, chunk aggregation and reciprocal rank fusion at document granularity.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           25
         ],
@@ -139,7 +139,7 @@
     ],
     "metadata": {
       "created": "2025-08-26T12:35:13.360Z",
-      "updated": "2025-08-26T14:30:08.301Z",
+      "updated": "2025-08-27T09:55:57.082Z",
       "description": "Tasks for master context"
     }
   }

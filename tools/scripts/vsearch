@@ -66,7 +66,7 @@ def warmup_command():
     return True
 
 
-def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid"):
+def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid", use_chunk_aggregation=None):
     """Simplified search using direct search coordination module"""
     # Display search info with filters
     filter_info = _format_filter_info(filters)
@@ -80,7 +80,7 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
         # Direct search using coordination module - Simple > Complex
         if search_mode == "semantic":
             print("🧠 Running semantic search...")
-            results = search_funcs['semantic_search'](query, limit=limit, filters=filters)
+            results = search_funcs['semantic_search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
             search_type = "🧠 Semantic Search"
         elif search_mode == "keyword":
             print("🔤 Running keyword search...")
@@ -89,7 +89,7 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
             search_type = "🔤 Keyword Search"
         else:  # hybrid
             print("🔍 Running hybrid search...")
-            results = search_funcs['search'](query, limit=limit, filters=filters)
+            results = search_funcs['search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
             search_type = "🔍 Hybrid Search"
         
         if results:
@@ -358,6 +358,119 @@ def upload_command(file_path):
         return False
 
 
+def chunk_ingest_command(args):
+    """Process documents through v2 chunking pipeline."""
+    import json
+    from utilities.chunk_pipeline import ChunkPipeline
+    from utilities.embeddings.batch_processor import BatchEmbeddingProcessor
+    
+    # Show statistics if requested
+    if args.stats:
+        pipeline = ChunkPipeline(quality_threshold=args.quality_threshold)
+        processor = BatchEmbeddingProcessor(
+            batch_size=args.batch_size,
+            min_quality=args.quality_threshold
+        )
+        
+        # Get statistics
+        chunk_stats = pipeline.get_pipeline_stats()
+        embed_stats = processor.get_processor_stats()
+        
+        # Combine stats
+        stats = {**chunk_stats, **embed_stats}
+        
+        if args.json:
+            print(json.dumps(stats, indent=2))
+        else:
+            print("\n📊 Chunk Pipeline Statistics")
+            print("=" * 60)
+            print(f"Documents ready for chunking: {stats.get('documents_ready', 0)}")
+            print(f"Documents already chunked: {stats.get('documents_chunked', 0)}")
+            print(f"Total chunks: {stats.get('total_chunks', 0)}")
+            print(f"  - High quality (>={args.quality_threshold}): {stats.get('high_quality_chunks', 0)}")
+            print(f"  - Low quality (<{args.quality_threshold}): {stats.get('low_quality_chunks', 0)}")
+            print(f"Chunks ready for embedding: {stats.get('chunks_ready', 0)}")
+            print(f"Chunks already embedded: {stats.get('chunks_embedded', 0)}")
+            print(f"Vectors in Qdrant (vectors_v2): {stats.get('vectors_in_qdrant', 'unknown')}")
+            
+            if stats.get('chunks_ready', 0) > 0:
+                print(f"\n⏱️  Estimated time to embed remaining: {stats.get('estimated_minutes', '?')} minutes")
+        return
+    
+    print("🔄 Starting v2 chunk ingestion pipeline...")
+    
+    if args.dry_run:
+        print("🔍 DRY RUN MODE - No changes will be made")
+    
+    # Phase 1: Chunking
+    print("\n📄 Phase 1: Document Chunking")
+    print("-" * 40)
+    
+    try:
+        pipeline = ChunkPipeline(quality_threshold=args.quality_threshold)
+        chunk_result = pipeline.process_documents(
+            limit=args.limit,
+            dry_run=args.dry_run
+        )
+        
+        if args.json:
+            print(json.dumps(chunk_result, indent=2, default=str))
+        else:
+            print(f"✅ Documents processed: {chunk_result['documents_processed']}")
+            print(f"✅ Chunks created: {chunk_result['chunks_created']}")
+            print(f"⚠️  Chunks dropped (quality < {args.quality_threshold}): {chunk_result['chunks_dropped_quality']}")
+            print(f"⏭️  Chunks skipped (already exist): {chunk_result['chunks_already_exist']}")
+            print(f"⏱️  Time: {chunk_result['elapsed_seconds']:.1f}s")
+            
+            if chunk_result["errors"]:
+                print(f"\n❌ Errors ({len(chunk_result['errors'])})")
+                for error in chunk_result["errors"][:5]:
+                    print(f"  - {error}")
+    
+    except Exception as e:
+        print(f"❌ Chunking failed: {e}")
+        return False
+    
+    # Phase 2: Embedding Generation (optional)
+    if args.embeddings and not args.dry_run:
+        print("\n🧠 Phase 2: Embedding Generation")
+        print("-" * 40)
+        
+        try:
+            processor = BatchEmbeddingProcessor(
+                batch_size=args.batch_size,
+                min_quality=args.quality_threshold
+            )
+            
+            # Process chunks that were just created
+            embed_result = processor.process_chunks(
+                limit=chunk_result.get('chunks_created', 0) if args.limit else None,
+                dry_run=False
+            )
+            
+            if args.json:
+                print(json.dumps(embed_result, indent=2, default=str))
+            else:
+                print(f"✅ Chunks processed: {embed_result['chunks_processed']}")
+                print(f"✅ Embeddings generated: {embed_result['embeddings_generated']}")
+                print(f"✅ Vectors stored in Qdrant: {embed_result['vectors_stored']}")
+                print(f"⏱️  Time: {embed_result['elapsed_seconds']:.1f}s")
+                
+                if embed_result.get('embeddings_per_second'):
+                    print(f"⚡ Rate: {embed_result['embeddings_per_second']:.1f} embeddings/sec")
+                
+                if embed_result["errors"]:
+                    print(f"\n❌ Errors ({len(embed_result['errors'])})")
+                    for error in embed_result["errors"][:5]:
+                        print(f"  - {error}")
+        
+        except Exception as e:
+            print(f"❌ Embedding generation failed: {e}")
+            return False
+    
+    print("\n✅ Chunk ingestion pipeline complete!")
+    return True
+
 def ingest_command(args):
     """Unified ingestion command for emails and/or documents."""
     from shared.unified_ingestion import get_ingestion_service
@@ -488,6 +601,12 @@ Examples:
     search_parser.add_argument(
         "--semantic-only", action="store_true", help="Use semantic search only"
     )
+    search_parser.add_argument(
+        "--chunk-search", action="store_true", help="Enable chunk-level search with document aggregation"
+    )
+    search_parser.add_argument(
+        "--no-chunks", action="store_true", help="Disable chunk aggregation (use document-level search)"
+    )
     search_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed errors")
     # Date filtering
     search_parser.add_argument(
@@ -539,6 +658,19 @@ Examples:
     ingest_parser.add_argument("--dir", default="data/Stoneman_dispute/user_data", 
                               help="Directory for document processing (default: data/Stoneman_dispute/user_data)")
     ingest_parser.add_argument("--since", help="Date filter for emails (e.g., 'last week', '2024-01-01')")
+
+    # Chunk ingestion (v2 pipeline) command
+    chunk_ingest_parser = subparsers.add_parser(
+        "chunk-ingest", 
+        help="Process documents through v2 chunking pipeline with quality scoring"
+    )
+    chunk_ingest_parser.add_argument("--batch-size", type=int, default=64, help="Number of chunks per embedding batch (default: 64)")
+    chunk_ingest_parser.add_argument("--quality-threshold", type=float, default=0.35, help="Minimum quality score (default: 0.35)")
+    chunk_ingest_parser.add_argument("--limit", type=int, help="Maximum documents to process")
+    chunk_ingest_parser.add_argument("--dry-run", action="store_true", help="Preview without processing")
+    chunk_ingest_parser.add_argument("--embeddings", action="store_true", help="Also generate embeddings for chunks")
+    chunk_ingest_parser.add_argument("--stats", action="store_true", help="Show pipeline statistics")
+    chunk_ingest_parser.add_argument("--json", action="store_true", help="Output as JSON")
 
     # Legal Intelligence commands
     legal_parser = subparsers.add_parser("legal", help="Legal Intelligence analysis tools")
@@ -770,12 +902,20 @@ def _dispatch_command(args) -> None:
         elif args.semantic_only:
             search_mode = "semantic"
         
+        # Determine chunk aggregation mode
+        use_chunk_aggregation = None  # Let system use default
+        if hasattr(args, 'chunk_search') and args.chunk_search:
+            use_chunk_aggregation = True
+        elif hasattr(args, 'no_chunks') and args.no_chunks:
+            use_chunk_aggregation = False
+        
         search_command(
             args.query,
             args.limit,
             verbose=args.verbose,
             filters=filters,
             search_mode=search_mode,
+            use_chunk_aggregation=use_chunk_aggregation,
         )
     elif args.command == "warmup":
         warmup_command()
@@ -787,6 +927,8 @@ def _dispatch_command(args) -> None:
         upload_command(args.file)
     elif args.command == "ingest":
         ingest_command(args)
+    elif args.command == "chunk-ingest":
+        chunk_ingest_command(args)
     elif args.command == "legal":
         # Import legal handlers
         from tools.scripts.cli.legal_handler import (

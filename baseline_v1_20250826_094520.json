@@ -1,0 +1,84 @@
+{
+  "search_performance": {
+    "timestamp": "2025-08-26T09:45:20.749624",
+    "pipeline": "v1",
+    "queries_tested": 10,
+    "avg_latency_ms": 264.669394493103,
+    "p50_latency_ms": 44.95406150817871,
+    "p95_latency_ms": 2112.626075744629,
+    "max_latency_ms": 2112.626075744629,
+    "min_latency_ms": 39.97206687927246,
+    "individual_results": [
+      {
+        "query": "lease",
+        "latency_ms": 2112.626075744629,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "tenant rights",
+        "latency_ms": 150.6938934326172,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "eviction notice",
+        "latency_ms": 53.66802215576172,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "security deposit",
+        "latency_ms": 44.95406150817871,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "habitability",
+        "latency_ms": 44.64411735534668,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "rent control",
+        "latency_ms": 44.370174407958984,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "mold inspection",
+        "latency_ms": 41.01395606994629,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "breach of contract",
+        "latency_ms": 73.38976860046387,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "discrimination",
+        "latency_ms": 41.36180877685547,
+        "result_count": 10,
+        "success": true
+      },
+      {
+        "query": "retaliation",
+        "latency_ms": 39.97206687927246,
+        "result_count": 10,
+        "success": true
+      }
+    ]
+  },
+  "database_performance": {
+    "content_stats": {
+      "total": 663,
+      "ready_for_embedding": 663,
+      "already_embedded": 23
+    },
+    "count_query_ms": 0.7510185241699219,
+    "search_query_ms": 0.22602081298828125,
+    "search_result_count": 10
+  }
+}

@@ -1,0 +1,44 @@
+MOTION FOR SUMMARY JUDGMENT
+
+COMES NOW, Plaintiff John Smith, by and through undersigned counsel, and respectfully moves this Honorable Court for Summary Judgment against Defendant ABC Corporation pursuant to Federal Rule of Civil Procedure 56. In support thereof, Plaintiff states as follows:
+
+STATEMENT OF UNDISPUTED FACTS
+
+1. On or about January 15, 2024, Plaintiff and Defendant entered into a written contract for the purchase and sale of commercial real estate located at 456 Business Park Drive, Anytown, State 12345 ("the Property").
+
+2. The contract price for the Property was $2,500,000.00, with Plaintiff providing earnest money in the amount of $250,000.00.
+
+3. The contract specified a closing date of March 1, 2024, time being of the essence.
+
+4. Plaintiff performed all conditions precedent to closing, including but not limited to:
+   a. Obtaining financing approval from First National Bank
+   b. Completing all required inspections
+   c. Securing title insurance
+   d. Depositing all required funds into escrow
+
+5. On February 28, 2024, one day before the scheduled closing, Defendant unilaterally refused to proceed with the sale, citing "changed business circumstances."
+
+ARGUMENT
+
+I. LEGAL STANDARD
+
+Summary judgment is appropriate when "there is no genuine dispute as to any material fact and the movant is entitled to judgment as a matter of law." Fed. R. Civ. P. 56(a). The moving party bears the initial burden of demonstrating the absence of a genuine issue of material fact. Celotex Corp. v. Catrett, 477 U.S. 317, 323 (1986).
+
+II. DEFENDANT BREACHED THE CONTRACT
+
+Under State law, the elements of breach of contract are: (1) existence of a valid contract; (2) performance by the plaintiff; (3) breach by the defendant; and (4) damages. Smith v. Jones, 123 State App. 456, 789 (2020).
+
+All elements are satisfied here. The parties executed a valid contract. Plaintiff performed all obligations. Defendant admitted in writing that it would not proceed with closing. Plaintiff suffered damages including loss of earnest money, financing costs, and lost opportunity.
+
+III. NO VALID DEFENSE EXISTS
+
+Defendant's assertion of "changed business circumstances" does not constitute a valid defense to breach of contract under State law. The doctrine of impossibility or frustration of purpose requires that performance be objectively impossible or that the principal purpose of the contract be substantially frustrated. Neither condition exists here.
+
+CONCLUSION
+
+For the foregoing reasons, Plaintiff respectfully requests that this Court grant Plaintiff's Motion for Summary Judgment, enter judgment in favor of Plaintiff and against Defendant for breach of contract, and award damages in the amount of $500,000.00, plus costs, attorney's fees, and such other relief as the Court deems just and proper.
+
+Respectfully submitted this 15th day of April, 2024.
+
+/s/ Attorney Name
+Attorney for Plaintiff

@@ -1,0 +1,282 @@
+# VSEARCH System Fixes & Enhancements - Technical PRD
+
+## Executive Summary
+
+This PRD addresses critical bugs, documentation inconsistencies, and performance improvements identified during comprehensive vsearch testing. The system is fundamentally sound but requires targeted fixes to achieve production reliability.
+
+## Problem Statement
+
+### Critical Issues Discovered
+1. **Entity Extraction Broken**: `vsearch intelligence entities <id>` fails with data type mismatch
+2. **Documentation Drift**: CLAUDE.md references non-existent commands
+3. **SQLite Pragma Warnings**: Database connection issues in legal/entity modules
+4. **Limited File Support**: Upload only supports PDF despite docs claiming txt/md/docx
+5. **Performance Overhead**: Legal BERT model reloads for every command
+6. **Error Reporting**: Vague error messages prevent effective debugging
+
+### Impact Assessment
+- **High**: Entity extraction completely non-functional (legal intelligence degraded)
+- **Medium**: Documentation confusion slows development and user adoption
+- **Medium**: Performance issues make CLI sluggish for repeated operations
+- **Low**: File upload limitations reduce utility but don't break core features
+
+## Solution Architecture
+
+### Phase 1: Critical Bug Fixes (Priority 1)
+
+#### 1.1 Entity Extraction Data Type Fix
+**Problem**: `extract_and_cache_entities` returns list but display expects dict
+**Solution**: Wrap return value in proper structure
+**Files**: 
+- `search_intelligence/main.py:~730`
+- `tools/scripts/cli/intelligence_handler.py:172`
+
+**Implementation**:
+```python
+# In search_intelligence/main.py
+def extract_and_cache_entities(self, doc_id: str, force_refresh: bool = False) -> dict[str, Any]:
+    # ... existing logic ...
+    return {
+        "entities": entities,
+        "cached": not force_refresh and cached_result_exists,
+        "doc_id": doc_id,
+        "extraction_time": datetime.now().isoformat()
+    }
+```
+
+#### 1.2 SQLite Pragma Warning Resolution
+**Problem**: Database path inconsistencies causing initialization warnings
+**Solution**: Centralize database path resolution across all modules
+
+**Files to Update**:
+- `legal_intelligence/main.py`
+- `entity/main.py` 
+- All modules showing pragma warnings
+
+**Implementation**:
+```python
+# Ensure all use centralized path
+from shared.simple_db import get_db_path
+db_path = get_db_path()  # Instead of hardcoded paths
+```
+
+### Phase 2: Documentation Alignment (Priority 2)
+
+#### 2.1 Command Reference Correction
+**Problem**: CLAUDE.md references non-existent commands
+**Solution**: Update documentation to match actual CLI structure
+
+**Changes Required**:
+```bash
+# WRONG (in current CLAUDE.md):
+tools/scripts/vsearch entity-status
+tools/scripts/vsearch extract-entities --missing-only
+
+# CORRECT (actual commands):
+tools/scripts/vsearch intelligence entities <doc_id>
+tools/scripts/vsearch intelligence entities <doc_id> --force-refresh
+```
+
+#### 2.2 File Upload Capability Documentation
+**Problem**: Docs claim support for txt/md/docx but only PDF works
+**Solution**: Either implement support or correct documentation
+
+**Decision Point**: 
+- Option A: Implement txt/md support (2-3 hours)
+- Option B: Update docs to reflect PDF-only (15 minutes)
+- **Recommendation**: Option A for better utility
+
+### Phase 3: Performance Optimization (Priority 3)
+
+#### 3.1 Model Caching Implementation
+**Problem**: Legal BERT model reloads for every command (8-10 second startup)
+**Solution**: Implement singleton pattern with lazy loading
+
+**Implementation Strategy**:
+```python
+# In utilities/embeddings/embedding_service.py
+class EmbeddingServiceSingleton:
+    _instance = None
+    _model = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def get_model(self):
+        if self._model is None:
+            self._model = self._load_model()
+        return self._model
+```
+
+#### 3.2 Database Connection Pooling
+**Problem**: Multiple database connections per command
+**Solution**: Connection reuse within command execution
+
+### Phase 4: Enhanced Error Reporting (Priority 3)
+
+#### 4.1 Structured Error Messages
+**Problem**: Vague errors like "Errors: 2" without details
+**Solution**: Implement structured error reporting with actionable messages
+
+**Implementation**:
+```python
+class VSSearchError:
+    def __init__(self, operation: str, details: str, suggested_action: str):
+        self.operation = operation
+        self.details = details
+        self.suggested_action = suggested_action
+    
+    def display(self):
+        return f"❌ {self.operation} failed: {self.details}\n💡 {self.suggested_action}"
+```
+
+## OCR Integration Requirements
+
+### External OCR Processor Output Format
+**For your separate OCR cleaning repo**, output should include:
+
+```json
+{
+  "document_id": "uuid",
+  "pages": [
+    {
+      "page_number": 1,
+      "regions": [
+        {
+          "type": "header|body|footer|table",
+          "content": "cleaned text content",
+          "raw_content": "original OCR output",
+          "confidence": 0.92,
+          "bounding_box": [x, y, width, height]
+        }
+      ]
+    }
+  ],
+  "quality_metrics": {
+    "overall_confidence": 0.87,
+    "text_density": 0.75,
+    "likely_scanned": true,
+    "suggested_for_entity_extraction": true
+  },
+  "cleaning_applied": [
+    "removed_ocr_artifacts",
+    "normalized_whitespace", 
+    "preserved_legal_structure"
+  ]
+}
+```
+
+### Integration Points
+1. **Ingestion Pipeline**: Accept JSON format from OCR processor
+2. **Quality Gates**: Use `quality_metrics.overall_confidence` 
+3. **Entity Extraction**: Only process if `suggested_for_entity_extraction: true`
+4. **Vector Storage**: Include OCR confidence in Qdrant payload
+
+## Technical Specifications
+
+### Database Schema Extensions
+```sql
+-- Add OCR confidence tracking
+ALTER TABLE content_unified ADD COLUMN ocr_confidence REAL DEFAULT NULL;
+ALTER TABLE content_unified ADD COLUMN processing_metadata TEXT DEFAULT NULL; -- JSON
+```
+
+### Qdrant Payload Enhancement
+```python
+enhanced_payload = {
+    "content_id": doc_id,
+    "title": title,
+    "source_type": source_type,
+    "ocr_confidence": ocr_confidence,  # NEW
+    "quality_score": quality_score,
+    "entities": extracted_entities,    # NEW
+    "processing_metadata": {           # NEW
+        "cleaned_by": "external_ocr_processor_v1",
+        "cleaning_applied": ["artifact_removal", "structure_preservation"],
+        "extraction_ready": True
+    }
+}
+```
+
+## Implementation Timeline
+
+### Sprint 1 (Week 1): Critical Fixes
+- **Day 1-2**: Entity extraction bug fix + testing
+- **Day 3**: SQLite pragma warning resolution  
+- **Day 4-5**: Documentation alignment + command reference updates
+
+### Sprint 2 (Week 2): File Support & Performance
+- **Day 1-3**: Implement txt/md file upload support
+- **Day 4-5**: Model caching implementation + performance testing
+
+### Sprint 3 (Week 3): Enhanced Integration
+- **Day 1-2**: OCR JSON format integration
+- **Day 3-4**: Enhanced error reporting system
+- **Day 5**: End-to-end testing + validation
+
+## Success Criteria
+
+### Functional Requirements
+1. ✅ `vsearch intelligence entities <id>` works without errors
+2. ✅ All documented commands actually exist and function
+3. ✅ File upload supports PDF, TXT, MD formats minimum
+4. ✅ No SQLite pragma warnings in logs
+5. ✅ Model loads once per session, not per command
+
+### Performance Requirements
+1. ✅ Command startup time <3 seconds (vs current 8-10s)
+2. ✅ Entity extraction completes in <30 seconds for typical documents
+3. ✅ Search response time <5 seconds for hybrid queries
+
+### Quality Requirements
+1. ✅ Error messages include specific failure reason + suggested action
+2. ✅ OCR confidence scores preserved through processing pipeline
+3. ✅ All critical operations have comprehensive logging
+
+## Risk Assessment
+
+### Technical Risks
+- **Low**: Entity extraction fix is straightforward data structure change
+- **Medium**: Model caching might introduce memory pressure on large documents
+- **Low**: File format expansion well-understood problem
+
+### Dependencies
+- **External OCR Processor**: Timeline depends on your separate repo completion
+- **Testing Data**: Need diverse document samples for validation
+
+## Validation Strategy
+
+### Automated Testing
+```bash
+# Entity extraction
+python3 -m pytest tests/test_entity_extraction_integration.py -v
+
+# End-to-end CLI
+python3 tests/test_vsearch_cli_comprehensive.py
+
+# Performance benchmarks  
+python3 tests/benchmark_vsearch_performance.py
+```
+
+### Manual Testing Checklist
+- [ ] Entity extraction on 5 different document types
+- [ ] File upload for PDF/TXT/MD formats
+- [ ] Command execution without model reloading
+- [ ] Error scenarios with clear messages
+- [ ] OCR confidence preservation through pipeline
+
+## Post-Implementation
+
+### Monitoring
+- Track command execution times via loguru
+- Monitor model memory usage patterns
+- Log entity extraction success rates by document type
+
+### Documentation Updates
+- Update CLAUDE.md with correct command syntax
+- Create troubleshooting guide for common issues
+- Document OCR integration workflow
+
+This PRD provides a structured approach to transforming vsearch from "mostly working" to "production ready" with clear priorities, technical specifications, and success criteria.

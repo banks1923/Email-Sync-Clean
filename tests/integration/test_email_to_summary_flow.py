@@ -130,7 +130,7 @@ class TestEmailToSummaryFlow(unittest.TestCase):
         self.assertIsNotNone(content, "Content record not found")
 
         # Get summary from database
-        summary = get_summary_for_document(self.gmail_service.db, content["content_id"])
+        summary = get_summary_for_document(self.gmail_service.db, content["id"])
 
         # Verify summary exists
         self.assertIsNotNone(summary, "No summary found for processed email")

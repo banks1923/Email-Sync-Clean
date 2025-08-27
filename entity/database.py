@@ -10,7 +10,19 @@ from shared.simple_db import SimpleDB
 
 
 class EntityDatabase:
-    def __init__(self, db_path="data/emails.db") -> None:
+    def __init__(self, db_path="data/system_data/emails.db") -> None:
+        # Use absolute path to avoid symlink issues in MCP context
+        import os
+        from config.settings import settings
+        
+        # Use settings-based path for consistency
+        try:
+            db_path = os.path.abspath(settings.database.emails_db_path)
+        except:
+            # Fallback to absolute path resolution
+            if not os.path.isabs(db_path):
+                db_path = os.path.join(os.getcwd(), db_path)
+        
         self.db = SimpleDB(db_path)
         self.db_path = db_path
         self.init_result = self._ensure_entities_table()
