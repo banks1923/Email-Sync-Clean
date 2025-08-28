@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the Gmail service._
+
 # Gmail Service
 
 Gmail API integration for email synchronization with streaming batch operations.

@@ -225,3 +225,6 @@ processing_*.json
 # BigQuery staging files
 bigquery_staging/
 *_staging/
+
+.qdrant-initialized
+data/reports/

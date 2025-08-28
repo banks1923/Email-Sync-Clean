@@ -437,7 +437,11 @@ class SearchIntelligenceService:
             content = doc.get("body", "") or doc.get("content", "")
             doc.get("title", "")
             result = self.entity_service.extract_email_entities(doc_id, content)
-            entities = result.get("entities", [])
+            # Handle both dict and list return types (bug fix)
+            if isinstance(result, list):
+                entities = result  # Handle legacy return format
+            else:
+                entities = result.get("entities", [])
 
             # Cache results
             if entities:

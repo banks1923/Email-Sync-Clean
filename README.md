@@ -4,6 +4,34 @@ AI-powered search system with Legal BERT semantic understanding for legal docume
 
 > **CURRENT: Production Ready** - Working Gmail sync, keyword search, and semantic search capabilities
 
+## Core Commands
+
+This section provides a quick reference to the most essential commands for interacting with the system.
+
+### System Operations
+```bash
+# Check system health and status
+make status
+
+# Run the full diagnostic suite
+make diagnose
+
+# Run fast tests (no slow AI tests)
+make test
+```
+
+### Content Operations
+```bash
+# Search for content
+tools/scripts/vsearch search "your query"
+
+# Upload and process a document
+tools/e/vsearch upload /path/to/your/document.pdf
+
+# Sync emails
+tools/scripts/vsearch sync-emails
+```
+
 ## STATUS: PRODUCTION BASELINE (2025-08-26) - WORKING
 
 WORKING: **Gmail Sync v2.0**: Working with message-level deduplication and content reduction  
@@ -314,7 +342,7 @@ make sync                                # Sync Gmail emails
 tools/scripts/vsearch search "important meeting"
 
 # Search with filters
-tools/scripts/vsearch search "contract" --type email --limit 10
+tools/e/vsearch search "contract" --type email --limit 10
 tools/scripts/vsearch search "lease" --limit 5
 
 # Legal analysis

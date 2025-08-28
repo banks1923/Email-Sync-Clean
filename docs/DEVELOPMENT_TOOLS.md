@@ -1,10 +1,14 @@
-# Code Transformation Tools
+# Development and Code Transformation Tools
 
-## LibCST - Large-Scale Python Refactoring
+This document outlines recommended tools and techniques for large-scale Python code transformations and general development in the Email Sync system.
+
+## Code Transformation Tools
+
+### LibCST - Large-Scale Python Refactoring
 
 LibCST (Concrete Syntax Trees) is the recommended tool for large-scale Python code transformations in the Email Sync project. It preserves formatting, comments, and whitespace while making AST-based changes.
 
-### Installation
+#### Installation
 
 ```bash
 pip install libcst
@@ -12,7 +16,7 @@ pip install libcst
 pip install -r requirements-dev.txt
 ```
 
-### Why LibCST over other tools?
+#### Why LibCST over other tools?
 
 | Tool | Pros | Cons | Use Case |
 |------|------|------|----------|
@@ -22,7 +26,7 @@ pip install -r requirements-dev.txt
 | **2to3/lib2to3** | Battle-tested | Python 2→3 focused, deprecated | Legacy migrations |
 | **rope** | Powerful refactoring | Complex setup, slower | IDE-level refactoring |
 
-### Example: Fix Broken Imports
+#### Example: Fix Broken Imports
 
 ```python
 import libcst as cst
@@ -61,9 +65,9 @@ def fix_imports_in_file(filepath: str):
         f.write(modified.code)
 ```
 
-### Common Patterns
+#### Common Patterns
 
-#### 1. Find and Replace Imports
+##### 1. Find and Replace Imports
 ```python
 # Replace all occurrences of an import
 class ReplaceImport(cst.CSTTransformer):
@@ -75,7 +79,7 @@ class ReplaceImport(cst.CSTTransformer):
         return updated_node
 ```
 
-#### 2. Add Missing Imports
+##### 2. Add Missing Imports
 ```python
 # Add an import if it doesn't exist
 class AddImport(cst.CSTTransformer):
@@ -99,7 +103,7 @@ class AddImport(cst.CSTTransformer):
         return updated_node
 ```
 
-#### 3. Rename Functions/Classes
+##### 3. Rename Functions/Classes
 ```python
 # Rename all occurrences of a function
 class RenameFunction(cst.CSTTransformer):
@@ -109,7 +113,7 @@ class RenameFunction(cst.CSTTransformer):
         return updated_node
 ```
 
-### Running LibCST on Multiple Files
+#### Running LibCST on Multiple Files
 
 ```python
 import os
@@ -143,7 +147,7 @@ def transform_codebase(transformer_class, file_pattern="*.py"):
 transform_codebase(ImportFixer)
 ```
 
-### Integration with Email Sync Workflow
+#### Integration with Email Sync Workflow
 
 1. **Dependency Analysis**: Use `dependency_mapper.py` to find issues
 2. **Create Transformer**: Write LibCST transformer for the specific issue
@@ -151,7 +155,7 @@ transform_codebase(ImportFixer)
 4. **Run on Codebase**: Apply to entire codebase
 5. **Verify**: Run tests and linters to ensure correctness
 
-### Best Practices
+#### Best Practices
 
 1. **Always backup before large transformations**
    ```bash
@@ -179,7 +183,7 @@ transform_codebase(ImportFixer)
    # with_changes() to not accidentally remove them
    ```
 
-### Real-World Example: Email Sync Import Cleanup
+#### Real-World Example: Email Sync Import Cleanup
 
 This actual codemod was used to fix 107 broken imports in the Email Sync project:
 
@@ -222,7 +226,7 @@ class EmailSyncImportFixer(cst.CSTTransformer):
         return ""
 ```
 
-### Debugging LibCST Transformations
+#### Debugging LibCST Transformations
 
 ```python
 # Enable verbose mode to see what's being transformed
@@ -242,7 +246,7 @@ result = module.visit(transformer)
 print(result.code)  # See the transformed code
 ```
 
-### Resources
+#### Resources
 
 - [LibCST Documentation](https://libcst.readthedocs.io/)
 - [LibCST Codemods Tutorial](https://libcst.readthedocs.io/en/latest/codemods_tutorial.html)
@@ -255,11 +259,15 @@ print(result.code)  # See the transformed code
 - Renaming services and factory functions
 - Adding type hints systematically
 - Removing dead code while preserving formatting
-- Enforcing consistent code patterns# Recommended Additional Dependencies
+- Enforcing consistent code patterns
 
-##  Code Quality & Analysis
+---
 
-### Already Have WORKING:
+## Recommended Additional Dependencies
+
+### Code Quality & Analysis
+
+#### Already Have WORKING:
 - ruff, black, isort (formatting/linting)
 - mypy (type checking)
 - bandit (security)
@@ -267,9 +275,9 @@ print(result.code)  # See the transformed code
 - pytest (testing)
 - vulture (dead code) - installed separately
 
-### Should Consider Adding CURRENT:
+#### Should Consider Adding CURRENT:
 
-#### 1. **Coverage Analysis**
+##### 1. **Coverage Analysis**
 ```bash
 pip install coverage-badge  # Generate coverage badges
 pip install diff-cover      # Coverage for only changed code
@@ -277,7 +285,7 @@ pip install diff-cover      # Coverage for only changed code
 - Shows coverage on PRs/commits
 - Focuses on new code quality
 
-#### 2. **Complexity Analysis**
+##### 2. **Complexity Analysis**
 ```bash
 pip install radon           # Code complexity metrics
 pip install xenon           # Complexity monitoring with thresholds
@@ -286,7 +294,7 @@ pip install xenon           # Complexity monitoring with thresholds
 - Maintainability index
 - Enforces max complexity limits
 
-#### 3. **Documentation**
+##### 3. **Documentation**
 ```bash
 pip install interrogate     # Docstring coverage checker
 pip install mkdocs          # Generate documentation site
@@ -295,7 +303,7 @@ pip install mkdocs-material # Beautiful Material theme
 - Ensures all functions are documented
 - Auto-generates docs from code
 
-#### 4. **Performance Profiling**
+##### 4. **Performance Profiling**
 ```bash
 pip install py-spy          # Sampling profiler (no code changes needed)
 pip install memory-profiler # Line-by-line memory usage
@@ -305,7 +313,7 @@ pip install scalene         # CPU + GPU + memory profiler
 - Memory leak detection
 - Real-time profiling
 
-#### 5. **Dependency Management**
+##### 5. **Dependency Management**
 ```bash
 pip install pip-audit       # Security vulnerabilities in dependencies
 pip install pipdeptree      # Visualize dependency tree
@@ -315,11 +323,11 @@ pip install pip-autoremove  # Remove unused dependencies
 - Clean dependency management
 - Conflict detection
 
-## READY: Development Productivity
+### Development Productivity
 
-### Should Consider Adding CURRENT:
+#### Should Consider Adding CURRENT:
 
-#### 6. **Development Tools**
+##### 6. **Development Tools**
 ```bash
 pip install ipdb            # Better Python debugger
 pip install rich            # Beautiful terminal output
@@ -330,7 +338,7 @@ pip install python-Levenshtein  # Fast string similarity (for search)
 - Better CLI output formatting
 - Improved search capabilities
 
-#### 7. **Async & Parallel Processing**
+##### 7. **Async & Parallel Processing**
 ```bash
 pip install aiofiles        # Async file operations
 pip install asyncpg         # Async PostgreSQL (future migration)
@@ -339,7 +347,7 @@ pip install concurrent-log-handler  # Thread-safe logging
 - Better async support
 - Prepared for scaling
 
-#### 8. **Data Validation**
+##### 8. **Data Validation**
 ```bash
 pip install pydantic        # Data validation using Python type annotations
 pip install marshmallow     # Object serialization/deserialization
@@ -348,11 +356,11 @@ pip install marshmallow     # Object serialization/deserialization
 - API data validation
 - Config validation
 
-## STATUS: Monitoring & Observability
+### Monitoring & Observability
 
-### Should Consider Adding CURRENT:
+#### Should Consider Adding CURRENT:
 
-#### 9. **Logging & Monitoring**
+##### 9. **Logging & Monitoring**
 ```bash
 pip install structlog       # Structured logging
 pip install sentry-sdk      # Error tracking and monitoring
@@ -362,7 +370,7 @@ pip install prometheus-client  # Metrics export
 - Error tracking in production
 - Performance metrics
 
-#### 10. **Database Tools**
+##### 10. **Database Tools**
 ```bash
 pip install alembic         # Database migrations
 pip install sqlalchemy      # ORM (if moving from raw SQL)
@@ -372,11 +380,11 @@ pip install dataset         # Simple database toolkit
 - Migration management
 - Database abstraction
 
-## TESTING: Testing Enhancements
+### Testing Enhancements
 
-### Should Consider Adding CURRENT:
+#### Should Consider Adding CURRENT:
 
-#### 11. **Advanced Testing**
+##### 11. **Advanced Testing**
 ```bash
 pip install hypothesis      # Property-based testing
 pip install faker           # Generate fake data for tests
@@ -389,7 +397,7 @@ pip install pytest-timeout  # Timeout long-running tests
 - Better test data
 - Performance regression testing
 
-#### 12. **Code Quality CI/CD**
+##### 12. **Code Quality CI/CD**
 ```bash
 pip install tox             # Test across Python versions
 pip install nox             # Modern tox alternative
@@ -400,11 +408,11 @@ pip install pre-commit-hooks  # Additional pre-commit checks
 - Standardized commits
 - Automated checks
 
-##  Security Enhancements
+### Security Enhancements
 
-### Should Consider Adding CURRENT:
+#### Should Consider Adding CURRENT:
 
-#### 13. **Security Tools**
+##### 13. **Security Tools**
 ```bash
 pip install detect-secrets  # Detect secrets in code
 pip install cryptography    # Encryption support
@@ -414,30 +422,30 @@ pip install python-jose     # JWT tokens
 - Secure data handling
 - Authentication tokens
 
-##  Recommended Installation Groups
+### Recommended Installation Groups
 
-### Minimal Quality Enhancement
+#### Minimal Quality Enhancement
 ```bash
 pip install coverage-badge diff-cover radon interrogate pip-audit
 ```
 
-### Development Productivity
+#### Development Productivity
 ```bash
 pip install ipdb rich typer pydantic structlog
 ```
 
-### Testing Enhancement
+#### Testing Enhancement
 ```bash
 pip install hypothesis faker freezegun pytest-benchmark
 ```
 
-### Full Stack (All Recommended)
+#### Full Stack (All Recommended)
 ```bash
 # Create requirements-enhanced.txt with all recommendations
 pip install -r requirements-enhanced.txt
 ```
 
-## CURRENT: Top 5 Priorities for Your Project
+### Top 5 Priorities for Your Project
 
 Based on your Email Sync system with legal document processing:
 
@@ -447,7 +455,7 @@ Based on your Email Sync system with legal document processing:
 4. **py-spy** - Profile performance bottlenecks
 5. **pip-audit** - Security scanning for dependencies
 
-##  Update Makefile
+### Update Makefile
 
 Add new commands to your Makefile:
 ```makefile
@@ -469,7 +477,7 @@ deps-tree: ## Show dependency tree
  pipdeptree --graph-output png > dependencies.png
 ```
 
-##  Pre-commit Config Update
+### Pre-commit Config Update
 
 Add to `.pre-commit-config.yaml`:
 ```yaml
@@ -487,7 +495,7 @@ repos:
         args: ['--baseline', '.secrets.baseline']
 ```
 
-##  Implementation Strategy
+### Implementation Strategy
 
 1. **Start Small**: Add 2-3 tools at a time
 2. **Test Integration**: Ensure they work with your workflow
@@ -495,7 +503,7 @@ repos:
 4. **Team Training**: If working with others, document conventions
 5. **CI/CD Integration**: Add to GitHub Actions or other CI
 
-##  Quick Wins
+### Quick Wins
 
 These will have immediate impact:
 ```bash

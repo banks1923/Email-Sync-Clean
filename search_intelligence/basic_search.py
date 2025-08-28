@@ -166,7 +166,7 @@ def search(
         Merged and ranked search results with optional chunk aggregation
     """
     logger.debug(f"Search request: '{query}' limit={limit}")
-
+    
     # Calculate dynamic weights if not provided and feature enabled
     if ENABLE_DYNAMIC_WEIGHTS and (keyword_weight is None or semantic_weight is None):
         keyword_weight, semantic_weight = calculate_weights(query)

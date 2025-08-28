@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the Documents service._
+
 # Document Processing System - CLAUDE.md Compliance Report
 
 ## Overview

@@ -4,7 +4,9 @@ This replaces scattered config.py files across services with type-safe,
 validated configuration management.
 """
 
+import os
 from pathlib import Path
+from typing import Any, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings

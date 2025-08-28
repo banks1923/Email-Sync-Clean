@@ -195,6 +195,80 @@ class EmailCleaner:
         """
         return [self.clean(email) for email in emails]
 
+    def extract_substantive_text(self, text: str, document_type: str = 'email') -> tuple[str, str]:
+        """
+        Extract substantive content by removing boilerplate.
+        Returns (full_text, substantive_text).
+        
+        Args:
+            text: Original text content
+            document_type: Type of document ('email', 'legal', etc.)
+            
+        Returns:
+            Tuple of (full_text, substantive_text)
+        """
+        # First clean the text normally
+        full_text = self._clean_body(text) if document_type == 'email' else text
+        
+        # Boilerplate patterns to remove
+        boilerplate_patterns = [
+            # Legal boilerplate
+            r'This\s+email\s+is\s+confidential.*?intended\s+recipient.*?$',
+            r'Attorney[\-\s]client\s+privileged.*?$',
+            r'NOTICE:\s+This\s+message.*?unauthorized\s+use.*?$',
+            r'DISCLAIMER:.*?$',
+            r'CONFIDENTIAL.*?NOTICE.*?$',
+            
+            # Email signatures and footers
+            r'Sent\s+from\s+my\s+iPhone.*?$',
+            r'Sent\s+from\s+my\s+iPad.*?$',
+            r'Sent\s+from\s+Mail\s+for.*?$',
+            r'Get\s+Outlook\s+for\s+iOS.*?$',
+            r'Get\s+Outlook\s+for\s+Android.*?$',
+            
+            # Quoted text markers (for deduplication)
+            r'^>+.*$',  # Lines starting with >
+            r'^On\s+.*wrote:$',  # Quote headers
+            r'^From:.*?Sent:.*?To:.*?Subject:',  # Outlook quote headers
+            r'[-]{3,}\s*Original\s+Message\s*[-]{3,}',  # Original message separators
+            
+            # Marketing/Social footers
+            r'Unsubscribe\s+from\s+this\s+list.*?$',
+            r'View\s+this\s+email\s+in\s+your\s+browser.*?$',
+            r'Follow\s+us\s+on.*?$',
+            r'Copyright\s+©.*?All\s+rights\s+reserved.*?$',
+            
+            # Auto-generated disclaimers
+            r'This\s+is\s+an?\s+automated\s+message.*?$',
+            r'Do\s+not\s+reply\s+to\s+this\s+email.*?$',
+            r'Please\s+do\s+not\s+respond.*?$'
+        ]
+        
+        substantive_text = full_text
+        for pattern in boilerplate_patterns:
+            try:
+                substantive_text = re.sub(
+                    pattern, 
+                    '', 
+                    substantive_text, 
+                    flags=re.MULTILINE | re.IGNORECASE | re.DOTALL
+                )
+            except re.error:
+                # Skip invalid patterns
+                continue
+        
+        # Remove excessive whitespace created by removals
+        substantive_text = re.sub(r'\n{3,}', '\n\n', substantive_text)
+        substantive_text = re.sub(r'[ \t]+', ' ', substantive_text)
+        substantive_text = substantive_text.strip()
+        
+        # If we removed too much (>70% gone), return original
+        # This prevents over-aggressive removal on short emails
+        if len(substantive_text) < len(full_text) * 0.3:
+            return full_text, full_text
+        
+        return full_text, substantive_text
+
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename by removing invalid characters.

@@ -83,7 +83,7 @@
         "id": 27,
         "title": "Feature Flags & Dual Index Routing",
         "description": "Implement environment-based feature flags to toggle between v1 and v2 search pipelines for CLI tools.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           24,
           25
@@ -139,7 +139,7 @@
     ],
     "metadata": {
       "created": "2025-08-26T12:35:13.360Z",
-      "updated": "2025-08-27T09:55:57.082Z",
+      "updated": "2025-08-27T10:18:23.653Z",
       "description": "Tasks for master context"
     }
   }

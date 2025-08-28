@@ -2,6 +2,57 @@
 
 > **WARNING**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-27] - Task 27 Complete: Feature Flags & Dual Index Routing
+
+### Pipeline Routing and Configuration Management
+**Status**: ✅ COMPLETED - Feature flag system operational with persistent storage
+
+**Features Implemented:**
+- **Pydantic-based feature flags**: `config/settings.py` with FeatureFlagSettings class
+- **Persistent JSON storage**: `.config/feature_flags.json` for runtime overrides
+- **CLI config commands**: `vsearch config get/set/list` for flag management
+- **Pipeline routing**: v1 (direct search) vs v2 (chunks+vectors) selection
+- **Pipeline override**: `--pipeline` flag for per-search control
+- **Make commands**: `make show-flags` and `make set-pipeline PIPELINE=v2`
+
+**Technical Implementation:**
+- **Files Created**:
+  - `config/feature_flag_manager.py` - JSON persistence manager
+- **Files Modified**:
+  - `config/settings.py` - Added FeatureFlagSettings class
+  - `search_intelligence/basic_search.py` - Pipeline routing logic
+  - `tools/scripts/vsearch` - Config commands and --pipeline flag
+  - `Makefile` - Feature flag management commands
+
+**Configuration Priority:**
+1. CLI flag override (`--pipeline v2`)
+2. Environment variable (`SEARCH_PIPELINE=v2`)
+3. Persistent JSON (`.config/feature_flags.json`)
+4. Default settings (v1)
+
+**Testing Results:**
+- ✅ Config commands working: get, set, list
+- ✅ Persistent storage functioning correctly
+- ✅ Pipeline routing: v2 falls back to v1 when vector store unavailable
+- ✅ Make commands operational
+- ✅ Per-search pipeline override working
+
+**Usage Examples:**
+```bash
+# View all flags
+tools/scripts/vsearch config list
+
+# Set pipeline version
+tools/scripts/vsearch config set search_pipeline v2
+
+# Search with specific pipeline
+tools/scripts/vsearch search "query" --pipeline v2
+
+# Make commands
+make show-flags
+make set-pipeline PIPELINE=v2
+```
+
 ## [2025-08-27] - Task 26 Complete: Document-Level Retrieval with RRF
 
 ### Phase 2 Complete: Chunk Aggregation for Document-Level Retrieval

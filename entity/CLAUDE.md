@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the Entity service._
+
 # Entity Service
 
 spaCy-powered named entity recognition with 18 entity types.
@@ -79,4 +81,3 @@ stats = service.get_entity_statistics()
 ```bash
 pytest tests/entity_service/
 ```
-EOF < /dev/null

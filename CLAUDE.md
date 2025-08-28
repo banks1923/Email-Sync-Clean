@@ -1,3 +1,5 @@
+_This document outlines the core development principles, architecture, and guidelines for the Litigator Solo project._
+
 # Legal Document Search System - Development Guide
 
 Clean architecture implementation with Legal BERT semantic search and simplified services.
@@ -587,7 +589,7 @@ WORKING: **Vector service connected**
 tools/scripts/vsearch info
 
 # Gmail sync (as needed)
-export LOG_LEVEL=DEBUG && python3 -m gmail.main
+export LOG_LEVEL=DEBUG && export USE_LOGURU=true && python3 -m gmail.main
 
 # Search testing
 tools/scripts/vsearch search "your query" --limit 5

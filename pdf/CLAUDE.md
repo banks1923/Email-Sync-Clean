@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the PDF service._
+
 # PDF Service
 
 PDF processing with OCR support, text extraction, and job queue integration.

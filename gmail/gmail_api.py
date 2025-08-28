@@ -114,22 +114,51 @@ class GmailAPI:
             return {"success": False, "error": str(e)}
 
     def parse_message(self, message_data):
-        """Parse Gmail message data into structured format.
+        """Parse Gmail message data into structured format with rich metadata.
 
         Args:
             message_data: Raw message data from Gmail API.
 
         Returns:
-            dict: Parsed message with subject, sender, content, etc.
+            dict: Parsed message with subject, sender, content, metadata, etc.
         """
         headers = message_data["payload"]["headers"]
 
+        # Extract basic headers
         subject = next((h["value"] for h in headers if h["name"] == "Subject"), "")
         sender = next((h["value"] for h in headers if h["name"] == "From"), "")
         recipient_to = next((h["value"] for h in headers if h["name"] == "To"), "")
         date_header = next((h["value"] for h in headers if h["name"] == "Date"), "")
+        
+        # Extract additional headers for rich metadata
+        cc = next((h["value"] for h in headers if h["name"] == "Cc"), "")
+        bcc = next((h["value"] for h in headers if h["name"] == "Bcc"), "")
+        message_id_header = next((h["value"] for h in headers if h["name"] == "Message-ID"), "")
+        in_reply_to = next((h["value"] for h in headers if h["name"] == "In-Reply-To"), "")
+        references = next((h["value"] for h in headers if h["name"] == "References"), "")
+        importance = next((h["value"] for h in headers if h["name"].lower() == "importance"), "normal")
 
         content = self._extract_content(message_data["payload"])
+        
+        # Build rich metadata structure
+        metadata = {
+            "source_specific": {
+                "email_details": {
+                    "message_id": message_id_header,
+                    "thread_id": message_data.get("threadId"),
+                    "in_reply_to": in_reply_to,
+                    "reference_ids": references.split() if references else [],
+                    "cc": self._parse_recipients(cc),
+                    "bcc": self._parse_recipients(bcc),
+                    "importance": importance,
+                    "labels": message_data.get("labelIds", [])
+                }
+            },
+            "gmail_api": {
+                "history_id": message_data.get("historyId"),
+                "internal_date": message_data.get("internalDate")
+            }
+        }
 
         return {
             "message_id": message_data["id"],
@@ -137,9 +166,23 @@ class GmailAPI:
             "subject": subject,
             "sender": sender,
             "recipient_to": recipient_to,
+            "cc": cc,
+            "bcc": bcc,
             "content": content,
             "datetime_utc": self._parse_date(date_header),
+            "message_id_header": message_id_header,
+            "in_reply_to": in_reply_to,
+            "references": references,
+            "importance": importance,
+            "metadata": metadata
         }
+    
+    def _parse_recipients(self, recipient_string):
+        """Parse comma-separated recipient string into list."""
+        if not recipient_string:
+            return []
+        # Simple parsing - can be enhanced for better email extraction
+        return [r.strip() for r in recipient_string.split(",") if r.strip()]
 
     def _decode_body_data(self, data):
         """

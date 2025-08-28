@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the Shared services._
+
 # Shared Components
 
 Minimal shared utilities - only truly shared components remain here.

@@ -1,3 +1,5 @@
+_This document outlines the development principles and implementation details for the CLI tools._
+
 # CLI Modular Architecture
 
 Modular CLI implementation following clean architecture principles.

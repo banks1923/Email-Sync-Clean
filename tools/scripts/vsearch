@@ -68,6 +68,24 @@ def warmup_command():
 
 def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid", use_chunk_aggregation=None):
     """Simplified search using direct search coordination module"""
+    # Check Qdrant status
+    import subprocess
+    qdrant_running = False
+    try:
+        result = subprocess.run(['pgrep', '-f', 'qdrant'], capture_output=True, text=True, timeout=1)
+        qdrant_running = result.returncode == 0
+    except:
+        pass
+    
+    if not qdrant_running:
+        print("⚠️  WARNING: Qdrant is not running - semantic search unavailable")
+        print("📝 **KEYWORD SEARCH ONLY** - Using database FTS")
+        if search_mode == "semantic":
+            print("❌ Cannot run semantic search without Qdrant")
+            print("💡 Start Qdrant with: ~/bin/qdrant")
+            return False
+        search_mode = "keyword"  # Force keyword mode
+    
     # Display search info with filters
     filter_info = _format_filter_info(filters)
     
@@ -88,9 +106,15 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
             results = db.search_content(query, limit=limit, filters=filters)
             search_type = "🔤 Keyword Search"
         else:  # hybrid
-            print("🔍 Running hybrid search...")
-            results = search_funcs['search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
-            search_type = "🔍 Hybrid Search"
+            if qdrant_running:
+                print("🔍 Running hybrid search...")
+                results = search_funcs['search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
+                search_type = "🔍 Hybrid Search"
+            else:
+                print("🔤 Running keyword search (Qdrant unavailable)...")
+                db = SimpleDB()
+                results = db.search_content(query, limit=limit, filters=filters)
+                search_type = "🔤 Keyword Search"
         
         if results:
             print(f"✅ Found {len(results)} matches")
@@ -234,6 +258,7 @@ def display_search_results(results, search_type, search_mode="hybrid"):
 
 
 
+
 def health_command(verbose=False):
     """Run comprehensive health check on all services"""
     print("🏥 Running System Health Check...")
@@ -286,6 +311,23 @@ def info_command():
     print("📊 System Information")
     print("=" * 50)
 
+    # Check Qdrant status first
+    import subprocess
+    qdrant_running = False
+    try:
+        result = subprocess.run(['pgrep', '-f', 'qdrant'], capture_output=True, text=True, timeout=1)
+        qdrant_running = result.returncode == 0
+    except:
+        pass
+    
+    if not qdrant_running:
+        print("\n⚠️  QDRANT STATUS: ❌ NOT RUNNING")
+        print("    📝 **KEYWORD SEARCH ONLY AVAILABLE**")
+        print("    💡 Start with: ~/bin/qdrant")
+    else:
+        print("\n✅ QDRANT STATUS: RUNNING")
+        print("    🔍 All search modes available")
+
     # Database stats
     try:
         db = SimpleDB()
@@ -300,17 +342,21 @@ def info_command():
         print(f"  ⚠️  Database unavailable: {e}")
 
     # Vector service status - Direct > Indirect
-    try:
-        from utilities.vector_store import get_vector_store
+    if qdrant_running:
+        try:
+            from utilities.vector_store import get_vector_store
 
-        store = get_vector_store()
+            store = get_vector_store()
+            print("\n🧠 Vector Service:")
+            print("  Status: ✅ Connected")
+            print(f"  Collection: {store.collection}")
+            print(f"  Dimensions: {store.dimensions}")
+        except Exception as e:
+            print("\n🧠 Vector Service:")
+            print(f"  Status: ❌ Connection failed ({e})")
+    else:
         print("\n🧠 Vector Service:")
-        print("  Status: ✅ Connected")
-        print(f"  Collection: {store.collection}")
-        print(f"  Dimensions: {store.dimensions}")
-    except Exception as e:
-        print("\n🧠 Vector Service:")
-        print(f"  Status: ❌ Not available ({e})")
+        print("  Status: ❌ Not available (Qdrant not running)")
 
     # Embeddings status - Direct > Indirect
     try:

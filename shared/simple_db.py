@@ -73,6 +73,8 @@ class SimpleDB:
         self.metrics = DBMetrics()
         # Initialize with optimized SQLite settings
         self._initialize_pragmas()
+        # Auto-create v2 schema tables
+        self._ensure_v2_schema()
 
     def _initialize_pragmas(self) -> None:
         """
@@ -140,6 +142,112 @@ class SimpleDB:
         # Log successful initialization
         if data_dir.exists():
             logger.debug(f"Data directories verified at {data_dir}")
+
+    def _ensure_v2_schema(self):
+        """Auto-create v2 schema tables on first access."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # content_unified with rich metadata support
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS content_unified (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        source_type TEXT NOT NULL CHECK(
+                            source_type IN ('email_message', 'email_summary', 'document', 'document_chunk')
+                        ),
+                        source_id TEXT NOT NULL,
+                        title TEXT,
+                        body TEXT NOT NULL,
+                        substantive_text TEXT,  -- NEW: Boilerplate removed
+                        sha256 TEXT UNIQUE,
+                        validation_status TEXT DEFAULT 'pending' CHECK(
+                            validation_status IN ('pending', 'validated', 'failed')
+                        ),
+                        ready_for_embedding BOOLEAN DEFAULT 1,
+                        embedding_generated BOOLEAN DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        embedding_generated_at TIMESTAMP,
+                        quality_score REAL DEFAULT 1.0,
+                        metadata TEXT,  -- Rich JSON metadata
+                        UNIQUE(source_type, source_id)
+                    )
+                """)
+                
+                # individual_messages for deduplication
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS individual_messages (
+                        message_hash TEXT PRIMARY KEY,
+                        content TEXT NOT NULL,
+                        subject TEXT,
+                        sender_email TEXT,
+                        sender_name TEXT,
+                        recipients TEXT,  -- JSON array
+                        cc TEXT,          -- NEW: JSON array
+                        bcc TEXT,         -- NEW: JSON array
+                        date_sent TIMESTAMP,
+                        message_id TEXT UNIQUE,
+                        thread_id TEXT,
+                        in_reply_to TEXT,  -- NEW
+                        reference_ids TEXT,   -- NEW (renamed from references)
+                        importance TEXT,   -- NEW
+                        content_type TEXT,
+                        first_seen_email_id TEXT
+                    )
+                """)
+                
+                # message_occurrences for audit trail
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS message_occurrences (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        message_hash TEXT NOT NULL,
+                        email_id TEXT NOT NULL,
+                        position_in_email INTEGER,
+                        context_type TEXT,
+                        quote_depth INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (message_hash) REFERENCES individual_messages(message_hash)
+                    )
+                """)
+                
+                # Add indexes for performance
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_content_unified_source ON content_unified(source_type, source_id)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_content_unified_embedding ON content_unified(ready_for_embedding, embedding_generated)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_individual_messages_thread ON individual_messages(thread_id)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_message_occurrences_hash ON message_occurrences(message_hash)")
+                
+                # Add triggers for foreign key enforcement on email_message type
+                conn.execute("""
+                    CREATE TRIGGER IF NOT EXISTS enforce_email_message_fk
+                    BEFORE INSERT ON content_unified
+                    FOR EACH ROW
+                    WHEN NEW.source_type = 'email_message'
+                    BEGIN
+                        SELECT RAISE(ABORT, 'Foreign key violation: message_hash not found')
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM individual_messages 
+                            WHERE message_hash = NEW.source_id
+                        );
+                    END
+                """)
+                
+                conn.execute("""
+                    CREATE TRIGGER IF NOT EXISTS enforce_email_message_fk_update
+                    BEFORE UPDATE OF source_id, source_type ON content_unified
+                    FOR EACH ROW
+                    WHEN NEW.source_type = 'email_message'
+                    BEGIN
+                        SELECT RAISE(ABORT, 'Foreign key violation: message_hash not found')
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM individual_messages 
+                            WHERE message_hash = NEW.source_id
+                        );
+                    END
+                """)
+                
+                logger.info("V2 schema tables and indexes created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create v2 schema: {e}")
+            raise
 
     @contextlib.contextmanager
     def durable_txn(self, conn: sqlite3.Connection) -> Generator[None, None, None]:
