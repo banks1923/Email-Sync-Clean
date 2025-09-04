@@ -151,14 +151,14 @@ class EntityHandler:
             return {"error": "Missing required parameters"}
 
         try:
-            # Search for content containing the entity
+            # Search for content containing the entity (using entity_text column)
             query = """
                 SELECT DISTINCT cu.id, cu.source_type, cu.title, cu.body, 
-                       ecm.entity_type, ecm.entity_value, ecm.confidence
+                       ecm.entity_type, ecm.entity_text, ecm.confidence
                 FROM content_unified cu
                 JOIN entity_content_mapping ecm ON cu.id = ecm.content_id
                 WHERE ecm.entity_type = ? 
-                AND ecm.entity_value LIKE ?
+                AND ecm.entity_text LIKE ?
                 ORDER BY ecm.confidence DESC, cu.created_at DESC
                 LIMIT ?
             """
@@ -181,7 +181,7 @@ class EntityHandler:
                 )
 
                 print(f"{i}. [{source_type.upper()}] {title}")
-                print(f"   Entity: {result['entity_value']} (confidence: {confidence:.2f})")
+                print(f"   Entity: {result['entity_text']} (confidence: {confidence:.2f})")
                 print(f"   Preview: {body_preview}")
                 print(f"   Content ID: {result['id']}")
                 print()

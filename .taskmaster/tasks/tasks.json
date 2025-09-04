@@ -135,11 +135,22 @@
         "details": "• Create monitoring script: scripts/monitor_pipeline.py\n  - Track query performance metrics (latency, result count, quality scores)\n  - Compare v1 vs v2 results side-by-side using feature flags from task 27\n  - Log metrics to CSV/JSON for trend analysis\n  - Display results via rich console tables\n\n• Metrics to track:\n  - Query execution time (p50, p95)\n  - Result relevance scores (from task 29 evaluation)\n  - Recall@10 and precision metrics\n  - Token usage and chunk quality distribution\n  - Error rates and failure modes\n\n• Testing procedure:\n  - Run parallel queries through both pipelines using vsearch\n  - Collect metrics over 1-week testing period\n  - Generate daily comparison reports\n  - Manual quality spot-checks on key queries\n\n• Cutover readiness:\n  - Create scripts/cutover_checklist.py to verify all components\n  - Rollback script using feature flags to instantly revert\n  - Documentation of manual test cases\n  - Backup current vector store before migration",
         "testStrategy": "• Test feature flag switching: rapidly toggle between v1/v2 and verify correct pipeline selection\n• Monitoring script validation: inject known test queries and verify metric collection accuracy\n• Rollback testing: simulate v2 failure and confirm clean reversion to v1\n• Performance regression: ensure monitoring catches intentionally degraded queries\n• Run full test suite from tests/evaluation/ against both pipelines",
         "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "System Recovery Orchestration",
+        "description": "Coordinate complete system recovery from nuclear database reset to fully operational state",
+        "details": "Orchestrate parallel and sequential recovery tasks after database reset. The database schema is auto-created by SimpleDB on first access. Need to coordinate Gmail sync, entity extraction, chunking/embedding pipeline, and search intelligence activation.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-26T12:35:13.360Z",
-      "updated": "2025-08-27T10:18:23.653Z",
+      "updated": "2025-08-28T03:00:57.078Z",
       "description": "Tasks for master context"
     }
   }

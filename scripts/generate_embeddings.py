@@ -21,7 +21,6 @@ def generate_embeddings():
         FROM content_unified
         WHERE ready_for_embedding = 1
         ORDER BY id
-        LIMIT 10
     """)
     
     logger.info(f"Found {len(content)} documents to embed")

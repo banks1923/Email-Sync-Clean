@@ -2,6 +2,40 @@
 
 > **WARNING**: Historical entries may not reflect current system state. Run `make db-stats` to verify current status.
 
+## [2025-08-28] - Entity Extraction Schema Fixes
+
+### Fixed Critical Entity Extraction Schema Issues
+**Status**: ✅ COMPLETED - Entity extraction and search fully operational
+
+**Issues Fixed:**
+- **Column mismatch**: Fixed `entity_value` → `entity_text` column references
+- **Database path**: Fixed hardcoded `data/emails.db` → `data/system_data/emails.db`
+- **Schema alignment**: Removed non-existent `message_id` references from entity_content_mapping
+- **Verification scripts**: Updated all scripts to use correct column names
+
+**Files Modified:**
+- `tools/scripts/cli/entity_handler.py` - Fixed entity search queries
+- `shared/unified_entity_processor.py` - Aligned columns with actual schema
+- `entity/main.py` - Corrected database path defaults
+- `scripts/verify_semantic_wiring.py` - Fixed entity queries
+- `utilities/verification/verify_semantic_wiring.py` - Fixed entity queries
+
+**Testing Results:**
+- ✅ Entity extraction working: 7 entities from test text
+- ✅ Entity search functional: Returns correct results
+- ✅ Database storage verified: 42+ entity mappings created
+- ✅ Schema integrity confirmed: All required columns present
+- ✅ No legacy columns remain (entity_value, message_id removed)
+
+**Usage:**
+```bash
+# Extract entities from existing content
+python3 -m tools.scripts.cli.entity_handler extract-entities --missing-only
+
+# Search by entity
+python3 -m tools.scripts.cli.entity_handler search-entities --entity-type PERSON --entity-value "James"
+```
+
 ## [2025-08-27] - Task 27 Complete: Feature Flags & Dual Index Routing
 
 ### Pipeline Routing and Configuration Management

@@ -22,6 +22,8 @@ from shared.simple_db import SimpleDB
 from summarization import get_document_summarizer
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
+from .similarity import DocumentSimilarityAnalyzer, DocumentClusterer
+from .duplicate_detector import DuplicateDetector
 
 
 class SearchIntelligenceService:
@@ -707,3 +709,15 @@ class SearchIntelligenceService:
         except Exception as e:
             logger.error(f"Duplicate detection failed: {e}")
             return []
+
+
+# Local singleton to avoid package-level circular imports
+_sis_singleton = None
+
+
+def get_search_intelligence_service() -> SearchIntelligenceService:
+    """Get or create a singleton SearchIntelligenceService instance."""
+    global _sis_singleton
+    if _sis_singleton is None:
+        _sis_singleton = SearchIntelligenceService()
+    return _sis_singleton

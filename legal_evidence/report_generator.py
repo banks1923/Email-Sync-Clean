@@ -59,7 +59,7 @@ class LegalReportGenerator:
             # Get all threads
             cursor = self.evidence.db.execute(
                 """
-                SELECT DISTINCT thread_id FROM emails 
+                SELECT DISTINCT thread_id FROM individual_messages 
                 WHERE thread_id IS NOT NULL 
                 ORDER BY thread_id
             """

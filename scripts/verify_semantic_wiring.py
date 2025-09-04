@@ -585,10 +585,10 @@ def eid_lookup(eid: str):
     # Get entities
     cursor = db.execute(
         """
-        SELECT DISTINCT entity_value, entity_type
+        SELECT DISTINCT entity_text, entity_type
         FROM entity_content_mapping
-        WHERE message_id = ?
-        ORDER BY entity_type, entity_value
+        WHERE content_id = ?
+        ORDER BY entity_type, entity_text
         LIMIT 10
     """,
         (message_id,),

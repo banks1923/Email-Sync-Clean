@@ -17,7 +17,7 @@ The following environment variables are used to configure the application. They 
 | `ENTITY_BATCH_SIZE` | The batch size for entity extraction. | `100` |
 | `ENTITY_CONFIDENCE_THRESHOLD` | The confidence threshold for entity extraction. | `0.5` |
 | `ENTITY_TYPES` | The entity types to extract. | `PERSON,ORG,GPE,MONEY,DATE` |
-| `ENTITY_DB_PATH` | The path to the database for the entity service. | `data/emails.db` |
+| `ENTITY_DB_PATH` | The path to the database for the entity service. | `data/system_data/emails.db` |
 | `ENTITY_DB_CONNECTIONS` | The maximum number of database connections for the entity service. | `5` |
 | `ENTITY_MAX_TEXT_LENGTH` | The maximum text length for entity extraction. | `10000` |
 | `ENTITY_NORMALIZE` | Whether to enable text normalization for entity extraction. | `true` |

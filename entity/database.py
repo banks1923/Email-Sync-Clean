@@ -32,12 +32,12 @@ class EntityDatabase:
         Create entity tables if they don't exist and handle schema migration.
         """
         try:
-            # Create basic table first
+            # Create entity_content_mapping table (v2 schema)
             self.db.execute(
                 """
-                CREATE TABLE IF NOT EXISTS email_entities (
+                CREATE TABLE IF NOT EXISTS entity_content_mapping (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    message_id TEXT NOT NULL,
+                    content_id TEXT NOT NULL,
                     entity_text TEXT NOT NULL,
                     entity_type TEXT NOT NULL,
                     entity_label TEXT NOT NULL,
@@ -45,8 +45,7 @@ class EntityDatabase:
                     end_char INTEGER NOT NULL,
                     confidence REAL,
                     normalized_form TEXT,
-                    processed_time TEXT DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (message_id) REFERENCES emails(message_id)
+                    processed_time TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """
             )
@@ -62,14 +61,14 @@ class EntityDatabase:
             ]
 
             # Check which columns already exist
-            existing_columns = self.db.fetch("PRAGMA table_info(email_entities)")
+            existing_columns = self.db.fetch("PRAGMA table_info(entity_content_mapping)")
             existing_column_names = {col["name"] for col in existing_columns}
 
             for column_name, column_def in new_columns:
                 if column_name not in existing_column_names:
                     try:
                         self.db.execute(
-                            f"ALTER TABLE email_entities ADD COLUMN {column_name} {column_def}"
+                            f"ALTER TABLE entity_content_mapping ADD COLUMN {column_name} {column_def}"
                         )
                     except Exception:
                         # Column already exists or other error, skip silently
@@ -113,12 +112,12 @@ class EntityDatabase:
 
             # Create performance indexes
             indexes = [
-                "CREATE INDEX IF NOT EXISTS idx_entities_message_id ON email_entities(message_id)",
-                "CREATE INDEX IF NOT EXISTS idx_entities_type ON email_entities(entity_type)",
-                "CREATE INDEX IF NOT EXISTS idx_entities_label ON email_entities(entity_label)",
-                "CREATE INDEX IF NOT EXISTS idx_entities_normalized ON email_entities(normalized_form)",
-                "CREATE INDEX IF NOT EXISTS idx_entities_entity_id ON email_entities(entity_id)",
-                "CREATE INDEX IF NOT EXISTS idx_entities_extractor ON email_entities(extractor_type)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_content_id ON entity_content_mapping(content_id)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_type ON entity_content_mapping(entity_type)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_label ON entity_content_mapping(entity_label)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_normalized ON entity_content_mapping(normalized_form)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_entity_id ON entity_content_mapping(entity_id)",
+                "CREATE INDEX IF NOT EXISTS idx_entities_extractor ON entity_content_mapping(extractor_type)",
                 "CREATE INDEX IF NOT EXISTS idx_consolidated_type ON consolidated_entities(entity_type)",
                 "CREATE INDEX IF NOT EXISTS idx_consolidated_name ON consolidated_entities(primary_name)",
                 "CREATE INDEX IF NOT EXISTS idx_relationships_source ON entity_relationships(source_entity_id)",
@@ -149,13 +148,13 @@ class EntityDatabase:
 
                 self.db.execute(
                     """
-                    INSERT INTO email_entities
-                    (message_id, entity_text, entity_type, entity_label, start_char, end_char,
+                    INSERT INTO entity_content_mapping
+                    (content_id, entity_text, entity_type, entity_label, start_char, end_char,
                      confidence, normalized_form, entity_id, extractor_type, role_type)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
-                        entity["message_id"],
+                        entity.get("content_id", entity.get("message_id", "")),  # Support both content_id and message_id
                         entity["text"],
                         entity["type"],
                         entity["label"],
@@ -187,13 +186,27 @@ class EntityDatabase:
 
     def get_entities_for_email(self, message_id):
         """
-        Get all entities for a specific email.
+        Get all entities for a specific email (by message_id or content_id).
         """
         try:
+            # First try as content_id (v2 schema)
             entities = self.db.fetch(
-                "SELECT * FROM email_entities WHERE message_id = ? ORDER BY start_char",
+                "SELECT * FROM entity_content_mapping WHERE content_id = ? ORDER BY start_char",
                 (message_id,),
             )
+            
+            # If no results, try to look up by legacy message_id
+            if not entities:
+                # Look up message_hash for this message_id
+                message_hash = self.db.fetch_one(
+                    "SELECT message_hash FROM individual_messages WHERE message_id = ?",
+                    (message_id,)
+                )
+                if message_hash:
+                    entities = self.db.fetch(
+                        "SELECT * FROM entity_content_mapping WHERE content_id = ? ORDER BY start_char",
+                        (message_hash["message_hash"],),
+                    )
             return {"success": True, "data": entities}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -204,7 +217,7 @@ class EntityDatabase:
         """
         try:
             entities = self.db.fetch(
-                "SELECT * FROM email_entities WHERE entity_type = ? LIMIT ?", (entity_type, limit)
+                "SELECT * FROM entity_content_mapping WHERE entity_type = ? LIMIT ?", (entity_type, limit)
             )
             return {"success": True, "data": entities}
         except Exception as e:
@@ -215,7 +228,7 @@ class EntityDatabase:
         Get total entity count.
         """
         try:
-            result = self.db.fetch_one("SELECT COUNT(*) as count FROM email_entities")
+            result = self.db.fetch_one("SELECT COUNT(*) as count FROM entity_content_mapping")
             return result["count"] if result else 0
         except Exception:
             return 0
@@ -226,7 +239,7 @@ class EntityDatabase:
         """
         try:
             results = self.db.fetch(
-                "SELECT entity_type, COUNT(*) as count FROM email_entities GROUP BY entity_type"
+                "SELECT entity_type, COUNT(*) as count FROM entity_content_mapping GROUP BY entity_type"
             )
             return {"success": True, "data": results}
         except Exception as e:
@@ -394,7 +407,7 @@ class EntityDatabase:
         """
         try:
             # Basic counts
-            total_raw = self.db.fetch_one("SELECT COUNT(*) as count FROM email_entities")["count"]
+            total_raw = self.db.fetch_one("SELECT COUNT(*) as count FROM entity_content_mapping")["count"]
             total_consolidated = self.db.fetch_one(
                 "SELECT COUNT(*) as count FROM consolidated_entities"
             )["count"]

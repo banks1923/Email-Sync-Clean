@@ -77,12 +77,12 @@ class TimelineService:
         Sync recent emails to timeline events.
         """
         try:
-            # Get emails from the emails table
+            # Get emails from the individual_messages table (v2 schema)
             email_query = """
-                SELECT message_id, subject, sender, datetime_utc
-                FROM emails
-                WHERE datetime_utc IS NOT NULL AND datetime_utc != ''
-                ORDER BY datetime_utc DESC
+                SELECT im.message_id, im.subject, im.sender_email as sender, im.date_sent as datetime_utc
+                FROM individual_messages im
+                WHERE im.date_sent IS NOT NULL AND im.date_sent != ''
+                ORDER BY im.date_sent DESC
                 LIMIT ?
             """
 

@@ -21,7 +21,7 @@ class EvidenceTracker:
     Track emails with legal Evidence IDs (EIDs) for court references.
     """
 
-    def __init__(self, db_path: str = "data/emails.db"):
+    def __init__(self, db_path: str = "data/system_data/emails.db"):
         """
         Initialize with database connection.
         """
@@ -30,34 +30,25 @@ class EvidenceTracker:
 
     def _ensure_schema(self):
         """
-        Add legal tracking columns to emails table if needed.
+        Add legal tracking columns to individual_messages table if needed.
         """
-        # Add EID and thread_id columns if they don't exist
+        # Add EID column if it doesn't exist
         try:
             self.db.execute(
                 """
-                ALTER TABLE emails ADD COLUMN eid TEXT UNIQUE
+                ALTER TABLE individual_messages ADD COLUMN eid TEXT UNIQUE
             """
             )
-            logger.info("Added eid column to emails table")
+            logger.info("Added eid column to individual_messages table")
         except sqlite3.OperationalError:
             pass  # Column already exists
 
+        # Note: thread_id already exists in individual_messages by default
+        # Create index for EID lookups
         try:
             self.db.execute(
                 """
-                ALTER TABLE emails ADD COLUMN thread_id TEXT
-            """
-            )
-            logger.info("Added thread_id column to emails table")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
-
-        # Create index for faster thread lookups
-        try:
-            self.db.execute(
-                """
-                CREATE INDEX idx_thread_id ON emails(thread_id)
+                CREATE INDEX idx_eid ON individual_messages(eid)
             """
             )
         except sqlite3.OperationalError:
@@ -74,7 +65,7 @@ class EvidenceTracker:
         # Get the highest EID number for this year
         cursor = self.db.execute(
             """
-            SELECT eid FROM emails 
+            SELECT eid FROM individual_messages 
             WHERE eid LIKE ? 
             ORDER BY eid DESC LIMIT 1
         """,
@@ -101,10 +92,10 @@ class EvidenceTracker:
         """
         # Get emails without EIDs
         query = """
-            SELECT id, message_id, datetime_utc, thread_id 
-            FROM emails 
+            SELECT message_hash, message_id, date_sent, thread_id 
+            FROM individual_messages 
             WHERE eid IS NULL
-            ORDER BY datetime_utc, id
+            ORDER BY date_sent, message_hash
         """
 
         if limit:
@@ -115,13 +106,13 @@ class EvidenceTracker:
 
         assigned = 0
         for email in emails:
-            eid = self.generate_eid(email["message_id"], email["datetime_utc"])
+            eid = self.generate_eid(email["message_id"], email["date_sent"])
 
             self.db.execute(
                 """
-                UPDATE emails SET eid = ? WHERE id = ?
+                UPDATE individual_messages SET eid = ? WHERE message_hash = ?
             """,
-                (eid, email["id"]),
+                (eid, email["message_hash"]),
             )
 
             assigned += 1
@@ -137,9 +128,9 @@ class EvidenceTracker:
         # Get all emails
         cursor = self.db.execute(
             """
-            SELECT id, subject, datetime_utc, sender
-            FROM emails 
-            ORDER BY datetime_utc
+            SELECT message_hash, subject, date_sent, sender_email
+            FROM individual_messages 
+            ORDER BY date_sent
         """
         )
 
@@ -165,9 +156,9 @@ class EvidenceTracker:
             # Update email with thread ID
             self.db.execute(
                 """
-                UPDATE emails SET thread_id = ? WHERE id = ?
+                UPDATE individual_messages SET thread_id = ? WHERE message_hash = ?
             """,
-                (threads[thread_key], email["id"]),
+                (threads[thread_key], email["message_hash"]),
             )
 
         logger.info(f"Assigned {thread_count} thread IDs to {len(emails)} emails")
@@ -180,10 +171,12 @@ class EvidenceTracker:
         """
         cursor = self.db.execute(
             """
-            SELECT eid, message_id, subject, sender, recipient_to,
-                   datetime_utc, thread_id, content
-            FROM emails
-            WHERE eid = ?
+            SELECT im.eid, im.message_id, im.subject, im.sender_email,
+                   im.recipients, im.date_sent, im.thread_id, cu.body as content
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+              AND im.eid = ?
         """,
             (eid,),
         )
@@ -199,11 +192,13 @@ class EvidenceTracker:
         """
         cursor = self.db.execute(
             """
-            SELECT eid, message_id, subject, sender, recipient_to,
-                   datetime_utc, content
-            FROM emails
-            WHERE thread_id = ?
-            ORDER BY datetime_utc
+            SELECT im.eid, im.message_id, im.subject, im.sender_email,
+                   im.recipients, im.date_sent, cu.body as content
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+              AND im.thread_id = ?
+            ORDER BY im.date_sent
         """,
             (thread_id,),
         )
@@ -216,11 +211,13 @@ class EvidenceTracker:
         """
         cursor = self.db.execute(
             """
-            SELECT eid, message_id, subject, sender, datetime_utc,
-                   thread_id, content
-            FROM emails
-            WHERE content LIKE ? OR subject LIKE ?
-            ORDER BY datetime_utc DESC
+            SELECT im.eid, im.message_id, im.subject, im.sender_email,
+                   im.date_sent, im.thread_id, cu.body as content
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+              AND (cu.body LIKE ? OR im.subject LIKE ?)
+            ORDER BY im.date_sent DESC
             LIMIT ?
         """,
             (f"%{pattern}%", f"%{pattern}%", limit),
@@ -235,21 +232,21 @@ class EvidenceTracker:
         stats = {}
 
         # Total emails with EIDs
-        cursor = self.db.execute("SELECT COUNT(*) FROM emails WHERE eid IS NOT NULL")
+        cursor = self.db.execute("SELECT COUNT(*) FROM individual_messages WHERE eid IS NOT NULL")
         stats["emails_with_eid"] = cursor.fetchone()[0]
 
         # Total without EIDs
-        cursor = self.db.execute("SELECT COUNT(*) FROM emails WHERE eid IS NULL")
+        cursor = self.db.execute("SELECT COUNT(*) FROM individual_messages WHERE eid IS NULL")
         stats["emails_without_eid"] = cursor.fetchone()[0]
 
         # Total threads
         cursor = self.db.execute(
-            "SELECT COUNT(DISTINCT thread_id) FROM emails WHERE thread_id IS NOT NULL"
+            "SELECT COUNT(DISTINCT thread_id) FROM individual_messages WHERE thread_id IS NOT NULL"
         )
         stats["total_threads"] = cursor.fetchone()[0]
 
         # Date range
-        cursor = self.db.execute("SELECT MIN(datetime_utc), MAX(datetime_utc) FROM emails")
+        cursor = self.db.execute("SELECT MIN(date_sent), MAX(date_sent) FROM individual_messages")
         result = cursor.fetchone()
         stats["date_range"] = {"earliest": result[0], "latest": result[1]}
 
@@ -257,7 +254,7 @@ class EvidenceTracker:
 
 
 # Simple factory function
-def get_evidence_tracker(db_path: str = "data/emails.db") -> EvidenceTracker:
+def get_evidence_tracker(db_path: str = "data/system_data/emails.db") -> EvidenceTracker:
     """
     Get evidence tracker instance.
     """

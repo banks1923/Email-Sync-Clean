@@ -151,10 +151,14 @@ class DuplicateDetector:
         if result:
             return result
 
-        # Try other tables
+        # Try individual_messages table for emails (v2 schema)
         result = self.db.fetch_one(
-            "SELECT message_id as content_id, 'email' as source_type, "  # ALLOWED: content_id
-            "subject as title, body as content FROM emails WHERE message_id = ?",
+            """SELECT im.message_hash as content_id, 'email' as source_type,
+               im.subject as title, cu.body as content
+               FROM individual_messages im
+               JOIN content_unified cu ON cu.source_id = im.message_hash
+               WHERE cu.source_type = 'email_message'
+                 AND im.message_hash = ?""",
             (doc_id,),
         )
         if result:
@@ -445,12 +449,14 @@ class DuplicateDetector:
         """
         Specialized method to find duplicate emails.
         """
-        # Get all emails
+        # Get all emails (v2 schema)
         emails = self.db.fetch(
             """
-            SELECT message_id, subject, body, date
-            FROM emails
-            ORDER BY date DESC
+            SELECT im.message_id, im.subject, cu.body, im.date_sent as date
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+            ORDER BY im.date_sent DESC
             """
         )
 

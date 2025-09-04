@@ -78,11 +78,11 @@ install: ## Install Python dependencies
 
 test: ## Run tests (fast, for daily development)
 	@echo "🧪 Running tests..."
-	pytest -c .config/pytest.ini -m "not slow" -v --tb=short
+	pytest -c .config/pytest.ini --rootdir=. -m "not slow" -v --tb=short
 
 test-all: ## Run all tests (including slow AI tests)
 	@echo "🧪 Running complete test suite..."
-	pytest -c .config/pytest.ini -v
+	pytest -c .config/pytest.ini --rootdir=. -v
 
 format: ## Format code (black, isort, docformatter)
 	@echo "🎨 Formatting code..."

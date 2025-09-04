@@ -132,8 +132,8 @@ class SemanticWiringVerifier:
         # Get a sample email with EID
         cursor = self.db.execute(
             """
-            SELECT id, message_id, eid, subject, datetime_utc
-            FROM emails 
+            SELECT message_hash as id, message_id, eid, subject, date_sent as datetime_utc
+            FROM individual_messages 
             WHERE eid IS NOT NULL 
             LIMIT 1
         """
@@ -239,9 +239,9 @@ class SemanticWiringVerifier:
         # Get a sample of already-processed messages
         cursor = self.db.execute(
             """
-            SELECT message_id FROM emails 
+            SELECT message_id FROM individual_messages 
             WHERE eid IS NOT NULL 
-            ORDER BY datetime_utc DESC 
+            ORDER BY date_sent DESC 
             LIMIT 10
         """
         )
@@ -397,7 +397,7 @@ class SemanticWiringVerifier:
         cursor = self.db.execute(
             """
             SELECT 
-                (SELECT COUNT(*) FROM emails) as total_emails,
+                (SELECT COUNT(*) FROM individual_messages) as total_emails,
                 (SELECT COUNT(DISTINCT message_id) FROM entity_content_mapping) as emails_with_entities
         """
         )
@@ -462,8 +462,8 @@ class SemanticWiringVerifier:
         cursor = self.db.execute(
             """
             SELECT 
-                (SELECT COUNT(*) FROM emails) as total,
-                (SELECT COUNT(*) FROM emails WHERE eid IS NOT NULL) as with_eid
+                (SELECT COUNT(*) FROM individual_messages) as total,
+                (SELECT COUNT(*) FROM individual_messages WHERE eid IS NOT NULL) as with_eid
         """
         )
         total, with_eid = cursor.fetchone()
@@ -554,9 +554,11 @@ def eid_lookup(eid: str):
     # Get email details
     cursor = db.execute(
         """
-        SELECT message_id, subject, sender, datetime_utc, content
-        FROM emails
-        WHERE eid = ?
+        SELECT im.message_id, im.subject, im.sender_email as sender, im.date_sent as datetime_utc, cu.body as content
+        FROM individual_messages im
+        JOIN content_unified cu ON cu.source_id = im.message_hash
+        WHERE cu.source_type = 'email_message'
+          AND im.eid = ?
     """,
         (eid,),
     )
@@ -585,10 +587,10 @@ def eid_lookup(eid: str):
     # Get entities
     cursor = db.execute(
         """
-        SELECT DISTINCT entity_value, entity_type
+        SELECT DISTINCT entity_text, entity_type
         FROM entity_content_mapping
-        WHERE message_id = ?
-        ORDER BY entity_type, entity_value
+        WHERE content_id = ?
+        ORDER BY entity_type, entity_text
         LIMIT 10
     """,
         (message_id,),
@@ -620,7 +622,7 @@ def eid_lookup(eid: str):
             print(f"  • {event_date}: {event_type} - {description[:50]}...")
 
     # Gmail link (if we have the thread ID)
-    cursor = db.execute("SELECT thread_id FROM emails WHERE eid = ?", (eid,))
+    cursor = db.execute("SELECT thread_id FROM individual_messages WHERE eid = ?", (eid,))
     thread = cursor.fetchone()
     if thread and thread[0]:
         # Format: https://mail.google.com/mail/u/0/#all/{thread_id}

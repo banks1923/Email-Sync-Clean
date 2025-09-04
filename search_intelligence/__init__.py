@@ -20,7 +20,12 @@ def get_search_intelligence_service():
     return _search_intelligence_service
 
 
-__all__ = ["get_search_intelligence_service", "search"]
+__all__ = [
+    "get_search_intelligence_service",
+    "search",
+    "semantic_search",
+    "vector_store_available",
+]
 
 # Basic search functionality
-from .basic_search import search
+from .basic_search import search, semantic_search, vector_store_available

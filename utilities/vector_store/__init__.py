@@ -34,7 +34,7 @@ class VectorStore:
         self,
         host: str = "localhost",
         port: int = 6333,
-        collection: str = "emails",
+        collection: str = "legal_documents",
         dimensions: int = 1024,
     ):
         """
@@ -480,7 +480,7 @@ class VectorStore:
 _vector_store: VectorStore | None = None
 
 
-def get_vector_store(collection: str = "emails") -> VectorStore:
+def get_vector_store(collection: str = "legal_documents") -> VectorStore:
     """
     Get or create singleton vector store.
     """

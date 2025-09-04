@@ -2,14 +2,18 @@
 
 ## Personal Project Guidelines
 
-This is a single-user system built for practical email and document search. The goal is to keep it maintainable and working smoothly without unnecessary complexity.
+This is a single-user system for email, document, and *legal research*, not evidence.  
+The goal is to keep it maintainable and working smoothly without unnecessary complexity. This is to be used asap by a single user for an active legal matter. 
+Legal Use *But NOT* Evidence requiring chain of custody, auditing trails ETC
+
+- *Maintainable, Valuable, Actionable insights for strategy and drafting of email replys is required.* 
 
 ## Core Principles
 
 ### 0. **Architecture Limits (ENFORCED)**
-- Target 450 lines for new files; existing working files guided by functionality
-- Maximum 35 lines per function
-- Maximum cyclomatic complexity of 12
+- Target <550 lines for new files; existing working files guided by functionality
+- Target <35 lines per function
+- Target cyclomatic complexity of <15
 - These are soft LIMITS to prevent drift
 
 ### 1. **Keep It Simple**

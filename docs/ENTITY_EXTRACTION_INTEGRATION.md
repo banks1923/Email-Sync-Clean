@@ -25,14 +25,21 @@ Content Unified Table → Entity Extractor → Quality Filter → Entity Content
 ```sql
 entity_content_mapping (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entity_id TEXT,
-    entity_value TEXT,
-    entity_type TEXT,
-    content_id TEXT,      -- Links to content_unified.id
-    message_id TEXT,      -- Source identifier (email ID, file path)
-    confidence REAL DEFAULT 1.0,
-    metadata TEXT,        -- JSON with extraction context
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    content_id TEXT NOT NULL,           -- Links to content_unified.id
+    entity_text TEXT NOT NULL,          -- The actual entity text (was entity_value)
+    entity_type TEXT NOT NULL,          -- Entity type (PERSON, ORG, etc.)
+    entity_label TEXT NOT NULL,         -- Entity label from NER
+    start_char INTEGER NOT NULL,        -- Start position in text
+    end_char INTEGER NOT NULL,          -- End position in text
+    confidence REAL,                    -- Confidence score
+    normalized_form TEXT,               -- Normalized version of entity
+    processed_time TEXT DEFAULT CURRENT_TIMESTAMP,
+    entity_id TEXT,                     -- Unique entity identifier
+    aliases TEXT,                       -- Entity aliases
+    frequency INTEGER DEFAULT 1,        -- Occurrence frequency
+    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    extractor_type TEXT DEFAULT 'spacy', -- Extraction method
+    role_type TEXT                      -- Role/relationship type
 )
 ```
 
@@ -60,7 +67,7 @@ tools/scripts/vsearch extract-entities --missing-only --limit 100
 # Check entity processing status
 tools/scripts/vsearch entity-status
 
-# Search content by entity
+# Search content by entity (searches entity_text column)
 tools/scripts/vsearch search-entities --entity-type PERSON --entity-value "Smith"
 ```
 
@@ -128,7 +135,7 @@ Find all content containing specific entities:
 SELECT DISTINCT cu.title, cu.source_type
 FROM content_unified cu
 JOIN entity_content_mapping ecm ON cu.id = ecm.content_id
-WHERE ecm.entity_value LIKE '%Stoneman%'
+WHERE ecm.entity_text LIKE '%Stoneman%'
 ```
 
 ### Cross-Document Analysis
@@ -137,12 +144,12 @@ Identify entities appearing across multiple documents:
 
 ```sql
 SELECT 
-    e1.entity_value,
+    e1.entity_text,
     COUNT(DISTINCT e1.content_id) as document_count,
     GROUP_CONCAT(DISTINCT cu.title) as documents
 FROM entity_content_mapping e1
 JOIN content_unified cu ON e1.content_id = cu.id
-GROUP BY e1.entity_value
+GROUP BY e1.entity_text
 HAVING document_count > 1
 ORDER BY document_count DESC
 ```

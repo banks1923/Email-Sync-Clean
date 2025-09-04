@@ -349,25 +349,31 @@ class UnifiedEntityProcessor:
 
             mapping = {
                 "entity_id": entity_id,
-                "entity_value": entity.get("text", ""),
+                "entity_text": entity.get("text", ""),  # Changed from entity_value to entity_text
                 "entity_type": entity.get("label", ""),
+                "entity_label": entity.get("label", ""),  # Added entity_label
                 "content_id": content_id,
-                "message_id": source_id,  # Could be email message_id or document path
+                "start_char": entity.get("start", 0),  # Added start_char
+                "end_char": entity.get("end", 0),  # Added end_char
                 "confidence": entity.get("confidence", 0.8),
-                "metadata": self._build_entity_metadata(entity, source_type),
+                "normalized_form": entity.get("text", "").lower(),  # Added normalized_form
+                "extractor_type": entity.get("extractor_type", "spacy"),  # Added extractor_type
             }
             mappings.append(mapping)
 
         if mappings:
-            # Batch insert mappings
+            # Batch insert mappings (aligned with actual schema)
             columns = [
-                "entity_id",
-                "entity_value",
-                "entity_type",
                 "content_id",
-                "message_id",
+                "entity_text",
+                "entity_type",
+                "entity_label",
+                "start_char",
+                "end_char",
                 "confidence",
-                "metadata",
+                "normalized_form",
+                "entity_id",
+                "extractor_type",
             ]
             values = [[m[col] for col in columns] for m in mappings]
 
@@ -437,13 +443,14 @@ class UnifiedEntityProcessor:
         )
 
         # Recent processing activity
-        recent_mappings = self.db.fetch(
+        recent_mappings_result = self.db.fetch(
             """
             SELECT COUNT(*) as count
             FROM entity_content_mapping
-            WHERE created_at > datetime('now', '-24 hours')
+            WHERE processed_time > datetime('now', '-24 hours')
         """
-        )[0]["count"]
+        )
+        recent_mappings = recent_mappings_result[0]["count"] if recent_mappings_result else 0
 
         return {
             "content_statistics": [dict(row) for row in content_stats],

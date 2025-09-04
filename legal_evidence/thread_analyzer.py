@@ -16,7 +16,7 @@ class ThreadAnalyzer:
     Analyze email threads for patterns and legal significance.
     """
 
-    def __init__(self, db_path: str = "data/emails.db"):
+    def __init__(self, db_path: str = "data/system_data/emails.db"):
         """
         Initialize with database connection.
         """
@@ -29,11 +29,14 @@ class ThreadAnalyzer:
         # Get all emails in thread
         cursor = self.db.execute(
             """
-            SELECT eid, message_id, subject, sender, recipient_to,
-                   datetime_utc, content
-            FROM emails
-            WHERE thread_id = ?
-            ORDER BY datetime_utc
+            SELECT im.eid, im.message_id, im.subject, im.sender_email as sender,
+                   im.recipients as recipient_to, im.date_sent as datetime_utc,
+                   cu.body as content
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+              AND im.thread_id = ?
+            ORDER BY im.date_sent
         """,
             (thread_id,),
         )
@@ -76,12 +79,14 @@ class ThreadAnalyzer:
         for keyword in keywords:
             cursor = self.db.execute(
                 """
-                SELECT DISTINCT thread_id, eid, subject, sender, datetime_utc,
-                       content
-                FROM emails
-                WHERE (content LIKE ? OR subject LIKE ?)
-                AND thread_id IS NOT NULL
-                ORDER BY thread_id, datetime_utc
+                SELECT DISTINCT im.thread_id, im.eid, im.subject, im.sender_email as sender,
+                       im.date_sent as datetime_utc, cu.body as content
+                FROM individual_messages im
+                JOIN content_unified cu ON cu.source_id = im.message_hash
+                WHERE cu.source_type = 'email_message'
+                  AND (cu.body LIKE ? OR im.subject LIKE ?)
+                  AND im.thread_id IS NOT NULL
+                ORDER BY im.thread_id, im.date_sent
             """,
                 (f"%{keyword}%", f"%{keyword}%"),
             )
@@ -111,16 +116,17 @@ class ThreadAnalyzer:
         Analyze communication patterns for specific sender or all.
         """
         query = """
-            SELECT sender, recipient_to, datetime_utc, thread_id, subject
-            FROM emails
+            SELECT im.sender_email as sender, im.recipients as recipient_to,
+                   im.date_sent as datetime_utc, im.thread_id, im.subject
+            FROM individual_messages im
         """
         params = ()
 
         if sender:
-            query += " WHERE sender = ?"
+            query += " WHERE im.sender_email = ?"
             params = (sender,)
 
-        query += " ORDER BY datetime_utc"
+        query += " ORDER BY im.date_sent"
 
         cursor = self.db.execute(query, params)
         emails = [dict(row) for row in cursor.fetchall()]
@@ -217,10 +223,13 @@ class ThreadAnalyzer:
         """
         cursor = self.db.execute(
             """
-            SELECT eid, sender, datetime_utc, content
-            FROM emails
-            WHERE thread_id = ?
-            ORDER BY datetime_utc
+            SELECT im.eid, im.sender_email as sender, im.date_sent as datetime_utc,
+                   cu.body as content
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+              AND im.thread_id = ?
+            ORDER BY im.date_sent
         """,
             (thread_id,),
         )
@@ -278,7 +287,7 @@ class ThreadAnalyzer:
 
 
 # Simple factory function
-def get_thread_analyzer(db_path: str = "data/emails.db") -> ThreadAnalyzer:
+def get_thread_analyzer(db_path: str = "data/system_data/emails.db") -> ThreadAnalyzer:
     """
     Get thread analyzer instance.
     """

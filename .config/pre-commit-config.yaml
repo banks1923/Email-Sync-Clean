@@ -1,0 +1,40 @@
+repos:
+  # Check for legacy table references
+  - repo: local
+    hooks:
+      - id: no-legacy-emails-table
+        name: Check for legacy emails table references
+        entry: bash -c 'grep -r "FROM emails\b\|JOIN emails\b\|INTO emails\b\|UPDATE emails\b" --include="*.py" --include="*.sql" . | grep -v "content_unified\|individual_messages\|test_no_legacy" && echo "❌ Found references to legacy emails table!" && exit 1 || echo "✅ No legacy table references"'
+        language: system
+        pass_filenames: false
+        
+      - id: no-email-messages-plural
+        name: Check for email_messages (plural)
+        entry: bash -c 'grep -r "email_messages" --include="*.py" --include="*.sql" . | grep -v "test_no_legacy" && echo "❌ Found email_messages (plural) - should be email_message!" && exit 1 || echo "✅ No plural form found"'
+        language: system
+        pass_filenames: false
+
+      - id: guard-tests
+        name: Run CI guard tests
+        entry: python3 tests/test_no_legacy_tables.py
+        language: system
+        pass_filenames: false
+        
+  # Python code quality
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        args: ['--line-length=100']
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ['--config=.config/.flake8']
+        
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile=black', '--line-length=100']

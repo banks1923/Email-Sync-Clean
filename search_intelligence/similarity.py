@@ -146,9 +146,13 @@ class DocumentSimilarityAnalyzer:
         if result:
             return result
 
-        # Try emails
+        # Try individual_messages (v2 schema)
         result = self.db.fetch_one(
-            "SELECT * FROM emails WHERE message_id = ? OR id = ?", (doc_id, doc_id)
+            """SELECT im.*, cu.body as content
+               FROM individual_messages im
+               JOIN content_unified cu ON cu.source_id = im.message_hash
+               WHERE cu.source_type = 'email_message'
+                 AND (im.message_id = ? OR im.message_hash = ?)""", (doc_id, doc_id)
         )
         if result:
             result["source_type"] = "email"

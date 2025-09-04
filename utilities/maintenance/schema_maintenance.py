@@ -137,13 +137,16 @@ class SchemaMaintenance:
                     logger.info("No legacy emails table found")
                     return {"migrated": 0, "status": "no_legacy_table"}
 
-                # Get emails not in unified_content
+                # Get emails not in content_unified (v2 schema)
                 cursor.execute(
                     """
-                    SELECT e.id, e.subject, e.sender, e.body, e.date, e.thread_id
-                    FROM emails e
-                    LEFT JOIN unified_content uc ON uc.source_id = e.id
-                    WHERE uc.id IS NULL
+                    SELECT im.message_hash as id, im.subject, im.sender_email as sender,
+                           cu_check.body, im.date_sent as date, im.thread_id
+                    FROM individual_messages im
+                    LEFT JOIN content_unified cu ON cu.source_id = im.message_hash
+                    LEFT JOIN content_unified cu_check ON cu_check.source_id = im.message_hash 
+                          AND cu_check.source_type = 'email_message'
+                    WHERE cu.id IS NULL
                     LIMIT ?
                 """,
                     (batch_size,),

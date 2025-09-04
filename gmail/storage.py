@@ -348,8 +348,14 @@ class EmailStorage:
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
             """
-            SELECT * FROM emails
-            ORDER BY datetime_utc DESC
+            SELECT im.message_hash as id, im.message_id, im.subject,
+                   im.sender_email as sender, im.recipients as recipient_to,
+                   cu.body as content, im.date_sent as datetime_utc,
+                   cu.sha256 as content_hash, cu.created_at
+            FROM individual_messages im
+            JOIN content_unified cu ON cu.source_id = im.message_hash
+            WHERE cu.source_type = 'email_message'
+            ORDER BY im.date_sent DESC
             LIMIT ?
         """,
             (limit,),

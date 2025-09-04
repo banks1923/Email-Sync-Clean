@@ -90,15 +90,22 @@ class TestSemanticPipeline(unittest.TestCase):
         self.db.execute(
             """
             CREATE TABLE entity_content_mapping (
-                id INTEGER PRIMARY KEY,
-                entity_id TEXT,
-                entity_value TEXT,
-                entity_type TEXT,
-                content_id TEXT,
-                message_id TEXT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content_id TEXT NOT NULL,
+                entity_text TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_label TEXT NOT NULL,
+                start_char INTEGER NOT NULL,
+                end_char INTEGER NOT NULL,
                 confidence REAL,
-                metadata TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                normalized_form TEXT,
+                processed_time TEXT DEFAULT CURRENT_TIMESTAMP,
+                entity_id TEXT,
+                aliases TEXT,
+                frequency INTEGER DEFAULT 1,
+                last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+                extractor_type TEXT DEFAULT 'spacy',
+                role_type TEXT
             )
         """
         )
@@ -231,10 +238,10 @@ class TestSemanticPipeline(unittest.TestCase):
         self.db.execute(
             """
             INSERT INTO entity_content_mapping 
-            (entity_value, entity_type, message_id, created_at)
-            VALUES (?, ?, ?, ?)
+            (content_id, entity_text, entity_type, entity_label, start_char, end_char, processed_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-            ("January 15, 2025", "DATE", "msg_001", datetime.now().isoformat()),
+            ("msg_001", "January 15, 2025", "DATE", "DATE", 0, 16, datetime.now().isoformat()),
         )
 
         emails_data = self.pipeline._get_email_data(["msg_001"])
@@ -399,8 +406,8 @@ class TestSemanticPipeline(unittest.TestCase):
         self.db.execute(
             """
             INSERT INTO entity_content_mapping 
-            (entity_value, entity_type, message_id, created_at)
-            VALUES (?, ?, ?, ?)
+            (content_id, entity_text, entity_type, entity_label, start_char, end_char, processed_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
             ("January 15", "DATE", "msg_001", datetime.now().isoformat()),
         )
