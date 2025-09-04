@@ -176,7 +176,7 @@ class TestSemanticPipeline(unittest.TestCase):
             )
 
             # Add corresponding content entry
-            content_metadata = {"message_id": email["message_id"], "type": "email"}
+            {"message_id": email["message_id"], "type": "email"}
             self.db.execute(
                 """
                 INSERT INTO content_unified (source_type, source_id, title, body)
@@ -400,7 +400,7 @@ class TestSemanticPipeline(unittest.TestCase):
         }
 
         message_ids = ["msg_001"]
-        result1 = self.pipeline.run_for_messages(message_ids=message_ids, steps=["entities"])
+        self.pipeline.run_for_messages(message_ids=message_ids, steps=["entities"])
 
         # Insert mock entity to simulate first run completion
         self.db.execute(
@@ -516,7 +516,7 @@ class TestSemanticIntegration(unittest.TestCase):
             with patch.object(service, "store_email") as mock_store:
                 mock_store.return_value = "stored_msg_id"
 
-                result = service.sync_emails(max_results=5)
+                service.sync_emails(max_results=5)
 
                 # Verify semantic pipeline was called
                 mock_get_pipeline.assert_called_once()

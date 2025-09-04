@@ -49,7 +49,7 @@ class TestSemanticSearchAPI(unittest.TestCase):
         mock_vector_store.return_value = mock_store
         
         # Perform search
-        results = search("test query", limit=5)
+        search("test query", limit=5)
         
         # Verify embedding was generated
         mock_embedder.encode.assert_called_once_with("test query")
@@ -141,24 +141,7 @@ class TestSemanticSearchAPI(unittest.TestCase):
                 self.assertIn('gte', applied_filters['created_at'])
                 self.assertEqual(applied_filters['party'], 'John Doe')
     
-    def test_deprecated_functions_warn(self):
-        """Test that deprecated functions issue warnings."""
-        import warnings
-        
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            
-            # Import deprecated function
-            from search_intelligence import get_search_intelligence_service
-            
-            # Call it
-            with patch('search_intelligence.main.SearchIntelligenceService'):
-                get_search_intelligence_service()
-            
-            # Check warning was issued
-            self.assertTrue(len(w) > 0)
-            self.assertTrue(issubclass(w[0].category, DeprecationWarning))
-            self.assertIn("deprecated", str(w[0].message).lower())
+    # Removed deprecated service shim tests as service is being retired
     
     def test_no_keyword_search_functions(self):
         """Verify keyword search functions have been removed."""

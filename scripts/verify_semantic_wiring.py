@@ -304,7 +304,7 @@ class SemanticWiringVerifier:
         test_texts = [f"Test document {i} for performance benchmarking" for i in range(16)]
 
         start = time.time()
-        embeddings = emb_service.encode_batch(test_texts)
+        emb_service.encode_batch(test_texts)
         emb_time = time.time() - start
         emb_throughput = len(test_texts) / emb_time * 60  # per minute
 
@@ -317,7 +317,7 @@ class SemanticWiringVerifier:
             vector_store = get_vector_store("emails")
             # Just test connection speed, don't actually upsert
             start = time.time()
-            info = vector_store.client.get_collection("emails")
+            vector_store.client.get_collection("emails")
             query_time = time.time() - start
 
             # Estimate based on typical batch sizes
@@ -335,7 +335,7 @@ class SemanticWiringVerifier:
 
             for query in ["test", "invoice", "payment"]:
                 start = time.time()
-                results = search_service.search(query, limit=10)
+                search_service.search(query, limit=10)
                 latency = (time.time() - start) * 1000  # ms
                 latencies.append(latency)
 

@@ -10,7 +10,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.simple_db import SimpleDB
 from entity.main import EntityService
 from loguru import logger
-import json
 
 def main():
     """Run entity extraction on all content"""

@@ -1,0 +1,40 @@
+# Exclude transient, cache, and vendor directories from cloc
+.git/
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+
+# Logs and run artifacts
+logs/
+*.log
+qdrant_data/
+qdrant.log
+
+# Virtual environments and site-packages
+.venv/
+venv/
+env/
+ENV/
+**/.venv/
+**/site-packages/
+
+# Python bytecode and caches
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Data directories - only exclude non-code data
+exports/
+snapshots/
+
+# CSV data files (not code)
+*.csv
+
+# Node and other deps
+node_modules/
+
+# Benchmarks and vendor test code
+.benchmarks/
+

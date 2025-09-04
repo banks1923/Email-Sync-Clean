@@ -5,14 +5,10 @@ Usage: python view_search.py "search term"
 """
 
 import sys
-import json
-from pathlib import Path
-from shared.simple_db import SimpleDB
 from search_intelligence.basic_search import search as perform_search
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.syntax import Syntax
 import textwrap
 
 def view_search(query, limit=10):

@@ -66,7 +66,7 @@ def warmup_command():
     return True
 
 
-def search_command(query, limit=5, verbose=False, filters=None, search_mode="hybrid", use_chunk_aggregation=None):
+def search_command(query, limit=5, verbose=False, filters=None, search_mode="semantic", use_chunk_aggregation=None):
     """Simplified search using direct search coordination module"""
     # Check Qdrant status
     import subprocess
@@ -98,18 +98,18 @@ def search_command(query, limit=5, verbose=False, filters=None, search_mode="hyb
         # Direct search using coordination module - Simple > Complex
         if search_mode == "semantic":
             print("🧠 Running semantic search...")
-            results = search_funcs['semantic_search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
+            results = search_funcs['semantic_search'](query, limit=limit, filters=filters)
             search_type = "🧠 Semantic Search"
         elif search_mode == "keyword":
             print("🔤 Running keyword search...")
             db = SimpleDB()
             results = db.search_content(query, limit=limit, filters=filters)
             search_type = "🔤 Keyword Search"
-        else:  # hybrid
+        else:  # hybrid (temporarily routed to semantic-only)
             if qdrant_running:
-                print("🔍 Running hybrid search...")
-                results = search_funcs['search'](query, limit=limit, filters=filters, use_chunk_aggregation=use_chunk_aggregation)
-                search_type = "🔍 Hybrid Search"
+                print("🔍 Hybrid mode selected → using semantic-only (simplified)")
+                results = search_funcs['search'](query, limit=limit, filters=filters)
+                search_type = "🧠 Semantic Search"
             else:
                 print("🔤 Running keyword search (Qdrant unavailable)...")
                 db = SimpleDB()
@@ -209,7 +209,7 @@ def _get_content_preview(result):
     return "No content preview available"
 
 
-def display_search_results(results, search_type, search_mode="hybrid"):
+def display_search_results(results, search_type, search_mode="semantic"):
     """Unified display function for all search result types"""
     try:
         print(f"\n=== {search_type} Results ===")
@@ -225,7 +225,7 @@ def display_search_results(results, search_type, search_mode="hybrid"):
 
         for i, result in enumerate(results, 1):
             # Get content type and icon
-            content_type = result.get("content_type", result.get("type", "unknown"))
+            content_type = result.get("source_type", result.get("content_type", result.get("type", "unknown")))
             type_icons = {"email": "📧", "pdf": "📄", "transcript": "🎙️", "document": "📄", "note": "📝"}
             icon = type_icons.get(content_type, "📄")
 
@@ -935,19 +935,33 @@ Examples:
 
 
 def _build_search_filters(args) -> dict | None:
-    """Build filters dictionary from command line arguments."""
+    """Build filters for semantic vector search.
+
+    Maps CLI args to the function API expected by search_intelligence.basic_search:
+    - since/until → date_range.start/end (maps to created_at range)
+    - types → source_type (string or list)
+    - tags → tags (string or list)
+    """
     filters = {}
-    if args.since:
-        filters["since"] = args.since
-    if args.until:
-        filters["until"] = args.until
+
+    # Date range
+    if args.since or args.until:
+        date_range = {}
+        if args.since:
+            date_range["start"] = args.since
+        if args.until:
+            date_range["end"] = args.until
+        filters["date_range"] = date_range
+
+    # Content types → source_type
     if args.types:
-        filters["content_types"] = args.types
+        # pass list directly; vector layer supports list via MatchAny
+        filters["source_type"] = args.types if isinstance(args.types, list) else [args.types]
+
+    # Tags
     if args.tags:
         filters["tags"] = args.tags
-        filters["tag_logic"] = args.tag_logic
-    
-    # Return filters only if any are specified
+
     return filters if filters else None
 
 
@@ -962,7 +976,7 @@ def _dispatch_command(args) -> None:
         filters = _build_search_filters(args)
         
         # Determine search mode based on flags
-        search_mode = "hybrid"  # default
+        search_mode = "semantic"  # default simplified mode
         if args.keyword_only and args.semantic_only:
             print("❌ Cannot use both --keyword-only and --semantic-only flags")
             return

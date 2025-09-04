@@ -9,7 +9,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 from uuid import UUID, uuid5
 
 

@@ -4,7 +4,7 @@ Extracts grammatical dependencies and relationships from text.
 """
 
 import spacy
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from loguru import logger
 
 

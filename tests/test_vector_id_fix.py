@@ -8,7 +8,7 @@ Tests the fix applied to utilities/embeddings/batch_processor.py
 
 import hashlib
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # Test the vector ID generation logic
 class TestVectorIDGeneration(unittest.TestCase):
@@ -81,7 +81,7 @@ class TestVectorIDGeneration(unittest.TestCase):
             
             # Process chunks
             processor = BatchEmbeddingProcessor()
-            result = processor._process_batch([{
+            processor._process_batch([{
                 "id": 672,
                 "source_id": "doc123:0", 
                 "body": "Test content",

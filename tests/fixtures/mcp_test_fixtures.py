@@ -28,7 +28,7 @@ def mock_search_service():
             "title": "Legal Document Test",
             "content": "This is a legal document about contracts and agreements.",
             "source_type": "email",
-            "relevance_score": 0.95,
+            "semantic_score": 0.95,
             "created_time": "2024-08-22T10:00:00",
         },
         {
@@ -36,7 +36,7 @@ def mock_search_service():
             "title": "Contract Analysis",
             "content": "Analysis of contract terms and legal obligations.",
             "source_type": "pdf",
-            "relevance_score": 0.87,
+            "semantic_score": 0.87,
             "created_time": "2024-08-21T15:30:00",
         },
     ]

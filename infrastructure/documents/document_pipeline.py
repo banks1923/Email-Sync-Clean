@@ -32,7 +32,8 @@ try:
 except ImportError:
     DB_AVAILABLE = False
     SimpleDB = None
-    get_db_path = lambda: "data/emails.db"
+    def get_db_path():
+        return "data/emails.db"
 
 # Logger is now imported globally from loguru
 

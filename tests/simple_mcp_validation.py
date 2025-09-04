@@ -12,30 +12,15 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-def test_query_expansion_logic():
+def test_search_api_availability():
     """
-    Test the core query expansion logic we fixed.
+    Validate function-based search API is available.
     """
-    print("🧪 Testing query expansion logic...")
-
-    # Test the core logic that was broken
-    query = "legal"
-    expanded_terms = ["law", "judicial"]
-
-    # OLD WAY (broken): concatenated string
-    old_way = f"{query} {' '.join(expanded_terms)}"
-    assert old_way == "legal law judicial"
-
-    # NEW WAY (fixed): OR conditions
-    all_terms = [query] + expanded_terms
-    or_conditions = " OR ".join(
-        [f"(title LIKE '%{term}%' OR body LIKE '%{term}%')" for term in all_terms]
-    )
-
-    expected_sql = "(title LIKE '%legal%' OR body LIKE '%legal%') OR (title LIKE '%law%' OR body LIKE '%law%') OR (title LIKE '%judicial%' OR body LIKE '%judicial%')"
-    assert or_conditions == expected_sql
-
-    print("✅ Query expansion logic validated")
+    print("🧪 Testing function-based search API...")
+    from search_intelligence import search, find_literal
+    assert callable(search)
+    assert callable(find_literal)
+    print("✅ Function API validated")
 
 
 def test_mcp_parameter_mapping():
@@ -54,49 +39,22 @@ def test_mcp_parameter_mapping():
     }
 
     assert service_params["doc_id"] == "test_123"
-    assert service_params["force_refresh"] == False
+    assert not service_params["force_refresh"]
 
     print("✅ Parameter mapping validated")
 
 
-def test_search_intelligence_service_methods():
+def test_mcp_tools_list():
     """
-    Test that SearchIntelligenceService has the methods we expect.
+    Validate search MCP tool names exist.
     """
-    print("🧪 Testing SearchIntelligenceService method signatures...")
-
-    try:
-        # Test that methods exist and have expected signatures
-        import inspect
-
-        from search_intelligence.main import SearchIntelligenceService
-
-        # Check smart_search_with_preprocessing
-        method = getattr(SearchIntelligenceService, "smart_search_with_preprocessing")
-        sig = inspect.signature(method)
-        expected_params = ["self", "query", "limit", "use_expansion", "filters"]
-        actual_params = list(sig.parameters.keys())
-
-        for param in expected_params:
-            assert param in actual_params, f"Missing parameter: {param}"
-
-        # Check extract_and_cache_entities
-        method = getattr(SearchIntelligenceService, "extract_and_cache_entities")
-        sig = inspect.signature(method)
-        assert "doc_id" in sig.parameters
-        assert "force_refresh" in sig.parameters
-
-        # Check analyze_document_similarity
-        method = getattr(SearchIntelligenceService, "analyze_document_similarity")
-        sig = inspect.signature(method)
-        assert "doc_id" in sig.parameters
-        assert "threshold" in sig.parameters
-
-        print("✅ SearchIntelligenceService method signatures validated")
-
-    except ImportError as e:
-        print(f"⚠️ Could not import SearchIntelligenceService: {e}")
-        print("   This is expected if dependencies are not available")
+    print("🧪 Testing MCP tool registration...")
+    from infrastructure.mcp_servers.search_intelligence_mcp import SearchIntelligenceMCPServer
+    server = SearchIntelligenceMCPServer()
+    tools = [t.name for t in server.server._tools]  # access registered tools
+    assert "search_smart" in tools
+    assert "find_literal" in tools
+    print("✅ MCP tools present")
 
 
 def test_mcp_function_imports():
@@ -119,30 +77,25 @@ def test_mcp_function_imports():
     return True
 
 
-def test_logging_implementation():
+def test_basic_filter_mapping():
     """
-    Test that debug logging is implemented correctly.
+    Validate CLI filter mapping to function API shape.
     """
-    print("🧪 Testing debug logging implementation...")
+    print("🧪 Testing filter mapping...")
+    class Args:
+        since = "2024-01-01"
+        until = "2024-02-01"
+        types = ["email_message"]
+        tags = ["urgent"]
+        tag_logic = "OR"
 
-    try:
-        import inspect
-
-        from search_intelligence.main import SearchIntelligenceService
-
-        # Check that the smart_search_with_preprocessing method contains debug logging
-        source = inspect.getsource(SearchIntelligenceService.smart_search_with_preprocessing)
-
-        # Look for the debug logging we added
-        assert (
-            "logger.debug" in source
-        ), "Debug logging not found in smart_search_with_preprocessing"
-        assert "No results found for query" in source, "Expected debug message not found"
-
-        print("✅ Debug logging implementation validated")
-
-    except Exception as e:
-        print(f"⚠️ Could not validate logging implementation: {e}")
+    from tools.scripts.vsearch import _build_search_filters
+    f = _build_search_filters(Args)
+    assert f["date_range"]["start"] == "2024-01-01"
+    assert f["date_range"]["end"] == "2024-02-01"
+    assert f["source_type"] == ["email_message"]
+    assert f["tags"] == ["urgent"]
+    print("✅ Filter mapping validated")
 
 
 def run_all_tests():
@@ -153,11 +106,11 @@ def run_all_tests():
     print("=" * 50)
 
     tests = [
-        test_query_expansion_logic,
+        test_search_api_availability,
         test_mcp_parameter_mapping,
-        test_search_intelligence_service_methods,
+        test_mcp_tools_list,
         test_mcp_function_imports,
-        test_logging_implementation,
+        test_basic_filter_mapping,
     ]
 
     passed = 0

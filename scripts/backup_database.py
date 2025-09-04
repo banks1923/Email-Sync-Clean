@@ -313,7 +313,7 @@ def main():
     create_parser.add_argument("--description", help="Backup description")
 
     # List backups command
-    list_parser = subparsers.add_parser("list", help="List available backups")
+    subparsers.add_parser("list", help="List available backups")
 
     # Restore backup command
     restore_parser = subparsers.add_parser("restore", help="Restore from backup")

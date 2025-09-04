@@ -9,68 +9,25 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from search_intelligence.main import SearchIntelligenceService
+from search_intelligence import search as semantic_search
 
 
 def test_search_intelligence():
     """
-    Test the search intelligence service with markdown support.
+    Test the function-based search with basic expectations.
     """
     print("=" * 50)
     print("Testing Search Intelligence Markdown Integration")
     print("=" * 50)
 
-    # Import with error handling
     try:
-        print("✅ SearchIntelligenceService imported")
-    except ImportError as e:
-        print(f"❌ Failed to import SearchIntelligenceService: {e}")
-        return False
-
-    # Initialize service
-    try:
-        # Disable vector store to avoid connection errors
-        import os
-
-        os.environ["DISABLE_VECTOR_STORE"] = "true"
-
-        service = SearchIntelligenceService()
-        print("✅ Service initialized")
+        results = semantic_search("contract", limit=2)
+        assert isinstance(results, list)
+        print("✅ Semantic search callable and returned list")
+        return True
     except Exception as e:
-        print(f"⚠️ Service initialization warning: {e}")
-        # Continue anyway as this might be vector store issue
-        service = None
-
-    if not service:
-        print("❌ Could not initialize service")
+        print(f"❌ Semantic search failed: {e}")
         return False
-
-    # Check unified search method
-    if hasattr(service, "unified_search"):
-        print("✅ Unified search method exists")
-    else:
-        print("❌ Unified search method not found")
-        return False
-
-    # Test helper methods
-    test_methods = ["_preprocess_and_expand_query", "_merge_and_rank_results"]
-
-    for method in test_methods:
-        if hasattr(service, method):
-            print(f"✅ Method {method} exists")
-        else:
-            print(f"❌ Method {method} not found")
-
-    print("\n" + "=" * 50)
-    print("Integration Test Summary")
-    print("=" * 50)
-    print("✅ Search Intelligence Service successfully updated")
-    print("✅ Markdown file search capability integrated")
-    print("✅ Frontmatter metadata parsing available")
-    print("✅ Vector search compatibility maintained")
-    print("✅ Backward compatibility preserved")
-
-    return True
 
 
 def test_cli_integration():
@@ -82,25 +39,13 @@ def test_cli_integration():
     print("=" * 50)
 
     try:
-        from search_intelligence import basic_search as search_emails
-
-        print("✅ search_emails function imported")
-
-        # Check if function accepts mode parameter
-        import inspect
-
-        sig = inspect.signature(search_emails)
-        if "mode" in sig.parameters:
-            print("✅ search_emails accepts 'mode' parameter")
-        else:
-            print("❌ search_emails missing 'mode' parameter")
-
+        from tools.scripts import vsearch as cli
+        assert hasattr(cli, 'search_command')
+        print("✅ CLI search_command available")
+        return True
     except Exception as e:
         print(f"❌ CLI integration error: {e}")
         return False
-
-    print("✅ CLI handler updated with backward compatibility")
-    return True
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test all Legal BERT functionality - Final comprehensive test."""
 
-from loguru import logger
 from search_intelligence.main import SearchIntelligenceService
 from shared.simple_db import SimpleDB
 import json
@@ -100,8 +99,8 @@ def test_all_features():
     vector_store = get_vector_store("vectors_v2")
     vector_count = vector_store.count()
     print(f"   Legal BERT vectors indexed: {vector_count}")
-    print(f"   Collection: vectors_v2")
-    print(f"   Dimensions: 1024 (Legal BERT)")
+    print("   Collection: vectors_v2")
+    print("   Dimensions: 1024 (Legal BERT)")
     
     print("\n" + "="*60)
     print("✅ ALL LEGAL BERT FEATURES TESTED SUCCESSFULLY")

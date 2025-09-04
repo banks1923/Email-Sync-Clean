@@ -9,7 +9,6 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pdf.ocr.validator import PDFValidator
-from loguru import logger
 
 def analyze_pdfs(directory: str):
     """Analyze all PDFs in directory to determine if searchable or scanned."""

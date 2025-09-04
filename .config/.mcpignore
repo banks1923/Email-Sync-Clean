@@ -99,3 +99,21 @@ node_modules/
 # Documentation builds
 docs/_build/
 site/
+
+# Data exports and analysis files
+exports/
+*.csv
+data/extra_entries_analysis.csv
+data/police_search_results.csv
+
+# Case data and documents (non-code content)
+data/Stoneman_dispute/
+data/reports/
+data/sequential_thinking/
+
+# SQL dumps and migrations (already in version control if needed)
+*.sql
+
+# Test fixtures are code-related, so not excluded
+# But large text data files should be
+all_emails.txt

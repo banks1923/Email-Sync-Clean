@@ -6,7 +6,7 @@ Computes quality scores and enforces gating thresholds.
 
 import re
 import os
-from typing import Generator, Optional, Dict, Any, Callable
+from typing import Generator, Optional, Callable
 from functools import wraps
 from collections import Counter
 

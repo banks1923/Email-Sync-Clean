@@ -119,7 +119,7 @@ def main():
     print("\nTesting database performance...")
     db_stats = test_database_performance()
     
-    print(f"✅ Database stats:")
+    print("✅ Database stats:")
     print(f"   Total content: {db_stats['content_stats']['total']}")
     print(f"   Ready for embedding: {db_stats['content_stats']['ready_for_embedding']}")
     print(f"   Already embedded: {db_stats['content_stats']['already_embedded']}")

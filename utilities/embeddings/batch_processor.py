@@ -15,7 +15,6 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from loguru import logger
-import numpy as np
 
 from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service

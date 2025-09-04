@@ -7,7 +7,6 @@ after the changes to enable them in SimpleDB.
 
 import sqlite3
 import sys
-from pathlib import Path
 
 from loguru import logger
 from shared.simple_db import SimpleDB
@@ -125,7 +124,7 @@ def test_foreign_keys():
     
     # Test a typical query with FK enabled
     start = time.perf_counter()
-    results = db.search_content("test", limit=10)
+    db.search_content("test", limit=10)
     elapsed = (time.perf_counter() - start) * 1000
     
     print(f"   Search query took {elapsed:.1f}ms")

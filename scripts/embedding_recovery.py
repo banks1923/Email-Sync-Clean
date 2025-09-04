@@ -49,7 +49,7 @@ def main():
         
         try:
             # Parse metadata
-            metadata = json.loads(metadata_str) if metadata_str else {}
+            json.loads(metadata_str) if metadata_str else {}
             
             # Create chunks for documents
             if source_type == 'document' and len(body) > 1500:

@@ -38,6 +38,12 @@ except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
 
+# Patchable factory hook for tests
+def get_search_intelligence_service(db_path: str | None = None):
+    from search_intelligence import get_search_intelligence_service as _factory
+
+    return _factory(db_path) if db_path else _factory()
+
 def search_smart(
     query: str, limit: int = 10, use_expansion: bool = True, content_type: str | None = None
 ) -> str:
@@ -69,8 +75,10 @@ def search_smart(
         # Format results
         for i, result in enumerate(results, 1):
             title = result.get("title", "Untitled")
-            content_type = result.get("content_type", "unknown")
-            score = result.get("relevance_score", 0)
+            # Prefer source_type; fall back for legacy payloads
+            content_type = result.get("source_type", result.get("content_type", "unknown"))
+            # Prefer standardized semantic_score; support legacy fields
+            score = result.get("semantic_score", result.get("relevance_score", result.get("score", 0)))
             snippet = result.get("content", "")[:200] + "..."
 
             output += f"{i}. [{content_type}] {title} (score: {score:.2f})\n"
@@ -142,7 +150,6 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
         return "Search intelligence services not available"
 
     try:
-        from search_intelligence import get_search_intelligence_service
         service = get_search_intelligence_service()
 
         # Find similar documents
@@ -158,10 +165,11 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
         output += f"📈 Similarity Threshold: {threshold:.2f}\n\n"
 
         for i, doc in enumerate(similar_docs, 1):
-            doc_id = doc.get("document_id", "unknown")
+            doc_id = doc.get("document_id", doc.get("content_id", "unknown"))
             similarity = doc.get("similarity_score", 0)
             title = doc.get("title", "Untitled")
-            content_type = doc.get("content_type", "unknown")
+            # Prefer source_type; fall back for legacy payloads
+            content_type = doc.get("source_type", doc.get("content_type", "unknown"))
 
             output += f"{i}. [{content_type}] {title}\n"
             output += f"   📊 Similarity: {similarity:.2%}\n"

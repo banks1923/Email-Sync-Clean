@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Test all Legal BERT functionality."""
 
-from loguru import logger
 from search_intelligence.main import SearchIntelligenceService
 from shared.simple_db import SimpleDB
-import json
 
 def test_all_features():
     """Test all Legal BERT features."""

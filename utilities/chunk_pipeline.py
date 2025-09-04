@@ -14,7 +14,7 @@ Simple, direct implementation following CLAUDE.md principles.
 """
 
 import time
-from typing import Any, Dict, List, Optional, Generator
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from loguru import logger

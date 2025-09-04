@@ -24,7 +24,7 @@ def search_emails(query, limit=5, hybrid=True, mode="semantic"):
         mode: Legacy parameter (ignored - always semantic)
     """
     print(f"🧠 Semantic Search for: '{query}'")
-    locator = get_locator()
+    get_locator()
     
     try:
         # Import the new semantic search directly

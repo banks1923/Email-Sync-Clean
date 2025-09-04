@@ -209,7 +209,7 @@ class TestDatabase:
         import uuid
 
         content_id = str(uuid.uuid4())
-        metadata_json = json.dumps(metadata or {})
+        json.dumps(metadata or {})
 
         self.conn.execute(
             """

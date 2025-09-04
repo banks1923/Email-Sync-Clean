@@ -52,14 +52,6 @@ cat > .mcp.json.tmp << EOF
 				"PYTHONPATH": "/Users/jim/Projects/Email-Sync-Clean-Backup"
 			}
 		},
-		"filesystem": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-filesystem",
-				"/Users/jim/Projects/Email-Sync-Clean-Backup"
-			]
-		},
 		"sequential-thinking": {
 			"command": "python3",
 			"args": [
@@ -67,7 +59,7 @@ cat > .mcp.json.tmp << EOF
 			],
 			"env": {
 				"PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
-				"MCP_STORAGE_DIR": "/Users/jim/Projects/Email-Sync-Clean-Backup/data/sequential_thinking"
+				"MCP_STORAGE_DIR": "/Users/jim/Projects/Email-Sync-Clean-Backup/data/system_data/sequential_thinking"
 			}
 		}
 	}

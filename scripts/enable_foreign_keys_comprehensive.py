@@ -19,7 +19,6 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
-from datetime import datetime
 
 from loguru import logger
 from shared.simple_db import SimpleDB
@@ -177,7 +176,7 @@ def add_foreign_key_constraints(db: SimpleDB, dry_run: bool = False) -> bool:
         
         # Get the current schema
         cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='content_unified'")
-        original_schema = cursor.fetchone()[0]
+        cursor.fetchone()[0]
         
         # Drop old table
         cursor.execute("DROP TABLE content_unified")
@@ -434,7 +433,7 @@ def validate_constraints(db: SimpleDB) -> bool:
         orphans = cursor.fetchone()[0]
         
         if orphans == 0:
-            print(f"   ✅ No orphaned email_message records")
+            print("   ✅ No orphaned email_message records")
         else:
             print(f"   ❌ Found {orphans} orphaned email_message records")
             return False

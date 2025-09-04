@@ -20,8 +20,6 @@ from utilities.embeddings import get_embedding_service
 from utilities.timeline import TimelineService
 from utilities.vector_store import get_vector_store
 from utilities.chunk_pipeline import ChunkPipeline
-from src.chunker.document_chunker import DocumentChunker
-from src.quality.quality_score import ChunkQualityScorer
 
 
 class ServiceOrchestrator:

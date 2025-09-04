@@ -60,15 +60,6 @@ if PYDANTIC_AVAILABLE:
                     "args": ["infrastructure/mcp_servers/search_intelligence_mcp.py"],
                     "env": {"PYTHONPATH": str(self.project_root)},
                 },
-                "filesystem": {
-                    "type": "stdio",
-                    "command": "npx",
-                    "args": [
-                        "-y",
-                        "@modelcontextprotocol/server-filesystem",
-                        str(self.project_root),
-                    ],
-                },
                 "sequential-thinking": {
                     "type": "stdio",
                     "command": "python3",

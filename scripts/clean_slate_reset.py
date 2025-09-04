@@ -4,8 +4,6 @@ Clean slate reset for embeddings and email data.
 Clears all embeddings and prepares for fresh processing.
 """
 
-import sqlite3
-from pathlib import Path
 from loguru import logger
 from shared.simple_db import SimpleDB
 
@@ -95,7 +93,7 @@ def clean_email_data():
         
         conn.commit()
         
-        logger.info(f"Cleaned email data:")
+        logger.info("Cleaned email data:")
         logger.info(f"  Content unified: {emails_deleted} records")
         logger.info(f"  Individual messages: {messages_deleted}")
         logger.info(f"  Message occurrences: {occurrences_deleted}")

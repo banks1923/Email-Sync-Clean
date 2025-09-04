@@ -27,12 +27,21 @@ help: ## Show available commands
 	@echo ""
 	@echo "📊 SYSTEM:"
 	@echo "  make status         System health check"
+	@echo "  make cloc           LOC for repo (excludes caches/venvs)"
+	@echo "  make cloc-tracked   LOC for git-tracked files only"
 	@echo "  make backup         Backup your data"
 	@echo ""
 	@echo "📄 CONTENT:"
 	@echo "  make search QUERY=\"terms\"    Search documents"
 	@echo "  make upload FILE=\"doc.pdf\"   Upload document"
 	@echo "  make sync                     Sync Gmail emails"
+	@echo ""
+	@echo "🧠 EMBEDDINGS PIPELINE (one-liners):"
+	@echo "  make pipeline-start [LIMIT=20 BATCH=16 TOKENS=512]   Start chunk+embed in background"
+	@echo "  make pipeline-run   [LIMIT=20 BATCH=16 TOKENS=512]   Run chunk+embed in foreground with live output"
+	@echo "  make pipeline-status                                 Show PID, DB counts, last log lines"
+	@echo "  make pipeline-tail                                    Tail latest pipeline log"
+	@echo "  make pipeline-stop                                    Stop running pipeline"
 	@echo ""
 	@echo "🔧 TROUBLESHOOTING:"
 	@echo "  make diagnose       Deep system diagnostic"
@@ -86,24 +95,44 @@ test-all: ## Run all tests (including slow AI tests)
 
 format: ## Format code (black, isort, docformatter)
 	@echo "🎨 Formatting code..."
-	black .
-	isort .
-	find . -name "*.py" -not -path "*/__pycache__/*" | xargs docformatter --in-place --make-summary-multi-line
+	# Exclude vendor/venv/cache directories explicitly
+	EXCLUDES='(.*/)?(\.venv|venv|env|node_modules|\.cache|site-packages)(/|$)'; \
+	black --exclude "$$EXCLUDES" .; \
+	isort --skip-gitignore --extend-skip-glob "**/.venv/**,**/site-packages/**,**/.cache/**" .; \
+	find . -type f -name "*.py" \
+	  -not -path "*/__pycache__/*" \
+	  -not -path "*/.venv/*" \
+	  -not -path "*/venv/*" \
+	  -not -path "*/env/*" \
+	  -not -path "*/node_modules/*" \
+	  -not -path "*/.cache/*" \
+	  -not -path "*/site-packages/*" \
+	| xargs docformatter --in-place --make-summary-multi-line
 	@echo "✅ Code formatted"
 
 lint: ## Check code quality (flake8, ruff, mypy)
 	@echo "🔍 Checking code quality..."
 	@echo "Running flake8..."
-	@flake8 --config .config/.flake8 . || true
+	@flake8 --config .config/.flake8 --exclude .venv,venv,env,node_modules,.cache,**/site-packages/**,infrastructure/mcp_servers/mcp-sequential-thinking/.venv . || true
 	@echo "Running ruff..."
-	@ruff check . --statistics || true
+	@ruff check . --statistics --exclude .venv,venv,env,node_modules,.cache,**/site-packages/**,infrastructure/mcp_servers/mcp-sequential-thinking/.venv || true
 	@echo "Running mypy..."
-	@mypy --config-file .config/mypy.ini gmail/ shared/ utilities/ infrastructure/ --ignore-missing-imports || true
+	@mypy --config-file .config/mypy.ini gmail/ shared/ utilities/ infrastructure/ --ignore-missing-imports \
+	  --exclude '(^|/)\.venv(/|$)|(^|/)venv(/|$)|(^|/)env(/|$)|(^|/)node_modules(/|$)|(^|/)\.cache(/|$)|(^|/)site-packages(/|$)|(^|/)infrastructure/mcp_servers/mcp-sequential-thinking/\.venv(/|$)' || true
 
 fix: ## Auto-fix common code issues
 	@echo "🔧 Auto-fixing issues..."
-	ruff check . --fix --unsafe-fixes
-	autoflake --remove-all-unused-imports --remove-unused-variables --in-place --recursive .
+	ruff check . --fix --unsafe-fixes --exclude .venv,venv,env,node_modules,.cache,**/site-packages/**,infrastructure/mcp_servers/mcp-sequential-thinking/.venv
+	# Run autoflake only on project files, not vendor/venv/cache
+	find . -type f -name "*.py" \
+	  -not -path "*/__pycache__/*" \
+	  -not -path "*/.venv/*" \
+	  -not -path "*/venv/*" \
+	  -not -path "*/env/*" \
+	  -not -path "*/node_modules/*" \
+	  -not -path "*/.cache/*" \
+	  -not -path "*/site-packages/*" \
+	| xargs autoflake --remove-all-unused-imports --remove-unused-variables --in-place
 	$(MAKE) format
 	@echo "✅ Auto-fixes applied"
 
@@ -112,7 +141,7 @@ clean: ## Clean up cache files and temporary data
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
-	@rm -rf .mypy_cache/ .pytest_cache/ .ruff_cache/ htmlcov/ .coverage 2>/dev/null || true
+	@rm -rf .mypy_cache/ .pytest_cache/ .ruff_cache/ htmlcov/ .coverage .cache/ 2>/dev/null || true
 	@find logs/ -name "*.log" -mtime +7 -delete 2>/dev/null || true
 	@echo "✅ Cleanup complete"
 
@@ -150,6 +179,18 @@ diagnose: ## Deep system diagnostic (when things are broken)
 	@echo "=== Recent Logs ==="
 	@echo "Last 10 log entries:"
 	@ls -la logs/ 2>/dev/null | head -5 || echo "No logs directory"
+
+# =============================================================================
+# CODE METRICS - Accurate line counts
+# =============================================================================
+
+cloc: ## Count lines, excluding caches/venvs/data
+	@echo "📏 Counting lines (excluding caches/venvs/data via .clocignore)..."
+	@cloc --exclude-list-file=.clocignore .
+
+cloc-tracked: ## Count lines for git-tracked files only
+	@echo "📏 Counting lines for git-tracked files only..."
+	@cloc --vcs=git
 
 # =============================================================================
 # CONTENT OPERATIONS - User-facing functionality
@@ -273,3 +314,82 @@ test-basic: ## Basic functionality test (no external dependencies)
 	@$(PYTHON) -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('✅ Database working')" || echo "❌ Database test failed"
 	@$(PYTHON) -c "from utilities.embeddings.embedding_service import get_embedding_service; svc = get_embedding_service(); result = svc.encode('test'); print('✅ Embeddings working') if len(result) == 1024 else print('❌ Embeddings failed')" || echo "❌ Embeddings test failed"
 	@echo "✅ Basic tests passed"
+
+# =============================================================================
+# EMBEDDINGS PIPELINE - Simple background controls
+# =============================================================================
+
+# Start chunking + embeddings in background with logging
+# Usage: make pipeline-start [LIMIT=20] [BATCH=16] [TOKENS=512]
+pipeline-start: ## Start chunk+embed in background (LIMIT,BATCH,TOKENS optional)
+	@echo "🚀 Starting embeddings pipeline (background)"
+	@$(MAKE) ensure-qdrant
+	@mkdir -p logs
+	@stamp=$$(date +%F_%H%M%S); \
+	log=logs/pipeline_$$stamp.log; \
+	echo "Log: $$log"; \
+	BATCH_VAL=$${BATCH:-16}; \
+	TOKENS_VAL=$${TOKENS:-512}; \
+	LIMIT_FLAG=$$( [ -n "$$LIMIT" ] && echo "--limit $$LIMIT" ); \
+	( EMBEDDING_BATCH_SIZE=$$BATCH_VAL EMBEDDING_MAX_TOKENS=$$TOKENS_VAL nohup $(PYTHON) tools/scripts/vsearch chunk-ingest --embeddings --batch-size $$BATCH_VAL $$LIMIT_FLAG > "$$log" 2>&1 & echo $$! > logs/pipeline.pid ); \
+	ps -p $$(cat logs/pipeline.pid) -o pid,etime,%%cpu,%%mem,command | sed -n '1,2p'
+
+# Run in foreground with line-buffered output and log capture
+# Usage: make pipeline-run [LIMIT=20] [BATCH=16] [TOKENS=512]
+pipeline-run: ## Run chunk+embed in foreground with live output
+	@$(MAKE) ensure-qdrant
+	@mkdir -p logs
+	@stamp=$$(date +%F_%H%M%S); \
+	log=logs/pipeline_$$stamp.log; \
+	echo "📜 Logging to: $$log"; \
+	BATCH_VAL=$${BATCH:-16}; \
+	TOKENS_VAL=$${TOKENS:-512}; \
+	LIMIT_FLAG=$$( [ -n "$$LIMIT" ] && echo "--limit $$LIMIT" ); \
+	EMBEDDING_BATCH_SIZE=$$BATCH_VAL EMBEDDING_MAX_TOKENS=$$TOKENS_VAL stdbuf -oL -eL $(PYTHON) tools/scripts/vsearch chunk-ingest --embeddings --batch-size $$BATCH_VAL $$LIMIT_FLAG | tee "$$log"
+
+# Show status: PID, quick DB counts, and last log lines
+pipeline-status: ## Show pipeline PID, DB counts, recent log
+	@PID=$$(cat logs/pipeline.pid 2>/dev/null || true); \
+	if [ -z "$$PID" ]; then echo "❌ No PID file found (logs/pipeline.pid)"; exit 0; fi; \
+	if ps -p "$$PID" >/dev/null 2>&1; then echo "✅ RUNNING: PID $$PID"; else echo "⚠️  Not running (stale PID $$PID)"; fi; \
+	$(PYTHON) - << 'PY'
+	import sqlite3, json
+	path='data/system_data/emails.db'
+	try:
+	  con=sqlite3.connect(path); con.row_factory=sqlite3.Row; cur=con.cursor()
+	  def q(sql):
+	    try: return cur.execute(sql).fetchone()['c']
+	    except Exception as e: return f"err: {e}"
+	  counts={
+	    'ready_to_chunk': q("""
+	      SELECT COUNT(*) c FROM content_unified d
+	      WHERE d.ready_for_embedding=1 AND d.source_type='email_message'
+	      AND NOT EXISTS (
+	        SELECT 1 FROM content_unified c2
+	        WHERE c2.source_type='document_chunk' AND c2.source_id LIKE d.source_id || ':%'
+	      )
+	    """),
+	    'chunks_total': q("SELECT COUNT(*) c FROM content_unified WHERE source_type='document_chunk'"),
+	    'chunks_embedded': q("SELECT COUNT(*) c FROM content_unified WHERE source_type='document_chunk' AND embedding_generated=1"),
+	    'chunks_pending_embed': q("SELECT COUNT(*) c FROM content_unified WHERE source_type='document_chunk' AND ready_for_embedding=1 AND embedding_generated=0")
+	  }
+	  print(json.dumps(counts))
+	except Exception as e:
+	  print('{"db":"unavailable","error":"%s"}' % e)
+	PY
+	@log_latest=$$(ls -t logs/pipeline_*.log 2>/dev/null | head -n1 || true); \
+	if [ -n "$$log_latest" ]; then echo "--- $$log_latest (last 20) ---"; tail -n 20 "$$log_latest"; else echo "No pipeline logs found"; fi
+
+# Tail the latest pipeline log
+pipeline-tail: ## Tail the latest pipeline log
+	@log_latest=$$(ls -t logs/pipeline_*.log 2>/dev/null | head -n1 || true); \
+	if [ -z "$$log_latest" ]; then echo "❌ No pipeline logs found"; exit 1; fi; \
+	echo "📜 Tailing: $$log_latest"; \
+	tail -f "$$log_latest"
+
+# Stop the running pipeline
+pipeline-stop: ## Stop the background pipeline process
+	@PID=$$(cat logs/pipeline.pid 2>/dev/null || true); \
+	if [ -z "$$PID" ]; then echo "❌ No PID file found (logs/pipeline.pid)"; exit 0; fi; \
+	if ps -p "$$PID" >/dev/null 2>&1; then echo "🛑 Killing $$PID"; kill "$$PID"; sleep 1; else echo "ℹ️  Process not running"; fi; \
+	rm -f logs/pipeline.pid

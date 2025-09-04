@@ -276,7 +276,7 @@ class TestChunkQualityScorer:
             token_start=0,
             token_end=100
         )
-        score = custom_scorer.score(chunk)
+        custom_scorer.score(chunk)
         
         # With threshold 0.5, chunk with score 0.4 should be rejected
         chunk.quality_score = 0.4

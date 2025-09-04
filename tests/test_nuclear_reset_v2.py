@@ -4,7 +4,6 @@ Nuclear Reset v2: Comprehensive test suite to verify the migration.
 Tests that legacy tables are quarantined and v2 schema is working.
 """
 
-import sqlite3
 import sys
 from pathlib import Path
 

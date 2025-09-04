@@ -4,7 +4,6 @@ CI Guard: Ensure no legacy tables exist in the database.
 This test MUST always pass to prevent regression to old schema.
 """
 
-import sqlite3
 import sys
 from pathlib import Path
 

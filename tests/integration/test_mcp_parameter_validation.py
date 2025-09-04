@@ -76,57 +76,51 @@ class TestSearchIntelligenceMCPParameters:
         assert "Similar Documents" in result
         assert "similar_doc" in result
 
-    @patch("infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service")
-    def test_search_smart_parameter_validation(self, mock_get_service):
+    @patch("search_intelligence.search")
+    def test_search_smart_parameter_validation(self, mock_search_fn):
         """
-        Test search_smart parameter validation and query expansion.
+        Test search_smart parameter mapping to function API and output formatting.
         """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
 
-        # Mock the service
-        mock_service = Mock()
-        mock_service.smart_search_with_preprocessing.return_value = [
+        # Mock the function API
+        mock_search_fn.return_value = [
             {
                 "title": "Legal Document",
                 "content": "This is legal content...",
                 "source_type": "email",
-                "relevance_score": 0.95,
+                "semantic_score": 0.95,
             }
         ]
-        mock_service._expand_query.return_value = ["law", "judicial"]
-        mock_get_service.return_value = mock_service
 
-        # Test with query expansion enabled
+        # Call search with content_type filter
         result = search_smart(query="legal", limit=10, use_expansion=True, content_type="email")
 
-        # Verify service method called with correct parameters
-        expected_filters = {"content_types": ["email"]}
-        mock_service.smart_search_with_preprocessing.assert_called_once_with(
-            query="legal", limit=10, use_expansion=True, filters=expected_filters
-        )
+        # Verify function called with filters mapped to source_type
+        mock_search_fn.assert_called_once()
+        called_kwargs = mock_search_fn.call_args.kwargs
+        assert called_kwargs["query"] == "legal"
+        assert called_kwargs["limit"] == 10
+        assert called_kwargs["filters"]["source_type"] == "email"
 
-        # Verify expansion terms shown in output
-        mock_service._expand_query.assert_called_once_with("legal")
-        assert "Expanded Terms" in result
-        assert "law, judicial" in result
+        # Verify output formatting includes score and title
+        assert "Semantic Search Results" in result
+        assert "Legal Document" in result
 
-    @patch("infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service")
-    def test_search_smart_no_expansion(self, mock_get_service):
+    @patch("search_intelligence.search")
+    def test_search_smart_no_expansion(self, mock_search_fn):
         """
-        Test search_smart without query expansion.
+        Test search_smart without query expansion (semantic-only).
         """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
 
-        mock_service = Mock()
-        mock_service.smart_search_with_preprocessing.return_value = []
-        mock_service._expand_query.return_value = []
-        mock_get_service.return_value = mock_service
+        mock_search_fn.return_value = []
 
         # Test with expansion disabled
         result = search_smart(query="test", use_expansion=False)
 
-        # Verify no expansion was attempted
-        mock_service._expand_query.assert_called_once_with("test")
+        # Should call search() and show no results
+        mock_search_fn.assert_called_once()
         assert "📭 No results found" in result
 
     @patch("infrastructure.mcp_servers.search_intelligence_mcp.SimpleDB")

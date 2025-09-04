@@ -5,7 +5,6 @@ query expansion, document similarity analysis, entity extraction
 caching, and content clustering.
 """
 
-import hashlib
 import json
 import re
 from datetime import datetime
@@ -13,8 +12,6 @@ from typing import Any
 
 import numpy as np
 from loguru import logger
-from sklearn.cluster import DBSCAN
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from entity import EntityService
@@ -22,7 +19,7 @@ from shared.simple_db import SimpleDB
 from summarization import get_document_summarizer
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
-from .similarity import DocumentSimilarityAnalyzer, DocumentClusterer
+from .similarity import DocumentClusterer
 from .similarity import cluster_similar_content  # re-exported for tests to patch
 from .duplicate_detector import DuplicateDetector
 
