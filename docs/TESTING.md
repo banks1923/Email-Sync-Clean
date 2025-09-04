@@ -370,6 +370,33 @@ python3 -m pytest tests/ --cov=. --cov-report=html
 python3 -m pytest tests/ -k "not integration and not pdf_service and not gmail_service and not vector_service"
 ```
 
+### Patching Factories for Legal Intelligence
+
+Some tests need to replace heavyweight services with light doubles. The Legal Intelligence module exposes two small, patchable factory functions you can override in tests:
+
+- `legal_intelligence.main.get_knowledge_graph_service(db_path)`
+- `legal_intelligence.main.get_similarity_analyzer()`
+
+Example with `unittest.mock.patch`:
+
+```python
+from unittest.mock import Mock, patch
+
+with patch("legal_intelligence.main.get_knowledge_graph_service") as mock_kg,
+     patch("legal_intelligence.main.get_similarity_analyzer") as mock_sim:
+    mock_kg.return_value = Mock(add_node=Mock(return_value={"success": True}),
+                                add_edge=Mock(return_value={"success": True}))
+    mock_sim.return_value = Mock(similarity=lambda a, b: 0.9)
+
+    from legal_intelligence import get_legal_intelligence_service
+    svc = get_legal_intelligence_service(db_path)
+    # run tests using svc
+```
+
+Notes:
+- The default factories return a minimal in-memory graph and a simple similarity helper suitable for lightweight integration tests.
+- Patching these functions avoids reaching into private internals and keeps tests deterministic.
+
 ### CI/CD Testing
 ```yaml
 # GitHub Actions workflow

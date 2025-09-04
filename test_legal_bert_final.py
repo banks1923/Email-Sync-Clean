@@ -97,10 +97,10 @@ def test_all_features():
     # 7. Vector Store Status
     print("\n7️⃣  VECTOR STORE STATUS")
     from utilities.vector_store import get_vector_store
-    vector_store = get_vector_store("legal_documents")
+    vector_store = get_vector_store("vectors_v2")
     vector_count = vector_store.count()
     print(f"   Legal BERT vectors indexed: {vector_count}")
-    print(f"   Collection: legal_documents")
+    print(f"   Collection: vectors_v2")
     print(f"   Dimensions: 1024 (Legal BERT)")
     
     print("\n" + "="*60)

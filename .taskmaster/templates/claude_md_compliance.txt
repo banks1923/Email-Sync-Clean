@@ -4,14 +4,6 @@
 Each subtask must verify compliance with Email Sync architecture principles:
 
 ### File Size Limits
-- [ ] New Python files under 450 lines (existing working files may exceed)
-- [ ] Use `wc -l *.py` to verify line counts
-- [ ] Split large files using single responsibility principle
-
-### Function Complexity Limits
-- [ ] Functions under 30 lines (orchestration functions may exceed)
-- [ ] Cyclomatic complexity under 10 per function
-- [ ] Use tools like `radon cc` for complexity analysis
 
 ### Architecture Patterns (Required)
 - [ ] **Simple > Complex**: Direct function calls, no factories

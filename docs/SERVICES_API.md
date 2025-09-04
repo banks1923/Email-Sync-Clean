@@ -506,6 +506,12 @@ graph = legal.build_case_knowledge_graph("24NNCV00555")
 - **Missing Document Prediction**: Pattern analysis to identify gaps
 - **Document Summarization**: TF-IDF and TextRank summaries with legal entity focus
 
+### Test Hooks (Patchable Factories)
+- `legal_intelligence.main.get_knowledge_graph_service(db_path)`: returns the knowledge graph service. Tests can `patch` this to inject a mock. The default is a minimal in-memory graph with `add_node`/`add_edge` methods for lightweight integration.
+- `legal_intelligence.main.get_similarity_analyzer()`: returns a simple similarity helper. Tests can patch this to control similarity behavior deterministically.
+
+These tiny factories exist to keep production wiring lightweight while making tests stable and easy to patch, without reaching into private internals. In production, you can ignore them and use `get_legal_intelligence_service()` as usual.
+
 ### API Methods
 ```python
 # Case processing

@@ -17,6 +17,7 @@ from loguru import logger
 
 from shared.simple_db import SimpleDB
 from utilities.semantic_pipeline import get_semantic_pipeline
+from summarization import get_document_summarizer
 
 
 def backfill_semantic(
@@ -41,7 +42,7 @@ def backfill_semantic(
 
     db = SimpleDB()
 
-    # Default steps (skip summary as it's already done during ingestion)
+    # Default steps (summary is optional and can be backfilled)
     if steps is None:
         steps = ["entities", "embeddings", "timeline"]
 
@@ -90,6 +91,7 @@ def backfill_semantic(
         "entities": {"processed": 0, "skipped": 0, "errors": 0},
         "embeddings": {"processed": 0, "skipped": 0, "errors": 0},
         "timeline": {"processed": 0, "skipped": 0, "errors": 0},
+        "summaries": {"processed": 0, "skipped": 0, "errors": 0},
     }
 
     for i in range(0, total_count, batch_size):
@@ -100,7 +102,7 @@ def backfill_semantic(
         print(f"\n🔄 Processing batch {batch_num}/{total_batches} ({len(batch)} emails)")
 
         try:
-            result = pipeline.run_for_messages(message_ids=batch, steps=steps)
+            result = pipeline.run_for_messages(message_ids=batch, steps=[s for s in steps if s != "summaries"])  # summaries handled below
 
             # Aggregate results
             for step in steps:
@@ -110,6 +112,12 @@ def backfill_semantic(
                         total_results[step][key] += step_result.get(key, 0)
 
             processed += len(batch)
+
+            # Optional: run summaries backfill for this batch
+            if "summaries" in steps:
+                s_result = _backfill_summaries_for_messages(db, batch, force=force)
+                for key in ["processed", "skipped", "errors"]:
+                    total_results["summaries"][key] += s_result.get(key, 0)
 
             # Progress update
             print(f"  Progress: {processed}/{total_count} ({100*processed/total_count:.1f}%)")
@@ -153,8 +161,8 @@ def main():
     parser.add_argument(
         "--steps",
         nargs="+",
-        choices=["entities", "embeddings", "timeline"],
-        help="Specific steps to run (default: all)",
+        choices=["entities", "embeddings", "timeline", "summaries"],
+        help="Specific steps to run (default: all except summaries)",
     )
     parser.add_argument(
         "--batch-size", type=int, default=50, help="Number of emails per batch (default: 50)"
@@ -174,6 +182,69 @@ def main():
         force=args.force,
         since_days=args.since_days,
     )
+
+
+def _backfill_summaries_for_messages(db: SimpleDB, message_ids: list[str], force: bool = False) -> dict:
+    """Backfill summaries for a list of individual_messages (by message_hash).
+
+    Writes summaries into content_unified with source_type='email_summary' and
+    source_id set to the original content_unified.id (string) for uniqueness.
+    """
+    result = {"processed": 0, "skipped": 0, "errors": 0}
+    if not message_ids:
+        return result
+
+    # Map message_hash -> content_unified row for email_message
+    placeholders = ",".join(["?"] * len(message_ids))
+    rows = db.fetch(
+        f"""
+        SELECT c.id as content_id, c.title, c.body, im.message_hash
+        FROM individual_messages im
+        JOIN content_unified c
+          ON c.source_type = 'email_message'
+         AND c.source_id = im.message_hash
+        WHERE im.message_hash IN ({placeholders})
+        """,
+        tuple(message_ids),
+    )
+
+    if not rows:
+        return result
+
+    summarizer = get_document_summarizer()
+
+    for row in rows:
+        content_id = str(row["content_id"])
+        title = row.get("title") or "Email"
+        body = row.get("body") or ""
+
+        # Skip if summary exists unless forced
+        if not force:
+            exists = db.fetch_one(
+                "SELECT 1 FROM content_unified WHERE source_type='email_summary' AND source_id = ? LIMIT 1",
+                (content_id,),
+            )
+            if exists:
+                result["skipped"] += 1
+                continue
+
+        try:
+            summary = summarizer.extract_summary(body, max_sentences=3, max_keywords=10, summary_type="combined")
+            summary_text = summary.get("summary_text") or "(No summary content)"
+
+            # Insert summary content; ready_for_embedding defaults to 1 but embedding not required
+            db.execute(
+                """
+                INSERT OR REPLACE INTO content_unified (source_type, source_id, title, body, ready_for_embedding, embedding_generated)
+                VALUES ('email_summary', ?, ?, ?, 0, 0)
+                """,
+                (content_id, f"Summary: {title}", summary_text),
+            )
+            result["processed"] += 1
+        except Exception:
+            result["errors"] += 1
+
+    return result
 
 
 if __name__ == "__main__":

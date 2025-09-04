@@ -234,6 +234,8 @@ def _display_search_results(results: list[dict[str, Any]], title: str):
     for i, result in enumerate(results, 1):
         score = result.get("score", result.get("similarity_score", 1.0))
         content = result.get("content", {})
+        if not isinstance(content, dict):
+            content = {"content": content}
         metadata = result.get("metadata", {})
 
         # Determine content type

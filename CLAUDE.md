@@ -48,6 +48,15 @@ Core Development Principles
 > **For detailed API documentation, see: docs/SERVICES_API.md**
 > **For MCP server documentation, see: docs/MCP_SERVERS.md**
 
+### Test Hooks (Patchable Factories)
+To keep tests deterministic without deep mocks, we expose small factory seams:
+
+- `infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service()`
+- `infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service(db_path=None)`
+- `legal_intelligence.main.get_knowledge_graph_service(db_path)` and `get_similarity_analyzer()`
+
+Patch these with `unittest.mock.patch` in tests to inject controlled doubles. Defaults are minimal, production-safe implementations. Note: `search_smart` always invokes `_expand_query(query)` but only displays expanded terms when `use_expansion=True`.
+
 ## Current System Status
 
 **Core Services Working**:

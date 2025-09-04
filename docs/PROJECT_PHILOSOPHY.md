@@ -51,6 +51,8 @@ Legal Use *But NOT* Evidence requiring chain of custody, auditing trails ETC
  **Over-Engineering**
 - Complex patterns for simple problems
 - Abstract factories when if/else works
+
+Note on pragmatic seams: We use tiny, patchable factory hooks only where tests must inject services cleanly (e.g., MCP servers, Legal Intelligence shims). These are minimal and avoid adding complexity to runtime code paths.
 - Deep inheritance hierarchies
 - Multiple layers of indirection
 

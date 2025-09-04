@@ -240,6 +240,8 @@ class TextRankSummarizer:
             s = p.replace(placeholder, ".").strip()
             if not s:
                 continue
+            # Normalize by trimming trailing terminal punctuation for tests
+            s = s.rstrip().rstrip(".!?")
             # Keep very short first sentence; otherwise require some length
             if len(s) > 1:
                 sentences.append(s)

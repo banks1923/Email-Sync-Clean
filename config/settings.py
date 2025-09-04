@@ -118,13 +118,14 @@ class VectorSettings(BaseSettings):
     qdrant_timeout: float = Field(default=60.0, env="QDRANT_TIMEOUT")
 
     # Embedding model
-    embedding_model: str = Field(default="nlpaueb/legal-bert-base-uncased", env="EMBEDDING_MODEL")
-    embedding_dimension: int = Field(default=768, env="EMBEDDING_DIMENSION")
+    # Default to the active 1024D LegalBERT large used by the pipeline
+    embedding_model: str = Field(default="pile-of-law/legalbert-large-1.7M-2", env="EMBEDDING_MODEL")
+    embedding_dimension: int = Field(default=1024, env="EMBEDDING_DIMENSION")
     batch_size: int = Field(default=32, env="VECTOR_BATCH_SIZE")
 
     # Collection names
-    email_collection: str = Field(default="emails", env="QDRANT_EMAIL_COLLECTION")
-    pdf_collection: str = Field(default="pdf_documents", env="QDRANT_PDF_COLLECTION")
+    # Active unified chunk collection
+    chunk_collection: str = Field(default="vectors_v2", env="QDRANT_CHUNK_COLLECTION")
 
 
 class APISettings(BaseSettings):

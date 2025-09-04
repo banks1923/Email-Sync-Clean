@@ -17,6 +17,53 @@ from shared.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.timeline.main import TimelineService
 
+
+class _InMemoryKnowledgeGraph:
+    """Minimal knowledge graph placeholder with add_node/add_edge methods.
+
+    Tests patch the factory that returns this; when unpatched, this provides
+    a simple in-memory structure suitable for basic integration checks.
+    """
+
+    def __init__(self) -> None:
+        self.nodes: list[dict] = []
+        self.edges: list[dict] = []
+
+    def add_node(self, node_id: str, label: str | None = None, **attrs) -> dict:
+        self.nodes.append({"id": node_id, "label": label, **attrs})
+        return {"success": True}
+
+    def add_edge(self, source: str, target: str, relation: str = "related_to", **attrs) -> dict:
+        self.edges.append({"source": source, "target": target, "relation": relation, **attrs})
+        return {"success": True}
+
+
+def get_knowledge_graph_service(db_path: str):
+    """Factory for knowledge graph service (patch-friendly)."""
+    return _InMemoryKnowledgeGraph()
+
+
+def get_similarity_analyzer():
+    """Factory for similarity analyzer (patch-friendly).
+
+    Returns a simple object exposing an 'similarity' method; tests usually
+    patch this function so behavior is controlled in unit tests.
+    """
+    class _SimpleSim:
+        def similarity(self, a: str, b: str) -> float:
+            try:
+                if not a or not b:
+                    return 0.0
+                # Jaccard-like character set overlap as a trivial baseline
+                sa, sb = set(a.lower().split()), set(b.lower().split())
+                inter = len(sa & sb)
+                union = len(sa | sb) or 1
+                return inter / union
+            except Exception:
+                return 0.0
+
+    return _SimpleSim()
+
 # Logger is now imported globally from loguru
 
 
@@ -36,6 +83,8 @@ class LegalIntelligenceService:
         # Initialize integrated services
         self.entity_service = EntityService()
         self.timeline_service = TimelineService()
+        self.knowledge_graph = get_knowledge_graph_service(db_path)
+        self.similarity_analyzer = get_similarity_analyzer()
         self.embedding_service = get_embedding_service()
 
         # Cache for analysis results

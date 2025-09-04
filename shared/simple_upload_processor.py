@@ -101,11 +101,38 @@ class SimpleUploadProcessor:
                 f"Processed {file_path.name} -> content_id: {content_id} ({len(content)} chars)"
             )
 
+            # Generate summary for meaningful content
+            summary_generated = False
+            if content and len(content) > 100:  # Only summarize substantial content
+                try:
+                    from summarization import get_document_summarizer
+                    summarizer = get_document_summarizer()
+                    summary = summarizer.extract_summary(
+                        content,
+                        max_sentences=3,
+                        max_keywords=10,
+                        summary_type="combined"
+                    )
+                    
+                    if summary and summary.get("summary_text"):
+                        self.db.add_document_summary(
+                            document_id=str(content_id),
+                            summary_type="combined",
+                            summary_text=summary.get("summary_text"),
+                            tf_idf_keywords=summary.get("tf_idf_keywords"),
+                            textrank_sentences=summary.get("textrank_sentences")
+                        )
+                        summary_generated = True
+                        logger.info(f"Generated summary for {file_path.name}")
+                except Exception as e:
+                    logger.warning(f"Could not generate summary for {file_path.name}: {e}")
+
             return {
                 "success": True,
                 "content_id": content_id,
                 "file_hash": file_hash,
                 "content_length": len(content),
+                "summary_generated": summary_generated,
                 "message": f"File processed: {file_path.name} ({len(content)} chars extracted)",
             }
 

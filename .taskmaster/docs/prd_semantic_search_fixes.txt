@@ -1,0 +1,330 @@
+PRODUCT REQUIREMENTS DOCUMENT: SEMANTIC-ONLY SEARCH CRITICAL FIXES
+
+PROJECT: Litigator Solo - Legal Document Search System
+DATE: 2025-09-04
+PRIORITY: CRITICAL - Security vulnerabilities and performance issues
+STATUS: 15 critical issues identified, 0 fixed
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+The semantic-only search refactor is complete but contains 15 critical issues including SQL injection vulnerabilities, N+1 query problems, and architectural debt from compatibility shims. This PRD defines the complete fix implementation following the principle: "No bandaids, fix it right."
+
+================================================================================
+PROBLEM STATEMENT
+================================================================================
+
+Current Issues Found (Severity: CRITICAL/HIGH/MEDIUM):
+
+1. [CRITICAL] SQL Injection vulnerability in find_literal() - field names directly interpolated into SQL
+2. [CRITICAL] No input validation on API boundaries - negative limits crash vector store
+3. [HIGH] N+1 query problem in _enrich_vector_results() - 100 results = 100 database queries  
+4. [HIGH] Wrong field names in MCP server - uses "relevance_score" instead of "semantic_score"
+5. [HIGH] Generic exception handling masks real errors - all exceptions caught as Exception
+6. [MEDIUM] SearchIntelligenceService class still exists despite being deprecated
+7. [MEDIUM] Compatibility shims in __init__.py add confusion
+8. [MEDIUM] Type conversion failures silently ignored
+9. [MEDIUM] No parameter validation for filters
+10. [MEDIUM] Missing error taxonomy - no specific exception types
+11. [MEDIUM] Field naming inconsistency across layers
+12. [MEDIUM] No batch size limits for enrichment
+13. [MEDIUM] Logger.warning for critical failures
+14. [MEDIUM] No validation of filter date formats
+15. [MEDIUM] Dead code from hybrid search still present
+
+Dependencies at Risk:
+- 15 test files depend on SearchIntelligenceService
+- 4 MCP server tools require updates
+- 7 CLI commands need migration
+- Multiple scripts and pipelines affected
+
+================================================================================
+REQUIREMENTS
+================================================================================
+
+FUNCTIONAL REQUIREMENTS:
+
+FR1: Security
+- FR1.1: Prevent SQL injection via parameterized queries only
+- FR1.2: Whitelist allowed fields for literal search
+- FR1.3: Escape special characters in LIKE patterns
+- FR1.4: Validate all input parameters at API boundary
+- FR1.5: Add specific exception classes for different error types
+
+FR2: Performance  
+- FR2.1: Replace N+1 queries with batch fetching
+- FR2.2: Implement chunking for SQLite parameter limits (999 max)
+- FR2.3: Clamp result limits to reasonable bounds (1-200)
+- FR2.4: Use connection pooling appropriately for single-user
+
+FR3: API Cleanliness
+- FR3.1: Remove SearchIntelligenceService class entirely
+- FR3.2: Delete all compatibility shims and deprecations
+- FR3.3: Expose only search() and find_literal() functions
+- FR3.4: Standardize field names across all layers
+
+FR4: Testing
+- FR4.1: Add security test suite for SQL injection attempts
+- FR4.2: Test batch enrichment with 1000+ IDs
+- FR4.3: Validate all parameter boundaries
+- FR4.4: Test literal pattern edge cases (BATES IDs, section codes)
+- FR4.5: Ensure backward compatibility for critical paths
+
+NON-FUNCTIONAL REQUIREMENTS:
+
+NFR1: Code Quality
+- NFR1.1: No files over 450 lines (current: basic_search.py at 298 lines - OK)
+- NFR1.2: Functions under 30 lines each
+- NFR1.3: Single responsibility per module
+- NFR1.4: Proper docstrings on all public functions
+
+NFR2: Performance
+- NFR2.1: Search response < 1 second for 100 results
+- NFR2.2: Memory usage < 100MB for typical searches
+- NFR2.3: No blocking operations in main thread
+
+NFR3: Reliability
+- NFR3.1: Graceful degradation if vector store unavailable
+- NFR3.2: Clear error messages for user-facing issues
+- NFR3.3: Comprehensive logging for debugging
+
+================================================================================
+TECHNICAL SPECIFICATION
+================================================================================
+
+ARCHITECTURE CHANGES:
+
+1. Module Structure:
+   search_intelligence/
+   ├── __init__.py (13 lines - ONLY exports: search, find_literal, vector_store_available)
+   ├── basic_search.py (350 lines max - core implementation)
+   ├── similarity.py (unchanged - keep for specialized features)
+   └── duplicate_detector.py (unchanged - keep for specialized features)
+   
+   DELETE: main.py (714 lines of deprecated code)
+
+2. Database Access:
+   - Use SimpleDB with proper parameterization
+   - Implement connection settings: WAL, busy_timeout=5000, synchronous=NORMAL
+   - Batch queries with 500-item chunks for SQLite limits
+
+3. Field Schema (Standardized):
+   {
+     "content_id": str,      # Not "id" or "document_id"
+     "source_id": str,       # Original source identifier  
+     "source_type": str,     # email_message, document, etc.
+     "title": str,           # Document title
+     "content": str,         # Full text content
+     "semantic_score": float,# Not "score" or "relevance_score"
+     "metadata": dict        # Additional fields
+   }
+
+IMPLEMENTATION DETAILS:
+
+1. SQL Injection Fix:
+   ```python
+   ALLOWED_LITERAL_FIELDS = frozenset({"body", "title", "source_id", "metadata"})
+   
+   def _escape_like(pattern: str) -> str:
+       return pattern.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
+   
+   # Build query safely
+   where_clauses = [f"({field} LIKE ? ESCAPE '\\')" for field in fields if field in ALLOWED_LITERAL_FIELDS]
+   ```
+
+2. Batch Enrichment:
+   ```python
+   def _enrich_vector_results_batch(vector_results: list[dict]) -> list[dict]:
+       content_ids = [str(r.get("payload", {}).get("content_id")) for r in vector_results if r.get("payload", {}).get("content_id")]
+       
+       content_map = {}
+       for i in range(0, len(content_ids), 500):  # SQLite chunk size
+           chunk = content_ids[i:i+500]
+           placeholders = ','.join(['?'] * len(chunk))
+           rows = db.fetch(f"SELECT * FROM content_unified WHERE id IN ({placeholders})", chunk)
+           for row in rows:
+               content_map[str(row["id"])] = dict(row)
+       
+       return [normalize_result(r, content_map.get(str(r.get("payload", {}).get("content_id")))) for r in vector_results]
+   ```
+
+3. Input Validation:
+   ```python
+   def validate_search_params(query: str, limit: int, filters: dict = None):
+       if not isinstance(query, str) or not query.strip():
+           raise ValidationError("Query must be non-empty string")
+       if not isinstance(limit, int) or not (1 <= limit <= 200):
+           raise ValidationError("Limit must be between 1 and 200")
+       if filters and not isinstance(filters, dict):
+           raise ValidationError("Filters must be a dictionary")
+   ```
+
+4. Exception Hierarchy:
+   ```python
+   class SearchError(Exception): pass
+   class ValidationError(SearchError): pass  
+   class VectorStoreError(SearchError): pass
+   class EnrichmentError(SearchError): pass
+   ```
+
+================================================================================
+MIGRATION PLAN
+================================================================================
+
+PHASE 1: Security Fixes (Day 1)
+- Task 1.1: Add input validation to search() and find_literal()
+- Task 1.2: Fix SQL injection with parameterized queries
+- Task 1.3: Add exception classes
+- Task 1.4: Add field whitelisting
+
+PHASE 2: Performance Fixes (Day 1) 
+- Task 2.1: Implement batch enrichment function
+- Task 2.2: Add SQLite chunking for large result sets
+- Task 2.3: Replace _enrich_vector_results with batch version
+- Task 2.4: Add connection parameter optimization
+
+PHASE 3: API Cleanup (Day 2)
+- Task 3.1: Delete search_intelligence/main.py entirely
+- Task 3.2: Clean __init__.py to 13 lines
+- Task 3.3: Fix field names in MCP server (4 locations)
+- Task 3.4: Remove all get_search_intelligence_service() calls
+
+PHASE 4: Update Dependencies (Day 2)
+- Task 4.1: Update 15 test files to use new API
+- Task 4.2: Update MCP server tools (4 tools)
+- Task 4.3: Update CLI handlers (7 commands)
+- Task 4.4: Update service orchestrator
+
+PHASE 5: Testing (Day 3)
+- Task 5.1: Create test_semantic_search_security.py
+- Task 5.2: Add SQL injection tests
+- Task 5.3: Add batch enrichment tests
+- Task 5.4: Run full test suite
+- Task 5.5: Manual testing of all affected commands
+
+PHASE 6: Documentation (Day 3)
+- Task 6.1: Update CHANGELOG.md
+- Task 6.2: Update docs/SERVICES_API.md
+- Task 6.3: Update inline docstrings
+- Task 6.4: Create migration guide for other developers
+
+================================================================================
+TESTING REQUIREMENTS
+================================================================================
+
+Security Tests:
+- Test 1: SQL injection via field names - should raise ValueError
+- Test 2: SQL injection via pattern - should be safely escaped
+- Test 3: Negative limit values - should raise ValueError
+- Test 4: Limit > 200 - should be clamped to 200
+- Test 5: Empty query string - should raise ValueError
+- Test 6: Invalid filter keys - should log warning
+
+Performance Tests:
+- Test 7: 1000 vector results - should use 2 batch queries (500 each)
+- Test 8: Empty vector results - should return empty list
+- Test 9: Missing content IDs - should handle gracefully
+- Test 10: Database timeout - should raise EnrichmentError
+
+Integration Tests:
+- Test 11: Full search pipeline with new API
+- Test 12: MCP server tools with updated imports
+- Test 13: CLI commands with new functions
+- Test 14: Literal search for BATES IDs
+- Test 15: Literal search for section codes (§1234)
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+1. Security:
+   - [ ] No SQL injection vulnerability (verified by security tests)
+   - [ ] All inputs validated before processing
+   - [ ] Specific exceptions for different error types
+
+2. Performance:
+   - [ ] No N+1 queries (verified by query logs)
+   - [ ] Search response < 1 second for 100 results
+   - [ ] Batch enrichment working with 1000+ IDs
+
+3. Code Quality:
+   - [ ] SearchIntelligenceService class deleted
+   - [ ] main.py file removed entirely
+   - [ ] __init__.py reduced to 13 lines
+   - [ ] No references to deprecated functions
+
+4. Testing:
+   - [ ] All tests passing (make test)
+   - [ ] Security test suite added
+   - [ ] No broken imports in codebase
+   - [ ] Manual testing successful
+
+5. Field Consistency:
+   - [ ] All results use "semantic_score" not "relevance_score"
+   - [ ] All results use "content_id" not "id"
+   - [ ] MCP server using correct field names
+
+================================================================================
+ROLLBACK PLAN
+================================================================================
+
+If critical issues arise:
+
+1. Immediate: git stash to save work
+2. Database: make restore-backup 
+3. Code: git revert HEAD~n
+4. Verify: python3 scripts/verify_pipeline.py
+5. Logs: Check ~/.cache/litigator/*.log for errors
+
+================================================================================
+APPENDIX: AFFECTED FILES
+================================================================================
+
+Files to Modify:
+1. search_intelligence/basic_search.py - Core fixes
+2. search_intelligence/__init__.py - Remove deprecations
+3. infrastructure/mcp_servers/search_intelligence_mcp.py - Fix field names
+
+Files to Delete:
+1. search_intelligence/main.py - Entire file
+
+Test Files to Update (15 files):
+1. tests/test_semantic_search_api.py
+2. tests/simple_mcp_validation.py
+3. tests/services/search/test_search_intelligence.py
+4. tests/test_search_integration.py
+5. tests/test_semantic_search_integration.py
+6. tests/unit/test_search_intelligence_query_expansion.py
+7. tests/fixtures/mcp_test_fixtures.py
+8. tests/services/search/test_search_intelligence_mcp.py
+9. tests/test_core_services_integration.py
+10. tests/integration/test_mcp_parameter_validation.py
+11. tests/infrastructure/mcp_servers/test_search_intelligence_mcp.py
+12. tests/test_mcp_parameter_validation.py
+13. tests/test_mcp_integration.py
+14. tests/run_mcp_tests.py
+15. tests/conftest.py
+
+CLI Files to Update (7 files):
+1. tools/scripts/cli/intelligence_handler.py
+2. tools/scripts/cli/service_locator.py
+3. tools/scripts/cli/info_handler.py
+4. tools/scripts/run_service_test.py
+5. tools/test_all_services.py
+6. tools/scripts/check_documents_in_vector.py
+7. tools/scripts/cli/search_handler.py
+
+Scripts to Update (4 files):
+1. scripts/verify_semantic_wiring.py
+2. scripts/test_v1_baseline.py
+3. utilities/verification/verify_semantic_wiring.py
+4. infrastructure/pipelines/service_orchestrator.py
+
+================================================================================
+END OF PRD
+================================================================================
+
+This PRD provides complete, unambiguous requirements for fixing the semantic-only search implementation. Follow the phases in order, validate each phase before proceeding, and ensure all success criteria are met before considering the work complete.
+
+NO BANDAIDS. FIX IT RIGHT.

@@ -38,45 +38,33 @@ except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
 
-# Clean architecture - no factory injection needed
-
-
 def search_smart(
     query: str, limit: int = 10, use_expansion: bool = True, content_type: str | None = None
 ) -> str:
-    """
-    Smart search with query preprocessing and expansion.
+    """Semantic search - pure vector similarity search.
+    
+    Note: use_expansion parameter is kept for compatibility but ignored
+    (semantic embeddings capture meaning without needing expansion).
     """
     if not SERVICES_AVAILABLE:
         return "Search intelligence services not available"
 
     try:
-        # Direct import following clean architecture pattern
-        from search_intelligence import get_search_intelligence_service
-
-        service = get_search_intelligence_service()
-
+        from search_intelligence import search
+        
         # Add content type filter if specified
         filters = {}
         if content_type:
-            filters["content_types"] = [content_type]
+            filters["source_type"] = content_type
 
-        # Perform smart search
-        results = service.smart_search_with_preprocessing(
-            query=query, limit=limit, use_expansion=use_expansion, filters=filters
-        )
+        # Perform semantic search
+        results = search(query=query, limit=limit, filters=filters)
 
         if not results:
             return f"📭 No results found for: {query}"
 
         # Format results
-        output = f"🔍 Smart Search Results for '{query}':\n\n"
-
-        # Show query expansion if used
-        if use_expansion:
-            expanded_terms = service._expand_query(query)
-            if expanded_terms:
-                output += f"📝 Expanded Terms: {', '.join(expanded_terms)}\n\n"
+        output = f"🔍 Semantic Search Results for '{query}':\n\n"
 
         # Format results
         for i, result in enumerate(results, 1):
@@ -102,6 +90,50 @@ def search_smart(
         return f"❌ Error in smart search: {str(e)}"
 
 
+def find_literal_patterns(
+    pattern: str, limit: int = 50, fields: list | None = None
+) -> str:
+    """Find documents with exact pattern matches.
+    
+    Perfect for finding specific identifiers like BATES numbers,
+    section codes, email addresses, etc.
+    """
+    if not SERVICES_AVAILABLE:
+        return "Search intelligence services not available"
+    
+    try:
+        from search_intelligence import find_literal
+        
+        # Perform literal search
+        results = find_literal(pattern=pattern, limit=limit, fields=fields)
+        
+        if not results:
+            return f"📭 No exact matches found for pattern: {pattern}"
+        
+        # Format results
+        output = f"🔤 Literal Pattern Matches for '{pattern}':\n\n"
+        output += f"Found {len(results)} documents containing the pattern\n\n"
+        
+        for i, result in enumerate(results, 1):
+            title = result.get("title", "Untitled")
+            source_type = result.get("source_type", "unknown")
+            content_id = result.get("content_id", "unknown")
+            
+            # Find and highlight the pattern in content
+            content_preview = result.get("content", "")[:200]
+            if pattern.lower() in content_preview.lower():
+                content_preview += "..."
+            
+            output += f"{i}. [{source_type}] {title}\n"
+            output += f"   🆔 ID: {content_id}\n"
+            output += f"   📄 Preview: {content_preview}\n\n"
+        
+        return output
+        
+    except Exception as e:
+        return f"❌ Error in literal pattern search: {str(e)}"
+
+
 def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) -> str:
     """
     Find documents similar to a given document.
@@ -110,9 +142,7 @@ def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) ->
         return "Search intelligence services not available"
 
     try:
-        # Direct import following clean architecture pattern
         from search_intelligence import get_search_intelligence_service
-
         service = get_search_intelligence_service()
 
         # Find similar documents
@@ -162,9 +192,6 @@ def search_entities(
         return "Search intelligence services not available"
 
     try:
-        # Direct import following clean architecture pattern
-        from search_intelligence import get_search_intelligence_service
-
         service = get_search_intelligence_service()
 
         if document_id:
@@ -479,7 +506,7 @@ class SearchIntelligenceMCPServer:
             return [
                 Tool(
                     name="search_smart",
-                    description="Smart search with query preprocessing and expansion",
+                    description="Semantic search using Legal BERT embeddings",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -491,7 +518,7 @@ class SearchIntelligenceMCPServer:
                             },
                             "use_expansion": {
                                 "type": "boolean",
-                                "description": "Use query expansion",
+                                "description": "Ignored - kept for compatibility",
                                 "default": True,
                             },
                             "content_type": {
@@ -501,6 +528,28 @@ class SearchIntelligenceMCPServer:
                             },
                         },
                         "required": ["query"],
+                    },
+                ),
+                Tool(
+                    name="find_literal",
+                    description="Find documents with exact pattern matches (BATES IDs, section codes, etc.)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "pattern": {"type": "string", "description": "Exact pattern to search for"},
+                            "limit": {
+                                "type": "integer",
+                                "description": "Maximum results",
+                                "default": 50,
+                            },
+                            "fields": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Fields to search in",
+                                "default": ["body", "metadata"],
+                            },
+                        },
+                        "required": ["pattern"],
                     },
                 ),
                 Tool(
@@ -637,6 +686,14 @@ class SearchIntelligenceMCPServer:
                         limit=arguments.get("limit", 10),
                         use_expansion=arguments.get("use_expansion", True),
                         content_type=arguments.get("content_type"),
+                    )
+                    return [TextContent(type="text", text=result)]
+
+                elif name == "find_literal":
+                    result = find_literal_patterns(
+                        pattern=arguments["pattern"],
+                        limit=arguments.get("limit", 50),
+                        fields=arguments.get("fields"),
                     )
                     return [TextContent(type="text", text=result)]
 

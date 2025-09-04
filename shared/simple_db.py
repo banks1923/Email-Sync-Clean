@@ -328,7 +328,26 @@ class SimpleDB:
                     self.metrics.slow_sql_count += 1
                     logger.info(f"Slow SQL: {dt_ms:.1f}ms, rows={len(results)}, query={query[:50]}")
 
-                return [dict(row) for row in results]
+                out: list[dict] = []
+                for row in results:
+                    d = dict(row)
+                    # Provide legacy-friendly alias
+                    if "id" in d and "content_id" not in d:
+                        try:
+                            d["content_id"] = str(d["id"]) if d["id"] is not None else None
+                        except Exception:
+                            d["content_id"] = d.get("id")
+                    # Provide computed metrics for content_unified rows
+                    if "body" in d and "word_count" not in d:
+                        try:
+                            text = d.get("body") or ""
+                            d["word_count"] = len(text.split())
+                            d["char_count"] = len(text)
+                        except Exception:
+                            d["word_count"] = 0
+                            d["char_count"] = 0
+                    out.append(d)
+                return out
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e) or "SQLITE_BUSY" in str(e):
                 self.metrics.busy_events += 1
@@ -709,7 +728,7 @@ class SimpleDB:
 
         # Normalize keys to legacy expectations used in tests
         normalized: Dict[str, Any] = {
-            "content_id": row.get("id"),
+            "content_id": str(row.get("id")),
             "title": row.get("title"),
             "content": row.get("body"),
             "created_time": row.get("created_at"),
@@ -777,9 +796,9 @@ class SimpleDB:
         """
         from .date_utils import get_date_range
 
-        # Base WHERE clause
-        where_clauses = ["(title LIKE ? OR body LIKE ?)"]
-        params = [f"%{keyword}%", f"%{keyword}%"]
+        # Base WHERE clause - now includes summaries via LEFT JOIN
+        where_clauses = ["(cu.title LIKE ? OR cu.body LIKE ? OR ds.summary_text LIKE ?)"]
+        params = [f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"]
 
         # Helper to map external content types to schema values
         def _map_source_type(t: str) -> str:
@@ -797,7 +816,7 @@ class SimpleDB:
 
         # Add content type filter
         if content_type:
-            where_clauses.append("source_type = ?")
+            where_clauses.append("cu.source_type = ?")
             params.append(_map_source_type(content_type))
 
         # Add filters if provided
@@ -808,10 +827,10 @@ class SimpleDB:
             if since or until:
                 start_date, end_date = get_date_range(since, until)
                 if start_date:
-                    where_clauses.append("created_at >= ?")
+                    where_clauses.append("cu.created_at >= ?")
                     params.append(start_date.isoformat())
                 if end_date:
-                    where_clauses.append("created_at <= ?")
+                    where_clauses.append("cu.created_at <= ?")
                     params.append(end_date.isoformat())
 
             # Content types filtering (multiple types)
@@ -819,7 +838,7 @@ class SimpleDB:
             if content_types and isinstance(content_types, list):
                 mapped = [_map_source_type(ct) for ct in content_types]
                 placeholders = ",".join(["?"] * len(mapped))
-                where_clauses.append(f"source_type IN ({placeholders})")
+                where_clauses.append(f"cu.source_type IN ({placeholders})")
                 params.extend(mapped)
 
             # Tags filtering
@@ -831,22 +850,25 @@ class SimpleDB:
                     tag_logic = filters.get("tag_logic", "OR").upper()
                     if tag_logic == "AND":
                         for tag in tags:
-                            where_clauses.append("(title LIKE ? OR body LIKE ?)")
+                            where_clauses.append("(cu.title LIKE ? OR cu.body LIKE ? OR ds.summary_text LIKE ?)")
                             tag_pattern = f"%{tag}%"
-                            params.extend([tag_pattern, tag_pattern])
+                            params.extend([tag_pattern, tag_pattern, tag_pattern])
                     else:  # OR logic
                         tag_conditions = []
                         for tag in tags:
-                            tag_conditions.append("(title LIKE ? OR body LIKE ?)")
+                            tag_conditions.append("(cu.title LIKE ? OR cu.body LIKE ? OR ds.summary_text LIKE ?)")
                             tag_pattern = f"%{tag}%"
-                            params.extend([tag_pattern, tag_pattern])
+                            params.extend([tag_pattern, tag_pattern, tag_pattern])
                         if tag_conditions:
                             where_clauses.append(f"({' OR '.join(tag_conditions)})")
 
-        # Build final query
+        # Build final query with LEFT JOIN to include summaries
         where_clause = " AND ".join(where_clauses)
         query = (
-            f"SELECT * FROM content_unified WHERE {where_clause} ORDER BY created_at DESC LIMIT ?"
+            f"""SELECT DISTINCT cu.* FROM content_unified cu 
+            LEFT JOIN document_summaries ds ON cu.id = ds.document_id
+            WHERE {where_clause} 
+            ORDER BY cu.created_at DESC LIMIT ?"""
         )
         params.append(limit)
 
@@ -856,7 +878,7 @@ class SimpleDB:
         results: list[dict] = []
         for row in rows or []:
             item = {
-                "content_id": row.get("id"),
+                "content_id": str(row.get("id")),
                 "title": row.get("title"),
                 "content": row.get("body"),
                 "created_time": row.get("created_at"),
@@ -1507,46 +1529,22 @@ class SimpleDB:
         keywords_json = json.dumps(tf_idf_keywords) if tf_idf_keywords else None
         sentences_json = json.dumps(textrank_sentences) if textrank_sentences else None
 
-        # Check if this is a content_unified ID (not in documents table)
-        doc_exists = self.fetch("SELECT 1 FROM documents WHERE id = ?", (document_id,))
-
-        if not doc_exists:
-            # This is likely a content_unified record - temporarily disable foreign keys
-            with self.get_connection() as conn:
-                conn.execute("PRAGMA foreign_keys=OFF")
-                conn.execute(
-                    """
-                    INSERT INTO document_summaries
-                    (summary_id, document_id, summary_type, summary_text, tf_idf_keywords, textrank_sentences)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        summary_id,
-                        document_id,
-                        summary_type,
-                        summary_text,
-                        keywords_json,
-                        sentences_json,
-                    ),
-                )
-                conn.execute("PRAGMA foreign_keys=ON")
-        else:
-            # Regular document - use normal insert
-            self.execute(
-                """
-                INSERT INTO document_summaries
-                (summary_id, document_id, summary_type, summary_text, tf_idf_keywords, textrank_sentences)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    summary_id,
-                    document_id,
-                    summary_type,
-                    summary_text,
-                    keywords_json,
-                    sentences_json,
-                ),
-            )
+        # Enforce foreign keys to content_unified(id)
+        self.execute(
+            """
+            INSERT INTO document_summaries
+            (summary_id, document_id, summary_type, summary_text, tf_idf_keywords, textrank_sentences)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """,
+            (
+                summary_id,
+                document_id,
+                summary_type,
+                summary_text,
+                keywords_json,
+                sentences_json,
+            ),
+        )
 
         return summary_id
 

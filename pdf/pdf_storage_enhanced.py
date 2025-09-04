@@ -86,6 +86,13 @@ class EnhancedPDFStorage:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
 
+                # Detect schema differences for readiness column
+                cursor.execute("PRAGMA table_info(documents)")
+                cols = {row[1] for row in cursor.fetchall()}
+                ready_col = "ready_for_embedding" if "ready_for_embedding" in cols else (
+                    "vector_processed" if "vector_processed" in cols else None
+                )
+
                 for chunk in chunks:
                     # Extract chunk data
                     chunk_id = chunk.get("chunk_id")
@@ -104,32 +111,60 @@ class EnhancedPDFStorage:
                         elif legal_metadata:
                             metadata_json = json.dumps(legal_metadata)
 
-                    cursor.execute(
-                        """
-                        INSERT OR REPLACE INTO documents (
-                            chunk_id, file_path, file_name, chunk_index, text_content,
-                            char_count, file_size, file_hash, source_type, modified_time,
-                            processed_time, content_type, ready_for_embedding,
-                            legal_metadata, extraction_method, ocr_confidence
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
-                                  'document', 0, ?, ?, ?)
-                    """,
-                        (
-                            chunk_id,
-                            pdf_path,
-                            file_name,
-                            chunk_index,
-                            text,
-                            len(text),
-                            file_size,
-                            file_hash,
-                            source,
-                            modified_time,
-                            metadata_json,
-                            extraction_method or chunk.get("extraction_method"),
-                            ocr_confidence or chunk.get("ocr_confidence"),
-                        ),
-                    )
+                    if ready_col:
+                        cursor.execute(
+                            f"""
+                            INSERT OR REPLACE INTO documents (
+                                chunk_id, file_path, file_name, chunk_index, text_content,
+                                char_count, file_size, file_hash, source_type, modified_time,
+                                processed_time, content_type, {ready_col},
+                                legal_metadata, extraction_method, ocr_confidence
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
+                                      'document', 0, ?, ?, ?)
+                        """,
+                            (
+                                chunk_id,
+                                pdf_path,
+                                file_name,
+                                chunk_index,
+                                text,
+                                len(text),
+                                file_size,
+                                file_hash,
+                                source,
+                                modified_time,
+                                metadata_json,
+                                extraction_method or chunk.get("extraction_method"),
+                                ocr_confidence or chunk.get("ocr_confidence"),
+                            ),
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            INSERT OR REPLACE INTO documents (
+                                chunk_id, file_path, file_name, chunk_index, text_content,
+                                char_count, file_size, file_hash, source_type, modified_time,
+                                processed_time, content_type,
+                                legal_metadata, extraction_method, ocr_confidence
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
+                                      'document', ?, ?, ?)
+                        """,
+                            (
+                                chunk_id,
+                                pdf_path,
+                                file_name,
+                                chunk_index,
+                                text,
+                                len(text),
+                                file_size,
+                                file_hash,
+                                source,
+                                modified_time,
+                                metadata_json,
+                                extraction_method or chunk.get("extraction_method"),
+                                ocr_confidence or chunk.get("ocr_confidence"),
+                            ),
+                        )
 
                 conn.commit()
 
@@ -137,9 +172,9 @@ class EnhancedPDFStorage:
                 # Combine all chunks for the full document text
                 full_text = " ".join([chunk.get("text", "") for chunk in chunks])
                 content_id = self.db.upsert_content(
-                    source_type="pdf",
+                    source_type="document",
                     external_id=file_hash,  # Use file hash as unique external ID
-                    content_type="pdf",  # Required by method signature
+                    content_type="document",  # Required by method signature
                     title=file_name,
                     content=full_text,
                     metadata={
@@ -235,9 +270,19 @@ class EnhancedPDFStorage:
         cursor.execute("SELECT SUM(char_count) FROM documents WHERE content_type = 'document'")
         total_chars = cursor.fetchone()[0] or 0
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND ready_for_embedding = 1"
-        )
+        # Readiness column may be named differently
+        cursor.execute("PRAGMA table_info(documents)")
+        cols = {row[1] for row in cursor.fetchall()}
+        if "ready_for_embedding" in cols:
+            cursor.execute(
+                "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND ready_for_embedding = 1"
+            )
+        elif "vector_processed" in cols:
+            cursor.execute(
+                "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND vector_processed = 1"
+            )
+        else:
+            cursor.execute("SELECT 0")
         ready_for_embedding = cursor.fetchone()[0]
 
         return {

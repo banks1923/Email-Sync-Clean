@@ -14,80 +14,95 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from tools.scripts.cli.service_locator import get_locator
 
 
-def search_emails(query, limit=5, hybrid=True, mode="database"):
-    """AI-Powered Database Search: Searches across emails, PDFs, and transcriptions
+def search_emails(query, limit=5, hybrid=True, mode="semantic"):
+    """Semantic Search: Searches across all content using Legal BERT embeddings
 
     Args:
         query: Search query string
         limit: Maximum number of results
-        hybrid: Whether to use hybrid search (legacy parameter, ignored)
-        mode: Search mode - always 'database' (analog removed)
+        hybrid: Legacy parameter (ignored - always uses semantic)
+        mode: Legacy parameter (ignored - always semantic)
     """
-    print(f"🤖 AI-Powered Database Search for: '{query}'")
+    print(f"🧠 Semantic Search for: '{query}'")
     locator = get_locator()
-
-    if hybrid:
-        # Unified search: searches across all content types
-        print("🔍 Running unified semantic search...")
-        try:
-            vector_service = locator.get_vector_service()
-
-            if hasattr(
-                vector_service, "validation_result"
-            ) and vector_service.validation_result.get("success"):
-                # Use unified search across all collections
-                unified_results = vector_service.search_all_content(
-                    query, limit=limit * 2, score_threshold=0.1
-                )
-
-                if unified_results["success"] and unified_results.get("data"):
-                    print(f"✅ Found {len(unified_results['data'])} unified matches")
-                    display_unified_results(
-                        unified_results["data"], "🧠 Unified Semantic Search", limit
-                    )
-                    return True
-                else:
-                    print("⚠️  Unified search unavailable, falling back to email keyword search")
-            else:
-                print("⚠️  Vector service not ready, using keyword search")
-        except Exception as e:
-            print(f"⚠️  Vector search error: {e}, using keyword search")
-
-    # Use search intelligence service with new unified search
-    print(f"🔍 Running {mode} search...")
-    search_service = locator.get_search_service()
-
-    # Check if the service has the new unified_search method
-    if hasattr(search_service, "unified_search"):
-        # Use the new unified search with mode support
-        results = search_service.unified_search(
-            query=query, mode=mode, limit=limit, use_expansion=True
-        )
-
+    
+    try:
+        # Import the new semantic search directly
+        from search_intelligence import search, vector_store_available
+        
+        # Check if vector store is available
+        if not vector_store_available():
+            print("❌ Vector store not available - please ensure Qdrant is running")
+            return False
+        
+        print("🔍 Running semantic vector search...")
+        
+        # Perform semantic search
+        results = search(query=query, limit=limit)
+        
         if results:
-            print(f"✅ Found {len(results)} results in {mode} mode")
-            display_unified_search_results(results, f"🔍 {mode.capitalize()} Search", limit)
+            print(f"✅ Found {len(results)} semantic matches")
+            display_semantic_results(results, "🧠 Semantic Search Results", limit)
             return True
         else:
-            print(f"❌ No results found in {mode} mode")
+            print("❌ No results found")
             return False
-    else:
-        # Fallback to old method for backward compatibility
-        print("⚠️  Using legacy search method...")
-        keyword_results = search_service.search_emails("keyword", keyword=query, limit=limit)
-
-    if not keyword_results["success"]:
-        print(f"❌ Search failed: {keyword_results['error']}")
+            
+    except Exception as e:
+        print(f"❌ Search error: {e}")
         return False
 
-    emails = keyword_results.get("results", [])
-    if emails:
-        print(f"✅ Found {len(emails)} keyword matches")
-        display_results(emails, "🔤 Keyword Match")
-    else:
-        print("❌ No results found")
 
-    return True
+def find_literal_pattern(pattern, limit=50):
+    """Find documents with exact pattern matches.
+    
+    Perfect for finding BATES IDs, section codes, email addresses, etc.
+    """
+    print(f"🔤 Searching for exact pattern: '{pattern}'")
+    
+    try:
+        from search_intelligence import find_literal
+        
+        print("🔍 Scanning for exact matches...")
+        
+        # Perform literal search
+        results = find_literal(pattern=pattern, limit=limit)
+        
+        if results:
+            print(f"✅ Found {len(results)} documents with exact matches")
+            display_literal_results(results, "🔤 Literal Pattern Matches", limit)
+            return True
+        else:
+            print(f"❌ No documents found containing '{pattern}'")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Literal search error: {e}")
+        return False
+
+
+def display_literal_results(results, search_type, limit=None):
+    """Display literal search results."""
+    print(f"\n{search_type}:")
+    print("-" * 50)
+    
+    # Limit results if specified
+    if limit:
+        results = results[:limit]
+    
+    for i, result in enumerate(results, 1):
+        title = result.get("title", "Untitled")
+        source_type = result.get("source_type", "unknown")
+        content = result.get("content", "")
+        
+        # Truncate content for display
+        if len(content) > 200:
+            content = content[:197] + "..."
+        
+        print(f"\n{i}. [{source_type}] {title}")
+        print(f"   Preview: {content}")
+    
+    print("\n" + "-" * 50)
 
 
 def search_multi_content(query, limit=5):
@@ -144,6 +159,32 @@ def search_multi_content(query, limit=5):
     except Exception as e:
         print(f"❌ Multi-content search error: {e}")
         return False
+
+
+def display_semantic_results(results, search_type, limit=None):
+    """Display semantic search results in a clean format."""
+    print(f"\n{search_type}:")
+    print("-" * 50)
+    
+    # Limit results if specified
+    if limit:
+        results = results[:limit]
+    
+    for i, result in enumerate(results, 1):
+        title = result.get("title", "Untitled")
+        source_type = result.get("source_type", "unknown")
+        score = result.get("semantic_score", 0.0)
+        content = result.get("content", "")
+        
+        # Truncate content for display
+        if len(content) > 200:
+            content = content[:197] + "..."
+        
+        print(f"\n{i}. [{source_type}] {title}")
+        print(f"   Score: {score:.3f}")
+        print(f"   Preview: {content}")
+    
+    print("\n" + "-" * 50)
 
 
 def display_unified_results(results, search_type, limit=None):

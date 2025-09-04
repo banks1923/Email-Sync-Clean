@@ -1,6 +1,9 @@
 """
 Qdrant operations - store and search vectors ONLY.
 No complexity. Just vector storage.
+
+Safeguard: Block writes to legacy collection 'legal_documents' unless explicitly allowed
+via env var `QDRANT_ALLOW_LEGACY_WRITES=true`.
 """
 
 import time
@@ -34,7 +37,7 @@ class VectorStore:
         self,
         host: str = "localhost",
         port: int = 6333,
-        collection: str = "legal_documents",
+        collection: str = "vectors_v2",
         dimensions: int = 1024,
     ):
         """
@@ -45,6 +48,16 @@ class VectorStore:
         self.collection = collection
         self.client = None
         self.dimensions = dimensions
+        # Env guard for legacy writes
+        try:
+            import os
+            self._allow_legacy_writes = str(os.getenv("QDRANT_ALLOW_LEGACY_WRITES", "false")).lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+        except Exception:
+            self._allow_legacy_writes = False
         self._connect()
 
     def _connect(self):
@@ -101,6 +114,12 @@ class VectorStore:
         """
         Store vector with metadata.
         """
+        # Write safeguard for legacy collection
+        if self.collection == "legal_documents" and not self._allow_legacy_writes:
+            raise RuntimeError(
+                "Blocked write to deprecated collection 'legal_documents'. "
+                "Set QDRANT_ALLOW_LEGACY_WRITES=true to override, or use 'vectors_v2'."
+            )
         if len(vector) != self.dimensions:
             raise ValueError(f"Vector size {len(vector)} != {self.dimensions}")
 
@@ -119,6 +138,12 @@ class VectorStore:
         """
         Original batch insert vectors method.
         """
+        # Write safeguard for legacy collection
+        if self.collection == "legal_documents" and not self._allow_legacy_writes:
+            raise RuntimeError(
+                "Blocked batch write to deprecated collection 'legal_documents'. "
+                "Set QDRANT_ALLOW_LEGACY_WRITES=true to override, or use 'vectors_v2'."
+            )
         if ids is None:
             ids = [str(uuid.uuid4()) for _ in vectors]
         if payloads is None:
@@ -359,6 +384,12 @@ class VectorStore:
         """
         Internal batch upsert for points format.
         """
+        # Write safeguard for legacy collection
+        if self.collection == "legal_documents" and not self._allow_legacy_writes:
+            raise RuntimeError(
+                "Blocked batch write to deprecated collection 'legal_documents'. "
+                "Set QDRANT_ALLOW_LEGACY_WRITES=true to override, or use 'vectors_v2'."
+            )
         vectors = []
         payloads = []
         ids = []
@@ -480,7 +511,7 @@ class VectorStore:
 _vector_store: VectorStore | None = None
 
 
-def get_vector_store(collection: str = "legal_documents") -> VectorStore:
+def get_vector_store(collection: str = "vectors_v2") -> VectorStore:
     """
     Get or create singleton vector store.
     """

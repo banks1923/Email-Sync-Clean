@@ -1,5 +1,3 @@
-_This document outlines the development principles and implementation details for the Taskmaster service._
-
 # Task Master AI - Agent Integration Guide
 
 ## Essential Commands

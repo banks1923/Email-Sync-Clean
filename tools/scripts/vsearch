@@ -288,6 +288,28 @@ def health_command(verbose=False):
             elif status["healthy"]:
                 print("  Status: Operational")
 
+        # Extra Qdrant preflight: validate vectors_v2 and 1024D when Qdrant is up
+        try:
+            qdrant_status = health_status["services"].get("qdrant", {})
+            if qdrant_status.get("status") == "connected":
+                from qdrant_client import QdrantClient
+                client = QdrantClient(host="localhost", port=6333, timeout=5.0)
+                info = client.get_collection("vectors_v2")
+                size = getattr(getattr(info.config, "params", None), "vectors", None).size
+                points = getattr(info, "points_count", None)
+                if points is None:
+                    points = getattr(info, "vectors_count", 0)
+                ok_dim = (size == 1024)
+                icon = "✅" if ok_dim else "❌"
+                print(f"\n{icon} Vector Store Preflight:")
+                print(f"  Collection 'vectors_v2': present, points={points}")
+                print(f"  Dimensions: {size} (expected 1024)")
+                if not ok_dim:
+                    print("  💡 Fix: Recreate 'vectors_v2' with 1024D COSINE; then re-embed.")
+        except Exception:
+            # Keep health robust even if Qdrant schema lookup fails
+            pass
+
         # Provide recovery suggestions for unhealthy services
         for service_name, status in health_status["services"].items():
             if not status["healthy"] and "error" in status:
@@ -345,8 +367,8 @@ def info_command():
     if qdrant_running:
         try:
             from utilities.vector_store import get_vector_store
-
-            store = get_vector_store()
+            # Use active collection
+            store = get_vector_store("vectors_v2")
             print("\n🧠 Vector Service:")
             print("  Status: ✅ Connected")
             print(f"  Collection: {store.collection}")
@@ -704,6 +726,7 @@ Examples:
     ingest_parser.add_argument("--dir", default="data/Stoneman_dispute/user_data", 
                               help="Directory for document processing (default: data/Stoneman_dispute/user_data)")
     ingest_parser.add_argument("--since", help="Date filter for emails (e.g., 'last week', '2024-01-01')")
+    
 
     # Chunk ingestion (v2 pipeline) command
     chunk_ingest_parser = subparsers.add_parser(
@@ -887,8 +910,8 @@ Examples:
     
     # Backfill command
     backfill_parser = semantic_subparsers.add_parser("backfill", help="Backfill semantic enrichment for old emails")
-    backfill_parser.add_argument("--steps", nargs="+", choices=["entities", "embeddings", "timeline"],
-                                help="Specific steps to run (default: all)")
+    backfill_parser.add_argument("--steps", nargs="+", choices=["entities", "embeddings", "timeline", "summaries"],
+                                help="Specific steps to run (default: all except summaries)")
     backfill_parser.add_argument("--batch-size", type=int, default=50, help="Batch size (default: 50)")
     backfill_parser.add_argument("--limit", type=int, help="Maximum emails to process")
     backfill_parser.add_argument("--force", action="store_true", help="Force reprocessing")

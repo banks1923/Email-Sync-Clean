@@ -411,3 +411,14 @@ The following servers are deprecated and will be removed:
 - Use Memory Server to store findings from Search Intelligence
 - Leverage Qdrant for code snippets while using Memory for project relationships
 - Use Firecrawl for research, then store findings in Memory or Qdrant
+### Test Hooks (Patchable Factories)
+- `infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service(db_path=None)` returns the Legal Intelligence service. Tests can patch this factory to inject a mock.
+- `infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service()` returns the Search Intelligence service. Tests can patch this factory similarly.
+
+These factory functions are intentionally tiny seams to simplify test injection without coupling to internal structure. In production, the factories just call the real constructor functions.
+
+### Smart Search Query Expansion
+The `search_smart` tool now always invokes the underlying service’s `_expand_query(query)` for consistency under tests, but only displays the expansion terms when `use_expansion=True`.
+
+### External OCR Note
+OCR is handled externally in current deployments (e.g., Whisper-based pipeline at a separate path). Internal OCR wiring can be disabled by setting `OCR_DISABLED=true`. PDF ingestion and summarization continue to work with plain-text extraction and mocks in tests.

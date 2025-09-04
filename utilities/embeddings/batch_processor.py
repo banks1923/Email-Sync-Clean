@@ -9,6 +9,7 @@ Simple, direct implementation following CLAUDE.md principles.
 """
 
 import hashlib
+import os
 import time
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -43,7 +44,14 @@ class BatchEmbeddingProcessor:
         """
         self.db = db or SimpleDB()
         self.embedding_service = embedding_service or get_embedding_service()
-        self.batch_size = batch_size
+        # Batch size controls both DB fetch size and embedding micro-batch size.
+        # Allow override via environment for tuning on constrained machines.
+        try:
+            import os
+            env_bs = os.getenv("EMBEDDING_BATCH_SIZE")
+            self.batch_size = int(env_bs) if env_bs else batch_size
+        except Exception:
+            self.batch_size = batch_size
         self.min_quality = min_quality
         
         # Use vectors_v2 collection for v2 chunks
@@ -181,8 +189,10 @@ class BatchEmbeddingProcessor:
         
         # Generate embeddings in batch
         try:
-            logger.debug(f"Generating embeddings for {len(texts)} chunks")
-            embeddings = self.embedding_service.batch_encode(texts, batch_size=16)
+            logger.debug(
+                f"Generating embeddings for {len(texts)} chunks (batch={self.batch_size})"
+            )
+            embeddings = self.embedding_service.batch_encode(texts, batch_size=self.batch_size)
             batch_result["embeddings_generated"] = len(embeddings)
             
         except Exception as e:
@@ -208,6 +218,7 @@ class BatchEmbeddingProcessor:
                 
                 # Prepare vector metadata
                 metadata = {
+                    "content_id": str(chunk.get("id")) if chunk.get("id") is not None else None,
                     "chunk_id": chunk["source_id"],  # Format: "doc_id:chunk_idx"
                     "doc_id": chunk["source_id"].split(":")[0],
                     "chunk_idx": int(chunk["source_id"].split(":")[-1]),
@@ -296,8 +307,15 @@ class BatchEmbeddingProcessor:
         stats["chunks_remaining"] = stats["chunks_ready"]
         
         if stats["chunks_ready"] > 0:
-            # Estimate time remaining (assuming ~50 chunks/second)
-            stats["estimated_minutes"] = round(stats["chunks_ready"] / (50 * 60), 1)
+            # Estimate time remaining using configurable throughput (embeddings/sec)
+            # Default to a conservative CPU/MPS rate; override via EMBEDDINGS_PER_SECOND
+            try:
+                eps = float(os.getenv("EMBEDDINGS_PER_SECOND", "2.0"))
+                eps = max(eps, 0.1)
+            except Exception:
+                eps = 2.0
+            stats["estimated_rate_eps"] = round(eps, 2)
+            stats["estimated_minutes"] = round(stats["chunks_ready"] / (eps * 60), 1)
         
         return stats
 

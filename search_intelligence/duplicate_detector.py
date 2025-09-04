@@ -182,7 +182,8 @@ class DuplicateDetector:
             # Compute hash of content
             doc_hash = self._compute_document_hash(doc)
             if doc_hash:
-                hash_groups[doc_hash].append(doc["id"])
+                doc_id = doc.get("id") or doc.get("content_id")
+                hash_groups[doc_hash].append(doc_id)
 
         # Find groups with duplicates
         duplicate_groups = []
@@ -203,14 +204,14 @@ class DuplicateDetector:
         """
         Compute SHA-256 hash of document content.
         """
-        doc_id = doc.get("id")
+        doc_id = doc.get("id") or doc.get("content_id")
 
         # Check cache
         if doc_id in self._hash_cache:
             return self._hash_cache[doc_id]
 
         # Extract and normalize content
-        content = doc.get("content_unified", "") or doc.get("body", "")
+        content = doc.get("content_unified", "") or doc.get("body", "") or doc.get("content", "")
         title = doc.get("title", "") or doc.get("subject", "")
 
         # Combine title and content for hashing
@@ -242,7 +243,7 @@ class DuplicateDetector:
             exact_duplicate_ids.update(group["members"])
 
         # Filter out exact duplicates
-        docs_to_check = [doc for doc in documents if doc["id"] not in exact_duplicate_ids]
+        docs_to_check = [doc for doc in documents if (doc.get("id") or doc.get("content_id")) not in exact_duplicate_ids]
 
         if len(docs_to_check) < 2:
             return []
@@ -252,7 +253,7 @@ class DuplicateDetector:
         embeddings = []
 
         for doc in docs_to_check:
-            doc_id = doc["id"]
+            doc_id = doc.get("id") or doc.get("content_id")
             embedding = self._get_document_embedding(doc)
 
             if embedding is not None:
@@ -285,7 +286,7 @@ class DuplicateDetector:
         """
         Get or generate embedding for document.
         """
-        doc_id = doc["id"]
+        doc_id = doc.get("id") or doc.get("content_id")
 
         try:
             # Try to get from vector store
@@ -294,7 +295,7 @@ class DuplicateDetector:
                 return np.array(result["vector"])
 
             # Generate new embedding
-            text = doc.get("content_unified", "") or doc.get("body", "")
+            text = doc.get("content_unified", "") or doc.get("body", "") or doc.get("content", "")
             title = doc.get("title", "") or doc.get("subject", "")
 
             full_text = f"{title} {text}".strip()

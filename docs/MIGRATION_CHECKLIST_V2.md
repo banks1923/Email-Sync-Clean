@@ -72,8 +72,8 @@ tools/scripts/vsearch search "query"  # Uses v1
 ```
 
 ### Data Rollback
-1. Vectors: Keep both collections, delete vectors_v2 if needed
-2. Database: Chunks are additive, original data untouched
+1. Vectors: Single collection strategy. If needed, recreate `vectors_v2` (1024D, COSINE) and re-embed.
+2. Database: Chunks are additive in `content_unified`; original data untouched
 3. Code: Git revert to previous commit
 
 ## Testing Procedures

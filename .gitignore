@@ -176,10 +176,6 @@ bfg.jar
 # Data directory
 /data/
 
-# Task files
-# tasks.json
-# tasks/ 
-
 # macOS artifacts
 .DS_Store
 .AppleDouble
@@ -228,3 +224,7 @@ bigquery_staging/
 
 .qdrant-initialized
 data/reports/
+
+# Task files
+# tasks.json
+# tasks/ 
