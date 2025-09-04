@@ -97,8 +97,8 @@ def check_environment():
         else:
             print("❌ Qdrant not healthy")
             return False
-    except:
-        print("❌ Qdrant not accessible at localhost:6333")
+    except Exception as e:
+        print(f"❌ Qdrant not accessible at localhost:6333: {e}")
         return False
 
     return True

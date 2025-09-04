@@ -471,7 +471,8 @@ class SimpleDB:
         meta.setdefault("original_type", content_type or "")
         try:
             meta_json = json.dumps(meta)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to serialize metadata: {e}")
             meta_json = None
 
         try:

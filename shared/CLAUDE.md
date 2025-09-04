@@ -10,14 +10,21 @@ Following the "Simple > Complex" principle, this directory now contains only 3 f
 
 ## Current Structure (3 files only)
 
-### SimpleDB (`simple_db.py`)
+### SimpleDB (`db/simple_db.py`)
 The core database interface used by 13+ modules across the system.
 
 ```python
 from shared.db.simple_db import SimpleDB
+from shared.db.exceptions import TestDataBlockedException
 
 db = SimpleDB()
-content_id = db.add_content("transcript", title, content, metadata)
+
+# Add content with exception handling
+try:
+    content_id = db.add_content("transcript", title, content, metadata)
+except TestDataBlockedException as e:
+    logger.warning(f"Test data blocked: {e.title}")
+
 results = db.search_content("query", limit=10)
 
 # High-performance batch operations
@@ -34,7 +41,14 @@ stats = db.batch_insert(
 - Batch operations (~2000+ records/second)
 - Auto-generation of UUIDs, word counts
 - Progress callbacks for long operations
+- **Custom exceptions** for proper error handling (no "-1" returns)
+- **Test data guardrails** to prevent test data in production
 - Used by: search, pdf, transcription, mcp_server, scripts, tests
+
+**Exception Classes** (`db/exceptions.py`):
+- `TestDataBlockedException` - Blocks test patterns
+- `ContentValidationError` - Validation failures
+- `DuplicateContentError` - Duplicate detection
 
 ### ServiceInterfaces (`service_interfaces.py`)
 Common interface definitions for services.

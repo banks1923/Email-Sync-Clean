@@ -227,6 +227,33 @@ Email Sync/
 
 ### Architecture Principles
 
+#### Error Handling & Database Layer
+
+The system uses **custom exceptions** for proper error handling instead of return codes:
+
+```python
+from shared.db.simple_db import SimpleDB
+from shared.db.exceptions import TestDataBlockedException
+
+try:
+    db = SimpleDB()
+    result = db.add_content("email", "Test Subject", "content")
+except TestDataBlockedException as e:
+    # Test data properly blocked with context
+    logger.error(f"Blocked: {e.title}, type: {e.content_type}")
+```
+
+**Exception Types** (`shared/db/exceptions.py`):
+- `TestDataBlockedException` - Test data patterns detected
+- `ContentValidationError` - Content validation failures  
+- `DuplicateContentError` - Duplicate content (if strict mode)
+
+**Best Practices Applied**:
+- Exceptions for errors, not return codes (no more "-1")
+- Structured logging with loguru
+- Exception context for debugging
+- Proper exception propagation
+
 #### File Size Guidelines
 
 ##### For New Development (GOALS, NOT ENFORCED)
