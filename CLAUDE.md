@@ -78,6 +78,35 @@ Patch these with `unittest.mock.patch` in tests to inject controlled doubles. De
 - **NEW**: All services use direct function APIs (no service classes)
 - **NEW**: Chunking/quality modules migrated from src/ to infrastructure/documents/
 
+## Unified Health Checks (CLI + APIs)
+
+We standardized service health into a single, lightweight contract with optional deep checks.
+
+- Contract keys: `status`, `details`, `metrics`, `hints`
+  - `status`: "healthy" | "mock" | "degraded" | "error"
+  - `details`: stable, service-specific fields (e.g., model_name, vector_size, db_path)
+  - `metrics`: lightweight stats (e.g., cache hits, query counts)
+  - `hints`: actionable guidance (how to enable Qdrant or models)
+
+- CLI usage:
+  - `python tools/scripts/vsearch admin health` (human-readable)
+  - `python tools/scripts/vsearch admin health --json` (machine-readable)
+  - `python tools/scripts/vsearch admin health --deep` (heavier checks)
+
+- Exit codes: 0 healthy, 1 degraded/mock (0 in TEST_MODE), 2 error
+
+- Environment toggles:
+  - `TEST_MODE=1` or `SKIP_MODEL_LOAD=1`: use mock embeddings; fast checks
+  - `QDRANT_DISABLED=1`: force mock vector store
+  - `QDRANT_HOST`, `QDRANT_PORT`, `QDRANT_TIMEOUT_S` (default 0.5s)
+
+- API entry points:
+  - `lib.db.SimpleDB.health_check(deep=False)`
+  - `lib.vector_store.get_vector_store().health_check(deep=False)`
+  - `lib.embeddings.get_embedding_service().health_check(deep=False)`
+
+Performance budgets: <300ms DB, <500ms vector control-plane, <50ms embeddings (mock/light). Deep checks do a single encode or a point count.
+
 ## READY: Quick Start (Development)
 
 ### Quick Development Setup
@@ -135,6 +164,9 @@ python3 scripts/data/generate_embeddings.py
 | | `tools/scripts/vsearch intelligence similarity doc_123` | Find similar |
 | **Entities** | `tools/scripts/vsearch extract-entities --missing-only` | Extract entities |
 | | `tools/scripts/vsearch entity-status` | Check status |
+| **Export** | `python3 tools/scripts/export_documents.py` | Export all documents to text files |
+| | `python3 tools/scripts/export_documents.py --content-type email` | Export emails only |
+| | `python3 tools/scripts/export_documents.py --output-dir /path` | Custom export directory |
 | **Verification** | `python3 scripts/verify_pipeline.py` | Full verification |
 | | `python3 tests/test_email_parser.py` | Validate email parsing |
 
@@ -151,8 +183,12 @@ Email Sync/
 ├── pdf/                # PDF processing
 ├── entity/             # Entity extraction
 ├── summarization/      # Document summarization
-├── search_intelligence/ # Unified search intelligence
-# Note: knowledge_graph service removed - functionality in search_intelligence and utilities
+├── lib/                # Core business logic (NEW: unified interface)
+│   ├── db.py           # Database operations (SimpleDB)
+│   ├── search.py       # Semantic search & literal patterns
+│   ├── embeddings.py   # Legal BERT embeddings
+│   ├── vector_store.py # Qdrant vector operations
+│   └── utilities/      # Helper functions
 ├── shared/             # Shared utilities & database
 
 # Organized Utility Services
@@ -325,7 +361,7 @@ These are guidance targets to prevent monster files; they are not hard caps.
 | Entity | `entity/` | 2,661 | 1,995 |
 | Infrastructure/Documents | `infrastructure/documents/` | 1,993 | 1,494 |
 | Gmail | `gmail/` | 1,883 | 1,412 |
-| Search Intelligence | `search_intelligence/` | 1,797 | 1,347 |
+| Core Library | `lib/` | 2,100 | 1,575 |
 | Infrastructure/MCP | `infrastructure/mcp_servers/` | 1,589 | 1,191 |
 | Summarization | `summarization/` | 499 | 374 |
 | Utilities/Vector Store | `utilities/vector_store/` | 413 | 309 |
@@ -458,7 +494,7 @@ The system provides 2 active MCP servers for Claude Desktop with 12+ intelligenc
 
 **Active Servers**:
 - **Legal Intelligence**: 6 legal analysis tools (entity extraction, timeline, document analysis)
-- **Search Intelligence**: 6 search tools (smart search, similarity, clustering)
+- **Search Intelligence**: 6 search tools via lib.search (semantic search, literal patterns)
 
 For complete MCP documentation and tool details, see **[docs/MCP_SERVERS.md](docs/MCP_SERVERS.md)**
 
@@ -515,6 +551,12 @@ For detailed verification documentation, see **[docs/PIPELINE_VERIFICATION.md](d
 python3 scripts/verify_pipeline.py              # Full pipeline verification
 make preflight-vector-parity                    # Vector sync check
 
+# SimpleDB tests (refactored 2025-09-04)
+pytest tests/infrastructure/database/           # All 52 SimpleDB tests
+pytest tests/infrastructure/database/test_simple_db_core.py      # Core CRUD/search tests
+pytest tests/infrastructure/database/test_simple_db_intelligence.py  # Intelligence tests
+pytest tests/infrastructure/database/test_simple_db_performance.py   # Performance tests
+
 # Email deduplication tests (v2.0)
 python3 tests/test_email_parser.py              # Unit tests (16 tests)
 python3 tests/test_email_integration.py         # Integration tests (4 tests)
@@ -526,14 +568,15 @@ python3 tests/simple_mcp_validation.py          # MCP validation
 python3 tests/run_mcp_tests.py                  # All MCP tests
 
 # Quick service test
-python3 -c "from shared.db.simple_db import SimpleDB; db = SimpleDB(); print('WORKING: DB working')"
+python3 -c "from lib.db import SimpleDB; db = SimpleDB(); print('WORKING: DB working')"
 ```
 
 ### Test Coverage
-- **Email Parsing**: Comprehensive test suite with 34 tests
+- **SimpleDB**: 52 tests across 3 focused modules (core, intelligence, performance)
+- **Email Parsing**: Comprehensive test suite with 34 tests at 97% coverage
 - **Integration Tests**: MCP parameter mapping and workflows
 - **System Tests**: Full pipeline validation via `verify_pipeline.py`
-- **Coverage Focus**: Email parsing at 97%, integration over unit tests
+- **Test Consolidation**: Reduced test code by ~2,500 lines (18% reduction)
 
 For detailed testing documentation, see **[docs/PIPELINE_VERIFICATION.md](docs/PIPELINE_VERIFICATION.md)**
 
@@ -575,12 +618,16 @@ class SearchFactory:
 ```
 
 ### File Organization
-- **Root level services**: gmail/, pdf/, search_intelligence/, legal_intelligence/
+- **Root level services**: gmail/, pdf/, entity/, summarization/
+- **Core library**: lib/ (unified interface for db, search, embeddings, vector_store)
 - **Utilities**: utilities/embeddings/, utilities/vector_store/ (utilities/notes/ removed)
 - **Infrastructure**: infrastructure/pipelines/, infrastructure/documents/, infrastructure/mcp_servers/
 - **Tools**: tools/cli/, tools/scripts/
 - **shared/**: Shared utilities (keep minimal)
 - **tests/**: All test files
+  - **infrastructure/database/**: SimpleDB tests (3 focused modules)
+  - **integration/**: End-to-end workflow tests
+  - **smoke/**: Quick system health checks
 
 ## PERFORMANCE: Metrics
 
@@ -652,6 +699,19 @@ make diag-wiring
 ---
 
 *Remember: The best code is no code. The second best is simple code that works.*
+
+## Refactor Audit Summary (2025-09-04) - COMPLETED
+- Tracker added at `TRACKER.md` documenting completed consolidation, gaps, next phases, and success gates.
+- Critical fixes completed:
+  - ✅ **Database Schema Fix**: SimpleDB was querying non-existent `content` table; fixed to use `content_unified` across 8 methods
+  - ✅ **SimpleDB API**: Added missing `get_content_stats()` method with proper aggregations
+  - ✅ **Vector Store Probe**: Enhanced `vector_store_available()` with proper Qdrant probe and TEST_MODE handling
+  - ✅ **CLI Attributes**: Fixed all attribute access in `cli/info.py` (`collection_name`, `vector_size`, `vector_dimension`)
+  - ✅ **Service Locator**: Updated import path from `search_intelligence` to `lib.search`
+- Pending minor items:
+  - Coverage sources cleanup in `pyproject.toml`
+  - Documentation alignment for vsearch paths
+- Health/admin CLI is the source of truth for diagnostics: `python -m cli admin health [--json] [--deep]`
 
 ## Task Master AI Integration (Optional)
 

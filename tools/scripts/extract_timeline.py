@@ -15,7 +15,7 @@ from loguru import logger
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utilities.timeline import TimelineService
+from lib.timeline import TimelineService
 
 
 def extract_timeline_from_database(_ = "MEDIUM") -> dict:

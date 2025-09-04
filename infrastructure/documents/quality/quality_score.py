@@ -1,26 +1,28 @@
 #!/usr/bin/env python3
-"""
-Quality scoring module for document chunks.
+"""Quality scoring module for document chunks.
+
 Computes quality scores and enforces gating thresholds.
 """
 
 import re
-from typing import Generator, Optional, Callable
-from functools import wraps
 from collections import Counter
+from functools import wraps
+from typing import Callable, Generator, Optional
 
 import numpy as np
-from scipy.stats import entropy
-from pydantic_settings import BaseSettings
-from pydantic import Field
 from loguru import logger
+from pydantic import Field
+from pydantic_settings import BaseSettings
+from scipy.stats import entropy
 
 # Import DocumentChunk from chunker
 from ..chunker.document_chunker import DocumentChunk
 
 
 class QualitySettings(BaseSettings):
-    """Configuration settings for quality scoring."""
+    """
+    Configuration settings for quality scoring.
+    """
     
     min_quality_score: float = Field(
         default=0.35,
@@ -76,15 +78,14 @@ class QualitySettings(BaseSettings):
 
 
 class ChunkQualityScorer:
-    """
-    Computes quality scores for document chunks.
+    """Computes quality scores for document chunks.
+
     Implements formula: quality = 0.4*length + 0.3*entropy + 0.2*content + 0.1*(1-quote_penalty)
     """
     
     def __init__(self, settings: Optional[QualitySettings] = None):
-        """
-        Initialize the quality scorer.
-        
+        """Initialize the quality scorer.
+
         Args:
             settings: Configuration settings (uses defaults if None)
         """
@@ -119,12 +120,11 @@ class ChunkQualityScorer:
         logger.info(f"ChunkQualityScorer initialized with threshold={self.settings.min_quality_score}")
     
     def _is_headers_only(self, text: str) -> bool:
-        """
-        Check if text is primarily email headers.
-        
+        """Check if text is primarily email headers.
+
         Args:
             text: Chunk text
-            
+
         Returns:
             True if >80% of lines are headers
         """
@@ -148,12 +148,11 @@ class ChunkQualityScorer:
         return header_ratio > 0.8
     
     def _is_signature_only(self, text: str) -> bool:
-        """
-        Check if text is primarily signatures.
-        
+        """Check if text is primarily signatures.
+
         Args:
             text: Chunk text
-            
+
         Returns:
             True if text appears to be mostly signature content
         """
@@ -176,12 +175,11 @@ class ChunkQualityScorer:
         return sig_lines > len(lines) * 0.6
     
     def _calculate_length_score(self, chunk: DocumentChunk) -> float:
-        """
-        Calculate length score normalized by expected length.
-        
+        """Calculate length score normalized by expected length.
+
         Args:
             chunk: Document chunk
-            
+
         Returns:
             Score between 0 and 1
         """
@@ -206,12 +204,11 @@ class ChunkQualityScorer:
         return max(0.0, min(1.0, score))
     
     def _calculate_entropy_score(self, text: str) -> float:
-        """
-        Calculate Shannon entropy (vocabulary diversity).
-        
+        """Calculate Shannon entropy (vocabulary diversity).
+
         Args:
             text: Chunk text
-            
+
         Returns:
             Normalized entropy score between 0 and 1
         """
@@ -244,12 +241,11 @@ class ChunkQualityScorer:
         return max(0.0, min(1.0, diversity_score))
     
     def _calculate_content_score(self, text: str) -> float:
-        """
-        Calculate ratio of content vs boilerplate.
-        
+        """Calculate ratio of content vs boilerplate.
+
         Args:
             text: Chunk text
-            
+
         Returns:
             Score between 0 and 1
         """
@@ -283,12 +279,11 @@ class ChunkQualityScorer:
         return max(0.0, min(1.0, score))
     
     def _calculate_quote_penalty(self, chunk: DocumentChunk) -> float:
-        """
-        Calculate quote penalty based on quote depth.
-        
+        """Calculate quote penalty based on quote depth.
+
         Args:
             chunk: Document chunk
-            
+
         Returns:
             Penalty value between 0 and 1
         """
@@ -297,12 +292,11 @@ class ChunkQualityScorer:
         return min(1.0, penalty)  # Cap at 1.0
     
     def score(self, chunk: DocumentChunk) -> float:
-        """
-        Compute quality score for a chunk.
-        
+        """Compute quality score for a chunk.
+
         Args:
             chunk: Document chunk to score
-            
+
         Returns:
             Quality score between 0 and 1
         """
@@ -352,12 +346,11 @@ class ChunkQualityScorer:
         return quality_score
     
     def is_acceptable(self, chunk: DocumentChunk) -> bool:
-        """
-        Check if chunk meets minimum quality threshold.
-        
+        """Check if chunk meets minimum quality threshold.
+
         Args:
             chunk: Document chunk
-            
+
         Returns:
             True if quality score >= threshold
         """
@@ -369,13 +362,12 @@ def quality_gate(
     min_score: Optional[float] = None,
     settings: Optional[QualitySettings] = None
 ) -> Callable:
-    """
-    Decorator to filter chunks by quality score.
-    
+    """Decorator to filter chunks by quality score.
+
     Args:
         min_score: Minimum quality score (overrides settings)
         settings: Quality settings to use
-        
+
     Returns:
         Decorated generator function
     """
@@ -424,11 +416,13 @@ def quality_gate(
 
 
 def main():
-    """CLI interface for testing quality scoring."""
+    """
+    CLI interface for testing quality scoring.
+    """
     import argparse
     import json
     from pathlib import Path
-    
+
     # Import chunker
     from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
     

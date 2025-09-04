@@ -6,16 +6,12 @@ embeddings, timeline).
 """
 
 import argparse
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
-
-
 
 from loguru import logger
 
-from shared.db.simple_db import SimpleDB
-from utilities.semantic_pipeline import get_semantic_pipeline
+from lib.db import SimpleDB
+from lib.pipelines import get_semantic_pipeline
 from summarization import get_document_summarizer
 
 
@@ -186,8 +182,9 @@ def main():
 def _backfill_summaries_for_messages(db: SimpleDB, message_ids: list[str], force: bool = False) -> dict:
     """Backfill summaries for a list of individual_messages (by message_hash).
 
-    Writes summaries into content_unified with source_type='email_summary' and
-    source_id set to the original content_unified.id (string) for uniqueness.
+    Writes summaries into content_unified with
+    source_type='email_summary' and source_id set to the original
+    content_unified.id (string) for uniqueness.
     """
     result = {"processed": 0, "skipped": 0, "errors": 0}
     if not message_ids:

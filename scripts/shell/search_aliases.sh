@@ -1,8 +1,8 @@
 #!/bin/bash
 # Add these to your ~/.zshrc or ~/.bashrc for quick access
 
-# Interactive search viewer
-alias search='python3 ~/Projects/Litigator_solo/tools/scripts/view_search.py'
+# Unified search CLI
+alias search='python3 ~/Projects/Litigator_solo/tools/scripts/vsearch search'
 
 # Export search to HTML and open in browser
 alias searchhtml='python3 ~/Projects/Litigator_solo/tools/scripts/export_search.py'

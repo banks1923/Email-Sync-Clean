@@ -5,29 +5,38 @@ Tests the minimal 2-function API: search() and find_literal().
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 
 
 class TestSemanticSearchAPI(unittest.TestCase):
-    """Test the semantic-only search API."""
+    """
+    Test the semantic-only search API.
+    """
     
     def test_search_function_exists(self):
-        """Test that search function is importable."""
+        """
+        Test that search function is importable.
+        """
         from search_intelligence import search
         self.assertTrue(callable(search))
     
     def test_find_literal_function_exists(self):
-        """Test that find_literal function is importable."""
+        """
+        Test that find_literal function is importable.
+        """
         from search_intelligence import find_literal
         self.assertTrue(callable(find_literal))
     
     @patch('search_intelligence.basic_search.get_vector_store')
     @patch('search_intelligence.basic_search.get_embedding_service')
     def test_search_basic(self, mock_embed_service, mock_vector_store):
-        """Test basic semantic search."""
+        """
+        Test basic semantic search.
+        """
         from search_intelligence import search
-        
+
         # Mock embedding service
         mock_embedder = MagicMock()
         mock_embedder.encode.return_value = np.ones(1024)  # 1024D vector
@@ -62,9 +71,11 @@ class TestSemanticSearchAPI(unittest.TestCase):
     
     @patch('search_intelligence.basic_search.SimpleDB')
     def test_find_literal_basic(self, mock_db_class):
-        """Test literal pattern matching."""
+        """
+        Test literal pattern matching.
+        """
         from search_intelligence import find_literal
-        
+
         # Mock database
         mock_db = MagicMock()
         mock_db.fetch.return_value = [
@@ -94,7 +105,9 @@ class TestSemanticSearchAPI(unittest.TestCase):
         self.assertEqual(results[0]['match_type'], 'literal')
     
     def test_vector_store_available(self):
-        """Test vector store availability check."""
+        """
+        Test vector store availability check.
+        """
         from search_intelligence import vector_store_available
         
         with patch('search_intelligence.basic_search.get_vector_store') as mock_get_store:
@@ -110,7 +123,9 @@ class TestSemanticSearchAPI(unittest.TestCase):
             self.assertFalse(vector_store_available())
     
     def test_filters_applied(self):
-        """Test that filters are properly applied to search."""
+        """
+        Test that filters are properly applied to search.
+        """
         from search_intelligence import search
         
         with patch('search_intelligence.basic_search.get_vector_store') as mock_get_store:
@@ -144,19 +159,24 @@ class TestSemanticSearchAPI(unittest.TestCase):
     # Removed deprecated service shim tests as service is being retired
     
     def test_no_keyword_search_functions(self):
-        """Verify keyword search functions have been removed."""
-        import search_intelligence.basic_search as basic_search
-        
+        """
+        Verify keyword search functions have been removed.
+        """
+        import lib.search as basic_search
+
         # These should not exist
         self.assertFalse(hasattr(basic_search, 'calculate_weights'))
         self.assertFalse(hasattr(basic_search, '_keyword_search'))
         self.assertFalse(hasattr(basic_search, '_merge_results_rrf'))
     
     def test_no_environment_variables(self):
-        """Verify environment variables for modes have been removed."""
-        import search_intelligence.basic_search as basic_search
+        """
+        Verify environment variables for modes have been removed.
+        """
         import inspect
-        
+
+        import lib.search as basic_search
+
         # Get source code
         source = inspect.getsource(basic_search)
         

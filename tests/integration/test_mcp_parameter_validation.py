@@ -79,7 +79,8 @@ class TestSearchIntelligenceMCPParameters:
     @patch("search_intelligence.search")
     def test_search_smart_parameter_validation(self, mock_search_fn):
         """
-        Test search_smart parameter mapping to function API and output formatting.
+        Test search_smart parameter mapping to function API and output
+        formatting.
         """
         from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
 

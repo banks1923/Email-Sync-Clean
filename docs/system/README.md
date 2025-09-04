@@ -70,17 +70,28 @@ The Email Sync system uses a centralized configuration approach:
 
 ## System Health Monitoring
 
-For live system monitoring, use:
+For quick, dependency-aware health checks, use the unified CLI:
 
 ```bash
-# Static health snapshot
-python3 scripts/system_health_graph.py
+# Light, human-readable snapshot (fast)
+python tools/scripts/vsearch admin health
 
-# Live monitoring dashboard
-python3 scripts/live_health_dashboard.py
+# JSON output for scripts/monitoring
+python tools/scripts/vsearch admin health --json
 
-# System diagnostics
-make diag-wiring
+# Deep checks (does a tiny encode, may be slower)
+python tools/scripts/vsearch admin health --deep
+
+# Tip: speed up in CI/dev
+TEST_MODE=1 python tools/scripts/vsearch admin health
+```
+
+Diagnostics tooling remains available for visual monitoring:
+
+```bash
+python3 scripts/system_health_graph.py   # Static health snapshot
+python3 scripts/live_health_dashboard.py # Live monitoring dashboard
+make diag-wiring                         # Wiring diagnostics
 ```
 
 ## Archived Files

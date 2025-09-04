@@ -3,16 +3,21 @@
 Extracts grammatical dependencies and relationships from text.
 """
 
-import spacy
 from typing import Any, Dict, List
+
+import spacy
 from loguru import logger
 
 
 class DependencyParser:
-    """Extract syntactic dependencies and grammatical relationships."""
+    """
+    Extract syntactic dependencies and grammatical relationships.
+    """
     
     def __init__(self):
-        """Initialize with spaCy model that includes parser."""
+        """
+        Initialize with spaCy model that includes parser.
+        """
         self.name = "dependency"
         try:
             self.nlp = spacy.load("en_core_web_sm")
@@ -27,11 +32,11 @@ class DependencyParser:
     
     def extract_dependencies(self, text: str, doc_id: str = "") -> Dict[str, Any]:
         """Extract dependency parse from text.
-        
+
         Args:
             text: Text to parse
             doc_id: Document identifier
-            
+
         Returns:
             Dict with dependencies, subjects, objects, and actions
         """
@@ -101,7 +106,7 @@ class DependencyParser:
     
     def _extract_svo_triples(self, doc) -> List[Dict[str, str]]:
         """Extract subject-verb-object triples from parsed document.
-        
+
         Returns:
             List of SVO triples with grammatical roles
         """
@@ -136,7 +141,7 @@ class DependencyParser:
     
     def extract_legal_actions(self, text: str) -> List[Dict[str, Any]]:
         """Extract legal actions and their actors from text.
-        
+
         Specialized for legal documents to find who did what.
         """
         doc = self.nlp(text)
@@ -184,5 +189,7 @@ class DependencyParser:
         return actions
     
     def is_available(self) -> bool:
-        """Check if parser is available."""
+        """
+        Check if parser is available.
+        """
         return self.available

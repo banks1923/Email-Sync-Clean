@@ -119,7 +119,7 @@ class ServiceTestHarness:
         """
         Test database connectivity and schema.
         """
-        from shared.db.simple_db import SimpleDB
+        from lib.db import SimpleDB
 
         db = SimpleDB()
         details = {}
@@ -148,7 +148,7 @@ class ServiceTestHarness:
         try:
             import requests
 
-            from utilities.vector_store import get_vector_store
+            from lib.vector_store import get_vector_store
 
             # Check Qdrant
             response = requests.get("http://localhost:6333/readyz", timeout=2)
@@ -187,7 +187,7 @@ class ServiceTestHarness:
         """
         Test embedding service.
         """
-        from utilities.embeddings import get_embedding_service
+        from lib.embeddings import get_embedding_service
 
         emb = get_embedding_service()
         details = {}
@@ -233,7 +233,7 @@ class ServiceTestHarness:
         """
         Test timeline service.
         """
-        from utilities.timeline import TimelineService
+        from lib.timeline import TimelineService
 
         ts = TimelineService()
         details = {}
@@ -275,7 +275,7 @@ class ServiceTestHarness:
         """
         Test search intelligence service.
         """
-        from search_intelligence import search, find_literal, vector_store_available
+        from search_intelligence import find_literal, search, vector_store_available
 
         details = {}
 

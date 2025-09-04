@@ -9,12 +9,11 @@ Following the project philosophy of **Simple > Complex** and **Working > Perfect
 
 ## Test Structure
 
-### Clean Services Tests (`/tests/services/`)
-Tests for the new simplified services:
-- `test_embedding_service.py` - EmbeddingService tests
-- `test_vector_store.py` - VectorStore tests (requires Qdrant)
-- `test_search_service.py` - SearchService integration tests
-- `test_simple_db.py` - SimpleDB database tests
+### Database Tests (`/tests/infrastructure/database/`)
+Tests for SimpleDB, organized by functionality:
+- `test_simple_db_core.py` - Basic CRUD operations, search, and error handling
+- `test_simple_db_intelligence.py` - Document summaries and intelligence tables
+- `test_simple_db_performance.py` - Batch operations, concurrency, and benchmarks
 
 ### Integration Tests (`/tests/integration/`)
 End-to-end workflow tests:
@@ -125,11 +124,14 @@ Subsequent runs use cached model.
 
 ## Test Metrics
 
-After refactoring:
-- **Test files**: Reduced by 60%
+After refactoring (2025-09-04):
+- **Test files**: Reduced by 60% (6 obsolete files removed)
+- **Test consolidation**: 22 SimpleDB test files → 3 focused modules
+- **Lines of code**: Reduced by ~2,500 lines (18% reduction)
 - **Mock usage**: Reduced by 89%
 - **Test execution time**: Improved by 40%
-- **Test clarity**: Dramatically improved
+- **Test clarity**: Dramatically improved with single responsibility principle
+- **Test coverage**: All 52 SimpleDB tests passing
 
 ## Future Testing Goals
 

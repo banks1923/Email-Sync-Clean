@@ -45,11 +45,8 @@ Modular CLI implementation following clean architecture principles.
 ## Usage
 
 ```bash
-# Direct usage via modular CLI
-python3 scripts/cli/cli_main.py search "query"
-
-# Via convenience wrapper (recommended)
-scripts/vsearch_modular search "query"
+# Recommended usage via unified CLI
+python tools/scripts/vsearch search "query"
 ```
 
 ## Benefits

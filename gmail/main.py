@@ -4,13 +4,17 @@ from typing import Any
 from loguru import logger
 
 from config.settings import get_db_path
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 from summarization import get_document_summarizer
 
 # Import advanced email parsing modules
 try:
     from shared.email.email_cleaner import EmailCleaner
-    from shared.processors.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
+    from shared.processors.thread_manager import (
+        ThreadService,
+        deduplicate_messages,
+        extract_thread_messages,
+    )
 
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")
@@ -20,11 +24,11 @@ except ImportError:
 
 # Legacy EmailThreadProcessor removed - using advanced parsing only
 
-from . import config as gmail_config
-from . import gmail_api as gmail_api_module
 # EmailStorage removed - use SimpleDB directly
 import hashlib
-from gmail.validators import DateValidator, EmailValidator, InputSanitizer
+
+from . import config as gmail_config
+from . import gmail_api as gmail_api_module
 
 # Logger is now imported globally from loguru
 
@@ -93,7 +97,9 @@ class GmailService:
             pass
 
     def _ensure_gmail_api(self) -> None:
-        """Lazily instantiate GmailAPI if not provided/mocked."""
+        """
+        Lazily instantiate GmailAPI if not provided/mocked.
+        """
         if (
             self.gmail_api is None
             or self.gmail_api is self._gmail_api_placeholder
@@ -105,9 +111,10 @@ class GmailService:
     def _get_gmail_service(self):
         """Compatibility stub for tests that patch this method.
 
-        Historical code used a raw Gmail API service; tests may patch this
-        method for integration coverage. Current implementation uses
-        gmail_api_module.GmailAPI directly, so this returns None by default.
+        Historical code used a raw Gmail API service; tests may patch
+        this method for integration coverage. Current implementation
+        uses gmail_api_module.GmailAPI directly, so this returns None by
+        default.
         """
         return None
 
@@ -248,8 +255,8 @@ class GmailService:
             return self._sync_emails_single(messages)
 
     def _sync_emails_batch(self, messages) -> dict[str, Any]:
-        """
-        Sync emails in 50-message chunks using batch API + storage.
+        """Sync emails in 50-message chunks using batch API + storage.
+
         Expected by tests: calls fetch_messages_batch per chunk and save_emails_batch.
         """
         logger.info(f"Using batch mode for {len(messages)} emails")
@@ -373,7 +380,8 @@ class GmailService:
     def sync_incremental(self, max_results: int = 500) -> dict[str, Any]:
         """Perform incremental sync using History API, with simple fallback.
 
-        Supports legacy storage interface expected by tests (get_last_history_id).
+        Supports legacy storage interface expected by tests
+        (get_last_history_id).
         """
         logger.info("Starting incremental sync")
 
@@ -605,7 +613,7 @@ class GmailService:
                 from config.settings import semantic_settings
 
                 if semantic_settings.semantics_on_ingest:
-                    from utilities.semantic_pipeline import get_semantic_pipeline
+                    from lib.pipelines import get_semantic_pipeline
 
                     # Extract message IDs from saved emails
                     message_ids = [
@@ -758,7 +766,9 @@ class GmailService:
             logger.warning(f"Could not generate email summaries: {e}")
 
     def _ensure_email_tables(self):
-        """Create email-specific tables if they don't exist."""
+        """
+        Create email-specific tables if they don't exist.
+        """
         # Create emails table
         self.db.execute("""
             CREATE TABLE IF NOT EXISTS emails (
@@ -793,7 +803,9 @@ class GmailService:
         """)
 
     def _save_email(self, email_data: dict) -> dict:
-        """Save single email to database."""
+        """
+        Save single email to database.
+        """
         # Validate required fields
         if not email_data.get("message_id") or not email_data.get("sender"):
             return {"success": False, "error": "Missing required fields"}
@@ -824,7 +836,9 @@ class GmailService:
             return {"success": False, "error": str(e)}
 
     def _save_emails_batch(self, email_list: list) -> dict:
-        """Save batch of emails to database."""
+        """
+        Save batch of emails to database.
+        """
         if not email_list:
             return {"success": True, "total": 0, "inserted": 0}
         

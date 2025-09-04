@@ -19,7 +19,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 def bench_write(db: SimpleDB, num_docs: int = 10000) -> dict:

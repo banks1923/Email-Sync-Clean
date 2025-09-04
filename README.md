@@ -2,7 +2,7 @@
 
 AI-powered search system with Legal BERT semantic understanding for legal document analysis.
 
-> **CURRENT: Production Ready** - Working Gmail sync, keyword search, and semantic search capabilities
+> CURRENT: Production baseline — Gmail sync, hybrid search (default), and semantic-only mode.
 
 ## Core Commands
 
@@ -26,7 +26,7 @@ make test
 tools/scripts/vsearch search "your query"
 
 # Upload and process a document
-tools/e/vsearch upload /path/to/your/document.pdf
+tools/scripts/vsearch upload /path/to/your/document.pdf
 
 # Sync emails
 tools/scripts/vsearch sync-emails
@@ -35,7 +35,7 @@ tools/scripts/vsearch sync-emails
 ## STATUS: PRODUCTION BASELINE (2025-08-26) - WORKING
 
 WORKING: **Gmail Sync v2.0**: Working with message-level deduplication and content reduction  
-WORKING: **Keyword Search**: Fully operational hybrid search system  
+WORKING: **Hybrid Search**: Default hybrid (semantic + keyword) with explainability  
 WORKING: **Vector Service**: Qdrant connected with Legal BERT ready for embeddings  
 WORKING: **Schema Compatibility**: All services aligned to v2.0 architecture  
 WORKING: **Debug Logging**: Enabled system-wide for troubleshooting  
@@ -47,10 +47,10 @@ WORKING: **Database Health**: Email deduplication active, SQLite WAL mode optimi
 ### VALIDATE: Current Baseline (30 seconds)
 ```bash
 # Quick system health check
-tools/scripts/vsearch info
+tools/scripts/vsearch admin health
 
-# Test keyword search (should return 5 lease-related results)
-tools/scripts/vsearch search "lease" --limit 5
+# Test search (hybrid default)
+tools/scripts/vsearch search "lease" --limit 5 --why
 
 # Verify Gmail sync status
 export LOG_LEVEL=DEBUG && python3 -m gmail.main
@@ -58,25 +58,24 @@ export LOG_LEVEL=DEBUG && python3 -m gmail.main
 
 ### Search Operations (Primary Use)
 ```bash
-# Search across all content with keyword search (WORKING NOW)
-tools/scripts/vsearch search "contract terms"
+# Search across all content (hybrid default)
+tools/scripts/vsearch search "contract terms" --why
 
 # Advanced search with filters
 tools/scripts/vsearch search "contract terms" --type email --limit 10
 tools/scripts/vsearch search "lease termination" --limit 5
 
 # Enable semantic search (next step after baseline validation)
-tools/scripts/vsearch ingest --emails  # Generate embeddings for semantic search
+tools/scripts/vsearch ingest --emails  # Generate embeddings for semantic search [TODO: Verify if 'tools/scripts/vsearch ingest --emails' is still the recommended way to generate embeddings, or if 'scripts/data/generate_embeddings.py' should be preferred.]
 # Alternative: python3 scripts/data/generate_embeddings.py
 
 # Additional analysis tools
 tools/scripts/vsearch legal process "case_id"
-tools/scripts/vsearch intelligence smart-search "query"
 ```
 
 ### Document Processing
 ```bash
-# Upload and process PDFs (with OCR support)
+# Upload and process PDFs (text extraction only)
 tools/scripts/vsearch upload document.pdf
 
 # Batch process multiple PDFs
@@ -94,20 +93,16 @@ python3 -m gmail.main
 - **Unified Search**: Search all content types in one database
 - **Advanced Filters**: Date ranges, content types, and tag-based filtering
 - **Flexible Dates**: Natural language dates ("last week", "3 days ago", "this month")
-- **OCR Support**: Automatic text extraction from scanned PDFs
+- **PDF Processing**: Text extraction from born-digital PDFs (OCR handled externally)
 - **Batch Processing**: Bulk document operations
 - **Gmail Sync**: Incremental sync with History API and content deduplication
 - **Clean Architecture**: Simplified database-only system (analog removed)
 
-### Search Intelligence
-- **Smart Search**: Query preprocessing with abbreviation expansion and synonyms
-- **Query Expansion**: "LLC" → "limited liability company", "Q1" → "first quarter"
-- **Intelligent Ranking**: Entity relevance + recency scoring for better results
-- **Document Similarity**: Find related documents using Legal BERT embeddings
-- **Content Clustering**: DBSCAN clustering with configurable thresholds
-- **Duplicate Detection**: SHA-256 hash for exact, cosine similarity for near-duplicates
-- **Entity Caching**: TTL-based caching for entity extraction results
-- **Auto-Summarization**: Integrated TF-IDF and TextRank summarization
+### Search
+- **Hybrid (default)**: Merges semantic vectors with a minimal keyword lane using a small, explicit legal abbreviation map (e.g., MSJ → "motion for summary judgment").
+- **Semantic-only**: Pure vector search via Legal BERT (1024D) when you want semantics without keyword signals.
+- **Explainability**: Use `--why` with the CLI to see match reasons (semantic score and any keyword hits).
+- **Fail-fast**: If the vector store is unavailable, hybrid raises an error (no silent keyword fallback). Use `vsearch admin health` to diagnose.
 
 ### Document Intelligence
 - **Automatic Summarization**: TF-IDF keywords and TextRank key sentences
@@ -138,8 +133,7 @@ User → CLI → Services → Data
               ↓
     ├── EmbeddingService (Legal BERT)
     ├── VectorStore (Qdrant)
-    ├── SearchService (Hybrid search)
-    ├── SearchIntelligence (Query expansion)
+    ├── lib.search (semantic-only + hybrid merge)
     ├── LegalIntelligence (Case analysis)
     ├── DocumentSummarizer (Auto-summarization)
     ├── CacheManager (Performance)
@@ -161,7 +155,7 @@ data/
 ### Core Services
 - **EmbeddingService**: Text-to-vector conversion using Legal BERT
 - **VectorStore**: Qdrant vector operations (optional)
-- **SearchService**: Search orchestration
+- **lib.search**: Hybrid (default) and semantic-only search; fail-fast on vector issues; explainable results
 - **SimpleDB**: Direct SQLite operations without abstractions
 
 ## PREREQUISITES
@@ -210,22 +204,22 @@ tools/scripts/vsearch search "legal contract"
 
 ### Core Services
 
-#### EmbeddingService (`utilities/embeddings/`)
+#### EmbeddingService (`lib/embeddings.py`)
 - Converts text to Legal BERT 1024D vectors
 - Singleton pattern for model reuse
 - Auto-detects device (MPS/CUDA/CPU)
 
-#### VectorStore (`utilities/vector_store/`)
+#### VectorStore (`lib/vector_store.py`)
 - Qdrant vector database operations
 - Simple CRUD for vectors
 - Optional - system works without it
 
-#### SearchService (`search_intelligence/`)
-- Orchestrates search across all services
-- Combines semantic and keyword search
-- Falls back gracefully when services unavailable
+#### Search (`lib/search.py`)
+- Provides semantic-only and hybrid-lite retrieval
+- Merges semantic vectors with a minimal keyword lane; explainability via reasons
+- Fail-fast on vector unavailability (no silent keyword fallback)
 
-#### SimpleDB (`shared/simple_db.py`)
+#### SimpleDB (`lib/db.py`)
 - Direct SQLite operations
 - No ORM, no abstractions
 - Just SQL that works
@@ -251,7 +245,7 @@ tools/scripts/vsearch search "legal contract"
 
 ### Service-Specific Documentation  
 - **[gmail/CLAUDE.md](gmail/CLAUDE.md)** - Gmail service implementation details
-- **[pdf/CLAUDE.md](pdf/CLAUDE.md)** - PDF processing and OCR functionality
+- **[pdf/CLAUDE.md](pdf/CLAUDE.md)** - PDF processing and text extraction
 - Audio transcription service (via document pipeline)
 - Knowledge graph operations (via search intelligence)
 - **[summarization/README.md](summarization/README.md)** - Document summarization engine
@@ -264,7 +258,7 @@ tools/scripts/vsearch search "legal contract"
 Email Sync/
 # Core Business Services (Root Level - Reorganized 2025-08-17)
 ├── gmail/                   # Email service with History API sync
-├── pdf/                     # PDF processing with intelligent OCR
+├── pdf/                     # PDF processing with text extraction
 ├── transcription/           # Audio/video transcription with Whisper
 ├── entity/                  # Named entity recognition (Legal NER)
 ├── summarization/           # Document summarization (TF-IDF + TextRank)
@@ -343,24 +337,23 @@ make sync                                # Sync Gmail emails
 tools/scripts/vsearch search "important meeting"
 
 # Search with filters
-tools/e/vsearch search "contract" --type email --limit 10
+tools/scripts/vsearch search "contract" --type email --limit 10
 tools/scripts/vsearch search "lease" --limit 5
 
 # Legal analysis
 tools/scripts/vsearch legal process "case_id"
-tools/scripts/vsearch intelligence smart-search "query"
 ```
 
 ### Advanced Document Processing (Direct CLI)
 ```bash
-# Upload single PDF (automatic OCR if needed)
+# Upload single PDF (text extraction)
 tools/scripts/vsearch upload document.pdf
 
 # Batch upload directory of PDFs
 tools/scripts/vsearch upload /path/to/legal/documents/
 
 # Check processing stats
-tools/scripts/vsearch info  # Shows OCR vs text extraction counts
+tools/scripts/vsearch info  # Shows system status and counts
 
 # Generate embeddings for semantic search
 tools/scripts/vsearch ingest --emails
@@ -460,7 +453,7 @@ python3 -m pytest tests/test_<service_name>.py -v
 # No Docker required
 
 # Verify connection
-scripts/vsearch info  # Should show "Vector Service: Connected"
+tools/scripts/vsearch admin health  # Should show "Vector Service: Connected"
 ```
 
 ### Import Errors

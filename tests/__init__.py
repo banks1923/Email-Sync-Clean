@@ -1,2 +1,4 @@
-"""Make tests a package for intra-test imports."""
+"""
+Make tests a package for intra-test imports.
+"""
 

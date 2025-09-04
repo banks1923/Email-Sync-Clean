@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from shared.db.simple_db import SimpleDB as DatabaseService
+from lib.db import SimpleDB as DatabaseService
 
 
 @pytest.mark.unit
@@ -59,7 +59,7 @@ class TestFileSystemHealth:
         Verify expected data directories exist.
         """
         base_path = Path.cwd()
-        expected_dirs = ["data", "tools", "shared"]  # Updated for new flat architecture
+        expected_dirs = ["data", "tools", "lib", "cli"]  # Updated for new flat architecture
 
         for dir_name in expected_dirs:
             dir_path = base_path / dir_name
@@ -107,7 +107,7 @@ class TestBasicServices:
     Test basic service health without external dependencies.
     """
 
-    @pytest.mark.skipif(not Path("shared/database").exists(), reason="Database service not found")
+    @pytest.mark.skipif(not Path("lib").exists(), reason="Library directory not found")
     def test_database_service_instantiation(self, mock_env):
         """
         Test that DatabaseService can be created.

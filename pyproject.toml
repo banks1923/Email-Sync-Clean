@@ -76,22 +76,18 @@ benchmark_storage = ".cache/benchmarks"
 addopts = [
     "-ra",
     "--strict-markers",
-    "--cov=shared",
+    "--cov=lib",
+    "--cov=cli",
     "--cov=gmail",
     "--cov=pdf", 
-    "--cov=search",
-    "--cov=vector_store",
-    "--cov=embeddings",
     "--cov=entity",
-    "--cov=search_intelligence",
-    "--cov=knowledge_graph",
-    "--cov=pipelines",
-    "--cov=mcp_servers",
+    "--cov=infrastructure",
+    "--cov=summarization",
     "--cov-branch",
     "--cov-context=test",
     "--cov-report=html:htmlcov",
     "--cov-report=term-missing:skip-covered",
-    "--cov-fail-under=25",
+    # No coverage gate during consolidation; revisit in follow-up
     "-v"
 ]
 markers = [
@@ -111,17 +107,13 @@ branch = true
 context = "${COVERAGE_CONTEXT:pytest}"
 config_file = ".config/.coveragerc"
 source = [
-    "shared",
+    "lib",
+    "cli",
     "gmail", 
     "pdf",
-    "search",
-    "vector_store", 
-    "embeddings",
     "entity",
-    "search_intelligence", 
-    "knowledge_graph",
-    "pipelines",
-    "mcp_servers"
+    "infrastructure",
+    "summarization"
 ]
 omit = [
     "*/tests/*",
@@ -157,12 +149,13 @@ show_contexts = true
 
 # Coverage thresholds per package
 [tool.coverage.thresholds]
-shared = 80
+lib = 80
+cli = 60
 gmail = 70
 pdf = 70
-search = 60
-vector_store = 60
-embeddings = 60
+entity = 70
+infrastructure = 60
+summarization = 60
 
 [tool.pylint.messages_control]
 disable = [

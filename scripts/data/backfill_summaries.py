@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
-"""
-Backfill summaries for existing content that lacks them.
+"""Backfill summaries for existing content that lacks them.
 
-This script generates summaries for all content_unified records that don't have
-corresponding entries in document_summaries table.
+This script generates summaries for all content_unified records that
+don't have corresponding entries in document_summaries table.
 """
 
-import sys
-from pathlib import Path
+
+import time
 
 from loguru import logger
-from shared.db.simple_db import SimpleDB
+
+from lib.db import SimpleDB
 from summarization import get_document_summarizer
-import time
 
 
 def backfill_summaries(batch_size: int = 50, source_type: str = None, limit: int = None):
-    """
-    Generate summaries for existing content without them.
-    
+    """Generate summaries for existing content without them.
+
     Args:
         batch_size: Number of records to process at a time
         source_type: Filter by source type (email_message, document, etc.)

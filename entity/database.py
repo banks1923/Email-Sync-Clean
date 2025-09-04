@@ -6,15 +6,16 @@ Follows CLAUDE.md principles - simple and direct.
 import hashlib
 import json
 
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 class EntityDatabase:
     def __init__(self, db_path="data/system_data/emails.db") -> None:
         # Use absolute path to avoid symlink issues in MCP context
         import os
+
         from config.settings import settings
-        
+
         # Use settings-based path for consistency
         try:
             db_path = os.path.abspath(settings.database.emails_db_path)
@@ -61,7 +62,7 @@ class EntityDatabase:
             ]
 
             # Check which columns already exist
-            existing_columns = self.db.fetch("PRAGMA table_info(entity_content_mapping)")
+            existing_columns = self.db.fetch_all("PRAGMA table_info(entity_content_mapping)")
             existing_column_names = {col["name"] for col in existing_columns}
 
             for column_name, column_def in new_columns:
@@ -190,7 +191,7 @@ class EntityDatabase:
         """
         try:
             # First try as content_id (v2 schema)
-            entities = self.db.fetch(
+            entities = self.db.fetch_all(
                 "SELECT * FROM entity_content_mapping WHERE content_id = ? ORDER BY start_char",
                 (message_id,),
             )
@@ -203,7 +204,7 @@ class EntityDatabase:
                     (message_id,)
                 )
                 if message_hash:
-                    entities = self.db.fetch(
+                    entities = self.db.fetch_all(
                         "SELECT * FROM entity_content_mapping WHERE content_id = ? ORDER BY start_char",
                         (message_hash["message_hash"],),
                     )
@@ -216,7 +217,7 @@ class EntityDatabase:
         Get entities of a specific type.
         """
         try:
-            entities = self.db.fetch(
+            entities = self.db.fetch_all(
                 "SELECT * FROM entity_content_mapping WHERE entity_type = ? LIMIT ?", (entity_type, limit)
             )
             return {"success": True, "data": entities}
@@ -238,7 +239,7 @@ class EntityDatabase:
         Get entity counts grouped by type.
         """
         try:
-            results = self.db.fetch(
+            results = self.db.fetch_all(
                 "SELECT entity_type, COUNT(*) as count FROM entity_content_mapping GROUP BY entity_type"
             )
             return {"success": True, "data": results}
@@ -301,7 +302,7 @@ class EntityDatabase:
             query = f"SELECT * FROM consolidated_entities{where_clause} ORDER BY total_mentions DESC LIMIT ?"
             params.append(limit)
 
-            results = self.db.fetch(query, tuple(params))
+            results = self.db.fetch_all(query, tuple(params))
             return {"success": True, "data": results}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -356,7 +357,7 @@ class EntityDatabase:
             where_clause = " WHERE " + " AND ".join(conditions)
             query = f"SELECT * FROM entity_relationships{where_clause} ORDER BY confidence DESC"
 
-            results = self.db.fetch(query, tuple(params))
+            results = self.db.fetch_all(query, tuple(params))
             return {"success": True, "data": results}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -396,7 +397,7 @@ class EntityDatabase:
                 """
                 params = ()
 
-            results = self.db.fetch(query, params)
+            results = self.db.fetch_all(query, params)
             return {"success": True, "data": results}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -416,7 +417,7 @@ class EntityDatabase:
             )["count"]
 
             # Entity types breakdown
-            types_breakdown = self.db.fetch(
+            types_breakdown = self.db.fetch_all(
                 "SELECT entity_type, COUNT(*) as count FROM consolidated_entities GROUP BY entity_type"
             )
             types_breakdown = [
@@ -424,7 +425,7 @@ class EntityDatabase:
             ]
 
             # Relationship types breakdown
-            relationships_breakdown = self.db.fetch(
+            relationships_breakdown = self.db.fetch_all(
                 "SELECT relationship_type, COUNT(*) as count FROM entity_relationships GROUP BY relationship_type"
             )
             relationships_breakdown = [

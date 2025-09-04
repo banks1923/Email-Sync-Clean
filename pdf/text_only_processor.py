@@ -4,8 +4,9 @@ Handles born-digital PDFs with embedded text using pypdf.
 For scanned PDFs, returns an error indicating external OCR is needed.
 """
 
-from typing import Any
 from pathlib import Path
+from typing import Any
+
 from loguru import logger
 
 try:
@@ -20,19 +21,21 @@ class TextOnlyProcessor:
     """
     
     def __init__(self):
-        """Initialize the text-only processor."""
+        """
+        Initialize the text-only processor.
+        """
         pass
     
     def process_pdf_with_ocr(self, pdf_path: str) -> dict[str, Any]:
-        """
-        Legacy method name kept for compatibility.
+        """Legacy method name kept for compatibility.
+
         Only extracts text from born-digital PDFs.
         """
         return self.process_pdf(pdf_path)
     
     def process_pdf(self, pdf_path: str) -> dict[str, Any]:
-        """
-        Process PDF by extracting embedded text.
+        """Process PDF by extracting embedded text.
+
         Returns error for scanned PDFs that need OCR.
         """
         if not pypdf:

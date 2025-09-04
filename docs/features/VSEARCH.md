@@ -1,7 +1,9 @@
-# 🤖 AI-Powered Database Search CLI (`scripts/vsearch`)
+# 🤖 AI-Powered Database Search CLI (`python -m cli`)
 
 ## Overview
-The `scripts/vsearch` command provides an AI-powered database search interface that uses Legal BERT semantic understanding with SQLite database storage for intelligent document discovery.
+The `python -m cli` command provides an AI-powered database search interface that uses Legal BERT semantic understanding with SQLite database storage for intelligent document discovery.
+
+Note: This replaces the legacy `tools/scripts/vsearch` command, which now acts as a wrapper to the new modular CLI.
 
 ##  How It Works
 
@@ -21,50 +23,48 @@ The `scripts/vsearch` command provides an AI-powered database search interface t
 
 ```bash
 # Check system status
-scripts/vsearch info
+python -m cli admin health
 
-# Process emails for AI search (required first time)
-scripts/vsearch process -n 50
+# Search (hybrid default: semantic + keyword)
+python -m cli search "water damage problems" --why
+python -m cli search "financial planning meeting"
+python -m cli search "urgent attention needed" --limit 10
 
-# Search with natural language
-scripts/vsearch search "water damage problems"
-scripts/vsearch search "financial planning meeting"
-scripts/vsearch search "urgent attention needed"
+# Alternative entry (wrapper for compatibility)
+tools/scripts/vsearch admin health
+tools/scripts/vsearch search "water damage"
 ```
 
 ## Commands
 
-### `scripts/vsearch search "query"`
-AI-powered database search with semantic similarity and keyword matching.
+### `python -m cli search` - Search Operations
+AI-powered search with hybrid retrieval (default) and semantic-only/literal modes.
 
 ```bash
-# Natural language queries
-scripts/vsearch search "password reset issues"
-scripts/vsearch search "property maintenance problems"
-scripts/vsearch search "budget planning discussions"
+# Hybrid search (default)
+python -m cli search "password reset issues"           # hybrid default
+python -m cli search "property maintenance problems" --limit 10 --why
+python -m cli search hybrid "budget planning discussions"
 
-# With custom result limit
-scripts/vsearch search "server errors" --limit 10
+# Literal pattern search (exact matches)
+python -m cli search literal "BATES001"
+python -m cli search literal "john@example.com" --limit 20
 
-# With advanced filters
-scripts/vsearch search "contract" --since "last month" --until "today"
-scripts/vsearch search "meeting" --type email --type pdf
-scripts/vsearch search "legal" --tag urgent --tag important --tag-logic AND
+# Legacy wrapper syntax (still supported)
+tools/scripts/vsearch search semantic "contract disputes"
 ```
 
-**Output Format:**
+**Output Format (hybrid):**
 ```
-🤖 AI-Powered Search for: 'water damage'
- Running database search...
-WORKING: Found 3 matches
+🔎 Hybrid Search for: 'water damage'
+✅ Found 3 results
 
 ===  Database Search Results ===
 
----  Result 1 (Score: 0.924) ---
-Title: Re: Water Damage Report
-From: john@example.com
-Date: 2024-03-15
-Preview: Following up on the water damage incident from last week...
+1. [email_message] Re: Water Damage Report
+   Semantic score: 0.924
+   Why: semantic:0.92; keyword:'water damage'
+   Preview: Following up on the water damage incident from last week...
 
 ---  Result 2 (Score: 0.889) ---
 Title: Property Maintenance - Urgent
@@ -73,123 +73,115 @@ Date: 2024-03-10
 Preview: Water damage detected in unit 102, immediate attention required...
 ```
 
-### `scripts/vsearch info`
-Display comprehensive system information.
+### `python -m cli admin` - System Information & Health
+Display comprehensive system information and health checks.
 
 ```bash
-scripts/vsearch info
+# Basic health check
+python -m cli admin health
+
+# Health check with JSON output
+python -m cli admin health --json
+
+# Deep health check (slower, more thorough)
+python -m cli admin health --deep
+
+# Aliases
+python -m cli admin info      # alias for health
+python -m cli admin doctor    # alias for health
 ```
 
 **Output:**
 ```
-STATUS: System Information
-====================
-DATA: Database Statistics:
-  Total emails: 45
-  Total PDFs: 5
-  Total transcripts: 2
-  Total content: 52
+System Health:
+==========
+Overall: healthy
 
- Vector Service:
-  Status: WORKING: Connected
-  Collection: email_vectors
-  Dimensions: 1024
+DB -> healthy
+  Path: /Users/.../emails.db
+  Content count: 52
 
-🤖 Embedding Service:
-  Model: pile-of-law/legalbert-large-1.7M-2
-  Dimensions: 1024
-  Device: cuda (GPU acceleration)
+EMBEDDINGS -> healthy
+  Model: pile-of-law/legalbert-large-1.7M-2 (loaded=true)
+  Dimension: 1024
+
+VECTOR -> healthy
+  Endpoint: localhost:6333
+  Collection: email_vectors (exists=true)
 ```
 
-### `scripts/vsearch process`
-Process unembedded content for semantic search.
+### `python -m cli embed` - Embedding Operations
+Generate and manage embeddings for content.
 
 ```bash
-# Process all new content
-scripts/vsearch process
+# Build embeddings for all content
+python -m cli embed build
 
-# Process specific content type
-scripts/vsearch process --type email -n 100
-scripts/vsearch process --type pdf -n 20
+# Reindex existing embeddings
+python -m cli embed reindex
+
+# Show embedding statistics
+python -m cli embed stats
 ```
 
-### `scripts/vsearch embed`
-Generate embeddings for specific content types.
+### `python -m cli db` - Database Administration
+Database maintenance and administration operations.
 
 ```bash
-# Generate embeddings for emails
-scripts/vsearch embed email -n 50
+# Run database migrations
+python -m cli db migrate
 
-# Generate embeddings for PDFs
-scripts/vsearch embed pdf -n 10
+# Backup database
+python -m cli db backup
+
+# Restore from backup
+python -m cli db restore
+
+# Vacuum/optimize database
+python -m cli db vacuum
 ```
 
-### `scripts/vsearch upload`
-Upload and process PDF documents.
+### `python -m cli index` - Index Operations
+Manage search indexes and content indexing.
 
 ```bash
-# Upload single PDF
-scripts/vsearch upload document.pdf
+# Add content to search index
+python -m cli index add
 
-# Upload directory of PDFs
-scripts/vsearch upload /path/to/pdfs/
+# Reindex all content
+python -m cli index reindex
+
+# Prune stale index entries
+python -m cli index prune
 ```
 
-### `scripts/vsearch transcribe`
-Transcribe audio/video files.
+### `python -m cli view` - Rich Search Results Viewer
+Pretty display of search results with optional interactivity.
 
 ```bash
-# Transcribe audio file
-scripts/vsearch transcribe meeting.mp4
+# Basic rich view of search results
+python -m cli view "water damage" --limit 10
 
-# Transcribe with metadata
-scripts/vsearch transcribe interview.wav --metadata '{"speaker": "John Doe"}'
-```
-
-### `scripts/vsearch timeline`
-View chronological timeline of content.
-
-```bash
-# View recent timeline
-scripts/vsearch timeline -n 20
-
-# Filter by content type
-scripts/vsearch timeline --types email pdf -n 50
-
-# Date range filtering
-scripts/vsearch timeline --start 2024-01-01 --end 2024-03-31
-```
-
-### `scripts/vsearch note`
-Create searchable notes.
-
-```bash
-# Create a note
-scripts/vsearch note "Meeting Notes" "Discussion about Q1 goals" --tags business quarterly
-
-# Create note with metadata
-scripts/vsearch note "Legal Review" "Contract review findings" --tags legal contract
+# Interactive viewer with full content preview
+python -m cli view "contract terms" --limit 20 --interactive
 ```
 
 ## Advanced Features
 
-###  Search Intelligence
-- **Query Expansion**: Automatically expands abbreviations (LLC → Limited Liability Company)
-- **Synonym Matching**: Finds related terms for better coverage
-- **Entity Recognition**: Identifies and weights important names/organizations
-- **Duplicate Detection**: Automatically removes duplicate results
+### Search Behavior
+- **Hybrid default**: Semantic vectors + lightweight keyword lane (tiny legal abbreviation map). Use `--why` to see reasons.
+- **Semantic-only mode**: `python -m cli search semantic "query"` for pure embeddings.
+- **Literal search**: `python -m cli search literal "BATES-12345"` for exact identifiers/citations.
 
 ### STATUS: Performance Metrics
-- **Vector Search**: ~0.5-2 seconds per query
-- **Keyword Fallback**: ~0.1-0.3 seconds per query
+- **Vector Search**: ~0.5–2 seconds per query (depends on model warmup)
+- **Keyword Lane**: ~0.1–0.3 seconds per query
 - **Batch Processing**: 100+ emails/second
 - **Database Operations**: 2000+ records/second
 
-###  Reliability Features
-- **Automatic Fallback**: Switches to keyword search if vector service unavailable
-- **Error Recovery**: Graceful handling of service failures
-- **Cache Management**: Automatic caching for frequently accessed content
-- **Health Monitoring**: Built-in health checks for all services
+### Reliability
+- **Fail-fast**: If the vector store is unavailable, hybrid returns an error (no silent keyword-only fallback). Check `admin health`.
+- **Health Monitoring**: Built-in health checks for DB, embeddings, and vector store.
 
 ## Troubleshooting
 
@@ -206,11 +198,14 @@ docker run -d -p 6333:6333 qdrant/qdrant
 
 **No Results Found:**
 ```bash
-# Check if content is processed
-scripts/vsearch info
+# Check if content is processed and indexed
+python -m cli admin health
 
-# Process content if needed
-scripts/vsearch process
+# Check embedding statistics
+python -m cli embed stats
+
+# Reindex content if needed
+python -m cli index reindex
 ```
 
 **Model Loading Slow:**
@@ -235,8 +230,11 @@ export VSEARCH_DEVICE=cuda
 
 ### Performance Tuning
 ```bash
-# Increase batch size for processing
-scripts/vsearch process --batch-size 100
+# Optimize database
+python -m cli db vacuum
+
+# Rebuild embeddings if performance degrades
+python -m cli embed reindex
 
 # Use GPU acceleration (if available)
 export CUDA_VISIBLE_DEVICES=0
@@ -246,41 +244,44 @@ export CUDA_VISIBLE_DEVICES=0
 
 ### System Components
 ```
-User Query → vsearch CLI → Search Intelligence Service
+User Query → python -m cli → CLI Router (search/admin/embed/db/index/view)
                                     ↓
                          
-                            Database Search   
-                            (SQLite + BERT)   
+                            Search Service   
+                            (lib.search)
                          
                                     ↓
                          
-                            Result Ranking    
-                            & Deduplication   
+                            Database + Vector Store    
+                            (SQLite + Qdrant + BERT)   
                          
+                                    ↓
+                         
+                            Result Ranking & Display    
+                            
 ```
 
 ### Data Flow
 1. User provides natural language query
-2. Query preprocessed with expansion and synonyms
+2. Hybrid default: semantic vectors + lightweight keyword lane (tiny legal abbreviation map)
 3. Legal BERT generates query embedding
-4. Vector similarity search in database
-5. Results ranked by relevance and recency
-6. Duplicates removed, formatted output
+4. Vector similarity search (Qdrant) + keyword matches (SQLite)
+5. Results merged and displayed (optional `--why` explains matches)
 
 ## Best Practices
 
 ### Search Tips
-- Use natural language queries for best results
-- Include context words for better matching
-- Use filters to narrow results
-- Check `info` command to verify content is indexed
+- Use natural language queries for semantic search
+- Use literal search for exact patterns (BATES IDs, email addresses)
+- Try the interactive view mode for detailed content exploration
+- Check `python -m cli admin health` to verify system status
 
 ### Performance Tips
-- Process content in batches for efficiency
-- Use GPU acceleration when available
-- Enable caching for frequent queries
-- Monitor system health regularly
+- Use `python -m cli db vacuum` to optimize database performance
+- Use GPU acceleration when available (CUDA_VISIBLE_DEVICES=0)
+- Monitor system health with `python -m cli admin health --deep`
+- Rebuild embeddings if search quality degrades
 
 ---
 
-*Updated: 2025-08-19 - Analog system removed, database-only operation*
+*Updated: 2025-09-04 - Documentation aligned with modular CLI implementation (python -m cli)*

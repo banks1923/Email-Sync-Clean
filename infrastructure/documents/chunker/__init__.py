@@ -1,5 +1,7 @@
-"""Document chunking module for semantic search v2."""
+"""
+Document chunking module for semantic search v2.
+"""
 
-from .document_chunker import DocumentChunker, DocumentChunk
+from .document_chunker import DocumentChunk, DocumentChunker
 
 __all__ = ['DocumentChunker', 'DocumentChunk']

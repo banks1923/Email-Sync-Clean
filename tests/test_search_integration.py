@@ -9,7 +9,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from search_intelligence import search as semantic_search
+from lib.search import search as semantic_search
 
 
 def test_search_intelligence():

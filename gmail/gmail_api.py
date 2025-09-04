@@ -178,7 +178,9 @@ class GmailAPI:
         }
     
     def _parse_recipients(self, recipient_string):
-        """Parse comma-separated recipient string into list."""
+        """
+        Parse comma-separated recipient string into list.
+        """
         if not recipient_string:
             return []
         # Simple parsing - can be enhanced for better email extraction

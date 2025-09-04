@@ -13,7 +13,7 @@ from typing import Any
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 def create_test_database(db_path: str | None = None) -> tuple[SimpleDB, str]:

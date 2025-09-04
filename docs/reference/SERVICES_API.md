@@ -198,7 +198,11 @@ summary_id = summarizer.save_summary_to_db(content_id, summary_data)
 cached_summary = summarizer.get_cached_summary(content_id)
 ```
 
-##  Search Intelligence Service (`search_intelligence/`)
+##  Search Intelligence Service (`search_intelligence/`) [Deprecated]
+
+Note: This service has been replaced by the consolidated `lib.search` module.
+There is no query expansion or synonym logic. Use the CLI or `lib.search.search()`
+for semantic-only, or `lib.search.hybrid_search()` for hybrid (semantic + keyword).
 
 ### Quick Start
 ```python
@@ -206,12 +210,8 @@ from search_intelligence import get_search_intelligence_service
 
 intelligence = get_search_intelligence_service()
 
-# Smart search with query expansion
-results = intelligence.smart_search_with_preprocessing(
-    "contract attorney",  # Automatically expands to include synonyms
-    limit=10,
-    use_expansion=True
-)
+# Semantic search (replacement: use `lib.search.search()` via CLI or code)
+# Kept for historical reference only; expansion is no longer supported.
 
 # Find similar documents
 similar = intelligence.analyze_document_similarity("doc_id", threshold=0.7)
@@ -220,19 +220,15 @@ similar = intelligence.analyze_document_similarity("doc_id", threshold=0.7)
 clusters = intelligence.cluster_similar_content(threshold=0.7, limit=100)
 ```
 
-### Key Features
-- **Query Preprocessing**: Abbreviation expansion, normalization
-- **Query Expansion**: Synonym-based query enhancement
-- **Intelligent Ranking**: Entity relevance + recency scoring
-- **Document Similarity**: Legal BERT-based similarity analysis
-- **DBSCAN Clustering**: Group similar documents (threshold=0.7)
-- **Duplicate Detection**: SHA-256 hash + semantic similarity
-- **Entity Caching**: TTL-based caching in relationship_cache
+### Key Features (Deprecated)
+The list below is retained for historical context. The current implementation
+uses `lib.search` with semantic-only and hybrid-lite retrieval. There is no
+query expansion or synonym logic.
 
-### API Methods
+### API Methods (Deprecated)
 ```python
 # Smart search operations
-results = intelligence.smart_search_with_preprocessing(query, limit=10, use_expansion=True)
+results = intelligence.smart_search_with_preprocessing(query, limit=10, use_expansion=True)  # Deprecated
 results = intelligence.basic_search(query, limit=10)
 
 # Document similarity
@@ -243,9 +239,19 @@ similarity_score = intelligence.calculate_similarity(doc1_id, doc2_id)
 clusters = intelligence.cluster_similar_content(threshold=0.7, limit=100)
 cluster_stats = intelligence.get_cluster_statistics(clusters)
 
-# Duplicate detection
-duplicates = intelligence.detect_duplicates(similarity_threshold=0.95)
-potential_duplicates = intelligence.find_potential_duplicates(doc_id)
+# Duplicate detection - Updated 2025-01-04
+# ARCHIVED: intelligence.detect_duplicates() was broken (non-existent imports/methods)
+# Use working MinHash-based duplicate detector instead:
+from utilities.deduplication.near_duplicate_detector import get_duplicate_detector
+
+detector = get_duplicate_detector(threshold=0.95)
+result = detector.batch_deduplicate(documents)  # Returns: total, unique, duplicates, groups
+
+# For individual document checking
+similar_docs = detector.check_duplicate(content_text)
+
+# For pairwise similarity  
+similarity_score = detector.get_similarity(content1, content2)
 
 # Entity operations
 entities = intelligence.extract_and_cache_entities(doc_id)
@@ -640,3 +646,45 @@ python utilities/maintenance/schema_maintenance.py update-refs
 ```
 
 For more detailed implementation examples and advanced usage patterns, see individual service documentation in their respective directories.
+## Unified Health Schema (DB, Embeddings, Vector)
+
+Each core service exposes a `health_check(deep: bool = False)` method returning a common structure:
+
+```json
+{
+  "status": "healthy|mock|degraded|error",
+  "details": {"..."},
+  "metrics": {"..."},
+  "hints": ["..."]
+}
+```
+
+Example aggregation via CLI:
+
+```bash
+python tools/scripts/vsearch admin health --json
+```
+
+Programmatic example:
+
+```python
+from lib.db import SimpleDB
+from lib.embeddings import get_embedding_service
+from lib.vector_store import get_vector_store
+
+db = SimpleDB()
+emb = get_embedding_service()
+vec = get_vector_store()
+
+health = {
+  "db": db.health_check(deep=False),
+  "embeddings": emb.health_check(deep=False),
+  "vector": vec.health_check(deep=False),
+}
+```
+
+Environment toggles:
+
+- `TEST_MODE=1`, `SKIP_MODEL_LOAD=1` → mock embeddings for fast checks.
+- `QDRANT_DISABLED=1` → mock vector store.
+- `QDRANT_HOST`, `QDRANT_PORT`, `QDRANT_TIMEOUT_S` tune vector endpoint and timeout.

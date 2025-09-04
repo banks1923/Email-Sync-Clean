@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
-"""
-Unit tests for quality scoring module.
+"""Unit tests for quality scoring module.
+
 Tests quality score calculation and chunk filtering.
 """
 
 import pytest
 
 from infrastructure.documents.chunker.document_chunker import DocumentChunk
-from infrastructure.documents.quality.quality_score import ChunkQualityScorer, quality_gate, QualitySettings
+from infrastructure.documents.quality.quality_score import (
+    ChunkQualityScorer,
+    QualitySettings,
+    quality_gate,
+)
 
 
 class TestQualitySettings:
-    """Test QualitySettings configuration."""
+    """
+    Test QualitySettings configuration.
+    """
     
     def test_default_settings(self):
-        """Test default settings values."""
+        """
+        Test default settings values.
+        """
         settings = QualitySettings()
         assert settings.min_quality_score == 0.35
         assert settings.min_char_length == 100
@@ -25,7 +33,9 @@ class TestQualitySettings:
         assert settings.quote_weight == 0.1
     
     def test_custom_settings(self):
-        """Test custom settings values."""
+        """
+        Test custom settings values.
+        """
         settings = QualitySettings(
             min_quality_score=0.5,
             min_char_length=50,
@@ -36,7 +46,9 @@ class TestQualitySettings:
         assert settings.min_token_count == 10
     
     def test_env_override(self, monkeypatch):
-        """Test environment variable override."""
+        """
+        Test environment variable override.
+        """
         monkeypatch.setenv("QUALITY_MIN_QUALITY_SCORE", "0.75")
         monkeypatch.setenv("QUALITY_MIN_CHAR_LENGTH", "200")
         settings = QualitySettings()
@@ -45,28 +57,38 @@ class TestQualitySettings:
 
 
 class TestChunkQualityScorer:
-    """Test ChunkQualityScorer class."""
+    """
+    Test ChunkQualityScorer class.
+    """
     
     @pytest.fixture
     def scorer(self):
-        """Create a default scorer instance."""
+        """
+        Create a default scorer instance.
+        """
         return ChunkQualityScorer()
     
     @pytest.fixture
     def custom_scorer(self):
-        """Create a scorer with custom settings."""
+        """
+        Create a scorer with custom settings.
+        """
         settings = QualitySettings(min_quality_score=0.5)
         return ChunkQualityScorer(settings)
     
     def test_scorer_initialization(self, scorer):
-        """Test scorer initialization."""
+        """
+        Test scorer initialization.
+        """
         assert scorer.settings.min_quality_score == 0.35
         assert scorer.header_patterns is not None
         assert scorer.signature_patterns is not None
         assert scorer.boilerplate_patterns is not None
     
     def test_hard_exclusion_short_text(self, scorer):
-        """Test exclusion for text too short."""
+        """
+        Test exclusion for text too short.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -79,7 +101,9 @@ class TestChunkQualityScorer:
         assert score == 0.0
     
     def test_hard_exclusion_few_tokens(self, scorer):
-        """Test exclusion for too few tokens."""
+        """
+        Test exclusion for too few tokens.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -92,7 +116,9 @@ class TestChunkQualityScorer:
         assert score == 0.0
     
     def test_hard_exclusion_headers_only(self, scorer):
-        """Test exclusion for headers-only content."""
+        """
+        Test exclusion for headers-only content.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -105,7 +131,9 @@ class TestChunkQualityScorer:
         assert score == 0.0
     
     def test_hard_exclusion_signature_only(self, scorer):
-        """Test exclusion for signature-only content."""
+        """
+        Test exclusion for signature-only content.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -121,7 +149,9 @@ class TestChunkQualityScorer:
         assert score < 0.2
     
     def test_length_score_calculation(self, scorer):
-        """Test length score calculation."""
+        """
+        Test length score calculation.
+        """
         # Optimal length chunk
         chunk = DocumentChunk(
             doc_id="test",
@@ -145,7 +175,9 @@ class TestChunkQualityScorer:
         assert 0.4 < length_score < 0.6
     
     def test_entropy_score_calculation(self, scorer):
-        """Test entropy score calculation."""
+        """
+        Test entropy score calculation.
+        """
         # High diversity text
         diverse_text = "The quick brown fox jumps over the lazy dog. Each word is unique here."
         entropy_score = scorer._calculate_entropy_score(diverse_text)
@@ -157,7 +189,9 @@ class TestChunkQualityScorer:
         assert entropy_score < 0.3
     
     def test_content_score_calculation(self, scorer):
-        """Test content score calculation."""
+        """
+        Test content score calculation.
+        """
         # High content text
         content_text = """This is a substantive paragraph with meaningful content.
         It discusses important topics and provides valuable information.
@@ -177,7 +211,9 @@ class TestChunkQualityScorer:
         assert content_score < 0.5
     
     def test_quote_penalty_calculation(self, scorer):
-        """Test quote penalty calculation."""
+        """
+        Test quote penalty calculation.
+        """
         # No quotes
         chunk = DocumentChunk(
             doc_id="test",
@@ -202,7 +238,9 @@ class TestChunkQualityScorer:
         assert abs(penalty - 0.6) < 0.01  # Use approximate comparison
     
     def test_full_quality_score(self, scorer):
-        """Test full quality score calculation."""
+        """
+        Test full quality score calculation.
+        """
         # High quality chunk
         good_chunk = DocumentChunk(
             doc_id="test",
@@ -234,7 +272,9 @@ class TestChunkQualityScorer:
         assert score < 0.35
     
     def test_is_acceptable(self, scorer):
-        """Test acceptability check."""
+        """
+        Test acceptability check.
+        """
         # Acceptable chunk
         good_chunk = DocumentChunk(
             doc_id="test",
@@ -262,7 +302,9 @@ class TestChunkQualityScorer:
         assert 0 <= score <= 1
     
     def test_custom_threshold(self, custom_scorer):
-        """Test custom quality threshold."""
+        """
+        Test custom quality threshold.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -283,10 +325,14 @@ class TestChunkQualityScorer:
 
 
 class TestQualityGateDecorator:
-    """Test quality_gate decorator."""
+    """
+    Test quality_gate decorator.
+    """
     
     def test_quality_gate_filtering(self):
-        """Test that quality gate filters low-score chunks."""
+        """
+        Test that quality gate filters low-score chunks.
+        """
         # Create test chunks
         chunks = [
             DocumentChunk(
@@ -332,7 +378,9 @@ class TestQualityGateDecorator:
         assert filtered[1].chunk_idx == 2
     
     def test_quality_gate_scoring(self):
-        """Test that quality gate scores unscored chunks."""
+        """
+        Test that quality gate scores unscored chunks.
+        """
         # Create unscored chunks
         chunks = [
             DocumentChunk(
@@ -369,7 +417,9 @@ class TestQualityGateDecorator:
         assert len(filtered) <= 1
     
     def test_quality_gate_custom_settings(self):
-        """Test quality gate with custom settings."""
+        """
+        Test quality gate with custom settings.
+        """
         settings = QualitySettings(
             min_quality_score=0.7,
             min_token_count=50
@@ -409,12 +459,16 @@ class TestQualityGateDecorator:
 
 
 class TestIntegrationWithChunker:
-    """Test integration between chunker and quality scorer."""
+    """
+    Test integration between chunker and quality scorer.
+    """
     
     def test_chunker_with_quality_scoring(self):
-        """Test that chunker can apply quality scoring."""
+        """
+        Test that chunker can apply quality scoring.
+        """
         from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
-        
+
         # Create chunker with quality scoring
         chunker = DocumentChunker(
             target_tokens=50,
@@ -442,7 +496,9 @@ class TestIntegrationWithChunker:
             assert 0 <= chunk.quality_score <= 1
     
     def test_quality_gate_with_chunker(self):
-        """Test using quality gate decorator with chunker output."""
+        """
+        Test using quality gate decorator with chunker output.
+        """
         from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
         
         chunker = DocumentChunker(
@@ -468,10 +524,14 @@ class TestIntegrationWithChunker:
 
 
 class TestEdgeCases:
-    """Test edge cases and error conditions."""
+    """
+    Test edge cases and error conditions.
+    """
     
     def test_empty_text(self):
-        """Test scoring empty text."""
+        """
+        Test scoring empty text.
+        """
         scorer = ChunkQualityScorer()
         chunk = DocumentChunk(
             doc_id="test",
@@ -485,7 +545,9 @@ class TestEdgeCases:
         assert score == 0.0
     
     def test_unicode_text(self):
-        """Test scoring Unicode text."""
+        """
+        Test scoring Unicode text.
+        """
         scorer = ChunkQualityScorer()
         chunk = DocumentChunk(
             doc_id="test",
@@ -501,7 +563,9 @@ class TestEdgeCases:
         assert score > 0  # Should handle Unicode gracefully
     
     def test_very_long_text(self):
-        """Test scoring very long text."""
+        """
+        Test scoring very long text.
+        """
         scorer = ChunkQualityScorer()
         # Create diverse long text
         long_text = " ".join(["Sentence number {} with content.".format(i) for i in range(1000)])
@@ -517,7 +581,9 @@ class TestEdgeCases:
         assert 0 < score <= 1  # Should handle long text
     
     def test_mathematical_content(self):
-        """Test scoring mathematical/code content."""
+        """
+        Test scoring mathematical/code content.
+        """
         scorer = ChunkQualityScorer()
         chunk = DocumentChunk(
             doc_id="test",

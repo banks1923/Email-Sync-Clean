@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import torch
 
-from utilities.embeddings.embedding_service import EmbeddingService, get_embedding_service
+from lib.embeddings.embedding_service import EmbeddingService, get_embedding_service
 
 
 class TestEmbeddingService:
@@ -369,7 +369,6 @@ class TestEmbeddingServiceSingleton:
         mock_model.from_pretrained.return_value = MagicMock()
 
         # Reset global singleton
-        import utilities.embeddings.embedding_service
 
         utilities.embeddings.embedding_service._embedding_service = None
 
@@ -390,7 +389,6 @@ class TestEmbeddingServiceSingleton:
         mock_model.from_pretrained.return_value = MagicMock()
 
         # Reset global singleton
-        import utilities.embeddings.embedding_service
 
         utilities.embeddings.embedding_service._embedding_service = None
 

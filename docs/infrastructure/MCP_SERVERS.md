@@ -20,8 +20,18 @@ The Email Sync system provides 40+ specialized tools through MCP servers for Cla
 ### Configuration
 - **Server**: `legal-intelligence` in `.mcp.json`
 - **File**: `infrastructure/mcp_servers/legal_intelligence_mcp.py`
-- **Status**: WORKING: Fully Implemented
-- **Dependencies**: Legal Intelligence Service, Entity Service, Timeline Service
+- **Status**: PARTIALLY WORKING: Core functions work, helper functions stubbed (2025-01-04)
+- **Dependencies**: Entity Service, Timeline Service, SimpleDB
+- **Technical Debt**: File is 1487 lines (needs refactoring), 5 broken functions removed
+
+### Known Issues (2025-01-04)
+- **5 broken functions REMOVED** (replaced with TODO comments):
+  - **Date extraction**: Deleted function, needs spacy NER reimplementation
+  - **Timeline gaps**: Deleted function, had hardcoded 30-day bug
+  - **Document similarity**: Deleted function, should use existing embeddings
+  - **Theme extraction**: Deleted function, needs KeyBERT or scikit-learn
+  - **Anomaly detection**: Deleted function, should use duplicate_detector.py
+- **File still 1487 lines** (needs extraction into smaller modules)
 
 ### Available Tools
 
@@ -109,27 +119,27 @@ mcp__legal-intelligence__legal_extract_entities(
 
 ##  Search Intelligence MCP Server
 
-**Purpose**: Comprehensive search and document intelligence including smart search, similarity analysis, and clustering.
+**Purpose**: Clean MCP interface for search functions. Smart search routes to semantic search in `lib.search`; no query expansion.
 
 ### Configuration
 - **Server**: `search-intelligence` in `.mcp.json`
 - **File**: `infrastructure/mcp_servers/search_intelligence_mcp.py`
-- **Status**: WORKING: Fully Implemented
-- **Dependencies**: Search Intelligence Service, Entity Service, Document Summarizer
+- **Status**: WORKING: Clean interface over `lib.search` (no wrappers)
+- **Dependencies**: `lib.search`, SimpleDB (for formatting), optional embeddings
 
 ### Available Tools
 
 #### 1. search_smart
-Smart search with query preprocessing and expansion for enhanced results.
+Semantic search (no query expansion). `use_expansion` is retained for compatibility but ignored.
 ```python
 search_smart(
     query="contract attorney",
     limit=10,
-    use_expansion=True,
+    use_expansion=True,  # Ignored (kept for compatibility)
     content_type="pdf"  # Optional filter
 )
 ```
-**Features**: Query expansion, abbreviation expansion, entity-aware ranking
+**Features**: Semantic retrieval with simple formatting (no expansion/reranking)
 
 #### 2. search_similar
 Find documents similar to a given document using Legal BERT embeddings.
@@ -174,7 +184,7 @@ search_cluster(
     min_cluster_size=2
 )
 ```
-**Features**: DBSCAN clustering, theme detection, cluster statistics
+**Features**: MinHash + LSH clustering for efficient near-duplicate detection, configurable thresholds
 
 #### 6. search_process_all
 Batch process documents with various operations.
@@ -189,10 +199,10 @@ search_process_all(
 
 ### Usage Examples
 ```python
-# Smart search with query expansion
+# Smart search (semantic only; no expansion)
 mcp__search-intelligence__search_smart(
     query="LLC contract",
-    use_expansion=True
+    use_expansion=True  # Ignored
 )
 
 # Find similar documents
@@ -206,11 +216,16 @@ mcp__search-intelligence__search_entities(
     text="ABC Corporation filed the lawsuit on January 15, 2024"
 )
 
-# Batch process for duplicate detection
+# Batch process for duplicate detection (now uses MinHash + LSH)
 mcp__search-intelligence__search_process_all(
     operation="find_duplicates",
     limit=500
 )
+
+# Note: Now uses utilities.deduplication.near_duplicate_detector
+# - Industry-standard MinHash + LSH algorithms
+# - Fast similarity search with configurable thresholds
+# - No external dependencies (uses numpy already installed)
 ```
 
 ##  Sequential Thinking MCP Server
@@ -417,8 +432,8 @@ The following servers are deprecated and will be removed:
 
 These factory functions are intentionally tiny seams to simplify test injection without coupling to internal structure. In production, the factories just call the real constructor functions.
 
-### Smart Search Query Expansion
-The `search_smart` tool now always invokes the underlying service’s `_expand_query(query)` for consistency under tests, but only displays the expansion terms when `use_expansion=True`.
+### Smart Search Behavior
+The `search_smart` tool performs semantic search only. The `use_expansion` parameter is retained for compatibility but is ignored.
 
 ### External OCR Note
 OCR is handled externally in current deployments (e.g., Whisper-based pipeline at a separate path). Internal OCR wiring can be disabled by setting `OCR_DISABLED=true`. PDF ingestion and summarization continue to work with plain-text extraction and mocks in tests.

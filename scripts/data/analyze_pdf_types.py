@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Analyze PDFs to identify searchable vs scanned documents."""
+"""
+Analyze PDFs to identify searchable vs scanned documents.
+"""
 
 import os
 import sys
@@ -12,7 +14,9 @@ except ImportError:
     sys.exit(1)
 
 def analyze_pdfs(directory: str):
-    """Analyze all PDFs in directory to determine if searchable or scanned."""
+    """
+    Analyze all PDFs in directory to determine if searchable or scanned.
+    """
     results = []
     
     pdf_dir = Path(directory)
@@ -58,7 +62,7 @@ def analyze_pdfs(directory: str):
     errors = sum(1 for r in results if r['type'] == 'error')
     
     print("-" * 80)
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Searchable (text-based): {searchable}")
     print(f"  Scanned (needs OCR):     {scanned}")
     print(f"  Errors:                  {errors}")

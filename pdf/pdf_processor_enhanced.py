@@ -1,9 +1,8 @@
-"""
-Enhanced PDF processor for text extraction (without OCR).
+"""Enhanced PDF processor for text extraction (without OCR).
+
 Handles text-based PDFs and legal metadata extraction.
 """
 
-import json
 from typing import Any
 
 from loguru import logger
@@ -18,8 +17,8 @@ except ImportError:
 
 
 class EnhancedPDFProcessor:
-    """
-    PDF processor with text extraction and legal metadata capabilities.
+    """PDF processor with text extraction and legal metadata capabilities.
+
     OCR functionality has been removed - handled externally.
     """
 
@@ -28,7 +27,6 @@ class EnhancedPDFProcessor:
     ) -> None:
         """
         Initialize text processor.
-        
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -42,19 +40,10 @@ class EnhancedPDFProcessor:
             self.legal_extractor = None
             logger.debug("Legal metadata extractor not available")
 
-    def extract_and_chunk_pdf(self, pdf_path: str, force_ocr: bool = False) -> dict[str, Any]:
+    def extract_and_chunk_pdf(self, pdf_path: str) -> dict[str, Any]:
         """
         Extract text from PDF and chunk it.
-        Note: force_ocr parameter kept for compatibility but ignored.
-        OCR must be handled externally.
         """
-        if force_ocr:
-            logger.warning("force_ocr requested but OCR is handled externally")
-            return {
-                "success": False,
-                "error": "OCR is handled by external service. Please use the external OCR pipeline."
-            }
-        
         # Extract text using pypdf
         extraction_result = self.pdf_processor.extract_text_from_pdf(pdf_path)
         

@@ -10,12 +10,10 @@ import sys
 import time
 from pathlib import Path
 
-
-
 from loguru import logger
 
 from email_parsing.message_deduplicator import MessageDeduplicator
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 class EmailBatchProcessor:

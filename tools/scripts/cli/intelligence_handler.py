@@ -12,11 +12,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
-    from search_intelligence import search, find_literal, vector_store_available
+    from lib.search import find_literal, search
     INTELLIGENCE_AVAILABLE = True
 except ImportError as e:
     INTELLIGENCE_AVAILABLE = False
-    print(f"⚠️ Search Intelligence not available: {e}")
+    print(f"⚠️ Search library not available: {e}")
 
 
 def smart_search_command(
@@ -75,7 +75,9 @@ def literal_search_command(
 
 
 def _display_search_results(results: list[dict[str, Any]], title: str):
-    """Display search results in readable format."""
+    """
+    Display search results in readable format.
+    """
     print(f"\n{title} Results: {len(results)} found")
     print("=" * 60)
     

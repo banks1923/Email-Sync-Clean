@@ -9,7 +9,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from search_intelligence import get_search_intelligence_service as get_search_service
+from lib.search import search
+from lib.vector_store import get_vector_store
 
 
 def check_document_vectors():
@@ -20,15 +21,19 @@ def check_document_vectors():
     print("Checking document vectors...")
     print("-" * 60)
 
-    service = get_search_service()
+    store = get_vector_store()
 
     # Get collection info
-    info = service.get_collection_info()
-    if info["success"]:
+    try:
+        health = store.health_check(deep=True)
+        details = health.get("details", {})
         print("✅ Vector collection info:")
-        print(f"   Total vectors: {info.get('vector_count', 0)}")
-        print(f"   Provider: {info.get('provider', 'unknown')}")
-        print(f"   Dimensions: {info.get('dimensions', 'unknown')}")
+        print(f"   Connected: {details.get('connected', False)}")
+        print(f"   Collection: {details.get('collection_name', 'unknown')}")
+        print(f"   Dimensions: {details.get('vector_size', 'unknown')}")
+        print(f"   Total vectors: {details.get('point_count', 0)}")
+    except Exception:
+        print("⚠️ Unable to fetch vector collection info (using mock?)")
 
     # Search for specific document-related terms
     document_queries = [
@@ -39,37 +44,41 @@ def check_document_vectors():
 
     for query in document_queries:
         print(f"\n🔍 Searching for: '{query}'")
-        results = service.search_similar(query, limit=5)
+        try:
+            results = search(query, limit=5)
+        except Exception as e:
+            print(f"   Search failed: {e}")
+            results = []
 
-        if results["success"] and results.get("data"):
-            print(f"   Found {len(results['data'])} results")
+        if results:
+            print(f"   Found {len(results)} results")
 
             doc_results = 0
             email_results = 0
 
-            for result in results["data"]:
-                if result.get("source") == "document" or "chunk_id" in result:
+            for result in results:
+                if result.get("source_type") == "document" or "chunk_id" in result:
                     doc_results += 1
-                elif "message_id" in result:
+                elif result.get("source_type") == "email_message" or "message_id" in result:
                     email_results += 1
 
             print(f"   - Documents: {doc_results}")
             print(f"   - Emails: {email_results}")
 
             # Show first document result if any
-            for result in results["data"]:
-                if result.get("source") == "document" or "chunk_id" in result:
+            for result in results:
+                if result.get("source_type") == "document" or "chunk_id" in result:
                     print("\n   📄 Sample document result:")
                     print(f"      File: {result.get('file_name', 'Unknown')}")
-                    print(f"      Score: {result.get('score', 0):.3f}")
-                    print(f"      Text: {result.get('text_snippet', '')[:100]}...")
+                    if 'semantic_score' in result:
+                        print(f"      Score: {result.get('semantic_score', 0):.3f}")
+                    snippet = result.get('content', '') or result.get('text_snippet', '')
+                    print(f"      Text: {snippet[:100]}...")
                     if result.get("legal_metadata"):
                         print("      ✅ Has legal metadata")
                     break
         else:
             print("   No results found")
-
-    service.cleanup()
 
 
 if __name__ == "__main__":

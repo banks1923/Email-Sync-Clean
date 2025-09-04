@@ -391,15 +391,7 @@ def real_database_with_contentwriter(isolated_test_db_path):
     Eliminates mock dependencies by providing real database operations.
     Following tri_plan.md Phase 2 requirements for mock elimination.
     """
-    # Import ContentWriter for real database operations
-    import os
-    import sys
-
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-
-    from shared.db.simple_db import SimpleDB
+    
 
     # Initialize real SimpleDB with isolated test database
     db = SimpleDB(isolated_test_db_path)

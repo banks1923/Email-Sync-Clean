@@ -8,14 +8,12 @@ import sys
 import time
 from pathlib import Path
 
-import pytest
-
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from search_intelligence import search as semantic_search
-from search_intelligence import vector_store_available
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
+from lib.search import search as semantic_search
+from lib.search import vector_store_available
 
 
 class TestSemanticSearchIntegration:
@@ -29,7 +27,7 @@ class TestSemanticSearchIntegration:
         """
         assert vector_store_available(), "Vector store should be available"
 
-        from utilities.vector_store import get_vector_store
+        from lib.vector_store import get_vector_store
 
         store = get_vector_store()
         count = store.count()

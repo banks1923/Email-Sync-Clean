@@ -10,7 +10,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utilities.vector_store import get_vector_store
+from lib.vector_store import get_vector_store
 
 
 def check_qdrant_documents():

@@ -196,14 +196,13 @@ class EmailCleaner:
         return [self.clean(email) for email in emails]
 
     def extract_substantive_text(self, text: str, document_type: str = 'email') -> tuple[str, str]:
-        """
-        Extract substantive content by removing boilerplate.
-        Returns (full_text, substantive_text).
-        
+        """Extract substantive content by removing boilerplate. Returns
+        (full_text, substantive_text).
+
         Args:
             text: Original text content
             document_type: Type of document ('email', 'legal', etc.)
-            
+
         Returns:
             Tuple of (full_text, substantive_text)
         """

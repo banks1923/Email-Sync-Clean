@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
-"""
-Unit tests for DocumentChunker module.
+"""Unit tests for DocumentChunker module.
+
 Tests token-based chunking with sentence awareness and overlap.
 """
 
-import pytest
 from pathlib import Path
 
-from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentChunk, DocumentType
+import pytest
+
+from infrastructure.documents.chunker.document_chunker import (
+    DocumentChunk,
+    DocumentChunker,
+    DocumentType,
+)
 
 
 class TestDocumentChunk:
-    """Test DocumentChunk dataclass."""
+    """
+    Test DocumentChunk dataclass.
+    """
     
     def test_chunk_creation(self):
-        """Test basic chunk creation."""
+        """
+        Test basic chunk creation.
+        """
         chunk = DocumentChunk(
             doc_id="test_doc",
             chunk_idx=0,
@@ -29,7 +38,9 @@ class TestDocumentChunk:
         assert chunk.token_count == 5
     
     def test_chunk_id_generation(self):
-        """Test automatic chunk_id generation."""
+        """
+        Test automatic chunk_id generation.
+        """
         chunk = DocumentChunk(
             doc_id="doc_123",
             chunk_idx=5,
@@ -41,7 +52,9 @@ class TestDocumentChunk:
         assert chunk.chunk_id == "doc_123:5"
     
     def test_chunk_with_metadata(self):
-        """Test chunk with optional metadata."""
+        """
+        Test chunk with optional metadata.
+        """
         chunk = DocumentChunk(
             doc_id="test",
             chunk_idx=0,
@@ -59,11 +72,15 @@ class TestDocumentChunk:
 
 
 class TestDocumentChunker:
-    """Test DocumentChunker class."""
+    """
+    Test DocumentChunker class.
+    """
     
     @pytest.fixture
     def chunker(self):
-        """Create a default chunker instance."""
+        """
+        Create a default chunker instance.
+        """
         return DocumentChunker(
             target_tokens=100,  # Smaller for testing
             min_tokens=80,
@@ -72,7 +89,9 @@ class TestDocumentChunker:
         )
     
     def test_chunker_initialization(self, chunker):
-        """Test chunker initialization."""
+        """
+        Test chunker initialization.
+        """
         assert chunker.target_tokens == 100
         assert chunker.min_tokens == 80
         assert chunker.max_tokens == 120
@@ -80,14 +99,18 @@ class TestDocumentChunker:
         assert chunker.nlp is not None
     
     def test_token_counting(self, chunker):
-        """Test token counting functionality."""
+        """
+        Test token counting functionality.
+        """
         text = "This is a simple test sentence for token counting."
         token_count = chunker._count_tokens(text)
         assert token_count > 0
         assert token_count < len(text)  # Tokens should be less than characters
     
     def test_empty_document(self, chunker):
-        """Test handling of empty documents."""
+        """
+        Test handling of empty documents.
+        """
         chunks = list(chunker.chunk_document("", "empty_doc"))
         assert len(chunks) == 0
         
@@ -95,7 +118,9 @@ class TestDocumentChunker:
         assert len(chunks) == 0
     
     def test_small_document(self, chunker):
-        """Test document smaller than target tokens."""
+        """
+        Test document smaller than target tokens.
+        """
         text = "This is a small document that fits in a single chunk."
         chunks = list(chunker.chunk_document(text, "small_doc"))
         
@@ -105,7 +130,9 @@ class TestDocumentChunker:
         assert chunks[0].chunk_id == "small_doc:0"
     
     def test_chunk_overlap(self):
-        """Test that chunks have proper overlap."""
+        """
+        Test that chunks have proper overlap.
+        """
         # Create chunker with specific settings
         chunker = DocumentChunker(
             target_tokens=50,
@@ -125,7 +152,9 @@ class TestDocumentChunker:
             assert chunk.token_count > 0
     
     def test_sentence_boundaries(self, chunker):
-        """Test that chunks respect sentence boundaries."""
+        """
+        Test that chunks respect sentence boundaries.
+        """
         text = "This is the first sentence. This is the second sentence. This is the third sentence. This is the fourth sentence. This is the fifth sentence."
         chunks = list(chunker.chunk_document(text, "sentence_test"))
         
@@ -137,7 +166,9 @@ class TestDocumentChunker:
                 assert last_char in '.?!', f"Chunk {chunk.chunk_idx} doesn't end at sentence boundary"
     
     def test_document_types(self, chunker):
-        """Test different document type handling."""
+        """
+        Test different document type handling.
+        """
         # Email type
         email_text = "Subject: Test\n\n----- Original Message -----\nThis is a reply."
         chunks = list(chunker.chunk_document(email_text, "email", DocumentType.EMAIL))
@@ -154,7 +185,9 @@ class TestDocumentChunker:
         assert len(chunks) > 0
     
     def test_quote_depth_detection(self, chunker):
-        """Test email quote depth detection."""
+        """
+        Test email quote depth detection.
+        """
         email_text = """
 Subject: Re: Test
 
@@ -171,7 +204,9 @@ My response here.
         assert max_quote_depth >= 0
     
     def test_section_title_extraction(self, chunker):
-        """Test section title extraction for legal documents."""
+        """
+        Test section title extraction for legal documents.
+        """
         legal_text = """INTRODUCTION
 
 This is the introduction section with some content.
@@ -187,7 +222,9 @@ These are the facts of the case."""
         assert len(section_titles) > 0
     
     def test_chunk_id_stability(self, chunker):
-        """Test that chunk IDs are stable across runs."""
+        """
+        Test that chunk IDs are stable across runs.
+        """
         text = "This is a test document for checking ID stability. " * 20
         
         # Run chunking twice
@@ -203,7 +240,9 @@ These are the facts of the case."""
             assert c1.chunk_idx == c2.chunk_idx
     
     def test_long_document(self):
-        """Test chunking of a long document."""
+        """
+        Test chunking of a long document.
+        """
         # Create a chunker with small chunks for testing
         chunker = DocumentChunker(target_tokens=30, overlap_ratio=0.15)
         
@@ -223,7 +262,9 @@ These are the facts of the case."""
             assert chunk.token_count > 0
     
     def test_chunk_size_constraints(self):
-        """Test that chunks respect size constraints."""
+        """
+        Test that chunks respect size constraints.
+        """
         chunker = DocumentChunker(
             target_tokens=100,
             min_tokens=90,
@@ -242,20 +283,28 @@ These are the facts of the case."""
 
 
 class TestChunkerWithFixtures:
-    """Test chunker with sample fixture files."""
+    """
+    Test chunker with sample fixture files.
+    """
     
     @pytest.fixture
     def fixtures_dir(self):
-        """Get fixtures directory path."""
+        """
+        Get fixtures directory path.
+        """
         return Path(__file__).parent / "fixtures"
     
     @pytest.fixture
     def chunker(self):
-        """Create a chunker for testing."""
+        """
+        Create a chunker for testing.
+        """
         return DocumentChunker(target_tokens=100, overlap_ratio=0.15)
     
     def test_email_fixture(self, chunker, fixtures_dir):
-        """Test chunking of sample email."""
+        """
+        Test chunking of sample email.
+        """
         email_file = fixtures_dir / "sample_email.txt"
         if not email_file.exists():
             pytest.skip("Email fixture not found")
@@ -268,7 +317,9 @@ class TestChunkerWithFixtures:
         assert any("Original Message" in chunk.text for chunk in chunks)
     
     def test_legal_fixture(self, chunker, fixtures_dir):
-        """Test chunking of sample legal document."""
+        """
+        Test chunking of sample legal document.
+        """
         legal_file = fixtures_dir / "sample_legal.txt"
         if not legal_file.exists():
             pytest.skip("Legal fixture not found")
@@ -281,7 +332,9 @@ class TestChunkerWithFixtures:
         assert any("MOTION" in chunk.text or "ARGUMENT" in chunk.text for chunk in chunks)
     
     def test_ocr_fixture(self, chunker, fixtures_dir):
-        """Test chunking of sample OCR document."""
+        """
+        Test chunking of sample OCR document.
+        """
         ocr_file = fixtures_dir / "sample_ocr.txt"
         if not ocr_file.exists():
             pytest.skip("OCR fixture not found")
@@ -296,10 +349,14 @@ class TestChunkerWithFixtures:
 
 
 class TestChunkerPerformance:
-    """Performance tests for the chunker."""
+    """
+    Performance tests for the chunker.
+    """
     
     def test_large_document_performance(self):
-        """Test performance with a large document."""
+        """
+        Test performance with a large document.
+        """
         import time
         
         chunker = DocumentChunker()
@@ -317,10 +374,14 @@ class TestChunkerPerformance:
 
 
 class TestChunkerEdgeCases:
-    """Test edge cases and error conditions."""
+    """
+    Test edge cases and error conditions.
+    """
     
     def test_unicode_handling(self):
-        """Test handling of unicode characters."""
+        """
+        Test handling of unicode characters.
+        """
         chunker = DocumentChunker(target_tokens=50)
         
         text = "This contains émojis 😀 and special characters: ñ, ü, 中文"
@@ -330,7 +391,9 @@ class TestChunkerEdgeCases:
         assert "émojis" in chunks[0].text or "😀" in chunks[0].text
     
     def test_malformed_email(self):
-        """Test handling of malformed email format."""
+        """
+        Test handling of malformed email format.
+        """
         chunker = DocumentChunker()
         
         text = ">>> Badly formatted\n>> email with\n> broken quotes\nAnd normal text"
@@ -339,7 +402,9 @@ class TestChunkerEdgeCases:
         assert len(chunks) > 0
     
     def test_very_long_line(self):
-        """Test handling of very long lines without breaks."""
+        """
+        Test handling of very long lines without breaks.
+        """
         chunker = DocumentChunker(target_tokens=50)
         
         # Single line with no sentence breaks
@@ -349,7 +414,9 @@ class TestChunkerEdgeCases:
         assert len(chunks) > 1  # Should still split into chunks
     
     def test_only_whitespace_segments(self):
-        """Test document with whitespace-only segments."""
+        """
+        Test document with whitespace-only segments.
+        """
         chunker = DocumentChunker()
         
         text = "First part\n\n\n\n   \n\n\nSecond part"

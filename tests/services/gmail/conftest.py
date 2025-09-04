@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -8,8 +8,9 @@ from gmail.main import GmailService
 
 @pytest.fixture
 def gmail_service_with_mocks(simple_db) -> Tuple[GmailService, Dict[str, Mock]]:
-    """
-    Provide a GmailService instance with core dependencies mocked for unit tests.
+    """Provide a GmailService instance with core dependencies mocked for unit
+    tests.
+
     Returns a tuple of (service, mocks_dict).
     """
     service = GmailService(db_path=simple_db.db_path)

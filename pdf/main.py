@@ -23,9 +23,9 @@ from loguru import logger
 
 # Type-only imports to avoid runtime coupling
 if TYPE_CHECKING:  # pragma: no cover
+    from lib.db import SimpleDB
     from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
     from pdf.pdf_storage_enhanced import EnhancedPDFStorage
-    from shared.db.simple_db import SimpleDB
 
 # Resource protection constants
 MAX_CONCURRENT_UPLOADS = 10  # Maximum concurrent upload operations

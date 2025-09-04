@@ -5,7 +5,7 @@ Comprehensive tests for NearDuplicateDetector.
 import numpy as np
 import pytest
 
-from utilities.deduplication.near_duplicate_detector import (
+from deduplication.near_duplicate_detector import (
     LSHIndex,
     MinHasher,
     NearDuplicateDetector,

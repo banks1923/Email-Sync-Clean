@@ -59,7 +59,7 @@ scripts/vsearch search "legal contract terms"    # Unified search
 ### Storage & Database
 - **PDFDatabase** (`pdf_database.py`) - SQLite storage with deduplication
 - **PDFProcessor** (`pdf_processor.py`) - Basic text extraction
-- **EnhancedPDFProcessor** (`pdf_processor_enhanced.py`) - OCR-enabled processing
+- **EnhancedPDFProcessor** (`pdf_processor_enhanced.py`) - Text extraction with legal metadata (syntax error fixed 2025-09-04)
 - **EnhancedPDFStorage** (`pdf_storage_enhanced.py`) - Legal metadata support
 
 ### Pipeline Integration

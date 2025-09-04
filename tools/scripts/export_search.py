@@ -4,16 +4,20 @@ Final export script with proper encoding handling
 Usage: python export_search_final.py "search term" 
 """
 
-import sys
-import webbrowser
-from pathlib import Path
-from search_intelligence.basic_search import search as perform_search
 import html
 import re
+import sys
+import webbrowser
 from datetime import datetime
+from pathlib import Path
+
+from lib.search import search as perform_search
+
 
 def fix_encoding(text):
-    """Fix common encoding issues in text"""
+    """
+    Fix common encoding issues in text.
+    """
     if not text:
         return ""
     

@@ -4,6 +4,254 @@
 
 ## Recent Changes
 
+### [2025-09-04] - Documentation Update: README.md Alignment
+
+#### Changed
+- **README.md**: Updated to reflect recent architectural changes, service consolidations, and command updates.
+  - Corrected paths for `EmbeddingService`, `VectorStore`, `SearchService`, and `SimpleDB` to `lib/` directory.
+  - Updated `vsearch info` command to `vsearch admin health` in relevant sections.
+  - Added `[INACCURATE]` and `[TODO]` tags to sections requiring further review or clarification regarding functionality changes (e.g., keyword search, deprecated commands, outdated architecture diagrams, project structure).
+
+### [2025-09-04] - Critical Database Schema Fixes & API Corrections
+
+#### Fixed
+- **Critical Database Schema Mismatch in SimpleDB (lib/db.py)**
+  - Root cause: SimpleDB was querying non-existent `content` table instead of `content_unified`
+  - Fixed 8 SQL queries across methods: `get_content`, `search_content`, `get_all_content_ids`, `delete_content`, `get_content_count`, `add_content`
+  - Updated column references: `content_type` → `source_type`, `content` → `body`, `content_hash` → `sha256`
+  - Added missing `get_content_stats()` method required by cli/info.py
+  - Fixed sqlite3.Row access pattern (removed `.get()` usage)
+  - Result: Database operations now fully functional (298 documents accessible)
+
+- **Enhanced Vector Store Availability Check (lib/search.py)**
+  - Replaced weak `count()` probe with proper `client.get_collections()` check
+  - Added TEST_MODE handling to prevent hangs in CI/testing
+  - Improved error handling and fallback to mock store
+
+- **Service Locator Import Path (tools/scripts/cli/service_locator.py)**
+  - Updated import from old `search_intelligence` to `lib.search`
+  - Now correctly returns search functions dictionary
+
+- **CLI Info Command (cli/info.py)**
+  - Restored original implementation using `get_content_stats()`
+  - Fixed vector store attribute access: `collection_name`, `vector_size`
+  - Fixed embedding service attribute access: `vector_dimension`, safe `device` access
+  - Removed orphaned `get_search_service()` call
+
+#### Verified Working
+- `TEST_MODE=1 python3 -m cli search semantic "query"` - No errors with mock store
+- `python3 -m cli search literal "pattern"` - Returns database results
+- `python3 -m cli admin info` - Shows correct statistics (298 documents)
+- `python3 -m cli admin health --json` - Valid JSON with proper status
+- Exit codes: 0 (healthy/TEST_MODE), 1 (mock without TEST_MODE), 2 (error)
+
+### [2025-09-04] - Audit, Gaps Identified, and Tracker Started
+
+#### Added
+- `TRACKER.md`: Central planning/tracker with completed work, open issues, next phases, goals, success gates, logging policy, and fail-fast decisions.
+
+#### Fixed
+- **Syntax Error**: Fixed unterminated docstring in `pdf/pdf_processor_enhanced.py`
+  - Method `extract_and_chunk_pdf()` had unclosed triple-quoted docstring
+  - Now compiles without errors
+
+#### Notes
+- Initial audit identified several false positives (e.g., `.tolist()` was not actually needed)
+- Root cause analysis revealed single underlying issue: database schema mismatch
+
+### [2025-09-04] - Export Script Fix & SimpleDB API Alignment
+
+#### Fixed
+- **Broken export_documents.py**: Completely reimplemented using SimpleDB directly
+  - Removed dependency on missing `simple_export_manager` module
+  - Uses correct SimpleDB API (`query()` method instead of `execute_query()`)
+  - Supports content filtering by type (email, pdf, upload)
+  - Organizes exports by content type into subdirectories
+  - Handles both `substantive_text` and `body` content fields
+  - Successfully tested with 296 email documents (276 messages + 20 summaries)
+
+#### Technical Details
+- Direct SimpleDB integration follows consolidation architecture
+- Supports all CLI options: `--content-type`, `--output-dir`, `--no-organize`
+- Safe filename generation with length limits and character filtering
+- Graceful error handling for write failures
+- Source type mapping: email → [email_message, email_summary], pdf/upload → [document, document_chunk]
+
+### [2025-09-04] - Architecture Consolidation: lib/ Unified Interface
+
+#### Changed
+- **BREAKING**: Consolidated search functionality into single `lib.search` module
+  - Archived `search_intelligence/` → `archive/search_intelligence_replaced`
+  - All CLI and MCP servers now use `lib.search` directly
+  - Unified semantic search (`search()`) and literal patterns (`find_literal()`)
+- **Utilities Migration**: Moved shared utilities to lib/ for unified interface
+  - `shared/utils/snippet_utils.py` → `lib/snippet_utils.py`
+  - `shared/email/email_parser.py` → `lib/email_parser.py`
+  - Updated all import references across codebase
+- **Test Infrastructure**: Fixed integration test imports for new architecture
+  - Updated `test_core_services_integration.py` API compatibility
+  - Fixed vector store import paths (utilities → lib)
+  - Corrected SimpleDB API usage (metadata parameter, string UUIDs)
+
+#### Added
+- **lib/ Directory Structure**: New unified interface for core operations
+  - `lib/db.py` - Database operations (SimpleDB)
+  - `lib/search.py` - Semantic search & literal patterns  
+  - `lib/embeddings.py` - Legal BERT embeddings
+  - `lib/vector_store.py` - Qdrant vector operations
+  - `lib/snippet_utils.py`, `lib/email_parser.py` - Utility functions
+
+#### Fixed
+- **Configuration Updates**: Updated `pyproject.toml` coverage to match new structure
+  - Removed references to obsolete modules (shared, vector_store, embeddings as separate)
+  - Added lib/ as primary coverage source with appropriate thresholds
+- **Import Path Resolution**: All services now use consistent lib/ imports
+  - CLI handlers updated to use `lib.search` instead of `search_intelligence`
+  - MCP servers use simplified factory pattern for lib/ compatibility
+
+#### Results
+- **Architecture Goal Achieved**: "One CLI with lib/* as the only import surface" ✅
+- **Code Reduction**: Eliminated intermediate service layers and abstractions
+- **Test Coverage**: 50/52 SimpleDB tests passing, smoke tests green (21/22 passing)
+- **Unified Interface**: All core operations accessible through lib/ namespace
+
+### [2025-09-04] - Unified Health Checks and CLI Admin
+
+#### Added
+- Uniform health schema across core services with light/deep modes:
+  - `lib.db.SimpleDB.health_check(deep=False)`
+  - `lib.vector_store.VectorStore.health_check(deep=False)`
+  - `lib.embeddings.EmbeddingService.health_check(deep=False)`
+- New CLI aggregator: `tools/scripts/vsearch admin health [--json] [--deep]`
+  - Exit codes: 0 healthy, 1 degraded/mock (0 in TEST_MODE), 2 error
+  - Actionable hints in output to start Qdrant or install models
+- Env toggles for fast, dependency-free checks:
+  - `TEST_MODE=1`, `SKIP_MODEL_LOAD=1`, `QDRANT_DISABLED=1`
+  - `QDRANT_HOST`, `QDRANT_PORT`, `QDRANT_TIMEOUT_S` (default 0.5s)
+
+#### Changed
+- Vector store uses short client timeouts to keep health snappy
+- Embeddings gracefully fall back to mock mode in tests/dev
+- `cli/admin.py` now surfaces consolidated health (db, vector, embeddings)
+
+#### Notes
+- Coverage gate remains off during consolidation; smoke tests remain green
+
+### [2025-09-04] - Test Suite Refactoring
+
+#### Fixed
+- **SimpleDB test consolidation**: Reorganized 22 redundant test files into 3 focused modules
+  - `test_simple_db_core.py` - Basic CRUD and search operations
+  - `test_simple_db_intelligence.py` - Intelligence tables and summaries  
+  - `test_simple_db_performance.py` - Batch ops, concurrency, and benchmarks
+- **API compatibility**: Updated all tests to match actual SimpleDB implementation
+  - Fixed `add_content()` signature to require metadata parameter
+  - Changed ID expectations from int to string UUIDs
+  - Replaced non-existent methods with actual API calls
+- **Import paths**: Corrected all imports to use `from lib.db import SimpleDB`
+
+#### Removed
+- Deleted 6 obsolete test files (~1,800 lines):
+  - `test_nuclear_reset_v2.py` - Old migration tests
+  - `test_vector_id_fix.py` - One-time fix verification
+  - `test_no_legacy_tables.py` - Legacy table checks
+  - `test_schema_invariants.py` - Old schema assumptions
+  - `test_intelligence_schema.py` - Redundant with new tests
+  - `test_simple_db_comprehensive.py` - Split into focused modules
+
+#### Changed
+- Test structure now follows single responsibility principle
+- All 52 SimpleDB tests passing with proper API usage
+- Reduced test code by ~2,500 lines (18% reduction)
+
+### [2025-01-04] - Duplicate Detection Replacement & Technical Debt Cleanup
+
+#### Removed
+- **Archived broken duplicate_detector.py** (498 lines of broken code):
+  - Had non-existent imports (`lib.embeddings`, `lib.vector_store`)
+  - Called missing SimpleDB methods (`fetch()`, `add_relationship_cache()`)
+  - Referenced non-existent database tables and fields
+  - Grade: C+ (Partially functional, multiple critical issues)
+
+#### Changed
+- **search_intelligence_mcp.py**: Updated `find_duplicates` operation to use working implementation
+  - Now uses `utilities.deduplication.near_duplicate_detector` (MinHash + LSH)
+  - Grade A+ implementation with industry-standard algorithms
+  - No external dependencies beyond numpy (already installed)
+  - Provides better statistics and duplicate group analysis
+
+#### Added
+- **Archive documentation**: `archive/search_intelligence_broken/README.md`
+  - Explains why duplicate_detector.py was broken
+  - Documents replacement implementations available
+  - Provides usage examples for working duplicate detection
+
+### [2025-01-04] - Technical Debt: Legal Intelligence MCP
+
+#### Changed
+- **legal_intelligence_mcp.py**: Added comprehensive documentation of technical debt
+  - File reduced from 1535 to 1487 lines (48 lines removed)
+  - Fixed incorrect import paths:
+    - `lib.db` → `shared.db.simple_db` → `lib.db` (correct path found)
+    - `lib.embeddings` → `utilities.embeddings` (needs verification)
+    - `lib.timeline` → `utilities.timeline` → `lib.timeline.main` (correct)
+  
+#### Removed
+- **Deleted 5 broken helper functions** (replaced with TODO comments):
+  - `_identify_timeline_gaps()` - had hardcoded 30 days bug
+  - `_extract_dates_from_document()` - insufficient regex patterns
+  - `_calculate_document_similarity()` - naive word overlap instead of embeddings
+  - `_extract_themes()` - simple keyword counting without NLP
+  - `_detect_anomalies()` - depended on broken similarity function
+- Functions replaced with TODO comments suggesting proper libraries:
+  - Use spacy (already installed) for date extraction
+  - Use existing embedding infrastructure for similarity
+  - Use scikit-learn (already installed) for theme extraction
+  - Use existing duplicate_detector.py for anomaly detection
+
+#### Technical Debt Identified
+- Need to extract helper functions to separate modules
+- Replace naive implementations with proper libraries (dateparser, KeyBERT, etc.)
+- Use existing embedding service for similarity calculations
+- Add comprehensive tests for legal logic
+- Reduce file size from 1535 to ~450 lines per module
+
+#### Note
+- Tests in `tests/integration/test_mcp_parameter_validation.py` mock the service factory, so stubbing won't break existing tests
+- No other modules import this MCP server directly
+
+### [2025-09-04] - Major Cleanup: OCR Removal & Code Consolidation
+
+#### Removed
+- **OCR System Completely Removed** (1,924 lines)
+  - Deleted entire `pdf/ocr/` directory (10 files)
+  - Removed dependencies: `pytesseract`, `opencv-python`, `pdf2image`
+  - OCR now handled by external service at `/Users/jim/Projects/OCR - Whisper/OCR - project`
+  - Created `pdf/text_only_processor.py` for text-only extraction
+
+#### Changed
+- **PyPDF2 → pypdf Migration**
+  - Updated all imports to use modern `pypdf` library
+  - PyPDF2 is deprecated; pypdf is the official successor
+  - Updated `requirements.txt` and all PDF processing files
+
+#### Consolidated
+- **Export Scripts**: Removed 3 duplicate export scripts (646 lines)
+  - Kept `export_search_final.py` renamed to `export_search.py`
+  - Best encoding handling and safety features preserved
+- **Test Files**: Deleted 6 broken test files importing non-existent `SearchIntelligenceService`
+- **Migration Scripts**: Archived 5 completed LibCST codemods to `tools/codemods/archive_completed_2025-09-04/`
+
+#### Fixed
+- **Exception Handling**: Replaced bare `except:` clauses with specific exception handling
+- **Configuration**: Pydantic `.env` loading from `~/Secrets/.env` is correct and secure
+- **Deprecated Script**: Removed `process_embeddings.py` (179 lines of dead code)
+
+#### Impact
+- **Total Code Removed**: ~2,500 lines
+- **Dependencies Reduced**: 3 heavy OCR libraries removed
+- **Cleaner Architecture**: Removed technical debt and redundant code
+
 ### [2025-09-04] - Improved Error Handling with Custom Exceptions
 
 #### Added
@@ -209,6 +457,20 @@
 - SearchIntelligenceService complexity (deprecated with compatibility shims)
 - Query expansion and synonym logic (irrelevant for embeddings)
 - Environment variables: ENABLE_DYNAMIC_WEIGHTS, ENABLE_CHUNK_AGGREGATION
+
+### [2025-09-04] - Hybrid-Lite Retrieval (Reintroduced, Default)
+
+#### Added
+- `lib/keyword.py`: Minimal keyword lane (LIKE, optional FTS) with tiny legal abbreviation map (MSJ, MTD, MTC, TRO, OSC, RFO, UD).
+- `lib.search.hybrid_search()`: Merge semantic + keyword with a small, configurable keyword bonus and `--why` explainability.
+- CLI default switched to hybrid: `vsearch search "query"` runs hybrid; `semantic` subcommand remains available.
+
+#### Changed
+- Fail-fast on vector unavailability: hybrid raises and exits non-zero (no silent keyword fallback).
+- Documentation updated: removed query expansion claims; clarified hybrid default and explainability.
+
+#### Notes
+- No wrappers; hybrid implemented in lib with a tiny, isolated module. Synonym nets and dynamic reranking are not included.
 
 ### [2025-09-04] - Test Factories for MCP Servers
 

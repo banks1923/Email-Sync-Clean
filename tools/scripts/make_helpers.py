@@ -18,12 +18,12 @@ def test_basic():
     """
     print("🧪 Testing basic system functionality...")
     try:
-        from shared.db.simple_db import SimpleDB
+        from lib.db import SimpleDB
 
         SimpleDB()
         print("✅ Database connection works")
 
-        from utilities.embeddings import get_embedding_service
+        from lib.embeddings import get_embedding_service
 
         emb = get_embedding_service()
         vec = emb.encode("test")
@@ -43,7 +43,7 @@ def recent_activity():
     print("📊 Recent Activity")
     print("==================")
     try:
-        from shared.db.simple_db import SimpleDB
+        from lib.db import SimpleDB
 
         db = SimpleDB()
         cursor = db.execute(
@@ -82,7 +82,7 @@ def db_stats():
     print("📊 Database Statistics")
     print("=====================")
     try:
-        from shared.db.simple_db import SimpleDB
+        from lib.db import SimpleDB
 
         db = SimpleDB()
 
@@ -113,8 +113,8 @@ def performance_stats():
     print("⚡ Performance Statistics")
     print("========================")
     try:
-        from shared.db.simple_db import SimpleDB
-        from utilities.embeddings import get_embedding_service
+        from lib.db import SimpleDB
+        from lib.embeddings import get_embedding_service
 
         print("Testing embedding speed...")
         start = time.time()
@@ -140,7 +140,7 @@ def optimize_db():
     """
     print("⚡ Optimizing database...")
     try:
-        from shared.db.simple_db import SimpleDB
+        from lib.db import SimpleDB
 
         db = SimpleDB()
         db.execute("VACUUM")

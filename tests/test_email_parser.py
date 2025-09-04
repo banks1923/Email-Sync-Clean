@@ -19,7 +19,7 @@ from email_parsing.message_deduplicator import (
     ParsedMessage,
     process_email_file,
 )
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 class TestMessageDeduplicator(unittest.TestCase):

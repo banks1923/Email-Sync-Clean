@@ -5,6 +5,55 @@ Unified Legal Intelligence MCP server that replaces existing legal and
 timeline servers. Provides comprehensive legal case analysis, entity
 extraction, timeline generation, knowledge graph relationships, and
 document intelligence.
+
+================================================================================
+TECHNICAL DEBT & STUBBED FUNCTIONS - UPDATED 2025-01-04
+================================================================================
+
+This file contains significant technical debt and needs major refactoring:
+- File size: 1487 lines (3.3x larger than recommended 450 lines)
+- Multiple broken helper functions REMOVED (5 functions, 48 lines deleted)
+- Import paths fixed to use correct modules
+
+STUBBED FUNCTIONS (These are placeholders that need proper implementation):
+
+1. BROKEN - Always returns placeholder values:
+   - _identify_timeline_gaps(): REMOVED - had hardcoded 30-day gaps
+   - _extract_dates_from_document(): REMOVED - regex too simplistic
+
+2. POOR IMPLEMENTATION - Naive string matching:
+   - _identify_document_types(): No word boundaries, will match "motion" in "promotion"
+   - _determine_case_type(): Simplistic keyword matching
+   - _calculate_document_similarity(): REMOVED - used word overlap not embeddings
+   - _extract_themes(): REMOVED - just counted keywords, no NLP
+   - _detect_anomalies(): REMOVED - overly simplistic duplicate detection
+
+3. SHOULD USE LIBRARIES:
+   - Date extraction -> dateparser or spacy
+   - Document similarity -> sentence-transformers or existing embeddings
+   - Pattern matching -> spacy.Matcher with proper patterns
+   - Theme extraction -> KeyBERT or topic modeling
+
+4. USEFUL BUT NEEDS REFACTOR:
+   - _predict_missing_documents(): Has legal domain value but needs state machine
+   - LEGAL_DOC_PATTERNS: Useful domain knowledge but needs proper config
+   - _get_expected_document_sequence(): Legal procedure knowledge worth keeping
+
+IMPORT PATHS:
+- lib.db.SimpleDB - Database module
+- utilities.embeddings.embedding_service - Embedding service (needs fixing)
+- lib.timeline.main.TimelineService - Timeline service
+
+TODO:
+1. Extract helper functions to separate modules (~300 lines each)
+2. Replace broken functions with proper libraries
+3. Add comprehensive tests
+4. Fix all hardcoded magic values
+5. Implement proper error handling
+
+NOTE: Tests in tests/integration/test_mcp_parameter_validation.py mock
+get_legal_intelligence_service() so changes here won't break tests.
+================================================================================
 """
 
 import asyncio
@@ -34,12 +83,14 @@ from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
 # Import underlying services directly
+# NOTE: Import paths reflect current project structure
 try:
-    from entity.main import EntityService
-    from shared.db.simple_db import SimpleDB
-    from utilities.embeddings.embedding_service import get_embedding_service
-    from utilities.timeline.main import TimelineService
     from loguru import logger
+
+    from entity.main import EntityService
+    from lib.db import SimpleDB  # Database module
+    from lib.embeddings import get_embedding_service  # Consolidated architecture
+    from lib.timeline.main import TimelineService  # Timeline service
 
     SERVICES_AVAILABLE = True
 except ImportError as e:
@@ -61,7 +112,10 @@ LEGAL_DOC_PATTERNS = {
 
 # Patchable factory hook for tests - now returns a simple dict structure
 def get_legal_intelligence_service(db_path: str | None = None):
-    """Create a simple service dict with the underlying services for compatibility with tests."""
+    """
+    Create a simple service dict with the underlying services for compatibility
+    with tests.
+    """
     if not SERVICES_AVAILABLE:
         return None
         
@@ -76,7 +130,9 @@ def get_legal_intelligence_service(db_path: str | None = None):
 # Helper functions from legal_intelligence service
 
 def _get_case_documents(case_number: str, db: SimpleDB) -> list[dict[str, Any]]:
-    """Get all documents related to a case number."""
+    """
+    Get all documents related to a case number.
+    """
     search_results = db.search_content(case_number, limit=100)
     
     # Filter to ensure relevance
@@ -93,7 +149,9 @@ def _get_case_documents(case_number: str, db: SimpleDB) -> list[dict[str, Any]]:
     return case_docs
 
 def _identify_document_types(documents: list[dict]) -> set[str]:
-    """Identify types of legal documents present."""
+    """
+    Identify types of legal documents present.
+    """
     identified_types = set()
     
     for doc in documents:
@@ -109,7 +167,9 @@ def _identify_document_types(documents: list[dict]) -> set[str]:
     return identified_types
 
 def _determine_case_type(documents: list[dict]) -> str:
-    """Determine the type of legal case from documents."""
+    """
+    Determine the type of legal case from documents.
+    """
     doc_types = _identify_document_types(documents)
     
     if "complaint" in doc_types:
@@ -128,7 +188,9 @@ def _determine_case_type(documents: list[dict]) -> str:
     return "civil_litigation"  # Default
 
 def _get_expected_document_sequence(case_type: str) -> list[str]:
-    """Get expected document sequence for a case type."""
+    """
+    Get expected document sequence for a case type.
+    """
     sequences = {
         "unlawful_detainer": [
             "complaint", "summons", "answer", "motion", "order", "judgment", "notice"
@@ -147,7 +209,9 @@ def _get_expected_document_sequence(case_type: str) -> list[str]:
     return sequences.get(case_type, sequences["civil_litigation"])
 
 def _calculate_missing_confidence(doc_type: str, existing: set[str], documents: list[dict]) -> float:
-    """Calculate confidence that a document type is missing."""
+    """
+    Calculate confidence that a document type is missing.
+    """
     confidence = 0.5  # Base confidence
     
     # Adjust based on typical sequence
@@ -168,7 +232,9 @@ def _calculate_missing_confidence(doc_type: str, existing: set[str], documents: 
     return min(confidence, 1.0)
 
 def _get_missing_reason(doc_type: str, existing: set[str]) -> str:
-    """Get reason why a document might be missing."""
+    """
+    Get reason why a document might be missing.
+    """
     reasons = {
         "answer": "Expected response to complaint not found",
         "discovery": "No discovery documents found despite case progression",
@@ -181,30 +247,16 @@ def _get_missing_reason(doc_type: str, existing: set[str]) -> str:
     
     return reasons.get(doc_type, f"Expected {doc_type} not found in case documents")
 
-def _extract_dates_from_document(document: dict) -> list[dict]:
-    """Extract dates and their context from a document."""
-    dates = []
-    content = document.get("content", "")
-    
-    import re
-    date_pattern = r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\w+ \d{1,2}, \d{4})\b"
-    
-    matches = re.finditer(date_pattern, content)
-    for match in matches:
-        date_str = match.group()
-        context = content[max(0, match.start() - 50) : min(len(content), match.end() + 50)]
-        
-        dates.append({
-            "date": date_str,
-            "type": _classify_date_type(context),
-            "description": context.strip(),
-            "confidence": 0.8
-        })
-    
-    return dates
+# TODO: _extract_dates_from_document() was removed (2025-01-04)
+# Original function extracted dates from documents using insufficient regex.
+# Should be reimplemented with spacy (already installed) for temporal NER:
+#   doc = nlp(text); dates = [ent for ent in doc.ents if ent.label_ == "DATE"]
+# Or use dateparser.search.search_dates() for more robust parsing.
 
 def _classify_date_type(context: str) -> str:
-    """Classify the type of date based on context."""
+    """
+    Classify the type of date based on context.
+    """
     context_lower = context.lower()
     
     if "filed" in context_lower:
@@ -218,29 +270,14 @@ def _classify_date_type(context: str) -> str:
     else:
         return "event_date"
 
-def _identify_timeline_gaps(events: list[dict]) -> list[dict]:
-    """Identify significant gaps in the timeline."""
-    gaps = []
-    
-    for i in range(len(events) - 1):
-        current = events[i]
-        next_event = events[i + 1]
-        
-        # Parse dates (simplified - should use proper date parsing)
-        gap_days = 30  # Placeholder
-        
-        if gap_days > 60:  # Significant gap
-            gaps.append({
-                "start": current["date"],
-                "end": next_event["date"],
-                "duration_days": gap_days,
-                "significance": "high" if gap_days > 120 else "medium"
-            })
-    
-    return gaps
+# TODO: _identify_timeline_gaps() was removed (2025-01-04)
+# Original function had hardcoded 30-day gap detection (broken logic).
+# Should be reimplemented with proper date parsing and configurable thresholds.
 
 def _identify_milestones(events: list[dict]) -> list[dict]:
-    """Identify key milestones in the case timeline."""
+    """
+    Identify key milestones in the case timeline.
+    """
     milestones = []
     milestone_types = ["filing_date", "hearing_date", "judgment_date"]
     
@@ -250,40 +287,20 @@ def _identify_milestones(events: list[dict]) -> list[dict]:
     
     return milestones
 
-def _calculate_document_similarity(doc1: dict, doc2: dict) -> float:
-    """Calculate similarity between two documents using embeddings."""
-    try:
-        # Get embeddings
-        text1 = doc1.get("content", "")[:2000]  # Limit for performance
-        text2 = doc2.get("content", "")[:2000]
-        
-        if not text1 or not text2:
-            return 0.0
-        
-        # Simple word overlap similarity (fallback if embeddings not available)
-        words1 = set(text1.lower().split())
-        words2 = set(text2.lower().split())
-        
-        if not words1 or not words2:
-            return 0.0
-            
-        intersection = len(words1 & words2)
-        union = len(words1 | words2)
-        
-        return intersection / union if union > 0 else 0.0
-        
-    except Exception as e:
-        if SERVICES_AVAILABLE:
-            logger.warning(f"Error calculating similarity: {e}")
-        return 0.0
+# TODO: _calculate_document_similarity() was removed (2025-01-04)
+# Original used naive Jaccard similarity (word overlap).
+# Should use existing embedding infrastructure + cosine similarity.
+# Check search_intelligence/similarity.py for existing implementation.
 
 def _generate_case_timeline(documents: list[dict]) -> dict[str, Any]:
-    """Generate timeline from case documents."""
+    """
+    Generate timeline from case documents.
+    """
     events = []
     
     for doc in documents:
-        # Extract dates from document
-        dates = _extract_dates_from_document(doc)
+        # TODO: Date extraction removed - would use spacy NER
+        dates = []  # Empty until reimplemented
         
         for date_info in dates:
             event = {
@@ -299,8 +316,8 @@ def _generate_case_timeline(documents: list[dict]) -> dict[str, Any]:
     # Sort by date
     events.sort(key=lambda x: x["date"])
     
-    # Identify timeline gaps
-    gaps = _identify_timeline_gaps(events)
+    # TODO: Gap detection removed - needs proper implementation
+    gaps = []  # Empty until reimplemented
     
     return {
         "success": True,
@@ -315,7 +332,9 @@ def _generate_case_timeline(documents: list[dict]) -> dict[str, Any]:
     }
 
 def _build_case_relationships(documents: list[dict]) -> dict[str, Any]:
-    """Build relationship graph for case documents."""
+    """
+    Build relationship graph for case documents.
+    """
     nodes = []
     edges = []
     
@@ -335,7 +354,8 @@ def _build_case_relationships(documents: list[dict]) -> dict[str, Any]:
     # Find document similarities and create edges
     for i, doc1 in enumerate(documents):
         for doc2 in documents[i + 1:]:
-            similarity = _calculate_document_similarity(doc1, doc2)
+            # TODO: Similarity calculation removed - should use embeddings
+            similarity = 0.1  # Default low similarity
             
             if similarity > 0.5:  # Threshold for relationship
                 edge = {
@@ -358,7 +378,9 @@ def _build_case_relationships(documents: list[dict]) -> dict[str, Any]:
     }
 
 def _extract_case_entities(documents: list[dict]) -> dict[str, Any]:
-    """Extract and consolidate entities from case documents."""
+    """
+    Extract and consolidate entities from case documents.
+    """
     all_entities = []
     entity_relationships = []
     
@@ -392,7 +414,9 @@ def _extract_case_entities(documents: list[dict]) -> dict[str, Any]:
     }
 
 def _consolidate_entities(entities: list[dict]) -> list[dict]:
-    """Consolidate duplicate entities."""
+    """
+    Consolidate duplicate entities.
+    """
     consolidated = {}
     
     for entity in entities:
@@ -410,7 +434,9 @@ def _consolidate_entities(entities: list[dict]) -> list[dict]:
     return list(consolidated.values())
 
 def _group_entities_by_type(entities: list[dict]) -> dict[str, list]:
-    """Group entities by their type/label."""
+    """
+    Group entities by their type/label.
+    """
     grouped = {}
     
     for entity in entities:
@@ -422,7 +448,9 @@ def _group_entities_by_type(entities: list[dict]) -> dict[str, list]:
     return grouped
 
 def _identify_key_parties(entities: list[dict]) -> list[dict]:
-    """Identify key parties in the case."""
+    """
+    Identify key parties in the case.
+    """
     # Focus on PERSON and ORG entities with high frequency
     person_org = [e for e in entities if e.get("label") in ["PERSON", "ORG"]]
     
@@ -432,7 +460,9 @@ def _identify_key_parties(entities: list[dict]) -> list[dict]:
     return person_org[:10]  # Top 10 key parties
 
 def _analyze_document_patterns(documents: list[dict]) -> dict[str, Any]:
-    """Analyze patterns in case documents."""
+    """
+    Analyze patterns in case documents.
+    """
     if not documents:
         return {"success": False, "error": "No documents to analyze"}
     
@@ -440,10 +470,12 @@ def _analyze_document_patterns(documents: list[dict]) -> dict[str, Any]:
     doc_types = _identify_document_types(documents)
     
     # Find recurring themes
-    themes = _extract_themes(documents)
+    # TODO: Theme extraction removed - needs KeyBERT or topic modeling
+    themes = []  # Empty until reimplemented
     
     # Detect anomalies
-    anomalies = _detect_anomalies(documents)
+    # TODO: Anomaly detection removed - use duplicate_detector.py instead
+    anomalies = []  # Empty until reimplemented
     
     # Analyze document flow
     flow = _analyze_document_flow(documents)
@@ -457,54 +489,20 @@ def _analyze_document_patterns(documents: list[dict]) -> dict[str, Any]:
         "pattern_summary": _summarize_patterns(doc_types, themes, anomalies)
     }
 
-def _extract_themes(documents: list[dict]) -> list[dict]:
-    """Extract recurring themes from documents."""
-    themes = []
-    
-    common_themes = {
-        "procedural": ["motion", "hearing", "order", "filed"],
-        "parties": ["plaintiff", "defendant", "petitioner", "respondent"],
-        "claims": ["breach", "damage", "injury", "violation"],
-        "relief": ["judgment", "settlement", "dismissal", "award"]
-    }
-    
-    for theme_name, keywords in common_themes.items():
-        count = 0
-        for doc in documents:
-            content = doc.get("body", "").lower()
-            for keyword in keywords:
-                if keyword in content:
-                    count += 1
-                    break
-        
-        if count > 0:
-            themes.append({
-                "theme": theme_name,
-                "prevalence": count / len(documents),
-                "document_count": count
-            })
-    
-    return themes
+# TODO: _extract_themes() was removed (2025-01-04)
+# Original was naive keyword counting without NLP.
+# Should use KeyBERT or topic modeling (LDA/NMF) for proper theme extraction.
+# scikit-learn (already installed) has TF-IDF and topic modeling capabilities.
 
-def _detect_anomalies(documents: list[dict]) -> list[dict]:
-    """Detect anomalies in document patterns."""
-    anomalies = []
-    
-    # Check for duplicate-looking documents
-    for i, doc1 in enumerate(documents):
-        for j, doc2 in enumerate(documents[i + 1:], i + 1):
-            similarity = _calculate_document_similarity(doc1, doc2)
-            if similarity > 0.95:
-                anomalies.append({
-                    "type": "potential_duplicate",
-                    "documents": [doc1.get("title"), doc2.get("title")],
-                    "confidence": similarity
-                })
-    
-    return anomalies
+# TODO: _detect_anomalies() was removed (2025-01-04)
+# Original depended on broken similarity function.
+# Should use search_intelligence/duplicate_detector.py (already exists!).
+# Or implement with MinHash/LSH for efficient near-duplicate detection.
 
 def _analyze_document_flow(documents: list[dict]) -> dict[str, Any]:
-    """Analyze the flow and progression of documents."""
+    """
+    Analyze the flow and progression of documents.
+    """
     # Sort documents by date if available
     sorted_docs = sorted(documents, key=lambda x: x.get("datetime_utc", ""))
     
@@ -524,7 +522,9 @@ def _analyze_document_flow(documents: list[dict]) -> dict[str, Any]:
     return flow
 
 def _identify_single_doc_type(document: dict) -> str:
-    """Identify the type of a single document."""
+    """
+    Identify the type of a single document.
+    """
     title = document.get("title", "").lower()
     
     for doc_type, patterns in LEGAL_DOC_PATTERNS.items():
@@ -535,7 +535,9 @@ def _identify_single_doc_type(document: dict) -> str:
     return "unknown"
 
 def _summarize_patterns(doc_types: set[str], themes: list[dict], anomalies: list[dict]) -> str:
-    """Summarize the patterns found in the analysis."""
+    """
+    Summarize the patterns found in the analysis.
+    """
     summary = f"Found {len(doc_types)} document types"
     
     if themes:
@@ -548,7 +550,9 @@ def _summarize_patterns(doc_types: set[str], themes: list[dict], anomalies: list
     return summary
 
 def _predict_missing_documents(case_documents: list[dict]) -> dict[str, Any]:
-    """Predict potentially missing documents based on case type and patterns."""
+    """
+    Predict potentially missing documents based on case type and patterns.
+    """
     if not case_documents:
         return {"success": False, "error": "No documents found"}
     
@@ -588,24 +592,22 @@ def _predict_missing_documents(case_documents: list[dict]) -> dict[str, Any]:
 
 
 def legal_extract_entities(content: str, case_id: str | None = None) -> str:
+    """Extract legal entities from text content using validated EntityService.
+
+    FAIL-FAST: Will crash immediately if EntityService is broken.
     """
-    Extract legal entities from text content using Legal BERT and NER.
-    """
-    # Honor patched availability flag from test shim if present
-    try:
-        _SERVICES_AVAILABLE = SERVICES_AVAILABLE
-        if not _SERVICES_AVAILABLE:
-            return "Legal intelligence services not available"
-    except Exception:
-        if not SERVICES_AVAILABLE:
-            return "Legal intelligence services not available"
+    if not SERVICES_AVAILABLE:
+        return "Legal intelligence services not available"
 
     try:
-        # Use EntityService directly
-        entity_service = EntityService()
+        # Use fail-fast validated EntityService
+        from .legal_service_validator import get_legal_service_validator
         
-        # Use extract_email_entities with dummy message_id
-        message_id = f"case_{case_id}" if case_id else "text_analysis"
+        validator = get_legal_service_validator()
+        entity_service = validator.get_validated_entity_service()
+        
+        # Use extract_email_entities with legal case context
+        message_id = f"case_{case_id}" if case_id else "legal_text_analysis"
         result = entity_service.extract_email_entities(
             message_id=message_id, 
             content=content

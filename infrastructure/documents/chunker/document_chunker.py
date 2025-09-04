@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""
-Document chunking module for semantic search v2.
-Splits documents into 900-1100 token chunks with sentence awareness and overlap.
+"""Document chunking module for semantic search v2.
+
+Splits documents into 900-1100 token chunks with sentence awareness and
+overlap.
 """
 
 import re
 from dataclasses import dataclass
-from typing import List, Generator, Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Generator, List, Optional
 
-import tiktoken
-import spacy
-from spacy.lang.en import English
 import sentencepiece as spm
+import spacy
+import tiktoken
 from boilerpy3 import extractors
-
 from loguru import logger
+from spacy.lang.en import English
 
 # Import quality scorer if available
 try:
@@ -33,7 +33,9 @@ DEFAULT_OVERLAP_RATIO = 0.15
 MIN_CHUNK_TOKENS = 100
 
 class DocumentType(Enum):
-    """Document type enumeration."""
+    """
+    Document type enumeration.
+    """
     EMAIL = "email"
     LEGAL_PDF = "legal_pdf"
     OCR_SCAN = "ocr_scan"
@@ -42,7 +44,9 @@ class DocumentType(Enum):
 
 @dataclass
 class DocumentChunk:
-    """Represents a single document chunk with metadata."""
+    """
+    Represents a single document chunk with metadata.
+    """
     doc_id: str
     chunk_idx: int
     text: str
@@ -56,14 +60,16 @@ class DocumentChunk:
     doc_type: Optional[DocumentType] = None
     
     def __post_init__(self):
-        """Generate chunk_id if not provided."""
+        """
+        Generate chunk_id if not provided.
+        """
         if not self.chunk_id:
             self.chunk_id = f"{self.doc_id}:{self.chunk_idx}"
 
 
 class DocumentChunker:
-    """
-    Token-based document chunker with sentence awareness.
+    """Token-based document chunker with sentence awareness.
+
     Creates chunks of 900-1100 tokens with ~15% overlap.
     """
     
@@ -77,9 +83,8 @@ class DocumentChunker:
         enable_quality_scoring: bool = True,
         quality_threshold: Optional[float] = None
     ):
-        """
-        Initialize the document chunker.
-        
+        """Initialize the document chunker.
+
         Args:
             target_tokens: Target token count per chunk
             min_tokens: Minimum tokens per chunk
@@ -137,7 +142,9 @@ class DocumentChunker:
         logger.info(f"DocumentChunker initialized: target={target_tokens}, overlap={overlap_ratio}")
     
     def _count_tokens(self, text: str) -> int:
-        """Count tokens in text."""
+        """
+        Count tokens in text.
+        """
         if self.use_tiktoken:
             return len(self.tokenizer.encode(text))
         else:
@@ -146,13 +153,12 @@ class DocumentChunker:
             return int(len(text.split()) * 1.3)
     
     def _pre_split_document(self, text: str, doc_type: DocumentType) -> List[str]:
-        """
-        Pre-split document based on type-specific patterns.
-        
+        """Pre-split document based on type-specific patterns.
+
         Args:
             text: Document text
             doc_type: Type of document
-            
+
         Returns:
             List of text segments
         """
@@ -225,14 +231,13 @@ class DocumentChunker:
         return segments if segments else [text]
     
     def _find_sentence_boundary(self, text: str, target_pos: int, backward: bool = True) -> int:
-        """
-        Find nearest sentence boundary to target position.
-        
+        """Find nearest sentence boundary to target position.
+
         Args:
             text: Text to search
             target_pos: Target character position
             backward: Search backward (True) or forward (False)
-            
+
         Returns:
             Position of sentence boundary
         """
@@ -274,9 +279,8 @@ class DocumentChunker:
         overlap_tokens: int,
         _
     ) -> tuple[str, int, int]:
-        """
-        Create a chunk with overlap handling.
-        
+        """Create a chunk with overlap handling.
+
         Returns:
             Tuple of (chunk_text, actual_start_pos, actual_end_pos)
         """
@@ -305,15 +309,14 @@ class DocumentChunker:
         doc_type: DocumentType = DocumentType.GENERAL,
         metadata: Optional[Dict[str, Any]] = None
     ) -> Generator[DocumentChunk, None, None]:
-        """
-        Chunk a document into token-based segments.
-        
+        """Chunk a document into token-based segments.
+
         Args:
             text: Document text to chunk
             doc_id: Document identifier
             doc_type: Type of document
             metadata: Optional metadata dictionary
-            
+
         Yields:
             DocumentChunk objects
         """
@@ -428,7 +431,9 @@ class DocumentChunker:
 
 
 def main():
-    """CLI interface for testing the chunker."""
+    """
+    CLI interface for testing the chunker.
+    """
     import argparse
     import json
     from pathlib import Path

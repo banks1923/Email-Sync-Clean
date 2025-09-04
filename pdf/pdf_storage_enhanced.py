@@ -8,7 +8,7 @@ import json
 import os
 from typing import Any
 
-from shared.db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 
 class EnhancedPDFStorage:
@@ -279,24 +279,7 @@ class EnhancedPDFStorage:
             "ready_for_embedding": ready_for_embedding,
         }
 
-    # Legacy compatibility
-    def store_chunks(
-        self, pdf_path: str, file_hash: str, chunks: list[str], source: str
-    ) -> dict[str, Any]:
-        """Legacy method - convert simple chunks to enhanced format"""
-        enhanced_chunks = []
-        for i, text in enumerate(chunks):
-            enhanced_chunks.append(
-                {
-                    "chunk_id": f"{file_hash}_{i}",
-                    "text": text,
-                    "chunk_index": i,
-                    "char_count": len(text),
-                }
-            )
-        return self.store_chunks_with_metadata(
-            pdf_path, file_hash, enhanced_chunks, extraction_method="text_extraction", source=source
-        )
+    
 
     def find_pdf_files(self, directory: str) -> list[str]:
         """

@@ -184,7 +184,7 @@ class TextRankSummarizer:
         """
         if self.embedding_service is None:
             try:
-                from utilities.embeddings import get_embedding_service
+                from lib.embeddings import get_embedding_service
 
                 self.embedding_service = get_embedding_service()
                 logger.debug("Loaded Legal BERT embedding service")

@@ -4,6 +4,6 @@ Only truly shared components remain here. Service-specific utilities
 have been moved to their respective services.
 """
 
-from .db.simple_db import SimpleDB
+from lib.db import SimpleDB
 
 __all__ = ["SimpleDB"]

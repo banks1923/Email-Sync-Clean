@@ -14,7 +14,7 @@ from entity.main import EntityService
 # Direct service imports - service registry was removed as unused
 # Services are now imported directly when needed
 from gmail.main import GmailService
-from utilities.timeline.main import TimelineService
+from lib.timeline.main import TimelineService
 
 # Notes service removed - migrated to document pipeline
 
@@ -38,7 +38,7 @@ class ServiceLocator:
         Get vector service instance.
         """
         # Import directly since service registry was removed
-        from utilities.vector_store import get_vector_store
+        from lib.vector_store import get_vector_store
 
         return get_vector_store()
 
@@ -46,7 +46,7 @@ class ServiceLocator:
         """
         Get search functions - returns a dict of search functions.
         """
-        from search_intelligence import search, find_literal, vector_store_available
+        from lib.search import find_literal, search, vector_store_available
 
         # Return a dict with the functions since there's no service object
         return {
