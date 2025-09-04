@@ -1,3 +1,8 @@
+[project]
+name = "litigator-solo"
+version = "0.1.0"
+description = "Legal document analysis and search tool."
+
 [tool.black]
 line-length = 100
 target-version = ['py38', 'py39', 'py310', 'py311']

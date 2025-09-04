@@ -165,20 +165,22 @@ def _enrich_vector_results(vector_results: list[dict]) -> list[dict[str, Any]]:
 
             if content_id is not None:
                 try:
-                    # Look up content in content_unified table
+                    # Look up content in content_unified table, preferring substantive_text
                     content_rows = db.fetch(
-                        "SELECT id, source_id, source_type, title, body FROM content_unified WHERE id = ? LIMIT 1",
+                        "SELECT id, source_id, source_type, title, body, substantive_text FROM content_unified WHERE id = ? LIMIT 1",
                         (int(content_id),),
                     )
 
                     if content_rows:
                         row = content_rows[0]
+                        # Prefer substantive_text if available, otherwise use body
+                        content_text = row["substantive_text"] if row.get("substantive_text") else row["body"]
                         content = {
                             "content_id": str(row["id"]),
                             "source_id": row["source_id"],
                             "source_type": row["source_type"],
                             "title": row["title"] or "No title",
-                            "content": row["body"] or "No content",
+                            "content": content_text or "No content",
                         }
 
                         # Add metadata from payload if available
@@ -269,7 +271,7 @@ def find_literal(
         # Execute query
         where_clause = " OR ".join(where_clauses)
         query = f"""
-            SELECT id, source_id, source_type, title, body, metadata
+            SELECT id, source_id, source_type, title, body, substantive_text, metadata
             FROM content_unified
             WHERE {where_clause}
             ORDER BY created_at DESC
@@ -281,12 +283,14 @@ def find_literal(
         
         # Format results
         for row in rows or []:
+            # Prefer substantive_text if available, otherwise use body
+            content_text = row["substantive_text"] if row.get("substantive_text") else row["body"]
             results.append({
                 "content_id": str(row["id"]),
                 "source_id": row["source_id"],
                 "source_type": row["source_type"],
                 "title": row["title"] or "No title",
-                "content": row["body"] or "No content",
+                "content": content_text or "No content",
                 "metadata": row.get("metadata"),
                 "match_type": "literal",
             })

@@ -60,17 +60,22 @@ Patch these with `unittest.mock.patch` in tests to inject controlled doubles. De
 ## Current System Status
 
 **Core Services Working**:
-- Gmail sync with v2.0 message deduplication (302 emails processed)
-- Keyword search operational, semantic search ready
-- Legal BERT embeddings via Qdrant vector store
+- Gmail sync with v2.0 message deduplication (420 emails processed)
+- Semantic search fully operational via Qdrant
+- Legal BERT embeddings with 1024D vectors
 - Entity extraction with 97% email parsing coverage
 - SQLite database with WAL mode, foreign key integrity
+- **NEW**: Substantive text extraction with boilerplate stripping
+- **NEW**: All DB access consolidated through SimpleDB
+- **NEW**: Zero technical debt - all bandaid solutions removed
 
 **Development State**:
 - Clean flat architecture, no complex abstractions
 - Email parsing pipeline stable and tested
 - Chunk pipeline implemented (Task 25 complete)
 - Debug logging enabled (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
+- **NEW**: Pre-commit hooks prevent direct sqlite3 usage
+- **NEW**: All services use direct function APIs (no service classes)
 
 ## READY: Quick Start (Development)
 

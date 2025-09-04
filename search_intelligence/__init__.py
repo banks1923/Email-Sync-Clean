@@ -79,35 +79,8 @@ def find_literal(
     return _find_literal(pattern, limit, fields)
 
 
-# For backward compatibility - will be deprecated
-def semantic_search(query: str, limit: int = 10, filters: dict = None) -> List[dict]:
-    """Deprecated: Use search() instead."""
-    return search(query, limit, filters)
-
-
-# Legacy singleton support - deprecated
-def get_search_intelligence_service():
-    """
-    Deprecated: Returns a compatibility shim for legacy code.
-    New code should use search() and find_literal() directly.
-    """
-    import warnings
-    warnings.warn(
-        "get_search_intelligence_service() is deprecated. "
-        "Use search() and find_literal() functions directly.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    
-    # Return compatibility shim from main.py
-    from .main import SearchIntelligenceService
-    return SearchIntelligenceService()
-
-
 __all__ = [
     "search",
-    "find_literal",
+    "find_literal", 
     "vector_store_available",
-    "semantic_search",  # Deprecated
-    "get_search_intelligence_service",  # Deprecated
 ]

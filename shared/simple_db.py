@@ -373,6 +373,7 @@ class SimpleDB:
         metadata: dict | None = None,
         source_path: str | None = None,
         message_hash: str | None = None,  # New parameter for email messages
+        strip_boilerplate: bool = True,  # New parameter to enable boilerplate stripping
     ) -> str:
         """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID.
 
@@ -381,12 +382,22 @@ class SimpleDB:
             title: Content title or email subject
             content: Full text content
             metadata: Optional metadata dict
-            source_path: Optional source file path
+            source_path: DEPRECATED - will be removed in v3.0 (not used)
             message_hash: For email_message type, the SHA256 hash to use as source_id
+            strip_boilerplate: Whether to strip boilerplate and populate substantive_text
 
         Returns:
             Content ID as string
         """
+        # Add deprecation warning for source_path
+        if source_path is not None:
+            import warnings
+            warnings.warn(
+                "source_path parameter is deprecated and will be removed in v3.0. This parameter is not used.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+        
         # Map external content types to schema's allowed source_type values
         def _map_source_type(t: str) -> str:
             mapping = {
@@ -402,9 +413,19 @@ class SimpleDB:
 
         schema_source_type = _map_source_type(content_type)
 
-        # Calculate content hash for deduplication
+        # Strip boilerplate if enabled
+        substantive_text = None
+        if strip_boilerplate and content:
+            from shared.boilerplate_stripper import strip_boilerplate, compute_content_hash
+            substantive_text = strip_boilerplate(content)
+            # Use substantive text for hash if available
+            content_for_hash = substantive_text if substantive_text else content
+        else:
+            content_for_hash = content
+        
+        # Calculate content hash for deduplication (using substantive text if available)
         normalized_title = (title or "").strip().lower()
-        normalized_content = (content or "").strip()
+        normalized_content = (content_for_hash or "").strip()
         hash_input = f"{content_type}:{normalized_title}:{normalized_content}"
         content_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
 
@@ -437,14 +458,15 @@ class SimpleDB:
 
         cursor = self.execute(
             """
-            INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, sha256, ready_for_embedding, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, substantive_text, sha256, ready_for_embedding, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 schema_source_type,
                 source_id,
                 title,
-                content,  # Maps to body
+                content,  # Original content to body
+                substantive_text,  # Stripped content to substantive_text
                 content_hash,  # Maps to sha256
                 1,  # Mark ready for embedding
                 meta_json,
@@ -555,12 +577,28 @@ class SimpleDB:
             content_type: Type of content (ignored - use source_type)
             title: Content title
             content: Actual content text
-            metadata: Optional metadata dict (ignored - not in schema)
-            parent_content_id: Optional parent content ID (ignored - not in schema)
+            metadata: DEPRECATED - will be removed in v3.0 (not used)
+            parent_content_id: DEPRECATED - will be removed in v3.0 (not used)
 
         Returns:
             Content ID from database
         """
+        # Add deprecation warnings for unused parameters
+        if metadata is not None:
+            import warnings
+            warnings.warn(
+                "metadata parameter is deprecated and will be removed in v3.0. This parameter is not used.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+        
+        if parent_content_id is not None:
+            import warnings
+            warnings.warn(
+                "parent_content_id parameter is deprecated and will be removed in v3.0. This parameter is not used.",
+                DeprecationWarning,
+                stacklevel=2
+            )
         import hashlib
 
         # Convert external_id to numeric source_id

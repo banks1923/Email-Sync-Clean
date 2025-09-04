@@ -3,10 +3,11 @@ Quarantine Recovery CLI Handler Manages failed documents with retry logic and
 purging.
 """
 
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from shared.simple_db import SimpleDB
 
 
 class QuarantineHandler:
@@ -18,17 +19,14 @@ class QuarantineHandler:
         from config.settings import DatabaseSettings
 
         self.db_path = DatabaseSettings().emails_db_path
+        self.db = SimpleDB(self.db_path)
         self.quarantine_dir = Path("data/quarantine")
 
     def list_quarantined(self, limit: int = 50) -> list[dict[str, Any]]:
         """
         List documents in quarantine.
         """
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        cursor.execute(
+        result = self.db.query(
             """
             SELECT DISTINCT 
                 sha256, file_name, status, 
@@ -45,7 +43,7 @@ class QuarantineHandler:
         )
 
         results = []
-        for row in cursor.fetchall():
+        for row in result.get("data", []):
             results.append(
                 {
                     "sha256": row["sha256"][:8] + "..." if row["sha256"] else "N/A",
@@ -64,11 +62,8 @@ class QuarantineHandler:
         """
         Retry processing a quarantined document.
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
         # Find full SHA256
-        cursor.execute(
+        result = self.db.query(
             """
             SELECT DISTINCT sha256, file_path, file_name
             FROM documents 
@@ -78,17 +73,17 @@ class QuarantineHandler:
             (sha256_prefix + "%",),
         )
 
-        row = cursor.fetchone()
-        if not row:
+        rows = result.get("data", [])
+        if not rows:
             return {
                 "success": False,
                 "error": f"No quarantined document found with SHA {sha256_prefix}",
             }
 
-        sha256, file_path, file_name = row
+        sha256, file_path, file_name = rows[0]['sha256'], rows[0]['file_path'], rows[0]['file_name']
 
         # Check if retry is allowed
-        cursor.execute(
+        attempt_result = self.db.query(
             """
             SELECT attempt_count, next_retry_at 
             FROM documents 
@@ -98,9 +93,9 @@ class QuarantineHandler:
             (sha256,),
         )
 
-        attempt_row = cursor.fetchone()
-        if attempt_row:
-            attempts, next_retry = attempt_row
+        attempt_rows = attempt_result.get("data", [])
+        if attempt_rows:
+            attempts, next_retry = attempt_rows[0]['attempt_count'], attempt_rows[0]['next_retry_at']
             if attempts >= 3:
                 return {
                     "success": False,
@@ -111,7 +106,7 @@ class QuarantineHandler:
                 return {"success": False, "error": f"Retry not allowed until {next_retry}"}
 
         # Reset status for retry
-        cursor.execute(
+        self.db.execute_query(
             """
             UPDATE documents 
             SET status = 'pending_retry',
@@ -120,9 +115,6 @@ class QuarantineHandler:
         """,
             (sha256,),
         )
-
-        conn.commit()
-        conn.close()
 
         # Trigger reprocessing
         from pdf.main import PDFService
@@ -151,9 +143,6 @@ class QuarantineHandler:
         """
         Purge old quarantined documents.
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
         query = """
             DELETE FROM documents 
             WHERE status IN ('failed', 'quarantined')
@@ -165,11 +154,8 @@ class QuarantineHandler:
         if permanent_only:
             query += " AND attempt_count >= 3"
 
-        cursor.execute(query)
-        deleted = cursor.rowcount
-
-        conn.commit()
-        conn.close()
+        result = self.db.execute_query(query)
+        deleted = result.get("rows_affected", 0)
 
         # Also clean up quarantine directory
         cleaned_files = 0
@@ -186,10 +172,7 @@ class QuarantineHandler:
         """
         Get quarantine statistics.
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute(
+        result = self.db.query(
             """
             SELECT 
                 COUNT(DISTINCT sha256) as unique_docs,
@@ -203,15 +186,17 @@ class QuarantineHandler:
         """
         )
 
-        row = cursor.fetchone()
-        conn.close()
+        rows = result.get("data", [])
+        row = rows[0] if rows else {}
 
         return {
-            "unique_documents": row[0] or 0,
-            "total_chunks": row[1] or 0,
-            "retry_eligible": (row[2] or 0) + (row[3] or 0),
-            "permanent_failures": row[4] or 0,
-            "average_attempts": round(row[5] or 0, 1),
+            "unique_documents": row.get('unique_docs', 0) or 0,
+            "total_chunks": row.get('total_chunks', 0) or 0,
+            "first_attempt": row.get('first_attempt', 0) or 0,
+            "second_attempt": row.get('second_attempt', 0) or 0,
+            "permanent_failures": row.get('permanent_failures', 0) or 0,
+            "average_attempts": round(row.get('avg_attempts', 0) or 0, 1),
+            "retry_eligible": (row.get('first_attempt', 0) or 0) + (row.get('second_attempt', 0) or 0),
         }
 
 

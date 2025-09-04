@@ -44,11 +44,16 @@ class ServiceLocator:
 
     def get_search_service(self, **kwargs):
         """
-        Get search service instance.
+        Get search functions - returns a dict of search functions.
         """
-        from search_intelligence import get_search_intelligence_service
+        from search_intelligence import search, find_literal, vector_store_available
 
-        return get_search_intelligence_service()
+        # Return a dict with the functions since there's no service object
+        return {
+            "search": search,
+            "find_literal": find_literal,
+            "vector_store_available": vector_store_available
+        }
 
     def get_gmail_service(self, **kwargs):
         """

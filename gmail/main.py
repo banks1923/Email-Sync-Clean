@@ -22,7 +22,9 @@ except ImportError:
 
 from . import config as gmail_config
 from . import gmail_api as gmail_api_module
-from .storage import EmailStorage
+# EmailStorage removed - use SimpleDB directly
+import hashlib
+from gmail.validators import DateValidator, EmailValidator, InputSanitizer
 
 # Logger is now imported globally from loguru
 
@@ -53,9 +55,10 @@ class GmailService:
         self._gmail_timeout = gmail_timeout
         self._gmail_api_placeholder = object()
         self.gmail_api = self._gmail_api_placeholder  # populated lazily or mocked
-        self.storage = EmailStorage(db_path)
+        # Remove EmailStorage - use SimpleDB directly
         self.config = gmail_config.GmailConfig()
         self.db = SimpleDB(db_path)
+        self._ensure_email_tables()  # Initialize email-specific tables
         self.summarizer = get_document_summarizer()
 
         # Initialize advanced parsing services
@@ -198,7 +201,7 @@ class GmailService:
                 if not full_messages:
                     return {"success": True, "processed": 0, "message": "No messages to sync"}
 
-                save = self.storage.save_emails_batch(full_messages, batch_size=len(full_messages))
+                save = self._save_emails_batch(full_messages)
                 if save.get("success"):
                     # Generate summaries for new emails only
                     if save.get("inserted", 0) > 0:
@@ -272,7 +275,7 @@ class GmailService:
             if use_fast_batch:
                 batch_msgs = fetch.get("messages", [])
                 total_processed += len(batch_msgs)
-                save = self.storage.save_emails_batch(batch_msgs)
+                save = self._save_emails_batch(batch_msgs)
                 if save.get("success"):
                     total_saved += int(save.get("saved", 0))
                     total_duplicates += int(save.get("duplicates", 0))
@@ -327,7 +330,7 @@ class GmailService:
                 )
                 continue
 
-            save_result = self.storage.save_email(email_data)
+            save_result = self._save_email(email_data)
 
             if save_result["success"]:
                 synced_count += 1
@@ -542,7 +545,7 @@ class GmailService:
         errors = 0
 
         # First, maintain backward compatibility with existing email storage
-        save_result = self.storage.save_emails_batch(email_list, batch_size=len(email_list))
+        save_result = self._save_emails_batch(email_list)
 
         if save_result["success"]:
             processed += save_result["inserted"]
@@ -660,7 +663,7 @@ class GmailService:
             return {"success": False, "error": fetch.get("error", "fetch failed")}
 
         full_messages = fetch.get("messages", [])
-        save = self.storage.save_emails_batch(full_messages)
+        save = self._save_emails_batch(full_messages)
 
         if not save.get("success"):
             return {"success": False, "error": save.get("error", "save failed")}
@@ -753,6 +756,117 @@ class GmailService:
         except Exception as e:
             # Don't fail email sync if summarization fails
             logger.warning(f"Could not generate email summaries: {e}")
+
+    def _ensure_email_tables(self):
+        """Create email-specific tables if they don't exist."""
+        # Create emails table
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS emails (
+                id INTEGER PRIMARY KEY,
+                message_id TEXT UNIQUE NOT NULL,
+                subject TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                recipient_to TEXT,
+                content TEXT,
+                datetime_utc DATETIME,
+                content_hash TEXT UNIQUE,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create sync_state table
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS sync_state (
+                account_email TEXT PRIMARY KEY,
+                last_history_id TEXT,
+                last_sync_time DATETIME,
+                last_message_id TEXT,
+                sync_status TEXT DEFAULT 'idle',
+                sync_in_progress BOOLEAN DEFAULT 0,
+                messages_processed INTEGER DEFAULT 0,
+                duplicates_found INTEGER DEFAULT 0,
+                error_count INTEGER DEFAULT 0,
+                last_error TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    def _save_email(self, email_data: dict) -> dict:
+        """Save single email to database."""
+        # Validate required fields
+        if not email_data.get("message_id") or not email_data.get("sender"):
+            return {"success": False, "error": "Missing required fields"}
+        
+        # Generate content hash
+        content_hash = hashlib.sha256(
+            f"{email_data.get('subject', '')}|{email_data.get('sender', '')}|{email_data.get('datetime_utc', '')}|{email_data.get('content', '')}".encode()
+        ).hexdigest()
+        
+        # Insert email
+        try:
+            self.db.execute_query(
+                """INSERT OR IGNORE INTO emails 
+                (message_id, subject, sender, recipient_to, content, datetime_utc, content_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    email_data["message_id"],
+                    email_data.get("subject", ""),
+                    email_data["sender"],
+                    email_data.get("recipient_to", ""),
+                    email_data.get("content", ""),
+                    email_data.get("datetime_utc", ""),
+                    content_hash
+                )
+            )
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _save_emails_batch(self, email_list: list) -> dict:
+        """Save batch of emails to database."""
+        if not email_list:
+            return {"success": True, "total": 0, "inserted": 0}
+        
+        inserted = 0
+        errors = []
+        
+        for email_data in email_list:
+            # Validate
+            if not email_data.get("message_id") or not email_data.get("sender"):
+                errors.append({"email": email_data.get("message_id"), "error": "Missing fields"})
+                continue
+                
+            # Generate hash
+            content_hash = hashlib.sha256(
+                f"{email_data.get('subject', '')}|{email_data.get('sender', '')}|{email_data.get('datetime_utc', '')}|{email_data.get('content', '')}".encode()
+            ).hexdigest()
+            
+            # Insert
+            result = self.db.execute_query(
+                """INSERT OR IGNORE INTO emails 
+                (message_id, subject, sender, recipient_to, content, datetime_utc, content_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    email_data["message_id"],
+                    email_data.get("subject", ""),
+                    email_data["sender"],
+                    email_data.get("recipient_to", ""),
+                    email_data.get("content", ""),
+                    email_data.get("datetime_utc", ""),
+                    content_hash
+                )
+            )
+            if result.get("rows_affected", 0) > 0:
+                inserted += 1
+                
+        return {
+            "success": True,
+            "total": len(email_list),
+            "inserted": inserted,
+            "ignored": len(email_list) - inserted - len(errors),
+            "errors": errors
+        }
 
 
 def main() -> None:

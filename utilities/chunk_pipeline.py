@@ -20,8 +20,8 @@ from datetime import datetime
 from loguru import logger
 
 from shared.simple_db import SimpleDB
-from src.chunker.document_chunker import DocumentChunker, DocumentType
-from src.quality.quality_score import ChunkQualityScorer
+from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
+from infrastructure.documents.quality.quality_score import ChunkQualityScorer
 
 
 class ChunkPipeline:

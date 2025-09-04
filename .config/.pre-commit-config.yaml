@@ -46,5 +46,15 @@ repos:
         args: ['--config-file', 'pyproject.toml']
         exclude: '^tests/'
 
+  # Custom database access check
+  - repo: local
+    hooks:
+      - id: check-sqlite-usage
+        name: Check for direct sqlite3.connect() usage
+        entry: bash -c 'if grep -r "sqlite3\.connect(" --include="*.py" --exclude-dir=".git" --exclude-dir="tests" --exclude-dir="scripts" --exclude="simple_db.py" . 2>/dev/null | grep -v "^Binary file" | grep -v "DEPRECATED"; then echo "ERROR: Direct sqlite3.connect() detected. Use SimpleDB instead."; exit 1; fi'
+        language: system
+        pass_filenames: false
+        types: [python]
+
 default_language_version:
   python: python3

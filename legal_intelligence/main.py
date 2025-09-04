@@ -73,7 +73,7 @@ class LegalIntelligenceService:
     relationship mapping, and missing document prediction.
     """
 
-    def __init__(self, db_path: str = "data/emails.db") -> None:
+    def __init__(self, db_path: str = "data/system_data/emails.db") -> None:
         """
         Initialize Legal Intelligence Service with integrated services.
         """
@@ -838,7 +838,7 @@ class LegalIntelligenceService:
         return summary
 
 
-def get_legal_intelligence_service(db_path: str = "data/emails.db") -> LegalIntelligenceService:
+def get_legal_intelligence_service(db_path: str = "data/system_data/emails.db") -> LegalIntelligenceService:
     """Factory function to create LegalIntelligenceService instance.
 
     Args:

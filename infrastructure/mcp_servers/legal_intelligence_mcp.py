@@ -9,7 +9,9 @@ document intelligence.
 
 import asyncio
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Add project root to path - flexible path resolution
 try:
@@ -31,20 +33,403 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-# Import only infrastructure layer dependencies
+# Import underlying services directly
 try:
+    from entity.main import EntityService
     from shared.simple_db import SimpleDB
+    from utilities.embeddings.embedding_service import get_embedding_service
+    from utilities.timeline.main import TimelineService
+    from loguru import logger
 
     SERVICES_AVAILABLE = True
 except ImportError as e:
     print(f"Infrastructure services not available: {e}", file=sys.stderr)
     SERVICES_AVAILABLE = False
 
-# Patchable factory hook for tests
-def get_legal_intelligence_service(db_path: str | None = None):
-    from legal_intelligence import get_legal_intelligence_service as _factory
+# Standard legal document patterns moved from legal_intelligence service
+LEGAL_DOC_PATTERNS = {
+    "complaint": ["complaint", "petition", "initial filing"],
+    "answer": ["answer", "response", "reply"],
+    "motion": ["motion", "request", "application"],
+    "order": ["order", "ruling", "judgment", "decree"],
+    "discovery": ["interrogatories", "deposition", "request for production"],
+    "notice": ["notice", "summons", "subpoena"],
+    "brief": ["brief", "memorandum", "argument"],
+    "settlement": ["settlement", "agreement", "stipulation"],
+    "transcript": ["transcript", "hearing", "proceedings"],
+}
 
-    return _factory(db_path) if db_path else _factory()
+# Patchable factory hook for tests - now returns a simple dict structure
+def get_legal_intelligence_service(db_path: str | None = None):
+    """Create a simple service dict with the underlying services for compatibility with tests."""
+    if not SERVICES_AVAILABLE:
+        return None
+        
+    db_path = db_path or "data/system_data/emails.db"
+    return {
+        'db': SimpleDB(db_path),
+        'entity_service': EntityService(),
+        'timeline_service': TimelineService(),
+        'embedding_service': get_embedding_service()
+    }
+
+# Helper functions from legal_intelligence service
+
+def _get_case_documents(case_number: str, db: SimpleDB) -> list[dict[str, Any]]:
+    """Get all documents related to a case number."""
+    search_results = db.search_content(case_number, limit=100)
+    
+    # Filter to ensure relevance
+    case_docs = []
+    case_upper = case_number.upper()
+    for doc in search_results:
+        # Check if case number is in title or content (case-insensitive)
+        if (
+            case_upper in doc.get("title", "").upper()
+            or case_upper in doc.get("body", "").upper()
+        ):
+            case_docs.append(doc)
+    
+    return case_docs
+
+def _identify_document_types(documents: list[dict]) -> set[str]:
+    """Identify types of legal documents present."""
+    identified_types = set()
+    
+    for doc in documents:
+        title = doc.get("title", "").lower()
+        content_preview = doc.get("body", "")[:500].lower()
+        
+        for doc_type, patterns in LEGAL_DOC_PATTERNS.items():
+            for pattern in patterns:
+                if pattern in title or pattern in content_preview:
+                    identified_types.add(doc_type)
+                    break
+    
+    return identified_types
+
+def _determine_case_type(documents: list[dict]) -> str:
+    """Determine the type of legal case from documents."""
+    doc_types = _identify_document_types(documents)
+    
+    if "complaint" in doc_types:
+        # Check for specific case type indicators
+        for doc in documents:
+            content = doc.get("body", "").lower()
+            if "unlawful detainer" in content:
+                return "unlawful_detainer"
+            elif "personal injury" in content:
+                return "personal_injury"  
+            elif "breach of contract" in content:
+                return "contract"
+            elif "divorce" in content or "dissolution" in content:
+                return "family_law"
+    
+    return "civil_litigation"  # Default
+
+def _get_expected_document_sequence(case_type: str) -> list[str]:
+    """Get expected document sequence for a case type."""
+    sequences = {
+        "unlawful_detainer": [
+            "complaint", "summons", "answer", "motion", "order", "judgment", "notice"
+        ],
+        "civil_litigation": [
+            "complaint", "summons", "answer", "discovery", "motion", "brief", "order", "judgment"
+        ],
+        "contract": [
+            "complaint", "answer", "discovery", "motion", "brief", "settlement", "order"
+        ],
+        "family_law": [
+            "petition", "response", "discovery", "motion", "order", "settlement", "judgment"
+        ]
+    }
+    
+    return sequences.get(case_type, sequences["civil_litigation"])
+
+def _calculate_missing_confidence(doc_type: str, existing: set[str], documents: list[dict]) -> float:
+    """Calculate confidence that a document type is missing."""
+    confidence = 0.5  # Base confidence
+    
+    # Adjust based on typical sequence
+    if doc_type == "answer" and "complaint" in existing:
+        confidence = 0.8
+    elif doc_type == "order" and "motion" in existing:
+        confidence = 0.7
+    elif doc_type == "judgment" and len(documents) > 5:
+        confidence = 0.6
+    
+    # Check for references to missing document
+    for doc in documents:
+        content = doc.get("body", "").lower()
+        if doc_type in content:
+            confidence += 0.2
+            break
+    
+    return min(confidence, 1.0)
+
+def _get_missing_reason(doc_type: str, existing: set[str]) -> str:
+    """Get reason why a document might be missing."""
+    reasons = {
+        "answer": "Expected response to complaint not found",
+        "discovery": "No discovery documents found despite case progression",
+        "motion": "Case appears to lack expected motions",
+        "order": "Court orders expected but not found",
+        "judgment": "Case may be missing final judgment",
+        "settlement": "Settlement documents not found",
+        "transcript": "Hearing transcripts appear to be missing"
+    }
+    
+    return reasons.get(doc_type, f"Expected {doc_type} not found in case documents")
+
+def _extract_dates_from_document(document: dict) -> list[dict]:
+    """Extract dates and their context from a document."""
+    dates = []
+    content = document.get("content", "")
+    
+    import re
+    date_pattern = r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\w+ \d{1,2}, \d{4})\b"
+    
+    matches = re.finditer(date_pattern, content)
+    for match in matches:
+        date_str = match.group()
+        context = content[max(0, match.start() - 50) : min(len(content), match.end() + 50)]
+        
+        dates.append({
+            "date": date_str,
+            "type": _classify_date_type(context),
+            "description": context.strip(),
+            "confidence": 0.8
+        })
+    
+    return dates
+
+def _classify_date_type(context: str) -> str:
+    """Classify the type of date based on context."""
+    context_lower = context.lower()
+    
+    if "filed" in context_lower:
+        return "filing_date"
+    elif "hearing" in context_lower:
+        return "hearing_date"
+    elif "served" in context_lower:
+        return "service_date"
+    elif "due" in context_lower or "deadline" in context_lower:
+        return "deadline"
+    else:
+        return "event_date"
+
+def _identify_timeline_gaps(events: list[dict]) -> list[dict]:
+    """Identify significant gaps in the timeline."""
+    gaps = []
+    
+    for i in range(len(events) - 1):
+        current = events[i]
+        next_event = events[i + 1]
+        
+        # Parse dates (simplified - should use proper date parsing)
+        gap_days = 30  # Placeholder
+        
+        if gap_days > 60:  # Significant gap
+            gaps.append({
+                "start": current["date"],
+                "end": next_event["date"],
+                "duration_days": gap_days,
+                "significance": "high" if gap_days > 120 else "medium"
+            })
+    
+    return gaps
+
+def _identify_milestones(events: list[dict]) -> list[dict]:
+    """Identify key milestones in the case timeline."""
+    milestones = []
+    milestone_types = ["filing_date", "hearing_date", "judgment_date"]
+    
+    for event in events:
+        if event.get("type") in milestone_types:
+            milestones.append(event)
+    
+    return milestones
+
+def _calculate_document_similarity(doc1: dict, doc2: dict) -> float:
+    """Calculate similarity between two documents using embeddings."""
+    try:
+        # Get embeddings
+        text1 = doc1.get("content", "")[:2000]  # Limit for performance
+        text2 = doc2.get("content", "")[:2000]
+        
+        if not text1 or not text2:
+            return 0.0
+        
+        # Simple word overlap similarity (fallback if embeddings not available)
+        words1 = set(text1.lower().split())
+        words2 = set(text2.lower().split())
+        
+        if not words1 or not words2:
+            return 0.0
+            
+        intersection = len(words1 & words2)
+        union = len(words1 | words2)
+        
+        return intersection / union if union > 0 else 0.0
+        
+    except Exception as e:
+        if SERVICES_AVAILABLE:
+            logger.warning(f"Error calculating similarity: {e}")
+        return 0.0
+
+def _generate_case_timeline(documents: list[dict]) -> dict[str, Any]:
+    """Generate timeline from case documents."""
+    events = []
+    
+    for doc in documents:
+        # Extract dates from document
+        dates = _extract_dates_from_document(doc)
+        
+        for date_info in dates:
+            event = {
+                "date": date_info["date"],
+                "type": date_info["type"],
+                "description": date_info["description"],
+                "document_id": doc.get("content_id"),
+                "document_title": doc.get("title"),
+                "confidence": date_info.get("confidence", 1.0)
+            }
+            events.append(event)
+    
+    # Sort by date
+    events.sort(key=lambda x: x["date"])
+    
+    # Identify timeline gaps
+    gaps = _identify_timeline_gaps(events)
+    
+    return {
+        "success": True,
+        "events": events,
+        "total_events": len(events),
+        "date_range": {
+            "start": events[0]["date"] if events else None,
+            "end": events[-1]["date"] if events else None
+        },
+        "gaps": gaps,
+        "milestones": _identify_milestones(events)
+    }
+
+def _build_case_relationships(documents: list[dict]) -> dict[str, Any]:
+    """Build relationship graph for case documents."""
+    nodes = []
+    edges = []
+    
+    # Add document nodes
+    for doc in documents:
+        node = {
+            "id": doc.get("content_id"),
+            "type": "document",
+            "title": doc.get("title"),
+            "metadata": {
+                "content_type": doc.get("source_type"),
+                "date": doc.get("datetime_utc")
+            }
+        }
+        nodes.append(node)
+    
+    # Find document similarities and create edges
+    for i, doc1 in enumerate(documents):
+        for doc2 in documents[i + 1:]:
+            similarity = _calculate_document_similarity(doc1, doc2)
+            
+            if similarity > 0.5:  # Threshold for relationship
+                edge = {
+                    "source": doc1.get("content_id"),
+                    "target": doc2.get("content_id"),
+                    "type": "similar_to",
+                    "strength": similarity
+                }
+                edges.append(edge)
+    
+    return {
+        "success": True,
+        "nodes": nodes,
+        "edges": edges,
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "graph_density": (
+            len(edges) / (len(nodes) * (len(nodes) - 1) / 2) if len(nodes) > 1 else 0
+        )
+    }
+
+def _extract_case_entities(documents: list[dict]) -> dict[str, Any]:
+    """Extract and consolidate entities from case documents."""
+    all_entities = []
+    entity_relationships = []
+    
+    entity_service = EntityService()
+    
+    for doc in documents:
+        content = doc.get("body", "")
+        if content:
+            # Use extract_email_entities with a dummy message_id
+            result = entity_service.extract_email_entities(
+                message_id=f"doc_{doc.get('id', 'unknown')}", 
+                content=content
+            )
+            if result.get("success"):
+                entities = result.get("entities", [])
+                all_entities.extend(entities)
+                
+                # Get relationships if available
+                relationships = result.get("relationships", [])
+                entity_relationships.extend(relationships)
+    
+    # Consolidate entities by type
+    consolidated = _consolidate_entities(all_entities)
+    
+    return {
+        "total_entities": len(all_entities),
+        "unique_entities": len(consolidated),
+        "by_type": _group_entities_by_type(consolidated),
+        "relationships": entity_relationships,
+        "key_parties": _identify_key_parties(consolidated)
+    }
+
+def _consolidate_entities(entities: list[dict]) -> list[dict]:
+    """Consolidate duplicate entities."""
+    consolidated = {}
+    
+    for entity in entities:
+        key = (entity.get("text", "").lower(), entity.get("label", ""))
+        
+        if key not in consolidated:
+            consolidated[key] = entity
+        else:
+            # Merge confidence scores
+            existing = consolidated[key]
+            existing["confidence"] = max(
+                existing.get("confidence", 0), entity.get("confidence", 0)
+            )
+    
+    return list(consolidated.values())
+
+def _group_entities_by_type(entities: list[dict]) -> dict[str, list]:
+    """Group entities by their type/label."""
+    grouped = {}
+    
+    for entity in entities:
+        label = entity.get("label", "UNKNOWN")
+        if label not in grouped:
+            grouped[label] = []
+        grouped[label].append(entity.get("text"))
+    
+    return grouped
+
+def _identify_key_parties(entities: list[dict]) -> list[dict]:
+    """Identify key parties in the case."""
+    # Focus on PERSON and ORG entities with high frequency
+    person_org = [e for e in entities if e.get("label") in ["PERSON", "ORG"]]
+    
+    # Sort by confidence
+    person_org.sort(key=lambda x: x.get("confidence", 0), reverse=True)
+    
+    return person_org[:10]  # Top 10 key parties
 
 
 def legal_extract_entities(content: str, case_id: str | None = None) -> str:
@@ -61,9 +446,15 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
             return "Legal intelligence services not available"
 
     try:
-        service = get_legal_intelligence_service()
-        # Extract entities using the legal intelligence service
-        result = service.extract_legal_entities(content, case_id=case_id)
+        # Use EntityService directly
+        entity_service = EntityService()
+        
+        # Use extract_email_entities with dummy message_id
+        message_id = f"case_{case_id}" if case_id else "text_analysis"
+        result = entity_service.extract_email_entities(
+            message_id=message_id, 
+            content=content
+        )
 
         # Treat missing 'success' as success to allow simple mocks in tests
         if result.get("success") is False:
@@ -129,10 +520,16 @@ def legal_timeline_events(
         return "Legal intelligence services not available"
 
     try:
-        legal_service = get_legal_intelligence_service()
-
-        # Generate case timeline using the legal intelligence service
-        timeline_result = legal_service.generate_case_timeline(case_number)
+        db = SimpleDB()
+        
+        # Get case documents
+        case_documents = _get_case_documents(case_number, db)
+        
+        if not case_documents:
+            return f"❌ No documents found for case {case_number}"
+        
+        # Generate timeline from case documents
+        timeline_result = _generate_case_timeline(case_documents)
 
         if not timeline_result.get("success"):
             return f"❌ Timeline generation failed: {timeline_result.get('error', 'No timeline data found')}"

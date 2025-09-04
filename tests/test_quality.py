@@ -5,14 +5,9 @@ Tests quality score calculation and chunk filtering.
 """
 
 import pytest
-import sys
-import os
 
-# Add src to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.chunker.document_chunker import DocumentChunk
-from src.quality.quality_score import ChunkQualityScorer, quality_gate, QualitySettings
+from infrastructure.documents.chunker.document_chunker import DocumentChunk
+from infrastructure.documents.quality.quality_score import ChunkQualityScorer, quality_gate, QualitySettings
 
 
 class TestQualitySettings:
@@ -418,7 +413,7 @@ class TestIntegrationWithChunker:
     
     def test_chunker_with_quality_scoring(self):
         """Test that chunker can apply quality scoring."""
-        from src.chunker.document_chunker import DocumentChunker, DocumentType
+        from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
         
         # Create chunker with quality scoring
         chunker = DocumentChunker(
@@ -448,7 +443,7 @@ class TestIntegrationWithChunker:
     
     def test_quality_gate_with_chunker(self):
         """Test using quality gate decorator with chunker output."""
-        from src.chunker.document_chunker import DocumentChunker, DocumentType
+        from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
         
         chunker = DocumentChunker(
             target_tokens=30,

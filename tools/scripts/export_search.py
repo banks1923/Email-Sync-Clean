@@ -150,7 +150,7 @@ def export_to_html(query, limit=20):
         <div class="content" id="content-{i}">
             {html.escape(display_content) if display_content else '<em>No content preview available</em>'}
         </div>
-        {f'<span class="expand-btn" id="btn-{i}" onclick="toggleContent({i}, \\"{full_content_js}\\", \\"{preview_js}\\")">Show full content</span>' if len(content) > 500 else ''}
+        {f'<span class="expand-btn" id="btn-{i}" onclick="toggleContent({i}, &quot;{full_content_js}&quot;, &quot;{preview_js}&quot;)">Show full content</span>' if len(content) > 500 else ''}
     </div>
 """
 

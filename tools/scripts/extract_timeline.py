@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from utilities.timeline import TimelineService
 
 
-def extract_timeline_from_database(min_confidence: str = "MEDIUM") -> dict:
+def extract_timeline_from_database(_ = "MEDIUM") -> dict:
     """
     Extract timeline events from database content.
     """

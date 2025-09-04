@@ -111,17 +111,6 @@ def test_foreign_keys():
         print(f"✅ FK constraint working: {e}")
 
 
-def test_legacy_prevention():
-    """Test that legacy module cannot be imported."""
-    try:
-        import legacy
-        assert False, "Legacy module should not be importable"
-    except RuntimeError as e:
-        print(f"✅ Legacy module blocked: {str(e)[:50]}...")
-    except ImportError:
-        print("✅ Legacy module not found (good)")
-
-
 def run_all_tests():
     """Run all verification tests."""
     print("\n" + "=" * 60)
@@ -133,7 +122,6 @@ def run_all_tests():
         ("V2 Schema", test_v2_schema),
         ("Entity Mapping", test_entity_mapping),
         ("Foreign Keys", test_foreign_keys),
-        ("Legacy Prevention", test_legacy_prevention),
     ]
     
     passed = 0

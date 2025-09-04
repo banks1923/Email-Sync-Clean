@@ -20,9 +20,26 @@ def search_emails(query, limit=5, hybrid=True, mode="semantic"):
     Args:
         query: Search query string
         limit: Maximum number of results
-        hybrid: Legacy parameter (ignored - always uses semantic)
-        mode: Legacy parameter (ignored - always semantic)
+        hybrid: DEPRECATED - will be removed in v3.0 (ignored - always uses semantic)
+        mode: DEPRECATED - will be removed in v3.0 (ignored - always semantic)
     """
+    # Add deprecation warnings for legacy parameters
+    if hybrid is not True:
+        import warnings
+        warnings.warn(
+            "hybrid parameter is deprecated and will be removed in v3.0. Semantic search is always used.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+    
+    if mode != "semantic":
+        import warnings
+        warnings.warn(
+            "mode parameter is deprecated and will be removed in v3.0. Semantic search is always used.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+    
     print(f"🧠 Semantic Search for: '{query}'")
     get_locator()
     

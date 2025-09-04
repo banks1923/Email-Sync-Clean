@@ -6,13 +6,8 @@ Tests token-based chunking with sentence awareness and overlap.
 
 import pytest
 from pathlib import Path
-import sys
-import os
 
-# Add src to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.chunker.document_chunker import DocumentChunker, DocumentChunk, DocumentType
+from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentChunk, DocumentType
 
 
 class TestDocumentChunk:

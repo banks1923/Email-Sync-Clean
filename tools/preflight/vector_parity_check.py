@@ -23,13 +23,14 @@ Exit codes:
 
 import json
 import os
-import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from shared.simple_db import SimpleDB
 
 
 def _bool(env, default=False):
@@ -43,19 +44,19 @@ def count_db_eligible(db_path: str) -> int:
     """
     Count eligible content in the database.
     """
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
+    db = SimpleDB(db_path)
     # Count content that has embeddings (already processed)
-    cur.execute(
+    result = db.query(
         """
         SELECT COUNT(DISTINCT c.id) 
         FROM content_unified c
         INNER JOIN embeddings e ON c.id = e.content_id
     """
     )
-    n = cur.fetchone()[0]
-    conn.close()
-    return int(n)
+    rows = result.get("data", [])
+    if rows and rows[0]:
+        return int(rows[0].get('COUNT(DISTINCT c.id)', 0))
+    return 0
 
 
 def qdrant_client():

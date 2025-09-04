@@ -146,7 +146,7 @@ def _calculate_snippet_score(snippet: str, query_terms: set) -> float:
 
 
 @lru_cache(maxsize=128)
-def _cached_snippet_extraction(text_hash: str, query: str, window_size: int) -> str:
+def _cached_snippet_extraction(_, query: str, window_size: int) -> str:
     """
     Cached version of snippet extraction for performance.
     """

@@ -273,25 +273,24 @@ class ServiceTestHarness:
         """
         Test search intelligence service.
         """
-        from search_intelligence import get_search_intelligence_service
+        from search_intelligence import search, find_literal, vector_store_available
 
-        search = get_search_intelligence_service()
         details = {}
 
-        # Smoke test
-        health = search.health()
-        details["status"] = health.get("status", "unknown")
+        # Smoke test - check if vector store is available
+        available = vector_store_available()
+        details["vector_store"] = "available" if available else "unavailable"
 
         if self.mode == "deep":
-            # Test search
-            results = search.search("test", limit=3)
+            # Test semantic search
+            results = search("test", limit=3)
             details["search_results"] = len(results)
 
-            # Test preprocessing
-            preprocessed = search.smart_search_with_preprocessing("legal contract", limit=3)
-            details["smart_search"] = len(preprocessed)
+            # Test literal search
+            literal_results = find_literal("test", limit=3)
+            details["literal_results"] = len(literal_results)
 
-        return health.get("status") == "healthy", details
+        return available, details
 
     def test_legal_intelligence(self) -> tuple[bool, dict]:
         """

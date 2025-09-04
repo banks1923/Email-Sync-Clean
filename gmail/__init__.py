@@ -14,7 +14,7 @@ from .config import GmailConfig
 from .gmail_api import GmailAPI
 from .main import GmailService
 from .oauth import GmailAuth
-from .storage import EmailStorage
+# EmailStorage removed - use SimpleDB directly
 
 
 def get_gmail_service():
@@ -26,7 +26,6 @@ def get_gmail_service():
 
 __all__ = [
     "GmailService",
-    "EmailStorage",
     "GmailAuth",
     "GmailAPI",
     "GmailConfig",

@@ -51,14 +51,11 @@ class EnhancedPDFStorage:
         Check if file hash already exists in database.
         """
         try:
-            import sqlite3
-
-            with sqlite3.connect(self._get_db().db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                cursor.execute("SELECT 1 FROM documents WHERE file_hash = ? LIMIT 1", (file_hash,))
-                result = cursor.fetchone() is not None
-            return result
+            cursor = self._get_db().execute(
+                "SELECT 1 FROM documents WHERE file_hash = ? LIMIT 1", 
+                (file_hash,)
+            )
+            return cursor.fetchone() is not None
         except Exception:
             return False
 
@@ -80,93 +77,87 @@ class EnhancedPDFStorage:
             file_size = os.path.getsize(pdf_path)
             modified_time = os.path.getmtime(pdf_path)
 
-            import sqlite3
+            db = self._get_db()
 
-            with sqlite3.connect(self._get_db().db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
+            # Detect schema differences for readiness column
+            cursor = db.execute("PRAGMA table_info(documents)")
+            cols = {row[1] for row in cursor.fetchall()}
+            ready_col = "ready_for_embedding" if "ready_for_embedding" in cols else (
+                "vector_processed" if "vector_processed" in cols else None
+            )
 
-                # Detect schema differences for readiness column
-                cursor.execute("PRAGMA table_info(documents)")
-                cols = {row[1] for row in cursor.fetchall()}
-                ready_col = "ready_for_embedding" if "ready_for_embedding" in cols else (
-                    "vector_processed" if "vector_processed" in cols else None
-                )
+            for chunk in chunks:
+                # Extract chunk data
+                chunk_id = chunk.get("chunk_id")
+                text = chunk.get("text", "")
+                chunk_index = chunk.get("chunk_index", 0)
 
-                for chunk in chunks:
-                    # Extract chunk data
-                    chunk_id = chunk.get("chunk_id")
-                    text = chunk.get("text", "")
-                    chunk_index = chunk.get("chunk_index", 0)
+                # Prepare legal metadata JSON
+                metadata_json = None
+                if legal_metadata or chunk.get("legal_metadata"):
+                    # Prefer chunk-level metadata, fall back to file-level
+                    meta = chunk.get("legal_metadata")
+                    if isinstance(meta, str):
+                        metadata_json = meta
+                    elif meta:
+                        metadata_json = json.dumps(meta)
+                    elif legal_metadata:
+                        metadata_json = json.dumps(legal_metadata)
 
-                    # Prepare legal metadata JSON
-                    metadata_json = None
-                    if legal_metadata or chunk.get("legal_metadata"):
-                        # Prefer chunk-level metadata, fall back to file-level
-                        meta = chunk.get("legal_metadata")
-                        if isinstance(meta, str):
-                            metadata_json = meta
-                        elif meta:
-                            metadata_json = json.dumps(meta)
-                        elif legal_metadata:
-                            metadata_json = json.dumps(legal_metadata)
-
-                    if ready_col:
-                        cursor.execute(
-                            f"""
-                            INSERT OR REPLACE INTO documents (
-                                chunk_id, file_path, file_name, chunk_index, text_content,
-                                char_count, file_size, file_hash, source_type, modified_time,
-                                processed_time, content_type, {ready_col},
-                                legal_metadata, extraction_method, ocr_confidence
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
-                                      'document', 0, ?, ?, ?)
-                        """,
-                            (
-                                chunk_id,
-                                pdf_path,
-                                file_name,
-                                chunk_index,
-                                text,
-                                len(text),
-                                file_size,
-                                file_hash,
-                                source,
-                                modified_time,
-                                metadata_json,
-                                extraction_method or chunk.get("extraction_method"),
-                                ocr_confidence or chunk.get("ocr_confidence"),
-                            ),
-                        )
-                    else:
-                        cursor.execute(
-                            """
-                            INSERT OR REPLACE INTO documents (
-                                chunk_id, file_path, file_name, chunk_index, text_content,
-                                char_count, file_size, file_hash, source_type, modified_time,
-                                processed_time, content_type,
-                                legal_metadata, extraction_method, ocr_confidence
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
-                                      'document', ?, ?, ?)
-                        """,
-                            (
-                                chunk_id,
-                                pdf_path,
-                                file_name,
-                                chunk_index,
-                                text,
-                                len(text),
-                                file_size,
-                                file_hash,
-                                source,
-                                modified_time,
-                                metadata_json,
-                                extraction_method or chunk.get("extraction_method"),
-                                ocr_confidence or chunk.get("ocr_confidence"),
-                            ),
-                        )
-
-                conn.commit()
+                if ready_col:
+                    db.execute_query(
+                        f"""
+                        INSERT OR REPLACE INTO documents (
+                            chunk_id, file_path, file_name, chunk_index, text_content,
+                            char_count, file_size, file_hash, source_type, modified_time,
+                            processed_time, content_type, {ready_col},
+                            legal_metadata, extraction_method, ocr_confidence
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
+                                  'document', 0, ?, ?, ?)
+                    """,
+                        (
+                            chunk_id,
+                            pdf_path,
+                            file_name,
+                            chunk_index,
+                            text,
+                            len(text),
+                            file_size,
+                            file_hash,
+                            source,
+                            modified_time,
+                            metadata_json,
+                            extraction_method or chunk.get("extraction_method"),
+                            ocr_confidence or chunk.get("ocr_confidence"),
+                        ),
+                    )
+                else:
+                    db.execute_query(
+                        """
+                        INSERT OR REPLACE INTO documents (
+                            chunk_id, file_path, file_name, chunk_index, text_content,
+                            char_count, file_size, file_hash, source_type, modified_time,
+                            processed_time, content_type,
+                            legal_metadata, extraction_method, ocr_confidence
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'),
+                                  'document', ?, ?, ?)
+                    """,
+                        (
+                            chunk_id,
+                            pdf_path,
+                            file_name,
+                            chunk_index,
+                            text,
+                            len(text),
+                            file_size,
+                            file_hash,
+                            source,
+                            modified_time,
+                            metadata_json,
+                            extraction_method or chunk.get("extraction_method"),
+                            ocr_confidence or chunk.get("ocr_confidence"),
+                        ),
+                    )
 
                 # Also add to content_unified table for unified access
                 # Combine all chunks for the full document text
@@ -196,36 +187,32 @@ class EnhancedPDFStorage:
         Get enhanced PDF statistics including OCR and legal metadata.
         """
         try:
-            import sqlite3
+            db = self._get_db()
 
-            with sqlite3.connect(self._get_db().db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
+            # Basic stats
+            stats = self._collect_document_stats(db)
 
-                # Basic stats
-                stats = self._collect_document_stats(cursor)
-
-                # OCR stats
-                cursor.execute(
-                    """
-                    SELECT extraction_method, COUNT(*)
-                    FROM documents
-                    WHERE content_type = 'document'
-                    GROUP BY extraction_method
+            # OCR stats
+            cursor = db.execute(
                 """
-                )
-                extraction_methods = dict(cursor.fetchall())
+                SELECT extraction_method, COUNT(*)
+                FROM documents
+                WHERE content_type = 'document'
+                GROUP BY extraction_method
+            """
+            )
+            extraction_methods = dict(cursor.fetchall())
 
-                # Legal metadata stats
-                cursor.execute(
-                    """
-                    SELECT COUNT(*)
-                    FROM documents
-                    WHERE content_type = 'document'
-                    AND legal_metadata IS NOT NULL
+            # Legal metadata stats
+            cursor = db.execute(
                 """
-                )
-                has_legal_metadata = cursor.fetchone()[0]
+                SELECT COUNT(*)
+                FROM documents
+                WHERE content_type = 'document'
+                AND legal_metadata IS NOT NULL
+            """
+            )
+            has_legal_metadata = cursor.fetchone()[0]
 
             # Calculate derived stats
             avg_chunks = stats["chunk_count"] / stats["doc_count"] if stats["doc_count"] > 0 else 0
@@ -255,34 +242,34 @@ class EnhancedPDFStorage:
         except Exception as e:
             return {"success": False, "error": f"Stats error: {str(e)}"}
 
-    def _collect_document_stats(self, cursor) -> dict[str, Any]:
+    def _collect_document_stats(self, db) -> dict[str, Any]:
         """
         Collect document statistics from database.
         """
-        cursor.execute(
+        cursor = db.execute(
             "SELECT COUNT(DISTINCT file_hash) FROM documents WHERE content_type = 'document'"
         )
         doc_count = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(*) FROM documents WHERE content_type = 'document'")
+        cursor = db.execute("SELECT COUNT(*) FROM documents WHERE content_type = 'document'")
         chunk_count = cursor.fetchone()[0]
 
-        cursor.execute("SELECT SUM(char_count) FROM documents WHERE content_type = 'document'")
+        cursor = db.execute("SELECT SUM(char_count) FROM documents WHERE content_type = 'document'")
         total_chars = cursor.fetchone()[0] or 0
 
         # Readiness column may be named differently
-        cursor.execute("PRAGMA table_info(documents)")
+        cursor = db.execute("PRAGMA table_info(documents)")
         cols = {row[1] for row in cursor.fetchall()}
         if "ready_for_embedding" in cols:
-            cursor.execute(
+            cursor = db.execute(
                 "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND ready_for_embedding = 1"
             )
         elif "vector_processed" in cols:
-            cursor.execute(
+            cursor = db.execute(
                 "SELECT COUNT(*) FROM documents WHERE content_type = 'document' AND vector_processed = 1"
             )
         else:
-            cursor.execute("SELECT 0")
+            cursor = db.execute("SELECT 0")
         ready_for_embedding = cursor.fetchone()[0]
 
         return {
