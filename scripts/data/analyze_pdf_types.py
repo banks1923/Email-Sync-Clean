@@ -5,11 +5,14 @@ import os
 import sys
 from pathlib import Path
 
-from pdf.ocr.validator import PDFValidator
+try:
+    import pypdf
+except ImportError:
+    print("Error: pypdf not installed. Run: pip install pypdf")
+    sys.exit(1)
 
 def analyze_pdfs(directory: str):
     """Analyze all PDFs in directory to determine if searchable or scanned."""
-    validator = PDFValidator()
     results = []
     
     pdf_dir = Path(directory)
@@ -20,67 +23,60 @@ def analyze_pdfs(directory: str):
     
     for pdf_path in pdf_files:
         try:
-            # Check if PDF is scanned
-            is_scanned, confidence = validator.is_scanned_pdf(str(pdf_path))
-            pdf_type = "SCANNED" if is_scanned else "SEARCHABLE"
-            
-            results.append({
-                "file": pdf_path.name,
-                "type": pdf_type,
-                "confidence": confidence,
-                "is_scanned": is_scanned
-            })
-            
-            # Print progress
-            status = "📷" if is_scanned else "📝"
-            print(f"{status} {pdf_type:12} ({confidence:.0%} conf): {pdf_path.name}")
-            
+            with open(pdf_path, 'rb') as file:
+                reader = pypdf.PdfReader(file)
+                page_count = len(reader.pages)
+                
+                # Try to extract text from first few pages
+                text_found = False
+                for i in range(min(3, page_count)):  # Check first 3 pages
+                    page_text = reader.pages[i].extract_text()
+                    if page_text and len(page_text.strip()) > 50:
+                        text_found = True
+                        break
+                
+                doc_type = "searchable" if text_found else "scanned"
+                results.append({
+                    'name': pdf_path.name,
+                    'pages': page_count,
+                    'type': doc_type
+                })
+                
+                print(f"{pdf_path.name:50} {page_count:4} pages  [{doc_type:10}]")
+                
         except Exception as e:
-            print(f"❌ ERROR: {pdf_path.name} - {str(e)}")
+            print(f"{pdf_path.name:50} ERROR: {e}")
             results.append({
-                "file": pdf_path.name,
-                "type": "ERROR",
-                "confidence": 0,
-                "is_scanned": None
+                'name': pdf_path.name,
+                'pages': 0,
+                'type': 'error'
             })
     
-    # Generate summary report
-    print("\n" + "=" * 80)
-    print("SUMMARY REPORT")
-    print("=" * 80)
+    # Summary
+    searchable = sum(1 for r in results if r['type'] == 'searchable')
+    scanned = sum(1 for r in results if r['type'] == 'scanned')
+    errors = sum(1 for r in results if r['type'] == 'error')
     
-    searchable = [r for r in results if r["type"] == "SEARCHABLE"]
-    scanned = [r for r in results if r["type"] == "SCANNED"]
-    errors = [r for r in results if r["type"] == "ERROR"]
+    print("-" * 80)
+    print(f"\nSummary:")
+    print(f"  Searchable (text-based): {searchable}")
+    print(f"  Scanned (needs OCR):     {scanned}")
+    print(f"  Errors:                  {errors}")
+    print(f"  Total:                   {len(pdf_files)}")
     
-    print(f"\nTotal PDFs analyzed: {len(results)}")
-    print(f"  📝 Searchable (native text): {len(searchable)} ({len(searchable)/len(results)*100:.1f}%)")
-    print(f"  📷 Scanned (needs OCR):      {len(scanned)} ({len(scanned)/len(results)*100:.1f}%)")
-    if errors:
-        print(f"  ❌ Errors:                   {len(errors)} ({len(errors)/len(results)*100:.1f}%)")
-    
-    # List scanned PDFs that might need OCR
-    if scanned:
-        print("\n" + "-" * 80)
-        print("SCANNED PDFs (may need OCR processing):")
-        print("-" * 80)
-        for pdf in sorted(scanned, key=lambda x: x["confidence"], reverse=True):
-            print(f"  - {pdf['file']} (confidence: {pdf['confidence']:.0%})")
-    
-    # High confidence searchable PDFs
-    high_conf_searchable = [r for r in searchable if r["confidence"] < 0.2]
-    if high_conf_searchable:
-        print("\n" + "-" * 80)
-        print(f"HIGH CONFIDENCE SEARCHABLE PDFs ({len(high_conf_searchable)} files):")
-        print("-" * 80)
-        for pdf in sorted(high_conf_searchable, key=lambda x: x["confidence"])[:10]:
-            print(f"  - {pdf['file']} (text density: {(1-pdf['confidence'])*100:.0f}%)")
+    if scanned > 0:
+        print(f"\n⚠️  {scanned} PDFs need external OCR processing")
     
     return results
 
 if __name__ == "__main__":
-    directory = "data/Stoneman_dispute/user_data"
-    if len(sys.argv) > 1:
-        directory = sys.argv[1]
+    if len(sys.argv) != 2:
+        print("Usage: python analyze_pdf_types.py <pdf_directory>")
+        sys.exit(1)
+    
+    directory = sys.argv[1]
+    if not os.path.isdir(directory):
+        print(f"Error: {directory} is not a valid directory")
+        sys.exit(1)
     
     analyze_pdfs(directory)

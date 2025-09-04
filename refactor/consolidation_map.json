@@ -1,0 +1,54 @@
+{
+  "file_moves": [
+    { "from": "shared/db/simple_db.py", "to": "lib/db.py" },
+    { "from": "shared/db/migrations", "to": "lib/migrations" },
+    { "from": "scripts/database/backup_database.py", "to": "lib/backup_restore.py" },
+    { "from": "scripts/database/enable_foreign_keys_comprehensive.py", "to": "lib/backup_restore.py" },
+    { "from": "scripts/database/clean_slate_reset.py", "to": "lib/backup_restore.py" },
+    { "from": "scripts/database/setup_semantic_schema.py", "to": "lib/migrations/setup_semantic_schema.py" },
+
+    { "from": "utilities/embeddings/embedding_service.py", "to": "lib/embeddings.py" },
+    { "from": "utilities/embeddings/batch_processor.py", "to": "lib/embeddings_batch.py" },
+    { "from": "utilities/vector_store/__init__.py", "to": "lib/vector_store.py" },
+
+    { "from": "search_intelligence/basic_search.py", "to": "lib/search.py" },
+
+    { "from": "utilities/semantic_pipeline.py", "to": "lib/pipelines.py" },
+    { "from": "utilities/chunk_pipeline.py", "to": "lib/pipelines.py" },
+    { "from": "utilities/timeline", "to": "lib/timeline" },
+
+    { "from": "tools/scripts/cli/cli_main.py", "to": "cli/__main__.py" },
+    { "from": "tools/scripts/cli/docs_handler.py", "to": "cli/docs.py" },
+    { "from": "tools/scripts/cli/search_handler.py", "to": "cli/search.py" },
+    { "from": "tools/scripts/cli/entity_handler.py", "to": "cli/entity.py" },
+    { "from": "tools/scripts/cli/info_handler.py", "to": "cli/info.py" },
+    { "from": "tools/scripts/cli/legal_handler.py", "to": "cli/legal.py" },
+    { "from": "tools/scripts/cli/process_handler.py", "to": "cli/process.py" },
+    { "from": "tools/scripts/cli/timeline_handler.py", "to": "cli/timeline.py" },
+    { "from": "tools/scripts/cli/upload_handler.py", "to": "cli/upload.py" }
+  ],
+  "delete_globs": [
+    "tools/scripts/vsearch",
+    "scripts/data/generate_*embeddings.py",
+    "tools/scripts/*embed*",
+    "shared/processors/**",
+    "shared/ingestion/**",
+    "utilities/maintenance/schema_maintenance.py",
+    "utilities/maintenance/vector_maintenance.py"
+  ],
+  "import_rewrites": [
+    { "from": "shared.db.simple_db", "to": "lib.db" },
+    { "from": "scripts.database", "to": "lib" },
+
+    { "from": "utilities.embeddings", "to": "lib.embeddings" },
+    { "from": "utilities.vector_store", "to": "lib.vector_store" },
+
+    { "from": "search_intelligence.basic_search", "to": "lib.search" },
+    { "from": "tools.scripts.cli.search_handler", "to": "lib.search" },
+
+    { "from": "utilities.semantic_pipeline", "to": "lib.pipelines" },
+    { "from": "utilities.chunk_pipeline", "to": "lib.pipelines" },
+
+    { "from": "utilities.timeline", "to": "lib.timeline" }
+  ]
+}

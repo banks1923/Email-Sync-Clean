@@ -64,7 +64,7 @@ Patch these with `unittest.mock.patch` in tests to inject controlled doubles. De
 - Legal BERT embeddings with 1024D vectors
 - Entity extraction with 97% email parsing coverage
 - SQLite database with WAL mode, foreign key integrity
-- **RESTORED**: PDF upload processing with external OCR workflow support
+- **RESTORED**: PDF upload processing (text extraction only, OCR handled externally)
 - **NEW**: Substantive text extraction with boilerplate stripping
 - **NEW**: All DB access consolidated through SimpleDB
 - **NEW**: Zero technical debt - all bandaid solutions removed
@@ -442,7 +442,7 @@ For detailed API documentation and usage examples, see **docs/SERVICES_API.md**
 
 - **Pipeline**: All content → `content_unified` table → vector embeddings → search
 - **Features**: Duplicate detection (SHA256), recursive processing, manual triggers
-- **File Types**: PDF (PyPDF2/OCR), DOCX, TXT, MD
+- **File Types**: PDF (pypdf text extraction), DOCX, TXT, MD
 
 ```bash
 tools/scripts/vsearch ingest --docs              # Process documents
@@ -466,7 +466,7 @@ For complete MCP documentation and tool details, see **[docs/MCP_SERVERS.md](doc
 
 **Entity extraction across all content types**
 
-- **Processing**: Unified pipeline with OCR garbage detection
+- **Processing**: Unified pipeline for text extraction
 - **Entity Types**: PERSON, ORG, DATE, COURT, STATUTE, MONEY, LEGAL_CONCEPT
 - **Current**: 719 entities extracted from processed content
 

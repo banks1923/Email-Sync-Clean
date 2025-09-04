@@ -332,10 +332,10 @@ class SystemRunner:
             pdf_files = list(raw_path.glob("*.pdf")) if raw_path.exists() else []
             if pdf_files:
                 try:
-                    from pdf.main import PDFService
+                    from pdf.wiring import get_pdf_service
 
                     # Initialize PDFService with all dependencies
-                    pdf_service = PDFService.from_db_path("data/emails.db")
+                    pdf_service = get_pdf_service("data/emails.db")
                     
                     for pdf_file in pdf_files[:5]:  # Process max 5 PDFs
                         try:

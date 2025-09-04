@@ -117,10 +117,10 @@ class QuarantineHandler:
         )
 
         # Trigger reprocessing
-        from pdf.main import PDFService
+        from pdf.wiring import get_pdf_service
 
         try:
-            pdf_service = PDFService.from_db_path(self.db_path)
+            pdf_service = get_pdf_service(self.db_path)
             result = pdf_service.upload_single_pdf(file_path, use_pipeline=False)
 
             if result.get("success"):

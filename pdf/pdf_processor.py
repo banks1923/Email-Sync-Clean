@@ -7,9 +7,9 @@ from typing import Any
 from loguru import logger
 
 try:
-    import PyPDF2
+    import pypdf
 except ImportError:
-    PyPDF2 = None
+    pypdf = None
 
 
 class PDFProcessor:
@@ -26,22 +26,22 @@ class PDFProcessor:
         """
         Validate required dependencies.
         """
-        if PyPDF2 is None:
+        if pypdf is None:
             return {
                 "success": False,
-                "error": "PyPDF2 not installed. Run: pip install PyPDF2",
+                "error": "pypdf not installed. Run: pip install pypdf",
             }
         return {"success": True}
 
     def extract_text_from_pdf(self, pdf_path: str) -> dict[str, Any]:
         """
-        Extract text from PDF using PyPDF2.
+        Extract text from PDF using pypdf.
         """
         try:
             text_content = []
 
             with open(pdf_path, "rb") as file:
-                pdf_reader = PyPDF2.PdfReader(file)
+                pdf_reader = pypdf.PdfReader(file)
 
                 for page_num, page in enumerate(pdf_reader.pages):
                     try:

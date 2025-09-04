@@ -248,12 +248,12 @@ class SimpleUploadProcessor:
                     f"OCR extraction failed for {file_path.name}, trying direct text extraction"
                 )
 
-                # Try using PyPDF2 directly for text-based PDFs
+                # Try using pypdf directly for text-based PDFs
                 try:
-                    import PyPDF2
+                    import pypdf
 
                     with open(file_path, "rb") as pdf_file:
-                        pdf_reader = PyPDF2.PdfReader(pdf_file)
+                        pdf_reader = pypdf.PdfReader(pdf_file)
                         text_parts = []
                         for page_num in range(len(pdf_reader.pages)):
                             page = pdf_reader.pages[page_num]
@@ -268,11 +268,10 @@ class SimpleUploadProcessor:
                             )
                             return combined_text
                 except Exception as pypdf_error:
-                    logger.warning(f"PyPDF2 extraction also failed: {pypdf_error}")
+                    logger.warning(f"pypdf extraction also failed: {pypdf_error}")
 
-                # If all methods failed, log error and return empty string (not placeholder)
-                error_msg = result.get("error", "All extraction methods failed")
-                logger.error(f"PDF extraction completely failed for {file_path.name}: {error_msg}")
+                # If text extraction failed, the PDF likely needs OCR
+                logger.error(f"PDF text extraction failed for {file_path.name}. Document may be scanned and needs external OCR.")
 
                 # Store empty string instead of placeholder - this will be caught by validation
                 return ""

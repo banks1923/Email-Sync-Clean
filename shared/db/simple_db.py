@@ -372,7 +372,7 @@ class SimpleDB:
         title: str,
         content: str,
         metadata: dict | None = None,
-        source_path: str | None = None,
+        
         message_hash: str | None = None,  # New parameter for email messages
         strip_boilerplate: bool = True,  # New parameter to enable boilerplate stripping
     ) -> str:
@@ -407,14 +407,7 @@ class SimpleDB:
             logger.debug(f"Test data blocked - Content too short ({len(content)} chars) with 'test'")
             return "-1"
         
-        # Add deprecation warning for source_path
-        if source_path is not None:
-            import warnings
-            warnings.warn(
-                "source_path parameter is deprecated and will be removed in v3.0. This parameter is not used.",
-                DeprecationWarning,
-                stacklevel=2
-            )
+        
         
         # Map external content types to schema's allowed source_type values
         def _map_source_type(t: str) -> str:
@@ -602,8 +595,7 @@ class SimpleDB:
         content_type: str,
         title: str,
         content: str,
-        metadata: dict | None = None,
-        parent_content_id: str | None = None,
+        
     ) -> str:
         """Upsert content using business key (source_type, external_id).
 
@@ -631,22 +623,7 @@ class SimpleDB:
                 content_type=source_type
             )
         
-        # Add deprecation warnings for unused parameters
-        if metadata is not None:
-            import warnings
-            warnings.warn(
-                "metadata parameter is deprecated and will be removed in v3.0. This parameter is not used.",
-                DeprecationWarning,
-                stacklevel=2
-            )
         
-        if parent_content_id is not None:
-            import warnings
-            warnings.warn(
-                "parent_content_id parameter is deprecated and will be removed in v3.0. This parameter is not used.",
-                DeprecationWarning,
-                stacklevel=2
-            )
         import hashlib
 
         # Convert external_id to numeric source_id

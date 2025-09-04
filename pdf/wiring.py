@@ -31,17 +31,9 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
 
     # Lazy provider factories (imports only on first call)
     def make_ocr():
-        import os
-        # Allow disabling internal OCR when using external pipeline
-        if os.getenv("OCR_DISABLED", "").lower() in ("1", "true", "yes"):
-            class _DisabledOCR:
-                def process_pdf_with_ocr(self, *args, **kwargs):
-                    return {"success": False, "error": "Internal OCR disabled (using external)"}
-            return _DisabledOCR()
-
-        from pdf.ocr.ocr_coordinator import OCRCoordinator
-
-        return OCRCoordinator()
+        # Text-only processor - OCR handled externally
+        from pdf.text_only_processor import TextOnlyProcessor
+        return TextOnlyProcessor()
 
     def make_validator():
         from pdf.pdf_validator import PDFValidator

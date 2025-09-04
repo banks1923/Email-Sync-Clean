@@ -77,19 +77,7 @@ class PDFService:
         # Enable idempotent writes with SHA256 deduplication
         self._enable_idempotent_writes()
 
-    @classmethod
-    def from_db_path(cls, db_path: str = "data/emails.db") -> "PDFService":
-        """Legacy compatibility constructor - creates PDFService with all dependencies.
-
-        Args:
-            db_path: Path to database file
-
-        Returns:
-            Configured PDFService instance
-        """
-        from pdf.wiring import build_pdf_service
-
-        return build_pdf_service(db_path)
+    
 
     # --- Provider resolution helpers ---
     def _get(self, key: str) -> object:

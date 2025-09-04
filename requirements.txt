@@ -5,12 +5,10 @@ requests
 openai
 loguru>=0.7.0            # Superior logging with automatic rotation and structured output
 qdrant-client
-PyPDF2
+pypdf>=5.0.0  # Modern PDF processing (successor to PyPDF2)
 pdfplumber
-pytesseract>=0.3.10      # Python wrapper for Tesseract OCR
-pdf2image>=1.16.3        # Convert PDF pages to images for OCR
-Pillow>=10.0.0           # Image processing for OCR
-opencv-python>=4.8.0     # Advanced image processing for better OCR
+# OCR dependencies removed - handled by external service
+# Pillow>=10.0.0         # Kept for general image processing if needed
 numpy>=1.24.0            # Required by OpenCV
 python-dotenv
 mcp>=0.8.0
