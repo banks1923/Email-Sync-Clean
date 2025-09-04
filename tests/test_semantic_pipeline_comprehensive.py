@@ -16,7 +16,7 @@ import numpy as np
 os.environ["SEMANTICS_ON_INGEST"] = "true"
 
 from config.settings import semantic_settings
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.semantic_pipeline import SemanticPipeline, get_semantic_pipeline
 
 

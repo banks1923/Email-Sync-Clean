@@ -41,7 +41,7 @@ class ImportFixer(cst.CSTTransformer):
         
         # Fix shared.simple_db imports
         if updated_node.module and updated_node.module.value == "shared.simple_db":
-            # Change to: from shared.simple_db import SimpleDB
+            # Change to: from shared.db.simple_db import SimpleDB
             return updated_node.with_changes(
                 module=cst.Attribute(
                     value=cst.Name("shared"),
@@ -196,7 +196,7 @@ class EmailSyncImportFixer(cst.CSTTransformer):
     
     # Map of broken imports to correct imports
     IMPORT_FIXES = {
-        r"shared\.simple_db": "from shared.simple_db import SimpleDB",
+        r"shared\.simple_db": "from shared.db.simple_db import SimpleDB",
         r"gmail\.main": "from gmail import get_gmail_service",
         r"pdf\.main": "from pdf import get_pdf_service",
         r"entity\.main": "from entity import get_entity_service",
@@ -233,7 +233,7 @@ class EmailSyncImportFixer(cst.CSTTransformer):
 import libcst as cst
 
 # Print the tree structure
-module = cst.parse_module("from shared.simple_db import *")
+module = cst.parse_module("from shared.db.simple_db import *")
 print(module)  # Shows the CST structure
 
 # Use the interactive matcher

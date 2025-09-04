@@ -198,15 +198,15 @@ results = search.search_with_entities("contract dispute", entity_types=["PERSON"
 
 ### Knowledge Graph Integration
 
-Entities feed into the knowledge graph:
+Entities can be used for relationship analysis through the entity service:
 
 ```python
-from knowledge_graph import get_knowledge_graph_service
+from entity.main import EntityService
 
-kg = get_knowledge_graph_service()
+entity_service = EntityService()
 
-# Entities become graph nodes
-kg.add_entity_relationships(entity_mappings)
+# Get entity relationships
+relationships = entity_service.get_entity_relationships(content_id)
 ```
 
 ## Troubleshooting

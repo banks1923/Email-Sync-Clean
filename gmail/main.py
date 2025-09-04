@@ -4,13 +4,13 @@ from typing import Any
 from loguru import logger
 
 from config.settings import get_db_path
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from summarization import get_document_summarizer
 
 # Import advanced email parsing modules
 try:
-    from shared.email_cleaner import EmailCleaner
-    from shared.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
+    from shared.email.email_cleaner import EmailCleaner
+    from shared.processors.thread_manager import ThreadService, deduplicate_messages, extract_thread_messages
 
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")
@@ -462,7 +462,7 @@ class GmailService:
                 # Convert QuotedMessage objects to dictionaries for deduplication
                 message_dicts = []
                 for msg in all_messages:
-                    from shared.thread_manager import quoted_message_to_dict
+                    from shared.processors.thread_manager import quoted_message_to_dict
 
                     message_dicts.append(quoted_message_to_dict(msg))
 

@@ -19,7 +19,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
 from infrastructure.documents.quality.quality_score import ChunkQualityScorer
 
@@ -57,7 +57,7 @@ class ChunkPipeline:
         
         Args:
             limit: Maximum documents to process
-            source_types: List of source types to process (default: email_message)
+            source_types: List of source types to process (default: document)
             dry_run: If True, preview without storing
             
         Returns:
@@ -65,9 +65,9 @@ class ChunkPipeline:
         """
         start_time = time.time()
         
-        # Default to email_message if not specified
+        # Default to document if not specified - NOT email_message!
         if source_types is None:
-            source_types = ["email_message"]
+            source_types = ["document"]
         
         # Initialize metrics
         metrics = {
@@ -140,13 +140,24 @@ class ChunkPipeline:
     ) -> List[Dict[str, Any]]:
         """Fetch documents ready for chunking that haven't been chunked yet.
         
+        IMPORTANT: This should ONLY process actual documents, not emails!
+        Email messages should go through the email pipeline, not chunking.
+        
         Args:
-            source_types: List of source types to fetch
+            source_types: List of source types to fetch (e.g., 'document', 'transcript')
             limit: Maximum number of documents
             
         Returns:
             List of document records
         """
+        # GUARDRAIL: Prevent email_message from being chunked
+        if "email_message" in source_types:
+            logger.warning("⚠️ Blocking email_message from chunk pipeline - emails should not be chunked!")
+            source_types = [st for st in source_types if st != "email_message"]
+            if not source_types:
+                logger.info("No valid document types to process after filtering emails")
+                return []
+        
         # Build query with placeholders
         type_placeholders = ",".join(["?" for _ in source_types])
         
@@ -155,6 +166,7 @@ class ChunkPipeline:
         FROM content_unified
         WHERE ready_for_embedding = 1
         AND source_type IN ({type_placeholders})
+        AND source_type NOT IN ('email_message', 'email_summary', 'document_chunk')  -- NEVER chunk these
         AND NOT EXISTS (
             SELECT 1 FROM content_unified c2
             WHERE c2.source_type = 'document_chunk'

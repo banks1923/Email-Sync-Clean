@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import numpy as np
 
 from search_intelligence import get_search_intelligence_service
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.semantic_pipeline import get_semantic_pipeline
 from utilities.vector_store import get_vector_store
@@ -468,9 +468,6 @@ class SemanticWiringVerifier:
         )
         total, with_eid = cursor.fetchone()
 
-        if total > 0 and with_eid < total:
-            missing = total - with_eid
-            recs.append(f"Run 'vsearch evidence assign-eids' to assign EIDs to {missing} emails")
 
         # Check vector coverage
         cursor = self.db.execute(

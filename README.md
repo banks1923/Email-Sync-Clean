@@ -67,6 +67,7 @@ tools/scripts/vsearch search "lease termination" --limit 5
 
 # Enable semantic search (next step after baseline validation)
 tools/scripts/vsearch ingest --emails  # Generate embeddings for semantic search
+# Alternative: python3 scripts/data/generate_embeddings.py
 
 # Additional analysis tools
 tools/scripts/vsearch legal process "case_id"
@@ -363,6 +364,7 @@ tools/scripts/vsearch info  # Shows OCR vs text extraction counts
 
 # Generate embeddings for semantic search
 tools/scripts/vsearch ingest --emails
+# Alternative: python3 scripts/data/generate_embeddings.py
 
 # Search documents
 tools/scripts/vsearch search "contract clause"
@@ -407,7 +409,7 @@ python3 -m pytest tests/ -m "not broken" --tb=short
 # Test core services are working
 python3 -c "
 from embeddings import get_embedding_service
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from search import get_search_service
 from caching import get_global_cache_manager
 

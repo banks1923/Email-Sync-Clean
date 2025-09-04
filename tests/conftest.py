@@ -23,7 +23,7 @@ import pytest
 from hypothesis import Verbosity, settings
 
 # Project imports
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 # =============================================================================
 # Test Environment Configuration

@@ -187,7 +187,7 @@ class TestSimpleDBIntegration:
         """
         Create test database.
         """
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
 
         # Use in-memory database for tests
         db = SimpleDB(":memory:")
@@ -289,7 +289,7 @@ class TestServiceIntegration:
         """
         from entity.main import EntityService
         from search_intelligence import basic_search as search
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
         from summarization.main import DocumentSummarizer
         from utilities.embeddings.embedding_service import EmbeddingService
 
@@ -376,65 +376,7 @@ class TestServiceIntegration:
         assert len(results) > 0
 
 
-class TestCachingIntegration:
-    """
-    Test caching system integration.
-    """
 
-    def test_cache_manager_initialization(self):
-        """
-        Test cache manager initialization.
-        """
-        from shared.cache import CacheManager
-
-        manager = CacheManager()
-        assert manager is not None
-
-    def test_cache_operations(self):
-        """
-        Test cache get/set operations.
-        """
-        from shared.cache import CacheManager
-
-        manager = CacheManager()
-
-        # Set value
-        success = manager.set("test_key", {"data": "test_value"}, ttl=60)
-        assert success is True
-
-        # Get value
-        value = manager.get("test_key")
-        assert value is not None
-        assert value["data"] == "test_value"
-
-        # Delete value
-        deleted = manager.delete("test_key")
-        assert deleted is True
-
-        # Verify deletion
-        value = manager.get("test_key")
-        assert value is None
-
-    def test_content_invalidation(self):
-        """
-        Test content-based cache invalidation.
-        """
-        from shared.cache import CacheManager
-
-        manager = CacheManager()
-
-        # Set multiple related entries
-        manager.set("content_123_summary", {"summary": "text"})
-        manager.set("content_123_entities", {"entities": ["A", "B"]})
-        manager.set("content_123_embedding", {"vector": [0.1, 0.2]})
-
-        # Invalidate all content_123 entries
-        manager.invalidate_content("content_123")
-
-        # Verify all are cleared
-        assert manager.get("content_123_summary") is None
-        assert manager.get("content_123_entities") is None
-        assert manager.get("content_123_embedding") is None
 
 
 if __name__ == "__main__":

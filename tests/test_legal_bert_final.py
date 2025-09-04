@@ -2,7 +2,7 @@
 """Test all Legal BERT functionality - Final comprehensive test."""
 
 from search_intelligence.main import SearchIntelligenceService
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 import json
 
 def test_all_features():

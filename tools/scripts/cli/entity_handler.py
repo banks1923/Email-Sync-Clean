@@ -15,7 +15,7 @@ sys.path.append(str(project_root))
 
 from loguru import logger
 
-from shared.unified_entity_processor import UnifiedEntityProcessor
+from shared.processors.unified_entity_processor import UnifiedEntityProcessor
 
 
 class EntityHandler:

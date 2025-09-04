@@ -266,7 +266,7 @@ def check_search_ux() -> tuple[bool, dict]:
 def check_maintenance() -> tuple[bool, dict]:
     """Check maintenance policy: batch size, progress, and WAL checkpoint timing."""
     try:
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
 
         db = SimpleDB()
 

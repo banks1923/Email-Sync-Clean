@@ -12,7 +12,7 @@ These are no longer needed with the simple file processing approach.
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def cleanup_database_tables():

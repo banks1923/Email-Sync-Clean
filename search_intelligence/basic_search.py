@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 

@@ -4,7 +4,7 @@ Comprehensive tests for snippet utilities.
 
 import pytest
 
-from shared.snippet_utils import (
+from shared.utils.snippet_utils import (
     _calculate_snippet_score,
     extract_snippet,
     format_search_result,

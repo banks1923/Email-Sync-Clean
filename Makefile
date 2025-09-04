@@ -156,7 +156,7 @@ status: ## Quick system health check
 	@$(MAKE) ensure-qdrant
 	@echo ""
 	@echo "📊 Database status:"
-	@$(PYTHON) -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('✅ Database connected'); cursor = db.execute('SELECT COUNT(*) FROM content_unified'); print(f'   Content records: {cursor.fetchone()[0]}'); cursor = db.execute('SELECT COUNT(*) FROM individual_messages'); print(f'   Email messages: {cursor.fetchone()[0]}')" 2>/dev/null || echo "❌ Database connection failed"
+	@$(PYTHON) -c "from shared.db.simple_db import SimpleDB; db = SimpleDB(); print('✅ Database connected'); cursor = db.execute('SELECT COUNT(*) FROM content_unified'); print(f'   Content records: {cursor.fetchone()[0]}'); cursor = db.execute('SELECT COUNT(*) FROM individual_messages'); print(f'   Email messages: {cursor.fetchone()[0]}')" 2>/dev/null || echo "❌ Database connection failed"
 	@echo ""
 	@echo "🔍 Search status:"
 	@tools/scripts/vsearch info 2>/dev/null || echo "❌ Search system unavailable"
@@ -311,7 +311,7 @@ install-qdrant: ## Install Qdrant vector database
 
 test-basic: ## Basic functionality test (no external dependencies)
 	@echo "🧪 Testing basic functionality..."
-	@$(PYTHON) -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('✅ Database working')" || echo "❌ Database test failed"
+	@$(PYTHON) -c "from shared.db.simple_db import SimpleDB; db = SimpleDB(); print('✅ Database working')" || echo "❌ Database test failed"
 	@$(PYTHON) -c "from utilities.embeddings.embedding_service import get_embedding_service; svc = get_embedding_service(); result = svc.encode('test'); print('✅ Embeddings working') if len(result) == 1024 else print('❌ Embeddings failed')" || echo "❌ Embeddings test failed"
 	@echo "✅ Basic tests passed"
 

@@ -21,7 +21,7 @@ from typing import Any
 
 from loguru import logger
 
-from .simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class UnifiedEntityProcessor:

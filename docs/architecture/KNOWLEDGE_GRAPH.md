@@ -1,8 +1,20 @@
-# Knowledge Graph Service
+# Knowledge Graph Service - NOT IMPLEMENTED
+
+⚠️ **IMPORTANT**: This service is not currently implemented. This document describes planned functionality.
 
 ## Overview
 
-The Knowledge Graph Service provides intelligent content relationship discovery and management for the Email Sync system. It uses Legal BERT embeddings to identify similar documents, extracts temporal relationships, and enables graph-based content navigation.
+The Knowledge Graph Service would provide intelligent content relationship discovery and management for the Email Sync system. It would use Legal BERT embeddings to identify similar documents, extract temporal relationships, and enable graph-based content navigation.
+
+## Current Status
+
+**NOT IMPLEMENTED** - This service does not exist in the codebase. Similar functionality is available through:
+
+- **Document similarity**: `search_intelligence/similarity.py` (DocumentSimilarityAnalyzer)
+- **Timeline analysis**: `utilities/timeline/` (TimelineService)
+- **Entity relationships**: `entity/` service with relationship extraction
+
+## Planned Overview (Aspirational)
 
 ## Architecture
 

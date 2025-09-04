@@ -8,10 +8,9 @@ corresponding entries in document_summaries table.
 
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from loguru import logger
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from summarization import get_document_summarizer
 import time
 

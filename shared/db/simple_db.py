@@ -19,7 +19,8 @@ from typing import Any, Optional, Dict, List
 # Import new error handling and retry utilities
 from loguru import logger
 
-from .retry_helper import retry_database
+from ..utils.retry_helper import retry_database
+from .exceptions import TestDataBlockedException, ContentValidationError
 
 # Configure logging for batch operations
 # Logger is now imported globally from loguru
@@ -377,6 +378,8 @@ class SimpleDB:
     ) -> str:
         """Add content to content_unified table - emails, transcripts, PDFs. Returns content ID.
 
+        GUARDRAIL: Blocks test data from entering production database.
+
         Args:
             content_type: Type of content ('email_message', 'pdf', 'transcript', etc.)
             title: Content title or email subject
@@ -389,6 +392,21 @@ class SimpleDB:
         Returns:
             Content ID as string
         """
+        # GUARDRAIL: Prevent test data from entering production database
+        if title and any(pattern in title.lower() for pattern in ['test subject', 'test legal', 'test_', 'test.', 'test ']):
+            logger.warning(f"⚠️ Blocking test data: '{title}' - test data should not be in production DB")
+            logger.debug(f"Test data blocked - Title: '{title}', Type: '{content_type}'")
+            raise TestDataBlockedException(
+                f"Test data blocked: '{title}' matches test patterns",
+                title=title,
+                content_type=content_type
+            )
+        
+        if content and len(content) < 10 and 'test' in content.lower():
+            logger.warning(f"⚠️ Blocking test content: too short and contains 'test'")
+            logger.debug(f"Test data blocked - Content too short ({len(content)} chars) with 'test'")
+            return "-1"
+        
         # Add deprecation warning for source_path
         if source_path is not None:
             import warnings
@@ -416,7 +434,7 @@ class SimpleDB:
         # Strip boilerplate if enabled
         substantive_text = None
         if strip_boilerplate and content:
-            from shared.boilerplate_stripper import strip_boilerplate, compute_content_hash
+            from shared.email.boilerplate_stripper import strip_boilerplate, compute_content_hash
             substantive_text = strip_boilerplate(content)
             # Use substantive text for hash if available
             content_for_hash = substantive_text if substantive_text else content
@@ -456,32 +474,49 @@ class SimpleDB:
         except Exception:
             meta_json = None
 
-        cursor = self.execute(
-            """
-            INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, substantive_text, sha256, ready_for_embedding, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                schema_source_type,
-                source_id,
-                title,
-                content,  # Original content to body
-                substantive_text,  # Stripped content to substantive_text
-                content_hash,  # Maps to sha256
-                1,  # Mark ready for embedding
-                meta_json,
-            ),
-        )
-
-        # Get the auto-generated ID
-        if cursor.lastrowid:
-            return str(cursor.lastrowid)
-        else:
-            # If insert was ignored due to duplicate, find existing ID
-            existing = self.fetch_one(
-                "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
+        try:
+            cursor = self.execute(
+                """
+                INSERT OR IGNORE INTO content_unified (source_type, source_id, title, body, substantive_text, sha256, ready_for_embedding, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    schema_source_type,
+                    source_id,
+                    title,
+                    content,  # Original content to body
+                    substantive_text,  # Stripped content to substantive_text
+                    content_hash,  # Maps to sha256
+                    1,  # Mark ready for embedding
+                    meta_json,
+                ),
             )
-            return str(existing["id"]) if existing else str(source_id)
+
+            # Get the auto-generated ID
+            if cursor.lastrowid:
+                content_id = str(cursor.lastrowid)
+                logger.debug(f"Added content ID {content_id}: {title[:50]}")
+                return content_id
+            else:
+                # If insert was ignored due to duplicate, find existing ID
+                existing = self.fetch_one(
+                    "SELECT id FROM content_unified WHERE sha256 = ?", (content_hash,)
+                )
+                if existing:
+                    logger.debug(f"Content already exists with ID {existing['id']}: {title[:50]}")
+                    return str(existing["id"])
+                else:
+                    logger.debug(f"Using generated source_id {source_id}: {title[:50]}")
+                    return str(source_id)
+                    
+        except sqlite3.IntegrityError as e:
+            logger.error(f"Database integrity error adding content: {e}")
+            logger.debug(f"Failed content - Title: '{title}', Type: '{schema_source_type}'")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error adding content: {e}")
+            logger.debug(f"Failed content - Title: '{title}', Type: '{schema_source_type}'")
+            raise
 
     def add_email_message(
         self,
@@ -571,6 +606,8 @@ class SimpleDB:
     ) -> str:
         """Upsert content using business key (source_type, external_id).
 
+        GUARDRAIL: Blocks test data from entering production database.
+
         Args:
             source_type: Type of source (email, pdf, transcript, etc.)
             external_id: External identifier (message_id, file_hash, etc.)
@@ -583,6 +620,16 @@ class SimpleDB:
         Returns:
             Content ID from database
         """
+        # GUARDRAIL: Prevent test data from entering production database
+        if title and any(pattern in title.lower() for pattern in ['test subject', 'test legal', 'test_', 'test.', 'test ']):
+            logger.warning(f"⚠️ Blocking test data in upsert: '{title}'")
+            logger.debug(f"Test data blocked in upsert - Title: '{title}', Source: '{source_type}', ExtID: '{external_id}'")
+            raise TestDataBlockedException(
+                f"Test data blocked in upsert: '{title}' matches test patterns",
+                title=title,
+                content_type=source_type
+            )
+        
         # Add deprecation warnings for unused parameters
         if metadata is not None:
             import warnings

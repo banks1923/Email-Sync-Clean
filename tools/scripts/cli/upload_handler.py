@@ -12,7 +12,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from shared.simple_upload_processor import get_upload_processor
+from shared.ingestion.simple_upload_processor import get_upload_processor
 
 
 def upload_pdf(pdf_path, source="upload"):

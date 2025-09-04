@@ -305,7 +305,7 @@ print(f'Collection health: {vs.health()}')
 ```bash
 # Verify db_maintenance method exists
 python3 -c "
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 db = SimpleDB()
 print(f'db_maintenance available: {hasattr(db, \"db_maintenance\")}')
 "
@@ -325,7 +325,7 @@ python3 -c "
 try:
     from utilities.embeddings import get_embedding_service
     from utilities.vector_store import get_vector_store
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
     print(' All modules importable')
 except ImportError as e:
     print(f' Import error: {e}')

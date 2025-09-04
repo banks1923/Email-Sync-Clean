@@ -10,7 +10,7 @@ from typing import Any
 
 from loguru import logger
 
-from shared.simple_file_processor import process_file_simple, quarantine_file
+from shared.ingestion.simple_file_processor import process_file_simple, quarantine_file
 
 
 class DocumentLifecycleManager:

@@ -11,9 +11,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from shared.email_parser import parse_conversation_chain
-from shared.simple_db import SimpleDB
-from shared.thread_manager import deduplicate_messages, extract_thread_messages
+from shared.email.email_parser import parse_conversation_chain
+from shared.db.simple_db import SimpleDB
+from shared.processors.thread_manager import deduplicate_messages, extract_thread_messages
 
 
 def test_advanced_parsing():
@@ -92,7 +92,7 @@ def test_advanced_parsing():
             all_messages = extract_thread_messages(thread_emails)
 
             # Convert to dictionaries for deduplication testing
-            from shared.thread_manager import quoted_message_to_dict
+            from shared.processors.thread_manager import quoted_message_to_dict
 
             message_dicts = [quoted_message_to_dict(msg) for msg in all_messages]
             unique_message_dicts = deduplicate_messages(message_dicts, similarity_threshold=0.95)

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from shared.simple_db import SimpleDB as DatabaseService
+from shared.db.simple_db import SimpleDB as DatabaseService
 
 
 @pytest.mark.unit

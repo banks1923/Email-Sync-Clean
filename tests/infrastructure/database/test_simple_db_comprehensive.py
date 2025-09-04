@@ -22,7 +22,7 @@ import pytest
 from hypothesis import Verbosity, given, settings
 from hypothesis import strategies as st
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 @pytest.mark.unit

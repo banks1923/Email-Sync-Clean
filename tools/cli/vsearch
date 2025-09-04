@@ -17,9 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import new clean services
 try:
-    from search import get_search_service
-
-    from shared.simple_db import SimpleDB
+    from shared.utils.error_handler import ErrorHandler
 
     SERVICES_AVAILABLE = True
 except ImportError:

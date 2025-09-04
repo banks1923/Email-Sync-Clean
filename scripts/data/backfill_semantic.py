@@ -10,12 +10,11 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.semantic_pipeline import get_semantic_pipeline
 from summarization import get_document_summarizer
 

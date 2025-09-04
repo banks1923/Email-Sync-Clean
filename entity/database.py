@@ -6,7 +6,7 @@ Follows CLAUDE.md principles - simple and direct.
 import hashlib
 import json
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class EntityDatabase:

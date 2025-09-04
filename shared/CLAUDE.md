@@ -14,7 +14,7 @@ Following the "Simple > Complex" principle, this directory now contains only 3 f
 The core database interface used by 13+ modules across the system.
 
 ```python
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 db = SimpleDB()
 content_id = db.add_content("transcript", title, content, metadata)
@@ -88,7 +88,7 @@ from shared.database_error_recovery import DatabaseErrorRecovery
 ```python
 from gmail.validators import EmailValidator  # Gmail-specific
 from pdf.database_error_recovery import DatabaseErrorRecovery  # PDF-specific
-from shared.simple_db import SimpleDB  # Still in shared (used everywhere)
+from shared.db.simple_db import SimpleDB  # Still in shared (used everywhere)
 ```
 
 ## Testing

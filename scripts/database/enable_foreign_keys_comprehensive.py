@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 
 from loguru import logger
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def analyze_current_state(db: SimpleDB) -> dict:

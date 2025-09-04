@@ -36,7 +36,7 @@ from mcp.types import TextContent, Tool
 # Import underlying services directly
 try:
     from entity.main import EntityService
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
     from utilities.embeddings.embedding_service import get_embedding_service
     from utilities.timeline.main import TimelineService
     from loguru import logger
@@ -431,6 +431,161 @@ def _identify_key_parties(entities: list[dict]) -> list[dict]:
     
     return person_org[:10]  # Top 10 key parties
 
+def _analyze_document_patterns(documents: list[dict]) -> dict[str, Any]:
+    """Analyze patterns in case documents."""
+    if not documents:
+        return {"success": False, "error": "No documents to analyze"}
+    
+    # Identify document types
+    doc_types = _identify_document_types(documents)
+    
+    # Find recurring themes
+    themes = _extract_themes(documents)
+    
+    # Detect anomalies
+    anomalies = _detect_anomalies(documents)
+    
+    # Analyze document flow
+    flow = _analyze_document_flow(documents)
+    
+    return {
+        "success": True,
+        "document_types": doc_types,
+        "themes": themes,
+        "anomalies": anomalies,
+        "document_flow": flow,
+        "pattern_summary": _summarize_patterns(doc_types, themes, anomalies)
+    }
+
+def _extract_themes(documents: list[dict]) -> list[dict]:
+    """Extract recurring themes from documents."""
+    themes = []
+    
+    common_themes = {
+        "procedural": ["motion", "hearing", "order", "filed"],
+        "parties": ["plaintiff", "defendant", "petitioner", "respondent"],
+        "claims": ["breach", "damage", "injury", "violation"],
+        "relief": ["judgment", "settlement", "dismissal", "award"]
+    }
+    
+    for theme_name, keywords in common_themes.items():
+        count = 0
+        for doc in documents:
+            content = doc.get("body", "").lower()
+            for keyword in keywords:
+                if keyword in content:
+                    count += 1
+                    break
+        
+        if count > 0:
+            themes.append({
+                "theme": theme_name,
+                "prevalence": count / len(documents),
+                "document_count": count
+            })
+    
+    return themes
+
+def _detect_anomalies(documents: list[dict]) -> list[dict]:
+    """Detect anomalies in document patterns."""
+    anomalies = []
+    
+    # Check for duplicate-looking documents
+    for i, doc1 in enumerate(documents):
+        for j, doc2 in enumerate(documents[i + 1:], i + 1):
+            similarity = _calculate_document_similarity(doc1, doc2)
+            if similarity > 0.95:
+                anomalies.append({
+                    "type": "potential_duplicate",
+                    "documents": [doc1.get("title"), doc2.get("title")],
+                    "confidence": similarity
+                })
+    
+    return anomalies
+
+def _analyze_document_flow(documents: list[dict]) -> dict[str, Any]:
+    """Analyze the flow and progression of documents."""
+    # Sort documents by date if available
+    sorted_docs = sorted(documents, key=lambda x: x.get("datetime_utc", ""))
+    
+    flow = {
+        "total_documents": len(sorted_docs),
+        "date_range": {
+            "start": sorted_docs[0].get("datetime_utc") if sorted_docs else None,
+            "end": sorted_docs[-1].get("datetime_utc") if sorted_docs else None
+        },
+        "document_sequence": [{
+            "title": doc.get("title"),
+            "type": _identify_single_doc_type(doc),
+            "date": doc.get("datetime_utc")
+        } for doc in sorted_docs]
+    }
+    
+    return flow
+
+def _identify_single_doc_type(document: dict) -> str:
+    """Identify the type of a single document."""
+    title = document.get("title", "").lower()
+    
+    for doc_type, patterns in LEGAL_DOC_PATTERNS.items():
+        for pattern in patterns:
+            if pattern in title:
+                return doc_type
+    
+    return "unknown"
+
+def _summarize_patterns(doc_types: set[str], themes: list[dict], anomalies: list[dict]) -> str:
+    """Summarize the patterns found in the analysis."""
+    summary = f"Found {len(doc_types)} document types"
+    
+    if themes:
+        top_theme = max(themes, key=lambda x: x["prevalence"])
+        summary += f", primary theme: {top_theme['theme']}"
+    
+    if anomalies:
+        summary += f", {len(anomalies)} anomalies detected"
+    
+    return summary
+
+def _predict_missing_documents(case_documents: list[dict]) -> dict[str, Any]:
+    """Predict potentially missing documents based on case type and patterns."""
+    if not case_documents:
+        return {"success": False, "error": "No documents found"}
+    
+    # Analyze existing document types
+    existing_types = _identify_document_types(case_documents)
+    
+    # Determine case type from documents
+    case_type = _determine_case_type(case_documents)
+    
+    # Get expected document sequence for case type
+    expected_sequence = _get_expected_document_sequence(case_type)
+    
+    # Find gaps in sequence
+    missing = []
+    for doc_type in expected_sequence:
+        if doc_type not in existing_types:
+            confidence = _calculate_missing_confidence(
+                doc_type, existing_types, case_documents
+            )
+            if confidence > 0.3:  # Threshold for reporting
+                missing.append({
+                    "document_type": doc_type,
+                    "confidence": confidence,
+                    "reason": _get_missing_reason(doc_type, existing_types)
+                })
+    
+    # Sort by confidence
+    missing.sort(key=lambda x: x["confidence"], reverse=True)
+    
+    return {
+        "success": True,
+        "case_type": case_type,
+        "existing_documents": list(existing_types),
+        "predicted_missing": missing,
+        "total_missing": len(missing)
+    }
+
 
 def legal_extract_entities(content: str, case_id: str | None = None) -> str:
     """
@@ -438,7 +593,7 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
     """
     # Honor patched availability flag from test shim if present
     try:
-        from mcp_servers.legal_intelligence_mcp import SERVICES_AVAILABLE as _SERVICES_AVAILABLE  # type: ignore
+        _SERVICES_AVAILABLE = SERVICES_AVAILABLE
         if not _SERVICES_AVAILABLE:
             return "Legal intelligence services not available"
     except Exception:
@@ -505,9 +660,7 @@ def legal_extract_entities(content: str, case_id: str | None = None) -> str:
         return f"❌ Error extracting entities: {str(e)}"
 
 
-def _get_legal_service():
-    """Return a legal service instance via patchable factory."""
-    return get_legal_intelligence_service()
+# _get_legal_service function removed - no longer needed since we use services directly
 
 
 def legal_timeline_events(
@@ -625,10 +778,16 @@ def legal_knowledge_graph(case_number: str, include_relationships: bool = True) 
         return "Legal intelligence services not available"
 
     try:
-        legal_service = get_legal_intelligence_service()
-
-        # Build relationship graph using the legal intelligence service
-        graph_result = legal_service.build_relationship_graph(case_number)
+        db = SimpleDB()
+        
+        # Get case documents
+        case_documents = _get_case_documents(case_number, db)
+        
+        if not case_documents:
+            return f"❌ No documents found for case {case_number}"
+        
+        # Build relationship graph
+        graph_result = _build_case_relationships(case_documents)
 
         if not graph_result.get("success"):
             return f"❌ Knowledge graph generation failed: {graph_result.get('error', 'No graph data found')}"
@@ -713,14 +872,31 @@ def legal_document_analysis(case_number: str, analysis_type: str = "comprehensiv
         return "Legal intelligence services not available"
 
     try:
-        legal_service = _get_legal_service()
+        db = SimpleDB()
+        
+        # Get case documents
+        case_documents = _get_case_documents(case_number, db)
+        
+        if not case_documents:
+            return f"❌ No documents found for case {case_number}"
 
         # Perform document pattern analysis
         if analysis_type == "patterns":
-            result = legal_service.analyze_document_patterns(case_number)
+            result = _analyze_document_patterns(case_documents)
         else:
             # Comprehensive case analysis
-            result = legal_service.process_case(case_number)
+            result = {
+                "success": True,
+                "case_number": case_number,
+                "document_count": len(case_documents),
+                "documents": case_documents,
+                "entities": _extract_case_entities(case_documents),
+                "timeline": _generate_case_timeline(case_documents),
+                "relationships": _build_case_relationships(case_documents),
+                "patterns": _analyze_document_patterns(case_documents),
+                "missing_documents": _predict_missing_documents(case_documents),
+                "analysis_timestamp": datetime.now().isoformat()
+            }
 
         if not result.get("success"):
             return f"❌ Document analysis failed: {result.get('error', 'Analysis error')}"
@@ -831,10 +1007,10 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
         return "Legal intelligence services not available"
 
     try:
-        legal_service = _get_legal_service()
-
+        db = SimpleDB()
+        
         # Get case documents for analysis
-        case_documents = legal_service._get_case_documents(case_number)
+        case_documents = _get_case_documents(case_number, db)
 
         if not case_documents:
             return f"❌ No documents found for case: {case_number}"
@@ -844,8 +1020,8 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
 
         if track_type == "status":
             # Case status analysis
-            doc_types = legal_service._identify_document_types(case_documents)
-            case_type = legal_service._determine_case_type(case_documents)
+            doc_types = _identify_document_types(case_documents)
+            case_type = _determine_case_type(case_documents)
 
             output += "⚖️ Case Status:\n"
             output += f"  • Case type: {case_type.replace('_', ' ').title()}\n"
@@ -916,7 +1092,7 @@ def legal_case_tracking(case_number: str, track_type: str = "status") -> str:
 
         elif track_type == "missing":
             # Missing document analysis
-            missing_result = legal_service.predict_missing_documents(case_number)
+            missing_result = _predict_missing_documents(case_documents)
 
             if missing_result.get("success"):
                 predicted = missing_result.get("predicted_missing", [])
@@ -955,17 +1131,17 @@ def legal_relationship_discovery(case_number: str, entity_focus: str | None = No
         return "Legal intelligence services not available"
 
     try:
-        legal_service = _get_legal_service()
-
+        db = SimpleDB()
+        
         # Get case documents
-        case_documents = legal_service._get_case_documents(case_number)
+        case_documents = _get_case_documents(case_number, db)
 
         if not case_documents:
             return f"❌ No documents found for case: {case_number}"
 
         # Extract and analyze relationships
-        relationship_result = legal_service._build_case_relationships(case_documents)
-        entity_result = legal_service._extract_case_entities(case_documents)
+        relationship_result = _build_case_relationships(case_documents)
+        entity_result = _extract_case_entities(case_documents)
 
         # Format relationship discovery output
         output = f"🔗 Legal Relationship Discovery: {case_number}\n\n"

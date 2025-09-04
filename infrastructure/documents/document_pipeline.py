@@ -26,7 +26,7 @@ except ImportError:
 # Import shared database
 try:
     from config.settings import get_db_path
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
 
     DB_AVAILABLE = True
 except ImportError:

@@ -35,7 +35,7 @@ class TestLegalIntelligenceMCP:
         """
         Mock LegalIntelligenceService.
         """
-        with patch("mcp_servers.legal_intelligence_mcp.LegalIntelligenceService") as mock:
+        with patch("infrastructure.mcp_servers.legal_intelligence_mcp.LegalIntelligenceService") as mock:
             service = Mock()
             mock.return_value = service
             yield service
@@ -45,7 +45,7 @@ class TestLegalIntelligenceMCP:
         """
         Mock EntityService.
         """
-        with patch("mcp_servers.legal_intelligence_mcp.EntityService") as mock:
+        with patch("infrastructure.mcp_servers.legal_intelligence_mcp.EntityService") as mock:
             service = Mock()
             mock.return_value = service
             yield service
@@ -55,7 +55,7 @@ class TestLegalIntelligenceMCP:
         """
         Mock SimpleDB.
         """
-        with patch("mcp_servers.legal_intelligence_mcp.SimpleDB") as mock:
+        with patch("infrastructure.mcp_servers.legal_intelligence_mcp.SimpleDB") as mock:
             db = Mock()
             mock.return_value = db
             yield db
@@ -78,7 +78,7 @@ class TestLegalIntelligenceMCP:
         result = legal_extract_entities("John Doe represents ABC Corp in case 24NNCV")
 
         # Verify result contains expected elements
-        assert "Legal Entity Analysis" in result
+        assert "Legal Entity Extraction" in result
         assert "John Doe" in result
         assert "ABC Corp" in result
         assert "Statistics" in result
@@ -245,7 +245,7 @@ class TestLegalIntelligenceMCP:
         """
         Test error handling when services unavailable.
         """
-        with patch("mcp_servers.legal_intelligence_mcp.SERVICES_AVAILABLE", False):
+        with patch("infrastructure.mcp_servers.legal_intelligence_mcp.SERVICES_AVAILABLE", False):
             result = legal_extract_entities("test content")
             assert "not available" in result.lower()
 
@@ -363,7 +363,7 @@ class TestMCPServerIntegration:
         """
         Test that MCP server files exist.
         """
-        mcp_dir = Path(__file__).parent.parent / "mcp_servers"
+        mcp_dir = Path(__file__).parent.parent.parent / "infrastructure" / "mcp_servers"
 
         # Check critical MCP server files
         required_files = ["legal_intelligence_mcp.py", "__init__.py"]

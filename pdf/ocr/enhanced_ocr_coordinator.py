@@ -30,7 +30,7 @@ from .validator import PDFValidator
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from shared.content_quality_scorer import ContentQualityScorer, ValidationStatus
+from shared.processors.content_quality_scorer import ContentQualityScorer, ValidationStatus
 
 
 class EnhancedOCRCoordinator:

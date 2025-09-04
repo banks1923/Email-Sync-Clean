@@ -98,7 +98,7 @@ jobs:
         
         # Create temporary database for testing
         python3 -c "
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
         import tempfile
         import os
         

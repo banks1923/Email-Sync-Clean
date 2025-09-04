@@ -6,11 +6,10 @@ Handles proper foreign key constraints for v2 schema
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from gmail.gmail_api import GmailAPI
 from gmail.config import GmailConfig
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from loguru import logger
 import hashlib
 from datetime import datetime

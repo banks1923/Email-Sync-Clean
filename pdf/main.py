@@ -25,7 +25,7 @@ from loguru import logger
 if TYPE_CHECKING:  # pragma: no cover
     from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
     from pdf.pdf_storage_enhanced import EnhancedPDFStorage
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
 
 # Resource protection constants
 MAX_CONCURRENT_UPLOADS = 10  # Maximum concurrent upload operations

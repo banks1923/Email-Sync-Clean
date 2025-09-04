@@ -18,15 +18,11 @@ pdf/                  # PDF processing with OCR
 entity/               # Named entity recognition
 summarization/        # Document summarization
 search_intelligence/  # Unified search and intelligence
-knowledge_graph/      # Document relationships
-legal_intelligence/   # Legal case analysis
-monitoring/           # Health monitoring
 
 # Organized Utility Services  
 utilities/
  embeddings/       # Legal BERT embeddings
  vector_store/     # Qdrant vector operations
- notes/            # Notes management
  timeline/         # Timeline service
 
 # Infrastructure Services
@@ -83,16 +79,24 @@ filtered = service.filter_messages_by_sender(messages, sender_filter)
 
 ### Quick Start
 ```python
-from pdf.main import PDFService
+# Recommended: Use SimpleUploadProcessor for file uploads
+from shared.ingestion.simple_upload_processor import get_upload_processor
 
-service = PDFService()
+processor = get_upload_processor()
+result = processor.process_file(Path("document.pdf"))  # Handles all file types
+
+# Advanced: Direct PDF service usage
+from pdf.wiring import build_pdf_service
+
+service = build_pdf_service()
 result = service.upload_single_pdf("document.pdf")  # Auto-detects OCR need
 result = service.upload_directory("/path/to/pdfs/")  # Batch processing
 ```
 
 ### Key Features
+- **External OCR Workflow**: Optimized for searchable PDFs pre-processed by external OCR
 - **Intelligent OCR Detection**: Automatically identifies scanned vs text PDFs
-- **Integrated Processing**: OCR seamlessly built into upload flow
+- **Dual Extraction**: OCR for complex PDFs, PyPDF2 for searchable PDFs
 - **Automatic summarization**: 5 sentences, 15 keywords for legal documents
 - **Batch Operations**: High-performance bulk document processing
 - **Legal Metadata**: Extracts case numbers, parties, dates
@@ -335,7 +339,7 @@ count = store.count_documents()
 
 ### Quick Start
 ```python
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 db = SimpleDB()
 content_id = db.add_content("email", "Subject", "Body", metadata)
@@ -414,173 +418,8 @@ relationships = db.get_relationships(content_id)
 db.update_relationship_score(rel_id, new_score)
 ```
 
-##  Knowledge Graph Service (`knowledge_graph/`)
 
-### Quick Start
-```python
-from knowledge_graph import (
-    get_knowledge_graph_service,
-    get_similarity_analyzer,
-    get_timeline_relationships
-)
 
-# Initialize services
-kg = get_knowledge_graph_service()
-analyzer = get_similarity_analyzer(similarity_threshold=0.7)
-timeline = get_timeline_relationships()
-
-# Find similar documents
-similar = analyzer.find_similar_content("email_123", limit=10)
-
-# Create relationships
-edge_id = kg.add_edge("email_123", "pdf_456", "references", 0.85)
-
-# Build timeline
-result = timeline.create_temporal_relationships()
-```
-
-### Key Features
-- **Document Similarity**: Legal BERT embeddings with cosine similarity
-- **Relationship Types**: similar_to, references, follows, mentions
-- **Timeline Analysis**: Temporal relationships with date extraction
-- **Topic Clustering**: Group related documents automatically
-- **Dual-layer Caching**: In-memory + SQLite for 100x speedup
-- **Batch Operations**: Process 1000+ nodes/edges per second
-
-### API Methods
-```python
-# Graph operations
-node_id = kg.add_node(content_id, content_type, metadata)
-edge_id = kg.add_edge(from_id, to_id, relationship_type, weight)
-kg.update_edge_weight(edge_id, new_weight)
-kg.delete_edge(edge_id)
-
-# Relationship discovery
-similar = analyzer.find_similar_content(content_id, limit=10)
-similarity_score = analyzer.calculate_similarity(content1_id, content2_id)
-batch_similarities = analyzer.batch_similarity_analysis(content_ids)
-
-# Graph traversal
-related = kg.get_related_content(content_id, ["similar_to"], limit=5)
-path = kg.find_shortest_path("doc_a", "doc_z", max_depth=5)
-subgraph = kg.get_subgraph(center_id, max_distance=2)
-
-# Timeline relationships
-result = timeline.create_temporal_relationships()
-cluster = timeline.find_temporal_cluster(content_id, window_days=7)
-temporal_neighbors = timeline.get_temporal_neighbors(content_id, window_hours=24)
-
-# Batch processing
-result = analyzer.discover_and_store_similarities(content_type="pdf")
-stats = kg.bulk_relationship_discovery(content_ids)
-
-# Graph analytics
-centrality = kg.calculate_centrality_scores()
-communities = kg.detect_communities()
-graph_stats = kg.get_graph_statistics()
-```
-
-##  Legal Intelligence Service (`legal_intelligence/`)
-
-### Quick Start
-```python
-from legal_intelligence import get_legal_intelligence_service
-
-legal = get_legal_intelligence_service()
-
-# Process legal case
-result = legal.process_legal_case("24NNCV00555")
-
-# Generate timeline
-timeline = legal.generate_case_timeline("24NNCV00555")
-
-# Build knowledge graph
-graph = legal.build_case_knowledge_graph("24NNCV00555")
-```
-
-### Key Features
-- **Case Processing**: Comprehensive legal case analysis with entity extraction
-- **Timeline Generation**: Chronological event timeline with document sources
-- **Relationship Mapping**: Graph-based document relationship analysis
-- **Legal Search**: Entity-aware search with case filtering
-- **Missing Document Prediction**: Pattern analysis to identify gaps
-- **Document Summarization**: TF-IDF and TextRank summaries with legal entity focus
-
-### Test Hooks (Patchable Factories)
-- `legal_intelligence.main.get_knowledge_graph_service(db_path)`: returns the knowledge graph service. Tests can `patch` this to inject a mock. The default is a minimal in-memory graph with `add_node`/`add_edge` methods for lightweight integration.
-- `legal_intelligence.main.get_similarity_analyzer()`: returns a simple similarity helper. Tests can patch this to control similarity behavior deterministically.
-
-These tiny factories exist to keep production wiring lightweight while making tests stable and easy to patch, without reaching into private internals. In production, you can ignore them and use `get_legal_intelligence_service()` as usual.
-
-### API Methods
-```python
-# Case processing
-result = legal.process_legal_case(case_number)
-analysis = legal.analyze_case_documents(case_number, analysis_type="comprehensive")
-patterns = legal.identify_case_patterns(case_number)
-
-# Timeline operations
-timeline = legal.generate_case_timeline(case_number, start_date=None, end_date=None)
-events = legal.extract_timeline_events(case_number)
-gaps = legal.identify_timeline_gaps(case_number)
-
-# Knowledge graph
-graph = legal.build_case_knowledge_graph(case_number, include_relationships=True)
-relationships = legal.discover_document_relationships(case_number)
-network = legal.analyze_entity_network(case_number)
-
-# Document analysis
-missing = legal.predict_missing_documents(case_number, confidence=0.6)
-summaries = legal.summarize_case_documents(case_number, max_docs=10)
-entities = legal.extract_case_entities(case_number)
-
-# Search operations
-results = legal.search_case_documents(query, case_number, limit=10)
-similar = legal.find_similar_cases(case_number, threshold=0.7)
-
-# Case tracking
-status = legal.track_case_status(case_number)
-deadlines = legal.extract_case_deadlines(case_number)
-activities = legal.get_recent_case_activity(case_number)
-```
-
-##  Notes Service (`utilities/notes/`)
-
-### Quick Start
-```python
-from utilities.notes.main import NotesService
-
-notes = NotesService()
-note_id = notes.create_note(title, content, tags)
-```
-
-### Key Features
-- **Markdown note management**: Rich text formatting support
-- **Tag-based organization**: Flexible categorization system
-- **Full-text search integration**: Searchable with main search system
-
-### API Methods
-```python
-# Note operations
-note_id = notes.create_note("Title", "Content", ["tag1", "tag2"])
-note = notes.get_note(note_id)
-notes.update_note(note_id, title="New Title", content="New Content")
-notes.delete_note(note_id)
-
-# Search and filtering
-results = notes.search_notes("query")
-tagged_notes = notes.get_notes_by_tag("legal")
-all_notes = notes.list_notes(limit=50)
-
-# Tag management
-tags = notes.get_all_tags()
-notes.add_tag_to_note(note_id, "new_tag")
-notes.remove_tag_from_note(note_id, "old_tag")
-
-# Batch operations
-notes.batch_create_notes(notes_data_list)
-notes.bulk_tag_notes(note_ids, tags)
-```
 
 ## ⏱ Timeline Service (`utilities/timeline/`)
 
@@ -630,7 +469,7 @@ procedural_timeline = timeline.extract_procedural_events(case_number)
 from gmail.main import GmailService
 from search_intelligence import get_search_intelligence_service
 from utilities.embeddings import get_embedding_service
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 # Initialize services
 gmail = GmailService()

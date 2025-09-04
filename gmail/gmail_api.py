@@ -5,8 +5,8 @@ import socket
 from googleapiclient.discovery import build
 from loguru import logger
 
-from shared.error_handler import ErrorHandler
-from shared.retry_helper import retry_network
+from shared.utils.error_handler import ErrorHandler
+from shared.utils.retry_helper import retry_network
 
 from .oauth import GmailAuth
 

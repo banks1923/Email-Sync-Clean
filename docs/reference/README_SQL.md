@@ -151,7 +151,7 @@ WHERE im.message_id = ?
 
 ### SimpleDB Usage
 ```python
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 db = SimpleDB()
 

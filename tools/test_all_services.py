@@ -159,7 +159,7 @@ def test_database():
     """
     print("\n=== Testing Database ===")
     try:
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
 
         db = SimpleDB()
 

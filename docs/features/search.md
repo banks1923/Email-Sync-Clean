@@ -159,7 +159,14 @@ docker run -p 6333:6333 qdrant/qdrant
 
 1. Ensure content has been embedded:
 ```bash
+# Option A: Via vsearch
 tools/scripts/vsearch ingest --emails
+
+# Option B: Direct embedding generation
+python3 scripts/data/generate_embeddings.py
+
+# Check embedding status
+python3 scripts/data/generate_embeddings.py --stats
 ```
 
 2. Check vector store has data:

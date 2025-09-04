@@ -118,7 +118,7 @@ class PreflightChecker:
         print("\n=== SimpleDB Methods Checks ===")
 
         try:
-            from shared.simple_db import SimpleDB
+            from shared.db.simple_db import SimpleDB
 
             db = SimpleDB()
 
@@ -179,9 +179,6 @@ class PreflightChecker:
         services = [
             ("Gmail Service", "gmail", "get_gmail_service"),
             ("PDF Service", "pdf", "get_pdf_service"),
-            ("Search Intelligence", "search_intelligence.main", "SearchIntelligenceService"),
-            ("Knowledge Graph", "knowledge_graph.main", "KnowledgeGraphService"),
-            ("Legal Intelligence", "legal_intelligence.main", "LegalIntelligenceService"),
         ]
 
         all_services_ok = True

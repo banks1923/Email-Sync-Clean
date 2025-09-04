@@ -2,7 +2,7 @@
 """Test all Legal BERT functionality."""
 
 from search_intelligence.main import SearchIntelligenceService
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 def test_all_features():
     """Test all Legal BERT features."""

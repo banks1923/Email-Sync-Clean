@@ -5,7 +5,7 @@ Clears all embeddings and prepares for fresh processing.
 """
 
 from loguru import logger
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 def reset_embeddings_and_flags():
     """Clear embeddings table and reset all processing flags."""

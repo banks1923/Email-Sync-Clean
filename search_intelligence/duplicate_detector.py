@@ -12,7 +12,7 @@ import numpy as np
 from loguru import logger
 from sklearn.metrics.pairwise import cosine_similarity
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 

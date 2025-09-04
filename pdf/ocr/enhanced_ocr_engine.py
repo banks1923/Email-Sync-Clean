@@ -41,7 +41,7 @@ from .ocr_engine import OCREngine
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from shared.content_quality_scorer import ContentQualityScorer, ValidationStatus
+from shared.processors.content_quality_scorer import ContentQualityScorer, ValidationStatus
 
 
 class EnhancedOCREngine:

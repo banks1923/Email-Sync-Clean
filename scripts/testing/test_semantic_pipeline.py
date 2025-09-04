@@ -8,15 +8,14 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+
 
 # Enable semantic processing
 os.environ["SEMANTICS_ON_INGEST"] = "true"
 
 
 from config.settings import semantic_settings
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def test_semantic_pipeline():
@@ -143,7 +142,7 @@ def test_semantic_pipeline():
         print("\n✅ Semantic pipeline test complete!")
 
     else:
-        print("⚠️  No emails with EIDs found. Run 'vsearch evidence assign-eids' first.")
+        print("⚠️  No emails with EIDs found.")
 
 
 if __name__ == "__main__":

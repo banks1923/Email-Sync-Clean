@@ -4,7 +4,164 @@
 
 ## Recent Changes
 
-### [2025-09-04] - Complete Technical Debt Elimination
+### [2025-09-04] - Improved Error Handling with Custom Exceptions
+
+#### Added
+- **Custom Exception Classes**: Created `shared/db/exceptions.py` with proper exception hierarchy
+  - `TestDataBlockedException` for blocked test data
+  - `ContentValidationError` for validation failures
+  - `DuplicateContentError` for duplicate detection (if strict mode)
+
+#### Changed
+- **Error Handling Best Practices**: Guardrails now raise exceptions instead of returning "-1"
+  - Test data blocking raises `TestDataBlockedException` with context
+  - Proper exception propagation for better error handling upstream
+  - Maintains structured logging with warnings and debug info
+
+#### Technical Details
+- Exceptions carry context (title, content_type) for better debugging
+- Compatible with existing try-catch blocks in calling code
+- Follows Python best practices: exceptions for errors, not return codes
+
+### [2025-09-04] - Email Chunking Bug Fix & HTML Email Cleanup
+
+#### Fixed
+- **Email-to-Document Pipeline Crossover**: Fixed critical bug where emails were being chunked as documents
+  - Root cause: `test_chunk_pipeline.py` incorrectly used `source_types=["email_message"]`
+  - 148 bogus document chunks created from HTML emails (all cleaned)
+  - Added multiple guardrails to prevent recurrence
+
+#### Changed
+- **ChunkPipeline defaults**: Changed from `["email_message"]` to `["document"]`
+- **Pipeline guardrails**: Added explicit blocking of email_message and email_summary types
+- **SQL constraints**: Query now excludes email types with `NOT IN` clause
+- **Import fix**: Fixed `shared/ingestion/simple_file_processor.py` import path
+
+#### Removed
+- **144 HTML emails**: Cleaned all HTML-formatted emails from database
+- **148 document chunks**: Removed all incorrectly chunked email data
+- **Data cleanup**: Both content_unified and individual_messages tables cleaned
+
+#### Technical Details
+- Guardrails prevent emails from entering document chunking pipeline
+- Warning logs if email_message type is attempted in chunk pipeline
+- Database now clean: 276 plain text emails, 0 HTML emails, 0 chunks
+- Killed lingering vsearch chunk-ingest process using old code
+
+### [2025-09-04] - PDF Upload Service Restoration
+
+#### Fixed
+- **PDF Upload Processing**: Fixed broken import in `shared/ingestion/simple_upload_processor.py`
+  - Changed `from .simple_db import SimpleDB` to `from shared.db.simple_db import SimpleDB`
+  - Removed broken PDFService instantiation fallback (missing required constructor arguments)
+- **Entity Processing**: Fixed broken import in `shared/processors/unified_entity_processor.py`
+  - Changed `from .simple_db import SimpleDB` to `from shared.db.simple_db import SimpleDB`
+- **PDF Extraction Flow**: Simplified PDF processing to work optimally with external OCR workflow
+  - Primary: OCR extraction via `pdf.wiring.build_pdf_service()` (for complex/image PDFs)
+  - Fallback: PyPDF2 direct text extraction (for searchable PDFs from external OCR)
+  - Compatible with user's external PDF OCR processing pipeline
+
+#### Technical Details
+- SimpleUploadProcessor now instantiates correctly and processes all file types
+- PDF service builds successfully with all components (ContentQualityScorer found)
+- External OCR workflow supported: searchable PDFs → PyPDF2 extraction → database storage
+- Maintains internal OCR capabilities as fallback for complex processing needs
+
+### [2025-09-04] - Documentation Reality Alignment
+
+#### Fixed
+- **Documentation-Reality Drift**: Aligned all documentation with actual codebase
+- Removed fictional service references from CLAUDE.md and SERVICES_API.md
+- Fixed audit.py to stop looking for non-existent services (knowledge_graph, notes, legal_intelligence)
+- Fixed preflight.py imports for non-existent KnowledgeGraphService
+- Updated entity extraction docs to use actual EntityService methods
+
+#### Changed
+- **KNOWLEDGE_GRAPH.md**: Marked as "NOT IMPLEMENTED" with clear status
+- **Service counts**: Updated CLAUDE.md totals to reflect legal_intelligence removal
+- **Test paths**: Removed references to non-existent test files in audit.py
+
+### [2025-09-04] - Fixed Embedding Generation Script
+
+#### Fixed
+- Replaced deprecated shim in `scripts/data/generate_embeddings.py` with functional implementation
+- Script now properly uses `BatchEmbeddingProcessor` from v2 pipeline infrastructure
+- Integrates with Legal BERT embeddings and Qdrant vectors_v2 collection
+
+#### Added
+- `--stats` flag to show embedding statistics (chunks needing embeddings)
+- `--dry-run` mode for testing without storing embeddings
+- `--batch-size` and `--min-quality` configuration options
+- Comprehensive help with usage examples
+
+#### Technical Details
+- Works with `content_unified` table for document chunks
+- Processes 148 chunks ready for embedding (quality scores: 0.561-0.925)
+- Follows project philosophy: uses existing services directly, no unnecessary abstractions
+
+### [2025-09-04] - Legal Intelligence Service Removal
+
+#### Removed
+- **BREAKING**: Removed `legal_intelligence/` directory entirely (837 lines)
+- Eliminated unnecessary orchestration layer that violated project philosophy
+
+#### Changed  
+- Refactored MCP server (`legal_intelligence_mcp.py`) to use services directly
+- Refactored CLI handler (`legal_handler.py`) to call services directly
+- Both now import: `EntityService`, `SimpleDB`, `TimelineService` directly
+- Moved useful logic (legal doc patterns, case processing) into consumers
+
+#### Fixed
+- Missing `extract_legal_entities()` method that was causing MCP server failures
+- Database path alignment: changed from `data/emails.db` to `data/system_data/emails.db`
+
+### [2025-09-04] - Legal CLI Handler Refactor
+
+#### Changed  
+- **BREAKING**: Refactored `legal_handler.py` to remove dependency on `legal_intelligence` service
+- Now uses underlying services directly: `EntityService`, `SimpleDB`, `TimelineService`, `get_document_summarizer`
+- All CLI functions (`process_legal_case`, `generate_legal_timeline`, etc.) maintain same interface
+- Moved legal intelligence logic directly into CLI helper functions
+
+#### Technical Details
+- Eliminated intermediate service layer for cleaner, more direct implementation
+- All 6 CLI commands working unchanged with same output format
+- Helper functions (`_get_case_documents`, `_extract_case_entities`, etc.) implemented as module-level functions
+- Simplified document similarity calculation using Jaccard similarity
+- Follows project philosophy of "Simple > Complex" and "Direct > Indirect"
+
+### [2025-09-04] - Legal Intelligence MCP Refactor
+
+#### Changed  
+- **BREAKING**: Refactored `legal_intelligence_mcp.py` to remove dependency on `legal_intelligence` service
+- Now uses underlying services directly: `EntityService`, `SimpleDB`, `TimelineService`
+- Moved all legal document patterns and logic directly into MCP handlers
+- Preserved patchable factory pattern for tests compatibility
+
+#### Technical Details
+- Eliminated intermediate service layer for better maintainability
+- All 6 MCP tool functions (`legal_extract_entities`, `legal_timeline_events`, etc.) working unchanged
+- Maintained same output format and functionality
+- Helper functions (`_get_case_documents`, `_identify_document_types`, etc.) moved directly into MCP file
+
+### [2025-09-04] - Chunking System Migration & Cleanup
+
+#### Changed
+- Document chunker moved from `src/chunker/` to `infrastructure/documents/chunker/`
+- Quality scorer moved from `src/quality/` to `infrastructure/documents/quality/`
+- All imports updated using LibCST automated refactoring (7 files)
+- Removed sys.path manipulation hacks from quality_score.py
+
+#### Removed
+- Deleted non-standard `src/` directory (now empty)
+- Removed unused `email_thread_processor` import from documents module
+
+#### Technical Details
+- Used LibCST codemod for safe automated import updates
+- Preserved circular dependency between chunker and quality modules (working code)
+- All tests pass after migration
+
+### [2025-09-04] -  Technical Debt Elimination
 
 #### Removed
 - **BREAKING**: EmailStorage class completely deleted (was using direct sqlite3)

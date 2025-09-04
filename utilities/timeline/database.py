@@ -8,7 +8,7 @@ import uuid
 from typing import Any
 
 from config.settings import get_db_path
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class TimelineDatabase:

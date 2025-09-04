@@ -14,9 +14,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Direct imports following CLAUDE.md "Direct > Indirect" principle
 # Lazy import for search functions to avoid model loading timeout
-from shared.error_handler import ErrorHandler
-from shared.health_check import run_health_check
-from shared.simple_db import SimpleDB
+from shared.utils.error_handler import ErrorHandler
+from shared.utils.health_check import run_health_check
+from shared.db.simple_db import SimpleDB
 from tools.cli.quarantine_handler import add_quarantine_commands, handle_quarantine_command
 
 # Global cache for expensive imports
@@ -630,10 +630,6 @@ Examples:
   vsearch intelligence cluster --threshold 0.8   # Find document clusters
   
   # Legal Evidence Tracking
-  vsearch evidence status                     # Check evidence tracking status
-  vsearch evidence assign-eids                # Assign Evidence IDs to emails
-  vsearch evidence assign-threads             # Group emails into threads
-  vsearch evidence report --keywords "entry"  # Generate evidence reports
   
   # System information
   vsearch info          # Show system status
@@ -867,42 +863,6 @@ Examples:
     )
     intel_summarize_parser.add_argument("--json", action="store_true", help="Output as JSON")
 
-    # Evidence commands
-    evidence_parser = subparsers.add_parser("evidence", help="Legal evidence tracking and reports")
-    evidence_subparsers = evidence_parser.add_subparsers(dest="evidence_command", help="Evidence commands")
-    
-    # Assign EIDs command
-    assign_eids_parser = evidence_subparsers.add_parser("assign-eids", help="Assign Evidence IDs to emails")
-    assign_eids_parser.add_argument("--limit", type=int, help="Maximum emails to process")
-    
-    # Assign threads command
-    evidence_subparsers.add_parser("assign-threads", help="Group emails into conversation threads")
-    
-    # Lookup command
-    lookup_parser = evidence_subparsers.add_parser("lookup", help="Look up specific evidence")
-    lookup_parser.add_argument("--eid", help="Evidence ID to look up")
-    lookup_parser.add_argument("--thread", help="Thread ID to look up")
-    
-    # Report command
-    report_parser = evidence_subparsers.add_parser("report", help="Generate legal evidence reports")
-    report_parser.add_argument("-o", "--output", default="legal_evidence_export", help="Output directory")
-    report_parser.add_argument("--keywords", nargs="+", help="Keywords to search for (comma-separated or multiple)")
-    report_parser.add_argument("--threads", nargs="+", help="Specific thread IDs to include")
-    report_parser.add_argument("--mode", choices=["lookup", "narrative", "both", "export"], 
-                              default="both", help="Report mode (default: both)")
-    
-    # Search pattern command
-    pattern_parser = evidence_subparsers.add_parser("search", help="Search for patterns in emails")
-    pattern_parser.add_argument("pattern", help="Pattern to search for")
-    pattern_parser.add_argument("-n", "--limit", type=int, default=100, help="Maximum results")
-    
-    # Analyze thread command
-    analyze_parser = evidence_subparsers.add_parser("analyze", help="Analyze a thread for patterns")
-    analyze_parser.add_argument("thread_id", help="Thread ID to analyze")
-    analyze_parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    
-    # Status command
-    evidence_subparsers.add_parser("status", help="Show evidence tracking status")
 
     # Semantic backfill command
     semantic_parser = subparsers.add_parser("semantic", help="Semantic enrichment operations")
@@ -1066,39 +1026,11 @@ def _dispatch_command(args) -> None:
             )
         else:
             intelligence_parser.print_help()
-    elif args.command == "evidence":
-        # Import evidence handlers
-        from tools.cli.evidence_handler import (
-            analyze_thread_command,
-            assign_eids_command,
-            assign_threads_command,
-            lookup_command,
-            report_command,
-            search_pattern_command,
-            status_command,
-        )
-        
-        if args.evidence_command == "assign-eids":
-            assign_eids_command(args.limit)
-        elif args.evidence_command == "assign-threads":
-            assign_threads_command()
-        elif args.evidence_command == "lookup":
-            lookup_command(args.eid, args.thread)
-        elif args.evidence_command == "report":
-            report_command(args.output, args.keywords, args.threads, args.mode)
-        elif args.evidence_command == "search":
-            search_pattern_command(args.pattern, args.limit)
-        elif args.evidence_command == "analyze":
-            analyze_thread_command(args.thread_id, args.format)
-        elif args.evidence_command == "status":
-            status_command()
-        else:
-            evidence_parser.print_help()
     elif args.command == "semantic":
         # Import semantic handlers
         from scripts.backfill_semantic import backfill_semantic
         from scripts.verify_semantic_wiring import SemanticWiringVerifier, eid_lookup
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
         
         if args.semantic_command == "backfill":
             backfill_semantic(

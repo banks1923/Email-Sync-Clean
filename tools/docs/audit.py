@@ -52,14 +52,10 @@ class DocumentationAuditor:
             "gmail": "gmail/**/*.py",
             "pdf": "pdf/**/*.py",
             "search_intelligence": "search_intelligence/**/*.py",
-            "legal_intelligence": "legal_intelligence/**/*.py",
             "entity": "entity/**/*.py",
             "summarization": "summarization/**/*.py",
-            "knowledge_graph": "knowledge_graph/**/*.py",
-            "transcription": "transcription/**/*.py",
             "utilities/embeddings": "utilities/embeddings/**/*.py",
             "utilities/vector_store": "utilities/vector_store/**/*.py",
-            "utilities/notes": "utilities/notes/**/*.py",
             "utilities/timeline": "utilities/timeline/**/*.py",
             "infrastructure/pipelines": "infrastructure/pipelines/**/*.py",
             "infrastructure/documents": "infrastructure/documents/**/*.py",
@@ -79,10 +75,7 @@ class DocumentationAuditor:
 
         # Test paths mentioned in documentation
         self.expected_test_paths = [
-            "tests/services/search/test_search_intelligence.py",
-            "tests/services/legal/test_legal_intelligence.py",
             "tests/infrastructure/mcp/test_mcp_integration.py",
-            "tests/services/knowledge_graph/test_knowledge_graph_consolidated.py",
         ]
 
     def count_lines_in_file(self, file_path: Path) -> tuple[int, int]:

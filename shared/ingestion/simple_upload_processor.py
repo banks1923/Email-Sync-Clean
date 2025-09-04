@@ -14,7 +14,7 @@ from typing import Any
 
 from loguru import logger
 
-from .simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class SimpleUploadProcessor:
@@ -47,31 +47,7 @@ class SimpleUploadProcessor:
 
             # Validate extracted content
             if not content or len(content.strip()) < 20:
-                # For PDFs, if extraction failed, try using the PDF service directly
-                if file_path.suffix.lower() == ".pdf":
-                    logger.warning(
-                        f"Empty/short content for PDF {file_path.name}, attempting direct PDF service processing"
-                    )
-                    try:
-                        from pdf.main import PDFService
-
-                        pdf_service = PDFService()
-                        # Use the PDF service's upload method which handles chunking properly
-                        result = pdf_service.upload_single_pdf(str(file_path))
-                        if result.get("success"):
-                            # PDF service handles its own database storage
-                            logger.info(f"PDF processed via PDFService: {file_path.name}")
-                            return {
-                                "success": True,
-                                "content_id": result.get("content_id", "pdf_processed"),
-                                "file_hash": self._get_file_hash(file_path),
-                                "message": f"PDF processed via PDFService: {file_path.name}",
-                                "chunks_processed": result.get("chunks_processed", 0),
-                            }
-                    except Exception as pdf_service_error:
-                        logger.error(f"PDF service fallback failed: {pdf_service_error}")
-
-                # If still no content or not a PDF, log warning but continue
+                # If still no content, log warning but continue
                 if not content:
                     content = ""  # Ensure it's at least an empty string
                     logger.warning(

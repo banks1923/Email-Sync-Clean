@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.vector_store import get_vector_store
 
 

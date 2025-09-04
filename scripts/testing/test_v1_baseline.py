@@ -8,7 +8,7 @@ import time
 import json
 from datetime import datetime
 from typing import List, Dict, Any
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from search_intelligence import get_search_intelligence_service
 
 def test_search_performance(queries: List[str], limit: int = 10) -> Dict[str, Any]:

@@ -12,7 +12,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from gmail.main import GmailService
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def test_full_integration():

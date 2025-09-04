@@ -9,7 +9,7 @@ import sqlite3
 import sys
 
 from loguru import logger
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def test_foreign_keys():

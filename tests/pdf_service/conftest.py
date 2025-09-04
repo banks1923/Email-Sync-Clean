@@ -399,7 +399,7 @@ def real_database_with_contentwriter(isolated_test_db_path):
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
 
     # Initialize real SimpleDB with isolated test database
     db = SimpleDB(isolated_test_db_path)

@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import new clean services
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 # Import service locator for backward compatibility
 try:

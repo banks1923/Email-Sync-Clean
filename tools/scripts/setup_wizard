@@ -16,6 +16,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+
+
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -27,6 +29,7 @@ class SetupWizard:
     def __init__(self):
         self.config = {}
         self.project_root = Path(__file__).parent.parent.parent
+        self.service = SetupService(self.project_root)
         
     def welcome(self):
         """Display welcome message"""
@@ -65,22 +68,18 @@ class SetupWizard:
         
     def check_python_version(self) -> bool:
         """Check if Python version is compatible"""
-        version = sys.version_info
-        if version.major == 3 and version.minor >= 9:
-            console.print(f"✅ Python {version.major}.{version.minor} detected")
+        version_ok = self.service.check_python_version()
+        if version_ok:
+            console.print(f"✅ Python {sys.version_info.major}.{sys.version_info.minor} detected")
             return True
         else:
-            console.print(f"[red]❌ Python 3.9+ required (found {version.major}.{version.minor})[/red]")
+            console.print(f"[red]❌ Python 3.9+ required (found {sys.version_info.major}.{sys.version_info.minor})[/red]")
             return False
             
     def install_dependencies(self) -> bool:
         """Install Python dependencies"""
         console.print("\n[bold]Installing Dependencies[/bold]")
         
-        if not Path("requirements.txt").exists():
-            console.print("[red]❌ requirements.txt not found[/red]")
-            return False
-            
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -88,17 +87,13 @@ class SetupWizard:
         ) as progress:
             task = progress.add_task("Installing packages...", total=None)
             
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-                capture_output=True,
-                text=True
-            )
+            success = self.service.install_dependencies()
             
-            if result.returncode == 0:
+            if success:
                 progress.update(task, description="✅ Dependencies installed")
                 return True
             else:
-                console.print(f"[red]❌ Installation failed: {result.stderr}[/red]")
+                progress.update(task, description="❌ Installation failed")
                 return False
                 
     def setup_gmail(self) -> bool:
@@ -116,9 +111,7 @@ class SetupWizard:
             
             # Test the connection
             try:
-                from gmail.oauth import GmailAuth
-                auth = GmailAuth()
-                result = auth.get_credentials()
+                result = self.service.setup_gmail_auth()
                 if result["success"]:
                     console.print("  [green]✓ Connection test: SUCCESS[/green]")
                     
@@ -155,23 +148,18 @@ class SetupWizard:
                     "Paste the contents of credentials.json:"
                 ).ask()
                 
-                try:
-                    # Validate JSON
-                    json.loads(creds_content)
-                    creds_path.parent.mkdir(exist_ok=True)
-                    creds_path.write_text(creds_content)
+                result = self.service.setup_gmail_auth(creds_content)
+                if result["success"]:
                     console.print("✅ Credentials saved")
-                except json.JSONDecodeError:
-                    console.print("[red]❌ Invalid JSON[/red]")
+                else:
+                    console.print(f"[red]❌ Invalid JSON: {result.get('error')}[/red]")
                     return False
             else:
                 return False
                 
         # Run authentication flow
         console.print("Opening browser for Gmail authentication...")
-        from gmail.oauth import GmailAuth
-        auth = GmailAuth()
-        result = auth.get_credentials()
+        result = self.service.setup_gmail_auth()
         
         if result["success"]:
             console.print("✅ Gmail authenticated successfully")
@@ -183,8 +171,6 @@ class SetupWizard:
     def configure_senders(self) -> bool:
         """Configure email sender filters"""
         console.print("\n[bold]Sender Configuration[/bold]")
-        
-        config_path = self.project_root / "gmail" / "config.py"
         
         filter_type = questionary.select(
             "How do you want to filter emails?",
@@ -210,47 +196,19 @@ class SetupWizard:
                 console.print(f"  Added: {sender}")
                 
             if senders:
-                # Update config.py
-                config_content = f'''"""Gmail configuration for Email Sync System"""
-
-class GmailConfig:
-    """Gmail service configuration"""
-    
-    def __init__(self):
-        self.max_results = 500
-        self.use_filters = True
-        self.preferred_senders = {senders!r}
-        
-    def build_query(self) -> str:
-        """Build Gmail search query from configured senders"""
-        if not self.use_filters or not self.preferred_senders:
-            return ""
-            
-        sender_queries = [f"from:{sender}" for sender in self.preferred_senders]
-        return f"({' OR '.join(sender_queries)})"
-'''
-                config_path.write_text(config_content)
-                console.print(f"✅ Configured {len(senders)} senders")
+                success = self.service.configure_gmail_senders(filter_type, senders)
+                if success:
+                    console.print(f"✅ Configured {len(senders)} senders")
+                else:
+                    console.print("[red]❌ Failed to configure senders[/red]")
+                return success
         else:
-            # No filter
-            config_content = '''"""Gmail configuration for Email Sync System"""
-
-class GmailConfig:
-    """Gmail service configuration"""
-    
-    def __init__(self):
-        self.max_results = 500
-        self.use_filters = False
-        self.preferred_senders = []
-        
-    def build_query(self) -> str:
-        """Build Gmail search query from configured senders"""
-        return ""
-'''
-            config_path.write_text(config_content)
-            console.print("✅ Configured to sync all emails")
-            
-        return True
+            success = self.service.configure_gmail_senders(filter_type)
+            if success:
+                console.print("✅ Configured to sync all emails")
+            else:
+                console.print("[red]❌ Failed to configure senders[/red]")
+            return success
         
     def setup_qdrant(self) -> Optional[bool]:
         """Optionally set up Qdrant vector database"""
@@ -270,78 +228,25 @@ class GmailConfig:
             choices=["macOS (Apple Silicon)", "macOS (Intel)", "Linux", "Windows", "Other"]
         ).ask()
         
-        install_commands = {
-            "macOS (Apple Silicon)": [
-                "curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.12.5/qdrant-aarch64-apple-darwin.tar.gz",
-                "tar -xzf /tmp/qdrant.tar.gz -C /tmp",
-                "mkdir -p ~/bin && cp /tmp/qdrant ~/bin/qdrant",
-                "chmod +x ~/bin/qdrant"
-            ],
-            "macOS (Intel)": [
-                "curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.12.5/qdrant-x86_64-apple-darwin.tar.gz",
-                "tar -xzf /tmp/qdrant.tar.gz -C /tmp",
-                "mkdir -p ~/bin && cp /tmp/qdrant ~/bin/qdrant",
-                "chmod +x ~/bin/qdrant"
-            ],
-            "Linux": [
-                "curl -L -o /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.12.5/qdrant-x86_64-unknown-linux-gnu.tar.gz",
-                "tar -xzf /tmp/qdrant.tar.gz -C /tmp",
-                "mkdir -p ~/bin && cp /tmp/qdrant ~/bin/qdrant",
-                "chmod +x ~/bin/qdrant"
-            ]
-        }
-        
-        if system in install_commands:
-            console.print(f"\n[cyan]Installing Qdrant for {system}...[/cyan]")
-            
-            for cmd in install_commands[system]:
-                console.print(f"  Running: {cmd[:50]}...")
-                result = subprocess.run(cmd, shell=True, capture_output=True)
-                if result.returncode != 0:
-                    console.print(f"[red]❌ Command failed[/red]")
-                    return False
-                    
-            console.print("✅ Qdrant installed to ~/bin/qdrant")
-            
-            # Test Qdrant
-            console.print("\nTesting Qdrant...")
-            test_process = subprocess.Popen(
-                [str(Path.home() / "bin" / "qdrant")],
-                env={**os.environ, "QDRANT__STORAGE__PATH": "./qdrant_data"},
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            
-            import time
-            time.sleep(3)
-            
-            try:
-                import requests
-                response = requests.get("http://localhost:6333/readiness", timeout=2)
-                if response.status_code == 200:
-                    console.print("✅ Qdrant is working!")
-                    test_process.terminate()
-                    return True
-            except:
-                pass
-                
-            test_process.terminate()
-            console.print("[yellow]⚠️  Qdrant installed but not responding[/yellow]")
-            return False
-        else:
+        if system == "Other":
             console.print("\n[yellow]Manual installation required:[/yellow]")
             console.print("Visit: https://qdrant.tech/documentation/quick-start/")
             return None
+
+        success = self.service.install_qdrant(system)
+        if success:
+            console.print("✅ Qdrant is working!")
+            return True
+        else:
+            console.print("[yellow]⚠️  Qdrant installed but not responding or failed to install[/yellow]")
+            return False
             
     def initialize_database(self) -> bool:
         """Initialize the database"""
         console.print("\n[bold]Database Initialization[/bold]")
         
-        from shared.simple_db import SimpleDB
-        
         try:
-            db = SimpleDB()
-            stats = db.get_content_stats()
+            stats = self.service.initialize_database()
             
             if stats["total_content"] > 0:
                 console.print(f"✅ Database exists with {stats['total_content']} items")
@@ -365,30 +270,17 @@ class GmailConfig:
             console.print("⏭️  Skipping MCP configuration")
             return True
             
-        mcp_config = {
-            "mcpServers": {
-                "email-sync": {
-                    "command": "python",
-                    "args": ["-m", "infrastructure.mcp_servers.legal_intelligence_server"],
-                    "cwd": str(self.project_root)
-                },
-                "search-intelligence": {
-                    "command": "python",
-                    "args": ["-m", "infrastructure.mcp_servers.search_intelligence_server"],
-                    "cwd": str(self.project_root)
-                }
-            }
-        }
+        success = self.service.setup_mcp_servers(self.project_root)
         
-        config_path = self.project_root / ".mcp.json"
-        config_path.write_text(json.dumps(mcp_config, indent=2))
-        
-        console.print("✅ MCP servers configured")
-        console.print("\n[cyan]To use with Claude Desktop:[/cyan]")
-        console.print(f"1. Copy {config_path} to Claude Desktop config directory")
-        console.print("2. Restart Claude Desktop")
-        
-        return True
+        if success:
+            console.print("✅ MCP servers configured")
+            console.print("\n[cyan]To use with Claude Desktop:[/cyan]")
+            console.print(f"1. Copy {self.project_root / ".claude" / "mcp.json"} to Claude Desktop config directory")
+            console.print("2. Restart Claude Desktop")
+            return True
+        else:
+            console.print("[red]❌ Failed to configure MCP servers[/red]")
+            return False
         
     def run_first_sync(self) -> bool:
         """Run the first email sync"""
@@ -405,9 +297,6 @@ class GmailConfig:
             
         console.print("\n[cyan]Starting email sync...[/cyan]")
         
-        from gmail.main import GmailService
-        service = GmailService()
-        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -415,7 +304,7 @@ class GmailConfig:
         ) as progress:
             task = progress.add_task("Syncing emails...", total=None)
             
-            result = service.sync_emails(max_results=50, batch_mode=True)
+            result = self.service.run_first_sync()
             
             if result["success"]:
                 progress.update(task, description=f"✅ Synced {result['processed']} emails")
@@ -432,22 +321,7 @@ class GmailConfig:
         """Create convenient command shortcuts"""
         console.print("\n[bold]Creating Shortcuts[/bold]")
         
-        # Create aliases file
-        aliases = """# Email Sync System Shortcuts
-# Add to your ~/.bashrc or ~/.zshrc
-
-alias vsearch='~/Projects/Email\\ Sync/tools/scripts/vsearch'
-alias vsync='python3 ~/Projects/Email\\ Sync/tools/scripts/run_full_system'
-alias vsetup='python3 ~/Projects/Email\\ Sync/tools/scripts/setup_wizard'
-
-# Quick commands
-alias vsearch-maintenance='vsearch search maintenance'
-alias vsearch-legal='vsearch legal process'
-alias vsearch-info='vsearch info'
-"""
-        
-        alias_path = self.project_root / "setup_aliases.sh"
-        alias_path.write_text(aliases)
+        alias_path = self.service.create_shortcuts(self.project_root)
         
         console.print("✅ Created setup_aliases.sh")
         console.print("\n[cyan]To install shortcuts:[/cyan]")
@@ -457,84 +331,6 @@ alias vsearch-info='vsearch info'
         
     def save_configuration(self):
         """Save setup configuration for future reference"""
-        config_path = self.project_root / ".setup_complete"
-        config_path.write_text(json.dumps({
-            "setup_date": str(Path.ctime(Path.cwd())),
-            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}",
-            "features": self.config
-        }, indent=2))
+        config_path = self.service.save_configuration(self.config, self.project_root)
         
-    def run(self):
-        """Run the complete setup wizard"""
-        self.welcome()
-        
-        # Check Python version
-        if not self.check_python_version():
-            return False
-            
-        # Install dependencies
-        if not self.install_dependencies():
-            return False
-            
-        # Gmail setup
-        if not self.setup_gmail():
-            console.print("\n[red]⚠️  Gmail setup is required[/red]")
-            return False
-            
-        # Configure senders
-        self.configure_senders()
-        
-        # Database
-        if not self.initialize_database():
-            return False
-            
-        # Optional: Qdrant
-        qdrant_result = self.setup_qdrant()
-        self.config["qdrant"] = qdrant_result
-        
-        # Optional: MCP
-        self.setup_mcp_servers()
-        
-        # First sync
-        self.run_first_sync()
-        
-        # Create shortcuts
-        self.create_shortcuts()
-        
-        # Save configuration
-        self.save_configuration()
-        
-        # Success!
-        console.print("\n" + "="*50)
-        console.print(Panel.fit(
-            "[bold green]🎉 Setup Complete![/bold green]\n\n"
-            "Your Email Sync System is ready to use!\n\n"
-            "[cyan]Quick Start Commands:[/cyan]\n"
-            "• Search: vsearch 'your query'\n"
-            "• Sync: tools/scripts/run_full_system\n"
-            "• Info: vsearch info\n\n"
-            "[yellow]Next Steps:[/yellow]\n"
-            "1. Review gmail/config.py for sender settings\n"
-            "2. Run full sync: tools/scripts/run_full_system\n"
-            "3. Try searching: vsearch search 'test'",
-            title="Success",
-            border_style="green"
-        ))
-        
-        return True
-
-def main():
-    """Main entry point"""
-    try:
-        wizard = SetupWizard()
-        success = wizard.run()
-        sys.exit(0 if success else 1)
-    except KeyboardInterrupt:
-        console.print("\n[yellow]Setup cancelled[/yellow]")
-        sys.exit(130)
-    except Exception as e:
-        console.print(f"\n[red]Setup failed: {e}[/red]")
-        sys.exit(1)
-
-if __name__ == "__main__":
-    main()
+        console.print(f"✅ Configuration saved to {config_path}")

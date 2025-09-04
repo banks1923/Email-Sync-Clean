@@ -10,13 +10,12 @@ import sys
 import time
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+
 
 from loguru import logger
 
 from email_parsing.message_deduplicator import MessageDeduplicator
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class EmailBatchProcessor:

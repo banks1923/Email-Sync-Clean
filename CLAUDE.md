@@ -53,7 +53,6 @@ To keep tests deterministic without deep mocks, we expose small factory seams:
 
 - `infrastructure.mcp_servers.search_intelligence_mcp.get_search_intelligence_service()`
 - `infrastructure.mcp_servers.legal_intelligence_mcp.get_legal_intelligence_service(db_path=None)`
-- `legal_intelligence.main.get_knowledge_graph_service(db_path)` and `get_similarity_analyzer()`
 
 Patch these with `unittest.mock.patch` in tests to inject controlled doubles. Defaults are minimal, production-safe implementations. Note: `search_smart` always invokes `_expand_query(query)` but only displays expanded terms when `use_expansion=True`.
 
@@ -65,6 +64,7 @@ Patch these with `unittest.mock.patch` in tests to inject controlled doubles. De
 - Legal BERT embeddings with 1024D vectors
 - Entity extraction with 97% email parsing coverage
 - SQLite database with WAL mode, foreign key integrity
+- **RESTORED**: PDF upload processing with external OCR workflow support
 - **NEW**: Substantive text extraction with boilerplate stripping
 - **NEW**: All DB access consolidated through SimpleDB
 - **NEW**: Zero technical debt - all bandaid solutions removed
@@ -76,6 +76,7 @@ Patch these with `unittest.mock.patch` in tests to inject controlled doubles. De
 - Debug logging enabled (`LOG_LEVEL=DEBUG`, `USE_LOGURU=true`)
 - **NEW**: Pre-commit hooks prevent direct sqlite3 usage
 - **NEW**: All services use direct function APIs (no service classes)
+- **NEW**: Chunking/quality modules migrated from src/ to infrastructure/documents/
 
 ## READY: Quick Start (Development)
 
@@ -92,6 +93,9 @@ python3 -m gmail.main
 
 # Generate embeddings for semantic search
 tools/scripts/vsearch ingest --emails
+
+# Or use direct script for embedding generation
+python3 scripts/data/generate_embeddings.py
 ```
 
 ### Command Reference (Simplified Makefile + Direct CLI)
@@ -118,6 +122,9 @@ tools/scripts/vsearch ingest --emails
 | **Advanced Ingestion** | `tools/scripts/vsearch ingest` | Process all content |
 | | `tools/scripts/vsearch ingest --docs` | Process documents only |
 | | `tools/scripts/vsearch upload document.pdf` | Single document |
+| **Embeddings** | `python3 scripts/data/generate_embeddings.py` | Generate all embeddings |
+| | `python3 scripts/data/generate_embeddings.py --stats` | Show embedding statistics |
+| | `python3 scripts/data/generate_embeddings.py --limit 100` | Process first 100 chunks |
 | **Email Parsing** | `python3 scripts/parse_messages.py` | Parse emails with deduplication |
 | | `python3 scripts/parse_messages.py --reset` | Fresh parse (clear resume state) |
 | | `python3 scripts/backup_database.py create` | Backup before migration |
@@ -145,21 +152,22 @@ Email Sync/
 ├── entity/             # Entity extraction
 ├── summarization/      # Document summarization
 ├── search_intelligence/ # Unified search intelligence
-# knowledge_graph/ - functionality distributed across search_intelligence and utilities
-├── legal_intelligence/ # Legal analysis service
+# Note: knowledge_graph service removed - functionality in search_intelligence and utilities
 ├── shared/             # Shared utilities & database
 
 # Organized Utility Services
 ├── utilities/          # Organized utility services [NEW: Reorganized 2025-08-17]
 │   ├── embeddings/     # Embedding service (Legal BERT)
 │   ├── vector_store/   # Vector store service
-│   ├── notes/          # REMOVED - Migrated to document pipeline
 │   └── timeline/       # Timeline service
 
 # Infrastructure Services
 ├── infrastructure/     # Infrastructure services [NEW: Reorganized 2025-08-17]
 │   ├── pipelines/      # Processing pipelines
-│   ├── documents/      # Document management
+│   ├── documents/      # Document management [UPDATED: 2025-09-04]
+│   │   ├── chunker/    # Document chunking logic (moved from src/)
+│   │   ├── quality/    # Quality scoring (moved from src/)
+│   │   └── processors/ # Format-specific processors
 │   └── mcp_servers/    # MCP server implementations
 
 # Development Tools
@@ -292,12 +300,11 @@ These are guidance targets to prevent monster files; they are not hard caps.
 | Gmail | `gmail/` | 1,883 | 1,412 |
 | Search Intelligence | `search_intelligence/` | 1,797 | 1,347 |
 | Infrastructure/MCP | `infrastructure/mcp_servers/` | 1,589 | 1,191 |
-| Legal Intelligence | `legal_intelligence/` | 837 | 627 |
 | Summarization | `summarization/` | 499 | 374 |
 | Utilities/Vector Store | `utilities/vector_store/` | 413 | 309 |
 | Utilities/Timeline | `utilities/timeline/` | 399 | 299 |
 | Utilities/Embeddings | `utilities/embeddings/` | 157 | 117 |
-| **TOTAL** | **All Services** | **21,874** | **16,399** |
+| **TOTAL** | **All Services** | **21,037** | **15,772** |
 
 <!-- END AUTO-GENERATED SERVICE COUNTS -->
 
@@ -492,7 +499,7 @@ python3 tests/simple_mcp_validation.py          # MCP validation
 python3 tests/run_mcp_tests.py                  # All MCP tests
 
 # Quick service test
-python3 -c "from shared.simple_db import SimpleDB; db = SimpleDB(); print('WORKING: DB working')"
+python3 -c "from shared.db.simple_db import SimpleDB; db = SimpleDB(); print('WORKING: DB working')"
 ```
 
 ### Test Coverage
@@ -592,7 +599,10 @@ WORKING: **Vector service connected**
 ⏳ **Semantic search ready** (needs embedding generation)
 
 ### Immediate Next Actions
-1. **Enable Semantic Search**: `tools/scripts/vsearch ingest --emails` - Generate embeddings for all emails
+1. **Enable Semantic Search**: Generate embeddings for content
+   - Option A: `tools/scripts/vsearch ingest --emails` - Generate embeddings via vsearch
+   - Option B: `python3 scripts/data/generate_embeddings.py` - Direct embedding generation
+   - Check status: `python3 scripts/data/generate_embeddings.py --stats`
 2. **Test Both Search Types**: 
    - Keyword: `tools/scripts/vsearch search "lease" --limit 5`
    - Semantic: `tools/scripts/vsearch search "tenant rights" --limit 5` (after embeddings)

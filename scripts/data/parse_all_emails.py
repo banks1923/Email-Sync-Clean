@@ -8,12 +8,12 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent))
+
 
 from loguru import logger
 
 from email_parsing.message_deduplicator import MessageDeduplicator
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 def parse_all_emails_file(file_path: str):

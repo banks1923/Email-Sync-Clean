@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class TestIntelligenceSchema(unittest.TestCase):

@@ -56,7 +56,7 @@ def extract_and_cache_entities(self, doc_id: str, force_refresh: bool = False) -
 **Implementation**:
 ```python
 # Ensure all use centralized path
-from shared.simple_db import get_db_path
+from shared.db.simple_db import get_db_path
 db_path = get_db_path()  # Instead of hardcoded paths
 ```
 

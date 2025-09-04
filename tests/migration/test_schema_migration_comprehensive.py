@@ -18,7 +18,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.maintenance.fix_content_schema import ContentSchemaMigration
 
 # Standard UUID namespace for testing

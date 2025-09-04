@@ -31,7 +31,7 @@ from mcp.types import TextContent, Tool
 
 # Import only infrastructure layer dependencies
 try:
-    from shared.simple_db import SimpleDB
+    from shared.db.simple_db import SimpleDB
 
     SERVICES_AVAILABLE = True
 except ImportError as e:

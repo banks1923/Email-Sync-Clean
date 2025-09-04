@@ -23,7 +23,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.vector_store import get_vector_store
 

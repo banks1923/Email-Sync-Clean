@@ -5,9 +5,8 @@ Embedding Recovery Script - Generate Legal BERT embeddings for all content
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings.legal_bert import LegalBertEmbeddings
 from utilities.vector_store.qdrant_store import QdrantStore
 from infrastructure.documents.chunker.document_chunker import DocumentChunker

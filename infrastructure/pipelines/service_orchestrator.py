@@ -12,7 +12,7 @@ from loguru import logger
 
 from entity.main import EntityService
 from search_intelligence import get_search_intelligence_service
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from summarization import get_document_summarizer
 from utilities.embeddings import get_embedding_service
 

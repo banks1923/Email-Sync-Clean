@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from loguru import logger
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.vector_store import get_vector_store
 
 # Logger is now imported globally from loguru

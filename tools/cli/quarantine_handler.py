@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class QuarantineHandler:

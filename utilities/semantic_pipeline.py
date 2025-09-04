@@ -14,7 +14,7 @@ from loguru import logger
 
 from config.settings import semantic_settings
 from entity.main import EntityService
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from utilities.embeddings import get_embedding_service
 from utilities.timeline import TimelineService
 from utilities.vector_store import get_vector_store

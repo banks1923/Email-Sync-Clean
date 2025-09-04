@@ -31,7 +31,7 @@ Each subtask must verify compliance with Email Sync architecture principles:
 ### Import Style
 ```python
 # GOOD: Direct imports
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 from embeddings import get_embedding_service
 
 # BAD: Complex imports

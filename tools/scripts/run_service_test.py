@@ -14,6 +14,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 os.environ["LOG_LEVEL"] = "WARNING"
 
 from loguru import logger
@@ -55,7 +58,6 @@ class ServiceTestHarness:
             ("Timeline", self.test_timeline),
             ("Summarization", self.test_summarization),
             ("Search Intelligence", self.test_search_intelligence),
-            ("Legal Intelligence", self.test_legal_intelligence),
         ]
 
         for service_name, test_func in services:
@@ -117,7 +119,7 @@ class ServiceTestHarness:
         """
         Test database connectivity and schema.
         """
-        from shared.simple_db import SimpleDB
+        from shared.db.simple_db import SimpleDB
 
         db = SimpleDB()
         details = {}
@@ -292,28 +294,6 @@ class ServiceTestHarness:
 
         return available, details
 
-    def test_legal_intelligence(self) -> tuple[bool, dict]:
-        """
-        Test legal intelligence service.
-        """
-        try:
-            from legal_intelligence import get_legal_intelligence_service
-
-            # Note: Depends on knowledge graph, may have issues
-            details = {"status": "importable"}
-
-            if self.mode == "deep":
-                try:
-                    get_legal_intelligence_service()
-                    # Would test legal.extract_legal_entities() here
-                    details["initialized"] = True
-                except Exception as e:
-                    details["error"] = str(e)[:50]
-
-            return True, details
-
-        except Exception as e:
-            return False, {"error": str(e)[:50]}
 
 
 def create_cli_entry_points():
@@ -325,7 +305,6 @@ def create_cli_entry_points():
         "entity": "entity.main:main",
         "summarization": "summarization.engine:main",
         "search": "search_intelligence.main:main",
-        "legal": "legal_intelligence.main:main",
     }
 
     print("\nCLI Entry Points:")

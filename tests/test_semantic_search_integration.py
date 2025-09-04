@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from search_intelligence import search as semantic_search
 from search_intelligence import vector_store_available
-from shared.simple_db import SimpleDB
+from shared.db.simple_db import SimpleDB
 
 
 class TestSemanticSearchIntegration:
