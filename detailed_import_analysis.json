@@ -1,0 +1,532 @@
+{
+  "files_needing_updates": [
+    {
+      "file": "tools/scripts/run_service_test.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 215
+        },
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 256
+        }
+      ],
+      "total_imports": 19,
+      "internal_imports": 6
+    },
+    {
+      "file": "tools/scripts/cli/service_locator.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 12
+        },
+        {
+          "current": "from pdf.wiring import build_pdf_service",
+          "new": "from services.pdf.wiring import build_pdf_service",
+          "line": 69
+        }
+      ],
+      "total_imports": 10,
+      "internal_imports": 8
+    },
+    {
+      "file": "tests/test_core_services_integration.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 288
+        },
+        {
+          "current": "from summarization.main import DocumentSummarizer",
+          "new": "from services.summarization.main import DocumentSummarizer",
+          "line": 291
+        }
+      ],
+      "total_imports": 21,
+      "internal_imports": 11
+    },
+    {
+      "file": "tests/test_email_integration.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import MessageDeduplicator",
+          "new": "from gmail.parsing.message_deduplicator import MessageDeduplicator",
+          "line": 18
+        }
+      ],
+      "total_imports": 9,
+      "internal_imports": 3
+    },
+    {
+      "file": "tests/test_email_parser.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import MessageDeduplicator",
+          "new": "from gmail.parsing.message_deduplicator import MessageDeduplicator",
+          "line": 17
+        },
+        {
+          "current": "from email_parsing.message_deduplicator import ParsedMessage",
+          "new": "from gmail.parsing.message_deduplicator import ParsedMessage",
+          "line": 17
+        },
+        {
+          "current": "from email_parsing.message_deduplicator import process_email_file",
+          "new": "from gmail.parsing.message_deduplicator import process_email_file",
+          "line": 17
+        }
+      ],
+      "total_imports": 9,
+      "internal_imports": 4
+    },
+    {
+      "file": "tests/test_email_coverage.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import MessageBoundary",
+          "new": "from gmail.parsing.message_deduplicator import MessageBoundary",
+          "line": 14
+        },
+        {
+          "current": "from email_parsing.message_deduplicator import MessageDeduplicator",
+          "new": "from gmail.parsing.message_deduplicator import MessageDeduplicator",
+          "line": 14
+        },
+        {
+          "current": "from email_parsing.message_deduplicator import ParsedMessage",
+          "new": "from gmail.parsing.message_deduplicator import ParsedMessage",
+          "line": 14
+        }
+      ],
+      "total_imports": 7,
+      "internal_imports": 3
+    },
+    {
+      "file": "tests/integration/test_advanced_parsing.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import quoted_message_to_dict",
+          "new": "from gmail.parsing.message_deduplicator import quoted_message_to_dict",
+          "line": 97
+        }
+      ],
+      "total_imports": 5,
+      "internal_imports": 3
+    },
+    {
+      "file": "tests/integration/test_intelligence_tables_population.py",
+      "imports_to_update": [
+        {
+          "current": "from pdf.wiring import get_pdf_service",
+          "new": "from services.pdf.wiring import get_pdf_service",
+          "line": 14
+        }
+      ],
+      "total_imports": 8,
+      "internal_imports": 1
+    },
+    {
+      "file": "tests/integration/test_pdf_to_summary_flow.py",
+      "imports_to_update": [
+        {
+          "current": "from pdf.wiring import get_pdf_service",
+          "new": "from services.pdf.wiring import get_pdf_service",
+          "line": 13
+        }
+      ],
+      "total_imports": 10,
+      "internal_imports": 1
+    },
+    {
+      "file": "tests/utilities/test_near_duplicate_detector.py",
+      "imports_to_update": [
+        {
+          "current": "from deduplication.near_duplicate_detector import LSHIndex",
+          "new": "from gmail.deduplication.near_duplicate_detector import LSHIndex",
+          "line": 8
+        },
+        {
+          "current": "from deduplication.near_duplicate_detector import MinHasher",
+          "new": "from gmail.deduplication.near_duplicate_detector import MinHasher",
+          "line": 8
+        },
+        {
+          "current": "from deduplication.near_duplicate_detector import NearDuplicateDetector",
+          "new": "from gmail.deduplication.near_duplicate_detector import NearDuplicateDetector",
+          "line": 8
+        },
+        {
+          "current": "from deduplication.near_duplicate_detector import get_duplicate_detector",
+          "new": "from gmail.deduplication.near_duplicate_detector import get_duplicate_detector",
+          "line": 8
+        }
+      ],
+      "total_imports": 6,
+      "internal_imports": 4
+    },
+    {
+      "file": "tests/services/summarization/test_summarization.py",
+      "imports_to_update": [
+        {
+          "current": "from summarization.engine import DocumentSummarizer",
+          "new": "from services.summarization.engine import DocumentSummarizer",
+          "line": 11
+        },
+        {
+          "current": "from summarization.engine import TextRankSummarizer",
+          "new": "from services.summarization.engine import TextRankSummarizer",
+          "line": 11
+        },
+        {
+          "current": "from summarization.engine import TFIDFSummarizer",
+          "new": "from services.summarization.engine import TFIDFSummarizer",
+          "line": 11
+        },
+        {
+          "current": "from summarization.engine import get_document_summarizer",
+          "new": "from services.summarization.engine import get_document_summarizer",
+          "line": 11
+        }
+      ],
+      "total_imports": 7,
+      "internal_imports": 4
+    },
+    {
+      "file": "tests/services/summarization/test_summarization_integration.py",
+      "imports_to_update": [
+        {
+          "current": "from pdf.wiring import get_pdf_service",
+          "new": "from services.pdf.wiring import get_pdf_service",
+          "line": 16
+        },
+        {
+          "current": "from summarization.engine import get_document_summarizer",
+          "new": "from services.summarization.engine import get_document_summarizer",
+          "line": 17
+        }
+      ],
+      "total_imports": 11,
+      "internal_imports": 4
+    },
+    {
+      "file": "pdf/main.py",
+      "imports_to_update": [
+        {
+          "current": "from pdf.pdf_processor_enhanced import EnhancedPDFProcessor",
+          "new": "from services.pdf.pdf_processor_enhanced import EnhancedPDFProcessor",
+          "line": 27
+        },
+        {
+          "current": "from pdf.pdf_storage_enhanced import EnhancedPDFStorage",
+          "new": "from services.pdf.pdf_storage_enhanced import EnhancedPDFStorage",
+          "line": 28
+        },
+        {
+          "current": "from pdf.pdf_idempotent_writer import make_pdf_write_idempotent",
+          "new": "from services.pdf.pdf_idempotent_writer import make_pdf_write_idempotent",
+          "line": 431
+        }
+      ],
+      "total_imports": 13,
+      "internal_imports": 4
+    },
+    {
+      "file": "pdf/wiring.py",
+      "imports_to_update": [
+        {
+          "current": "from pdf.main import PDFService",
+          "new": "from services.pdf.main import PDFService",
+          "line": 16
+        },
+        {
+          "current": "from pdf.pdf_processor_enhanced import EnhancedPDFProcessor",
+          "new": "from services.pdf.pdf_processor_enhanced import EnhancedPDFProcessor",
+          "line": 24
+        },
+        {
+          "current": "from pdf.pdf_storage_enhanced import EnhancedPDFStorage",
+          "new": "from services.pdf.pdf_storage_enhanced import EnhancedPDFStorage",
+          "line": 25
+        },
+        {
+          "current": "from pdf.main import PDFService",
+          "new": "from services.pdf.main import PDFService",
+          "line": 87
+        },
+        {
+          "current": "from pdf.text_only_processor import TextOnlyProcessor",
+          "new": "from services.pdf.text_only_processor import TextOnlyProcessor",
+          "line": 35
+        },
+        {
+          "current": "from pdf.pdf_validator import PDFValidator",
+          "new": "from services.pdf.pdf_validator import PDFValidator",
+          "line": 39
+        },
+        {
+          "current": "from pdf.database_health_monitor import DatabaseHealthMonitor",
+          "new": "from services.pdf.database_health_monitor import DatabaseHealthMonitor",
+          "line": 44
+        },
+        {
+          "current": "from pdf.database_error_recovery import DatabaseErrorRecovery",
+          "new": "from services.pdf.database_error_recovery import DatabaseErrorRecovery",
+          "line": 49
+        },
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 54
+        },
+        {
+          "current": "from pdf.pdf_health import PDFHealthManager",
+          "new": "from services.pdf.pdf_health import PDFHealthManager",
+          "line": 62
+        }
+      ],
+      "total_imports": 15,
+      "internal_imports": 11
+    },
+    {
+      "file": "cli/legal.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 19
+        },
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 21
+        }
+      ],
+      "total_imports": 10,
+      "internal_imports": 3
+    },
+    {
+      "file": "cli/upload.py",
+      "imports_to_update": [
+        {
+          "current": "from shared.ingestion.simple_upload_processor import get_upload_processor",
+          "new": "from lib.shared.ingestion.simple_upload_processor import get_upload_processor",
+          "line": 15
+        }
+      ],
+      "total_imports": 4,
+      "internal_imports": 1
+    },
+    {
+      "file": "cli/entity.py",
+      "imports_to_update": [
+        {
+          "current": "from shared.processors.unified_entity_processor import UnifiedEntityProcessor",
+          "new": "from lib.shared.processors.unified_entity_processor import UnifiedEntityProcessor",
+          "line": 18
+        }
+      ],
+      "total_imports": 6,
+      "internal_imports": 1
+    },
+    {
+      "file": "cli/__main__.py",
+      "imports_to_update": [
+        {
+          "current": "from cli.search import main",
+          "new": "from services.cli.search import main",
+          "line": 17
+        },
+        {
+          "current": "from cli.embed import main",
+          "new": "from services.cli.embed import main",
+          "line": 19
+        },
+        {
+          "current": "from cli.db import main",
+          "new": "from services.cli.db import main",
+          "line": 21
+        },
+        {
+          "current": "from cli.index import main",
+          "new": "from services.cli.index import main",
+          "line": 23
+        },
+        {
+          "current": "from cli.admin import main",
+          "new": "from services.cli.admin import main",
+          "line": 25
+        },
+        {
+          "current": "from cli.view import main",
+          "new": "from services.cli.view import main",
+          "line": 27
+        }
+      ],
+      "total_imports": 7,
+      "internal_imports": 6
+    },
+    {
+      "file": "scripts/data/parse_all_emails.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import MessageDeduplicator",
+          "new": "from gmail.parsing.message_deduplicator import MessageDeduplicator",
+          "line": 13
+        }
+      ],
+      "total_imports": 6,
+      "internal_imports": 2
+    },
+    {
+      "file": "scripts/data/parse_messages.py",
+      "imports_to_update": [
+        {
+          "current": "from email_parsing.message_deduplicator import MessageDeduplicator",
+          "new": "from gmail.parsing.message_deduplicator import MessageDeduplicator",
+          "line": 15
+        }
+      ],
+      "total_imports": 8,
+      "internal_imports": 2
+    },
+    {
+      "file": "scripts/data/backfill_summaries.py",
+      "imports_to_update": [
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 14
+        }
+      ],
+      "total_imports": 5,
+      "internal_imports": 2
+    },
+    {
+      "file": "scripts/data/backfill_semantic.py",
+      "imports_to_update": [
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 15
+        }
+      ],
+      "total_imports": 7,
+      "internal_imports": 3
+    },
+    {
+      "file": "infrastructure/mcp_servers/legal_intelligence_mcp.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 43
+        }
+      ],
+      "total_imports": 17,
+      "internal_imports": 4
+    },
+    {
+      "file": "infrastructure/mcp_servers/legal_service_validator.py",
+      "imports_to_update": [
+        {
+          "current": "from entity.main import EntityService",
+          "new": "from services.entity.main import EntityService",
+          "line": 55
+        }
+      ],
+      "total_imports": 7,
+      "internal_imports": 2
+    },
+    {
+      "file": "gmail/gmail_api.py",
+      "imports_to_update": [
+        {
+          "current": "from shared.utils.error_handler import ErrorHandler",
+          "new": "from lib.utils.error_handler import ErrorHandler",
+          "line": 8
+        },
+        {
+          "current": "from shared.utils.retry_helper import retry_network",
+          "new": "from lib.utils.retry_helper import retry_network",
+          "line": 9
+        }
+      ],
+      "total_imports": 9,
+      "internal_imports": 2
+    },
+    {
+      "file": "gmail/main.py",
+      "imports_to_update": [
+        {
+          "current": "from summarization import get_document_summarizer",
+          "new": "from services.summarization import get_document_summarizer",
+          "line": 8
+        },
+        {
+          "current": "from shared.email.email_cleaner import EmailCleaner",
+          "new": "from gmail.utils.email_cleaner import EmailCleaner",
+          "line": 12
+        },
+        {
+          "current": "from shared.processors.thread_manager import ThreadService",
+          "new": "from lib.shared.processors.thread_manager import ThreadService",
+          "line": 13
+        },
+        {
+          "current": "from shared.processors.thread_manager import deduplicate_messages",
+          "new": "from lib.shared.processors.thread_manager import deduplicate_messages",
+          "line": 13
+        },
+        {
+          "current": "from shared.processors.thread_manager import extract_thread_messages",
+          "new": "from lib.shared.processors.thread_manager import extract_thread_messages",
+          "line": 13
+        },
+        {
+          "current": "from shared.processors.thread_manager import quoted_message_to_dict",
+          "new": "from lib.shared.processors.thread_manager import quoted_message_to_dict",
+          "line": 473
+        }
+      ],
+      "total_imports": 18,
+      "internal_imports": 10
+    }
+  ],
+  "all_internal_modules": [
+    "cli.admin",
+    "cli.db",
+    "cli.embed",
+    "cli.index",
+    "cli.search",
+    "cli.view",
+    "deduplication.near_duplicate_detector",
+    "email_parsing.message_deduplicator",
+    "entity.main",
+    "pdf.database_error_recovery",
+    "pdf.database_health_monitor",
+    "pdf.main",
+    "pdf.pdf_health",
+    "pdf.pdf_idempotent_writer",
+    "pdf.pdf_processor_enhanced",
+    "pdf.pdf_storage_enhanced",
+    "pdf.pdf_validator",
+    "pdf.text_only_processor",
+    "pdf.wiring",
+    "shared.email.email_cleaner",
+    "shared.ingestion.simple_upload_processor",
+    "shared.processors.thread_manager",
+    "shared.processors.unified_entity_processor",
+    "shared.utils.error_handler",
+    "shared.utils.retry_helper",
+    "summarization",
+    "summarization.engine",
+    "summarization.main"
+  ],
+  "total_updates_needed": 63
+}

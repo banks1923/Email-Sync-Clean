@@ -1,0 +1,154 @@
+{
+  "timestamp": "2025-09-05 16:40:12",
+  "summary": {
+    "total_errors": 5,
+    "total_warnings": 1,
+    "categories_with_errors": [
+      "DATABASE",
+      "VECTOR_STORE",
+      "EMBEDDINGS",
+      "SEARCH",
+      "ALIGNMENT"
+    ],
+    "categories_with_warnings": [
+      "CONFIG"
+    ]
+  },
+  "errors": {
+    "DATABASE": [],
+    "VECTOR_STORE": [
+      {
+        "message": "Vector store check failed: '>' not supported between instances of 'NoneType' and 'int'",
+        "details": null,
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/tools/diagnostics/system_diagnostics.py\", line 205, in check_vector_store_integrity\n    if vector_count > 0:\n       ^^^^^^^^^^^^^^^^\nTypeError: '>' not supported between instances of 'NoneType' and 'int'\n"
+      }
+    ],
+    "EMBEDDINGS": [],
+    "SEARCH": [
+      {
+        "message": "Search failed for 'contract': Database query failed: no such column: metadata",
+        "details": null,
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 78, in keyword_search\n    results = _search_with_like(db, phrases, limit, filters)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 155, in _search_with_like\n    rows = db.fetch_all(sql, tuple(params))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/db.py\", line 128, in fetch_all\n    cursor = conn.execute(query, params)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsqlite3.OperationalError: no such column: metadata\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/tools/diagnostics/system_diagnostics.py\", line 294, in check_search_functionality\n    results = hybrid_search(query, limit=5)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/search.py\", line 398, in hybrid_search\n    kw_results = keyword_search(query, candidate_limit, filters) or []\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 80, in keyword_search\n    raise EnrichmentError(f\"Database query failed: {e}\") from e\nlib.exceptions.EnrichmentError: Database query failed: no such column: metadata\n"
+      },
+      {
+        "message": "Search failed for 'legal agreement tenant': Database query failed: no such column: metadata",
+        "details": null,
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 78, in keyword_search\n    results = _search_with_like(db, phrases, limit, filters)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 155, in _search_with_like\n    rows = db.fetch_all(sql, tuple(params))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/db.py\", line 128, in fetch_all\n    cursor = conn.execute(query, params)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsqlite3.OperationalError: no such column: metadata\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/tools/diagnostics/system_diagnostics.py\", line 294, in check_search_functionality\n    results = hybrid_search(query, limit=5)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/search.py\", line 398, in hybrid_search\n    kw_results = keyword_search(query, candidate_limit, filters) or []\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 80, in keyword_search\n    raise EnrichmentError(f\"Database query failed: {e}\") from e\nlib.exceptions.EnrichmentError: Database query failed: no such column: metadata\n"
+      },
+      {
+        "message": "Search failed for 'person:john': Database query failed: no such column: metadata",
+        "details": null,
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 78, in keyword_search\n    results = _search_with_like(db, phrases, limit, filters)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 155, in _search_with_like\n    rows = db.fetch_all(sql, tuple(params))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/db.py\", line 128, in fetch_all\n    cursor = conn.execute(query, params)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsqlite3.OperationalError: no such column: metadata\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jim/Projects/Litigator_solo/tools/diagnostics/system_diagnostics.py\", line 294, in check_search_functionality\n    results = hybrid_search(query, limit=5)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/search.py\", line 398, in hybrid_search\n    kw_results = keyword_search(query, candidate_limit, filters) or []\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jim/Projects/Litigator_solo/lib/keyword.py\", line 80, in keyword_search\n    raise EnrichmentError(f\"Database query failed: {e}\") from e\nlib.exceptions.EnrichmentError: Database query failed: no such column: metadata\n"
+      }
+    ],
+    "ALIGNMENT": [
+      {
+        "message": "Found 1 misaligned records",
+        "details": [
+          {
+            "id": 1,
+            "title": "Lab Results- 03:12:25.pdf",
+            "issue": "No vector"
+          }
+        ],
+        "traceback": null
+      }
+    ]
+  },
+  "warnings": {
+    "CONFIG": [
+      {
+        "message": "Missing file: data/system_data/content.db",
+        "details": null
+      }
+    ]
+  },
+  "info": {
+    "CONFIG": [
+      {
+        "message": "Found: data/system_data/emails.db",
+        "details": null
+      },
+      {
+        "message": "Found: .config/credentials.json",
+        "details": null
+      },
+      {
+        "message": "QDRANT_HOST=localhost",
+        "details": null
+      },
+      {
+        "message": "LOG_LEVEL=INFO",
+        "details": null
+      },
+      {
+        "message": "USE_CLOUD_EMBEDDINGS=false",
+        "details": null
+      }
+    ],
+    "DATABASE": [
+      {
+        "message": "Table exists: content_unified",
+        "details": null
+      },
+      {
+        "message": "Table exists: individual_messages",
+        "details": null
+      },
+      {
+        "message": "Table exists: message_occurrences",
+        "details": null
+      },
+      {
+        "message": "Table exists: document_summaries",
+        "details": null
+      },
+      {
+        "message": "Table exists: entities",
+        "details": null
+      },
+      {
+        "message": "Total content: 1, Total messages: 0",
+        "details": null
+      }
+    ],
+    "VECTOR_STORE": [
+      {
+        "message": "Vectors: None, Points: 1",
+        "details": null
+      }
+    ],
+    "EMBEDDINGS": [
+      {
+        "message": "Encoded 10 chars in 1.72s",
+        "details": null
+      },
+      {
+        "message": "Encoded 45 chars in 0.17s",
+        "details": null
+      },
+      {
+        "message": "Encoded 5000 chars in 0.11s",
+        "details": null
+      },
+      {
+        "message": "Using local embeddings",
+        "details": null
+      }
+    ]
+  },
+  "statistics": {
+    "content_count": 1,
+    "message_count": 0,
+    "vector_count": null,
+    "point_count": 1
+  },
+  "check_results": {
+    "Configuration": true,
+    "Database Integrity": true,
+    "Vector Store": false,
+    "Embedding Service": true,
+    "Search Functionality": false,
+    "Data Alignment": false
+  }
+}
