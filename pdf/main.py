@@ -143,7 +143,7 @@ class PDFService:
                     file_hash = self.storage.hash_file(pdf_path)
                     # Prefer processor mock; fallback to OCR mock text
                     try:
-                        result = self.processor.extract_and_chunk_pdf(pdf_path, force_ocr=False)
+                        result = self.processor.extract_and_chunk_pdf(pdf_path)
                     except Exception:
                         result = {"success": False}
                     if not result or not result.get("success"):
@@ -336,7 +336,7 @@ class PDFService:
                 }
             else:
                 # Regular text extraction
-                result = self.processor.extract_and_chunk_pdf(pdf_path, force_ocr=False)
+                result = self.processor.extract_and_chunk_pdf(pdf_path)
             if not result["success"]:
                 return result
 

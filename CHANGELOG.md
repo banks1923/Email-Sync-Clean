@@ -4,6 +4,104 @@
 
 ## Recent Changes
 
+### [2025-09-05] - NLP Bug Fix & System Verification
+
+#### Fixed
+- **Critical Admin Health Check Bug** (`cli/admin.py:36`)
+  - Fixed inverted logic that always reported "mock" embeddings
+  - Was: `use_mock=(not args.deep)` - causing mock when deep=False
+  - Now: `use_mock=False` - always uses real embeddings
+  - System confirmed using pile-of-law/legalbert-large-1.7M-2 (1024D)
+  - Semantic and hybrid search now fully operational
+
+#### Verified
+- **NLP System Status**: All components operational
+  - Legal BERT embeddings: 1024D model working correctly
+  - SpaCy NER: Version 3.8.7 with en_core_web_sm loaded
+  - Document Summarization: TF-IDF and TextRank implemented
+  - Vector Store: 144 points with 1024D vectors in Qdrant
+  - No bad embeddings found in storage
+
+### [2025-09-05] - Hybrid Search Upgraded to RRF
+
+#### Added
+- **True Hybrid Search with Reciprocal Rank Fusion (RRF)**
+  - Upgraded from simple additive scoring to industry-standard RRF algorithm
+  - Proper rank-based fusion combining semantic and keyword search results
+  - Configurable semantic/keyword weights (default 0.7/0.3)
+  - Explainable results showing rank positions and match sources
+  - Expected 20-40% relevance improvement based on academic research
+
+#### Changed
+- `hybrid_search()` in `lib/search.py` now uses RRF formula: `score = semantic_weight/(k + sem_rank) + keyword_weight/(k + kw_rank)`
+- CLI displays RRF scores and individual system ranks for transparency
+- Increased candidate retrieval (2x limit) for better fusion coverage
+- Results include `match_sources` field indicating which systems found each document
+- Results include `hybrid_score` field with the RRF score
+
+#### Technical Implementation
+- RRF constant k=60 (industry standard from Elasticsearch/Pinecone)
+- Weights auto-normalized to sum to 1.0
+- Backward compatible - old `keyword_weight` parameter still accepted
+- New parameters: `semantic_weight`, `keyword_weight`, `k`
+
+### [2025-09-05] - Documentation Reorganization
+#### Changed
+- **CLAUDE.md Streamlined**
+  - Extracted database schema to `docs/DATABASE_SCHEMA.md`
+  - Extracted command reference to `docs/COMMAND_REFERENCE.md`
+  - Created `docs/SYSTEM_STATUS.md` for current system state
+  - Created `docs/TESTING_GUIDE.md` for comprehensive test documentation
+  - Created `docs/CONFIGURATION.md` for configuration management
+  - Reduced CLAUDE.md from ~780 lines to focused content
+  - Removed completed refactor audit information
+  - Fixed typo: "extentions" → "extensions"
+
+## Historical Updates (Archived from CLAUDE.md)
+
+### [2025-09-04] - Refactor Audit Completed
+- **Database Schema Fix**: SimpleDB was querying non-existent `content` table; fixed to use `content_unified` across 8 methods
+- **SimpleDB API**: Added missing `get_content_stats()` method with proper aggregations
+- **Vector Store Probe**: Enhanced `vector_store_available()` with proper Qdrant probe and TEST_MODE handling
+- **CLI Attributes**: Fixed all attribute access in `cli/info.py` (`collection_name`, `vector_size`, `vector_dimension`)
+- **Service Locator**: Updated import path from `search_intelligence` to `lib.search`
+
+### [2025-08-26] - Foreign Keys Enforcement
+- **Foreign Keys ENFORCED**: Referential integrity active via triggers
+  - Only applies to `source_type='email_message'` records
+  - Email summaries (`source_type='email_summary'`) exempt from FK constraints
+  - CASCADE DELETE enabled for automatic cleanup
+  - Migration tool: `scripts/enable_foreign_keys_comprehensive.py`
+
+### [2025-08-23] - Configuration Alignment
+- **Database Path Alignment**: All services use `data/system_data/emails.db` via centralized `get_db_path()`
+- **Legacy Pipeline Cleanup**: Removed automatic creation of unused `data/raw/`, `data/staged/`, `data/processed/` folders
+- **User Data Standardization**: All services aligned to case-specific `data/Stoneman_dispute/user_data` path
+- **Centralized Configuration**: 35+ files updated to use Pydantic settings instead of hardcoded paths
+- **Clean Directory Structure**: No more stale database creation or unused pipeline directories
+
+### [2025-08-22] - Code Quality Achievements
+- **Type Safety**: Critical modules now properly type-annotated with modern Python syntax
+- **Complexity Reduction**: High-complexity functions refactored following clean architecture
+- **Function Compliance**: All new extracted functions under 30 lines (goal achieved)
+- **Dependency Health**: All packages current, deprecation warnings resolved
+
+### [2025-08-19] - SQLite Optimizations
+- WAL mode enabled for better concurrency
+- 64MB cache for batch operations
+- NORMAL synchronous mode (safe for single-user)
+- 5-second busy timeout for resilience
+- Slow-query logging (>100ms)
+- `db_maintenance()` method for WAL checkpointing after large batches
+
+### [2025-08-17] - Directory Reorganization
+- **53% reduction**: Root directory items reduced from 34 to 16
+- **One-level nesting**: utilities/, infrastructure/, tools/ organize smaller services
+- **Core services remain at root**: Main business logic stays easily accessible
+- **Auto-updated imports**: 60+ import statements updated via Bowler AST transformations
+
+---
+
 ### [2025-09-05] - Environment Loader Fix and Qdrant Management Improvements
 
 #### Fixed

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The search system provides semantic-only search using Legal BERT 1024-dimensional embeddings with Qdrant vector store. This is a pure semantic search architecture with no keyword search, no FTS, and no hybrid modes.
+The search system provides both semantic search using Legal BERT 1024-dimensional embeddings with Qdrant vector store, and true hybrid search using Reciprocal Rank Fusion (RRF) to combine semantic and keyword results. The system defaults to pure semantic search but supports industry-standard hybrid fusion when needed.
 
 ## Core API
 
@@ -39,12 +39,53 @@ results = search(
 **Returns:**
 List of documents with semantic similarity scores.
 
+### `hybrid_search(query, limit=10, filters=None, semantic_weight=0.7, keyword_weight=0.3)`
+
+True hybrid search with Reciprocal Rank Fusion (RRF). Combines semantic vector search and keyword search using industry-standard rank fusion algorithm.
+
+```python
+from lib.search import hybrid_search
+
+# Basic hybrid search (70% semantic, 30% keyword)
+results = hybrid_search("contract breach damages")
+
+# Adjust weights for more keyword focus
+results = hybrid_search(
+    "BATES-123 contract",
+    semantic_weight=0.3,
+    keyword_weight=0.7
+)
+
+# Equal weighting
+results = hybrid_search(
+    "lease termination",
+    semantic_weight=0.5,
+    keyword_weight=0.5
+)
+```
+
+**Parameters:**
+- `query` (str): Search query text
+- `limit` (int): Maximum results to return (default: 10)
+- `filters` (dict): Optional filters (same as semantic search)
+- `semantic_weight` (float): Weight for semantic search (default: 0.7)
+- `keyword_weight` (float): Weight for keyword search (default: 0.3)
+
+**Returns:**
+List of documents ranked by RRF score, with individual rank tracking and match source information.
+
+**RRF Algorithm:**
+```
+RRF Score = semantic_weight/(k + semantic_rank) + keyword_weight/(k + keyword_rank)
+```
+Where k=60 (standard constant used by Elasticsearch, Pinecone, etc.)
+
 ### `find_literal(pattern, limit=50, fields=None)`
 
 Find documents containing exact patterns. Use this for specific identifiers that need exact matching.
 
 ```python
-from search_intelligence import find_literal
+from lib.search import find_literal
 
 # Find BATES numbers
 docs = find_literal("BATES-00123")
@@ -77,11 +118,17 @@ The system is locked to the following configuration:
 ### CLI Usage
 
 ```bash
-# Semantic search
-tools/scripts/vsearch search "lease agreement" --limit 5
+# Pure semantic search
+tools/scripts/vsearch search semantic "lease agreement" --limit 5
 
-# Find exact patterns (coming soon in CLI)
-tools/scripts/vsearch find-literal "BATES-00123"
+# True hybrid search with RRF (default weights: 70% semantic, 30% keyword)
+tools/scripts/vsearch search hybrid "contract breach" --limit 10
+
+# Hybrid search with custom weights
+tools/scripts/vsearch search hybrid "BATES-123" --semantic-weight 0.3 --keyword-weight 0.7
+
+# Find exact patterns
+tools/scripts/vsearch search literal "BATES-00123" --limit 50
 ```
 
 ### Python Usage

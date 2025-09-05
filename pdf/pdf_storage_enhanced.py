@@ -105,7 +105,7 @@ class EnhancedPDFStorage:
                         metadata_json = json.dumps(legal_metadata)
 
                 if ready_col:
-                    db.execute_query(
+                    db.execute(
                         f"""
                         INSERT OR REPLACE INTO documents (
                             chunk_id, file_path, file_name, chunk_index, text_content,
@@ -132,7 +132,7 @@ class EnhancedPDFStorage:
                         ),
                     )
                 else:
-                    db.execute_query(
+                    db.execute(
                         """
                         INSERT OR REPLACE INTO documents (
                             chunk_id, file_path, file_name, chunk_index, text_content,
@@ -162,19 +162,18 @@ class EnhancedPDFStorage:
                 # Also add to content_unified table for unified access
                 # Combine all chunks for the full document text
                 full_text = " ".join([chunk.get("text", "") for chunk in chunks])
-                content_id = self.db.upsert_content(
-                    source_type="document",
-                    external_id=file_hash,  # Use file hash as unique external ID
-                    content_type="document",  # Required by method signature
+                content_id = self.db.add_content(
+                    content_type="document",
                     title=file_name,
                     content=full_text,
                     metadata={
-                        "source_path": pdf_path,
                         "extraction_method": extraction_method,
                         "ocr_confidence": ocr_confidence,
                         "legal_metadata": legal_metadata,
                         "chunk_count": len(chunks),
+                        "file_hash": file_hash,
                     },
+                    source_path=pdf_path
                 )
 
             return {"success": True, "chunks_stored": len(chunks), "content_id": content_id}

@@ -146,17 +146,24 @@ def display_literal_results(results, search_type, limit=None):
     print("\n" + "-" * 50)
 
 
-def hybrid_search_command(query: str, limit: int = 10, why: bool = False, keyword_weight: float = 0.2):
-    """Run hybrid-lite search.
+def hybrid_search_command(query: str, limit: int = 10, why: bool = False, 
+                         semantic_weight: float = 0.7, keyword_weight: float = 0.3):
+    """Run true hybrid search with RRF.
 
-    Fails fast (non-zero exit) if vector store is unavailable to avoid
-    masking issues.
+    Uses Reciprocal Rank Fusion to combine semantic and keyword search.
+    Fails fast (non-zero exit) if vector store is unavailable.
     """
-    print(f"🔎 Hybrid Search for: '{query}' (semantic + keyword)")
+    print(f"🔎 Hybrid Search (RRF) for: '{query}'")
+    print(f"   Weights: semantic={semantic_weight:.1f}, keyword={keyword_weight:.1f}")
     try:
         from lib.search import hybrid_search
 
-        results = hybrid_search(query=query, limit=limit, keyword_weight=keyword_weight)
+        results = hybrid_search(
+            query=query, 
+            limit=limit, 
+            semantic_weight=semantic_weight,
+            keyword_weight=keyword_weight
+        )
         if not results:
             print("❌ No results found")
             return False
@@ -188,10 +195,21 @@ def display_hybrid_results(results, title: str, limit: int = None, why: bool = F
 
     for i, r in enumerate(results, 1):
         print(f"\n{i}. [{r.get('source_type','unknown')}] {r.get('title','Untitled')}")
-        score = r.get("semantic_score", 0.0)
-        print(f"   Semantic score: {score:.3f}")
+        
+        # Show RRF hybrid score and match sources
+        hybrid_score = r.get("hybrid_score", 0.0)
+        match_sources = r.get("match_sources", [])
+        print(f"   RRF Score: {hybrid_score:.4f} | Sources: {', '.join(match_sources)}")
+        
+        # Show individual ranks if available
+        if "semantic_rank" in r:
+            print(f"   Semantic rank: #{r['semantic_rank']}, score: {r.get('semantic_score', 0.0):.3f}")
+        if "keyword_rank" in r:
+            print(f"   Keyword rank: #{r['keyword_rank']}")
+            
         if why and r.get("reasons"):
             print("   Why: " + "; ".join(str(x) for x in r["reasons"]))
+        
         content = r.get("content", "")
         if len(content) > 200:
             content = content[:197] + "..."
@@ -407,11 +425,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Search operations")
     sub = parser.add_subparsers(dest="mode")
 
-    p_hyb = sub.add_parser("hybrid", help="Hybrid search (default): semantic + keyword")
+    p_hyb = sub.add_parser("hybrid", help="Hybrid search with RRF: semantic + keyword")
     p_hyb.add_argument("query", nargs="?", help="Query text")
     p_hyb.add_argument("--limit", type=int, default=10)
     p_hyb.add_argument("--why", action="store_true", help="Explain match reasons")
-    p_hyb.add_argument("--keyword-weight", type=float, default=0.2)
+    p_hyb.add_argument("--semantic-weight", type=float, default=0.7, help="Weight for semantic (default: 0.7)")
+    p_hyb.add_argument("--keyword-weight", type=float, default=0.3, help="Weight for keyword (default: 0.3)")
 
     p_sem = sub.add_parser("semantic", help="Semantic-only search")
     p_sem.add_argument("query", nargs="?", help="Query text")
@@ -427,14 +446,16 @@ def main(argv=None):
     if args.mode is None:
         # Default to hybrid
         args = parser.parse_args(["hybrid"] + (argv or []))
-        ok = hybrid_search_command(args.query or "", limit=args.limit, why=args.why, keyword_weight=args.keyword_weight)
+        ok = hybrid_search_command(args.query or "", limit=args.limit, why=args.why, 
+                                  semantic_weight=args.semantic_weight, keyword_weight=args.keyword_weight)
         return 0 if ok else 2
 
     if args.mode == "hybrid":
         if not getattr(args, "query", None):
             parser.print_help()
             return 2
-        ok = hybrid_search_command(args.query, limit=args.limit, why=args.why, keyword_weight=args.keyword_weight)
+        ok = hybrid_search_command(args.query, limit=args.limit, why=args.why,
+                                  semantic_weight=args.semantic_weight, keyword_weight=args.keyword_weight)
         return 0 if ok else 2
 
     if args.mode == "semantic":

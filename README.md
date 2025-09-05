@@ -2,7 +2,7 @@
 
 AI-powered search system with Legal BERT semantic understanding for legal document analysis.
 
-> CURRENT: Production baseline — Gmail sync, hybrid search (default), and semantic-only mode.
+> CURRENT: Production baseline — Gmail sync, true hybrid search with RRF, and semantic-only mode.
 
 ## Core Commands
 
@@ -35,7 +35,7 @@ tools/scripts/vsearch sync-emails
 ## STATUS: PRODUCTION BASELINE (2025-08-26) - WORKING
 
 WORKING: **Gmail Sync v2.0**: Working with message-level deduplication and content reduction  
-WORKING: **Hybrid Search**: Default hybrid (semantic + keyword) with explainability  
+WORKING: **Hybrid Search**: True RRF hybrid search (semantic + keyword) with explainability  
 WORKING: **Vector Service**: Qdrant connected with Legal BERT ready for embeddings  
 WORKING: **Schema Compatibility**: All services aligned to v2.0 architecture  
 WORKING: **Debug Logging**: Enabled system-wide for troubleshooting  
@@ -99,7 +99,7 @@ python3 -m gmail.main
 - **Clean Architecture**: Simplified database-only system (analog removed)
 
 ### Search
-- **Hybrid (default)**: Merges semantic vectors with a minimal keyword lane using a small, explicit legal abbreviation map (e.g., MSJ → "motion for summary judgment").
+- **Hybrid (RRF)**: Industry-standard Reciprocal Rank Fusion combining semantic and keyword search with configurable weights (default: 70% semantic, 30% keyword).
 - **Semantic-only**: Pure vector search via Legal BERT (1024D) when you want semantics without keyword signals.
 - **Explainability**: Use `--why` with the CLI to see match reasons (semantic score and any keyword hits).
 - **Fail-fast**: If the vector store is unavailable, hybrid raises an error (no silent keyword fallback). Use `vsearch admin health` to diagnose.
@@ -133,7 +133,7 @@ User → CLI → Services → Data
               ↓
     ├── EmbeddingService (Legal BERT)
     ├── VectorStore (Qdrant)
-    ├── lib.search (semantic-only + hybrid merge)
+    ├── lib.search (semantic-only + RRF hybrid)
     ├── LegalIntelligence (Case analysis)
     ├── DocumentSummarizer (Auto-summarization)
     ├── CacheManager (Performance)
@@ -155,7 +155,7 @@ data/
 ### Core Services
 - **EmbeddingService**: Text-to-vector conversion using Legal BERT
 - **VectorStore**: Qdrant vector operations (optional)
-- **lib.search**: Hybrid (default) and semantic-only search; fail-fast on vector issues; explainable results
+- **lib.search**: RRF hybrid and semantic-only search; fail-fast on vector issues; explainable results with rank tracking
 - **SimpleDB**: Direct SQLite operations without abstractions
 
 ## PREREQUISITES

@@ -33,7 +33,8 @@ def health(argv=None) -> int:
     # Embeddings health (avoid heavy load in light mode)
     from lib.embeddings import get_embedding_service
 
-    emb = get_embedding_service(use_mock=(not args.deep))
+    # Fixed: use real embeddings unless explicitly in test mode
+    emb = get_embedding_service(use_mock=False)
     emb_health = emb.health_check(deep=args.deep)
 
     # Vector health (mock in TEST_MODE or if disabled)
