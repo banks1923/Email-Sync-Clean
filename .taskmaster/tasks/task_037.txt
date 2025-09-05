@@ -1,0 +1,15 @@
+# Task ID: 37
+# Title: Remove SearchIntelligenceService class and deprecated main.py
+# Status: pending
+# Dependencies: 36
+# Priority: high
+# Description: Delete obsolete abstractions, reduce __init__.py to 13 lines exporting only public APIs.
+# Details:
+1. Delete search_intelligence/main.py.
+2. Remove SearchIntelligenceService class; search for imports & replace with direct search()/find_literal().
+3. Shrink __init__.py: `from .basic_search import search, find_literal, vector_store_available` plus exception re-exports.
+4. Ensure no remaining references via grep.
+
+# Test Strategy:
+• run `pytest -q` – no ImportError.
+• Grep for `SearchIntelligenceService` and `main.py` – expect 0 hits.

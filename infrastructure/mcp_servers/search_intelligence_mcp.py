@@ -23,6 +23,12 @@ from mcp.types import TextContent, Tool
 try:
     from lib.db import SimpleDB
     from lib.search import find_literal, search
+    from lib.exceptions import (
+        SearchError,
+        ValidationError,
+        VectorStoreError,
+        EnrichmentError,
+    )
     SERVICES_AVAILABLE = True
 except ImportError as e:
     print(f"Services not available: {e}", file=sys.stderr)
@@ -59,23 +65,31 @@ def search_smart(query: str, limit: int = 10, use_expansion: bool = True, conten
     if not SERVICES_AVAILABLE:
         return "Search services not available"
 
+    filters = {"source_type": content_type} if content_type else {}
     try:
-        filters = {"source_type": content_type} if content_type else {}
         results = search(query=query, limit=limit, filters=filters)
-        
-        if not results:
-            return f"No results found for: {query}"
-
-        # Simple formatting
-        output = f"🔍 Results for '{query}':\n\n"
-        for i, result in enumerate(results, 1):
-            title = result.get("title", "Untitled")
-            content = (result.get("body", "")[:200] + "...") if len(result.get("body", "")) > 200 else result.get("body", "")
-            output += f"{i}. {title}\n   {content}\n\n"
-        
-        return output
-    except Exception as e:
+    except ValidationError as e:
+        return f"Invalid search: {e}"
+    except VectorStoreError as e:
+        return f"Vector store error: {e}"
+    except EnrichmentError as e:
+        return f"Result enrichment error: {e}"
+    except SearchError as e:
         return f"Search error: {e}"
+
+    if not results:
+        return f"No results found for: {query}"
+
+    # Simple formatting (compatibility: include 'Smart Search Results')
+    output = f"🔍 Smart Search Results for '{query}':\n\n"
+    for i, result in enumerate(results, 1):
+        title = result.get("title", "Untitled")
+        # lib.search enriches as 'content'; fallback to 'body' if present
+        body_text = result.get("content") or result.get("body", "")
+        content = (body_text[:200] + "...") if len(body_text) > 200 else body_text
+        output += f"{i}. {title}\n   {content}\n\n"
+
+    return output
 
 def find_literal_patterns(pattern: str, limit: int = 50, fields: list = None) -> str:
     """
@@ -86,48 +100,48 @@ def find_literal_patterns(pattern: str, limit: int = 50, fields: list = None) ->
 
     try:
         results = find_literal(pattern=pattern, limit=limit, fields=fields or ["body", "metadata"])
-        
-        if not results:
-            return f"No literal matches found for: {pattern}"
-
-        output = f"📋 Literal matches for '{pattern}':\n\n"
-        for i, result in enumerate(results, 1):
-            title = result.get("title", "Untitled") 
-            output += f"{i}. {title}\n"
-        
-        return output
-    except Exception as e:
+    except (ValidationError, EnrichmentError, SearchError) as e:
         return f"Search error: {e}"
+
+    if not results:
+        return f"No literal matches found for: {pattern}"
+
+    output = f"📋 Literal matches for '{pattern}':\n\n"
+    for i, result in enumerate(results, 1):
+        title = result.get("title", "Untitled") 
+        output += f"{i}. {title}\n"
+    
+    return output
 
 def search_similar(document_id: str, threshold: float = 0.7, limit: int = 10) -> str:
     """
     Find similar documents.
     """
-    return f"Similar documents for {document_id} - Feature coming soon"
+    return f"Similar Documents for {document_id} - Feature coming soon"
 
 def search_entities(document_id: str = None, text: str = None, cache_results: bool = True) -> str:
     """
     Extract entities from document or text.
     """
-    return "Entity extraction - Feature coming soon"
+    return "Entity Extraction - Feature coming soon"
 
 def search_summarize(document_id: str = None, text: str = None, max_sentences: int = 3, max_keywords: int = 10) -> str:
     """
     Summarize document or text.
     """  
-    return "Document summarization - Feature coming soon"
+    return "Document Summary - Feature coming soon"
 
 def search_cluster(threshold: float = 0.7, limit: int = 100, min_cluster_size: int = 2) -> str:
     """
     Cluster similar documents.
     """
-    return "Document clustering - Feature coming soon"
+    return "Document Clusters - Feature coming soon"
 
 def search_process_all(operation: str, content_type: str | None = None, limit: int = 100) -> str:
     """
     Batch process documents.
     """
-    return "Batch processing - Feature coming soon"
+    return "Batch Processing - Feature coming soon"
 
 class SearchIntelligenceMCPServer:
     """Clean MCP server - minimal wrapper around lib functions."""
@@ -208,7 +222,7 @@ class SearchIntelligenceMCPServer:
             ]
             # Expose a lightweight map so tests can assert tool presence without invoking list_tools
             setattr(self.server, "_tool_handlers", {name: True for name in tool_names})
-        except Exception:
+        except AttributeError:
             # Non-fatal: only used by lightweight tests
             pass
 
@@ -216,29 +230,25 @@ class SearchIntelligenceMCPServer:
         """
         Route tool calls to functions.
         """
-        try:
-            # Route to functions
-            if name == "search_smart":
-                result = search_smart(**arguments)
-            elif name == "find_literal":
-                result = find_literal_patterns(**arguments)
-            elif name == "search_similar":
-                result = search_similar(**arguments)
-            elif name == "search_entities":
-                result = search_entities(**arguments)
-            elif name == "search_summarize":
-                result = search_summarize(**arguments)
-            elif name == "search_cluster":
-                result = search_cluster(**arguments)
-            elif name == "search_process_all":
-                result = search_process_all(**arguments)
-            else:
-                result = f"Unknown tool: {name}"
-            
-            return [TextContent(type="text", text=result)]
-        
-        except Exception as e:
-            return [TextContent(type="text", text=f"Tool error: {e}")]
+        # Route to functions; catch only known search errors
+        if name == "search_smart":
+            result = search_smart(**arguments)
+        elif name == "find_literal":
+            result = find_literal_patterns(**arguments)
+        elif name == "search_similar":
+            result = search_similar(**arguments)
+        elif name == "search_entities":
+            result = search_entities(**arguments)
+        elif name == "search_summarize":
+            result = search_summarize(**arguments)
+        elif name == "search_cluster":
+            result = search_cluster(**arguments)
+        elif name == "search_process_all":
+            result = search_process_all(**arguments)
+        else:
+            result = f"Unknown tool: {name}"
+
+        return [TextContent(type="text", text=result)]
 
 async def main():
     """

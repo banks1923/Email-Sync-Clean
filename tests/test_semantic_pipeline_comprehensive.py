@@ -17,10 +17,10 @@ os.environ["SEMANTICS_ON_INGEST"] = "true"
 
 from config.settings import semantic_settings
 from lib.db import SimpleDB
-from lib.pipelines import SemanticPipeline, get_semantic_pipeline
+from lib.pipelines import ChunkPipeline
 
 
-class TestSemanticPipeline(unittest.TestCase):
+class TestChunkPipeline(unittest.TestCase):
     """
     Test semantic pipeline functionality.
     """
@@ -41,7 +41,7 @@ class TestSemanticPipeline(unittest.TestCase):
         self.mock_timeline_service = Mock()
 
         # Create pipeline with mocked services
-        self.pipeline = SemanticPipeline(
+        self.pipeline = ChunkPipeline(
             db=self.db,
             embedding_service=self.mock_embedding_service,
             vector_store=self.mock_vector_store,

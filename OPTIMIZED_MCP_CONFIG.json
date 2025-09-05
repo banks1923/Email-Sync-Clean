@@ -1,0 +1,70 @@
+{
+  "description": "Optimized MCP configuration for low-memory systems",
+  "recommendations": {
+    "claude_code_terminal": {
+      "file": ".mcp.json",
+      "config": {
+        "mcpServers": {
+          "sequential-thinking": {
+            "type": "stdio",
+            "command": "python3",
+            "args": [
+              "/Users/jim/Projects/mcp-sequential-thinking/run_server.py"
+            ],
+            "env": {
+              "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
+              "MCP_STORAGE_DIR": "/Users/jim/Projects/Litigator_solo/data/system_data/sequential_thinking"
+            }
+          }
+        }
+      },
+      "notes": "Minimal config with just sequential-thinking for memory efficiency"
+    },
+    "claude_desktop": {
+      "file": "~/Library/Application Support/Claude/claude_desktop_config.json",
+      "config": {
+        "mcpServers": {
+          "sequential-thinking": {
+            "command": "python3",
+            "args": [
+              "/Users/jim/Projects/mcp-sequential-thinking/run_server.py"
+            ],
+            "env": {
+              "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
+              "MCP_STORAGE_DIR": "/Users/jim/Library/Application Support/Claude/sequential_thinking_data"
+            }
+          }
+        }
+      },
+      "notes": "Direct Python execution, no NPX overhead"
+    },
+    "optional_additions": {
+      "legal-intelligence": {
+        "type": "stdio",
+        "command": "python3",
+        "args": ["infrastructure/mcp_servers/legal_intelligence_mcp.py"],
+        "env": {"PYTHONPATH": "/Users/jim/Projects/Litigator_solo"}
+      },
+      "search-intelligence": {
+        "type": "stdio", 
+        "command": "python3",
+        "args": ["infrastructure/mcp_servers/search_intelligence_mcp.py"],
+        "env": {"PYTHONPATH": "/Users/jim/Projects/Litigator_solo"}
+      }
+    }
+  },
+  "memory_savings": {
+    "removed": [
+      "task-master Node.js server (missing file anyway)",
+      "filesystem MCP server (can use native file operations)",
+      "git MCP server (can use CLI directly)",
+      "NPX wrappers for Python servers"
+    ],
+    "estimated_savings": "~200-400MB RAM by avoiding Node.js overhead"
+  },
+  "files_to_remove": [
+    "~/.config/claude-desktop/claude_desktop_config.json",
+    "/Users/jim/Projects/Litigator_solo/.config/.mcp.json",
+    "/Users/jim/Projects/Litigator_solo/.claude/mcp.json"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["/Users/jim/Projects/mcp-sequential-thinking/run_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
+        "MCP_STORAGE_DIR": "data/system_data/sequential_thinking"
+      }
+    }
+  }
+}

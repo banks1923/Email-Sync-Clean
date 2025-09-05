@@ -1,0 +1,16 @@
+# Task ID: 45
+# Title: Final performance benchmarking & validation
+# Status: pending
+# Dependencies: 40, 42, 43
+# Priority: medium
+# Description: Run load tests, ensure success criteria met, and tag release.
+# Details:
+1. Use Locust to simulate 20 concurrent searches of 100 results → <1s avg.
+2. Memory profiling with tracemalloc – peak <100 MB.
+3. Run full security scan (bandit, safety).
+4. Tag v1.3.0-semantic-fix in git.
+
+# Test Strategy:
+• Attach locust report; assert KPIs.
+• CI pipeline must pass security gates.
+• Manual smoke test via CLI & MCP.

@@ -10,6 +10,12 @@ If the 'rich' library is unavailable, falls back to plain text output.
 
 import argparse
 from typing import Dict, List
+from lib.exceptions import (
+    ValidationError,
+    VectorStoreError,
+    EnrichmentError,
+    SearchError,
+)
 
 
 def _plain_render(results: List[Dict], query: str) -> None:
@@ -89,18 +95,30 @@ def main(argv=None) -> int:
 
     try:
         from lib.search import search as perform_search
-    except Exception as e:
+    except ImportError as e:
         print(f"Search library unavailable: {e}")
         return 2
 
-    results = perform_search(args.query, limit=args.limit) or []
-    if not results:
-        print("No results found")
-        return 1
+    try:
+        results = perform_search(args.query, limit=args.limit) or []
+        if not results:
+            print("No results found")
+            return 1
+    except ValidationError as e:
+        print(f"Invalid query: {e}")
+        return 2
+    except VectorStoreError as e:
+        print(f"Vector store error: {e}")
+        return 2
+    except EnrichmentError as e:
+        print(f"Enrichment error: {e}")
+        return 2
+    except SearchError as e:
+        print(f"Search failed: {e}")
+        return 2
 
     return _rich_render(results, args.query, args.interactive)
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

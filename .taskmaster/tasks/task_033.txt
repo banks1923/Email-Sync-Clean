@@ -1,0 +1,15 @@
+# Task ID: 33
+# Title: Implement comprehensive input validation layer
+# Status: pending
+# Dependencies: 32
+# Priority: high
+# Description: Validate query, limit, filters, and date formats at API boundary for search() and find_literal().
+# Details:
+1. Add validators.py with `validate_search_params` per PRD.
+2. Incorporate into search() & find_literal(): call validator before any DB access.
+3. Clamp limit 1‒200; coerce or reject invalid types; verify filters dict & date RFC3339.
+4. On failure raise ValidationError.
+
+# Test Strategy:
+• Parameterized pytest covering: negative limit, >200, empty query, wrong filter type, bad date.
+• Fuzz test random unicode input – expect ValidationError not crash.

@@ -1,0 +1,15 @@
+# Task ID: 35
+# Title: Replace N+1 enrichment with batched enrichment function
+# Status: pending
+# Dependencies: 34
+# Priority: high
+# Description: Implement _enrich_vector_results_batch using 500-item chunks to fetch content data in bulk.
+# Details:
+1. Add function to basic_search.py per PRD snippet.
+2. Remove / rename old _enrich_vector_results; update all call sites.
+3. Use list comprehension to build content_id list, iterate in range(0,len,…,500).
+4. Handle missing IDs gracefully; on DB timeout raise EnrichmentError.
+
+# Test Strategy:
+• Unit test with 1000 fake vector rows – assert only 2 DB calls (patch cursor.execute counter).
+• Perf test: <200 ms for 1000 rows on sample DB.

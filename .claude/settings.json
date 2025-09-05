@@ -1,31 +1,29 @@
 {
   "allowedTools": [
     "Edit",
-    "Read", 
+    "Read",
     "Write",
     "MultiEdit",
-    "Bash",
     "LS",
     "Glob",
     "Grep",
     "TodoWrite",
-    "WebFetch",
-    "WebSearch",
-    "mcp__task-master-ai__*",
-    "mcp__legal-intelligence__*",
+    "mcp__filesystem__*",
     "mcp__search-intelligence__*",
-    "mcp__sequential-thinking__*",
-    "mcp__filesystem__*"
-  ],
-  "autoApprove": [
-    "Bash(task-master *)",
     "Bash(git status)",
     "Bash(git diff)",
-    "Bash(make *)",
-    "Bash(python3 scripts/*)",
-    "mcp__task-master-ai__get_tasks",
-    "mcp__task-master-ai__next_task",
-    "mcp__task-master-ai__get_task"
+    "Bash(python3 -m cli *)",
+    "Bash(task-master list)",
+    "Bash(task-master next)",
+    "Bash(task-master show *)",
+    "Bash(task-master set-status *)"
+  ],
+  "autoApprove": [
+    "Read",
+    "LS",
+    "Grep",
+    "Bash(git status)",
+    "Bash(git diff)"
   ],
   "preferences": {
     "codeStyle": "pythonic",

@@ -4,6 +4,34 @@
 
 ## Recent Changes
 
+### [2025-09-05] - Phase 1 Critical Fixes: Test Infrastructure & Error Handling
+
+#### Fixed
+- **Test Import Errors**
+  - Fixed `tests/utilities/test_embedding_service.py` to import from `lib.embeddings` instead of non-existent `lib.embeddings.embedding_service`
+  - Fixed `tests/test_semantic_pipeline_comprehensive.py` to use `ChunkPipeline` instead of non-existent `SemanticPipeline`
+  - Fixed `tests/test_email_integration.py` to import from `scripts.data.parse_messages` instead of `scripts.parse_messages`
+  - Updated test expectations to match actual implementation (768D for mock embeddings vs 1024D)
+
+- **Replaced Broad Exception Handlers**
+  - **lib/vector_store.py**: Replaced 10+ instances of `except Exception` with specific exceptions:
+    - `UnexpectedResponse`, `ResponseHandlingException` for Qdrant operations
+    - `ConnectionError`, `OSError` for network issues
+    - `ValueError` for data validation
+    - Added proper logging with context for each exception type
+  - **lib/db.py**: Replaced broad exception handler with `sqlite3.Error`, `OSError`, `ValueError`
+  - Added missing `loguru` import to vector_store.py for proper logging
+
+- **Error Propagation Enhancement**
+  - Verified `lib/search.py` already has proper error propagation with specific exceptions
+  - Added normalization of Qdrant exceptions to `ConnectionError` for consistent handling
+  - Maintained fail-fast behavior for vector store unavailability
+
+#### Test Results
+- Tests now running: 213 passed (up from 0), 164 failed (down from all), 11 errors
+- Core functionality tests passing including search, embeddings, and database operations
+- Remaining failures mostly in integration tests requiring further setup
+
 ### [2025-09-04] - Documentation Update: README.md Alignment
 
 #### Changed

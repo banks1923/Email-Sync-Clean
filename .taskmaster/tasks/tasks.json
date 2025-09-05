@@ -9,8 +9,54 @@
         "testStrategy": "• Grep for `except Exception` – expect 0 matches.\n• Unit test: raise ValidationError in search and assert correct propagation.\n• Pytest `raises(SearchError)` for each public function when invalid input supplied.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create exceptions.py",
+            "description": "Define SearchError, ValidationError, VectorStoreError, and EnrichmentError classes inheriting from built-in Exception.",
+            "dependencies": [],
+            "details": "Implement a new file named exceptions.py that contains the defined exception classes.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Update search modules",
+            "description": "Modify basic_search.py, similarity.py, and duplicate_detector.py to import exceptions and raise specific errors.",
+            "dependencies": [],
+            "details": "Replace generic Exception handling with specific exceptions from the new exceptions.py.",
+            "status": "in-progress",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Refactor exception handling",
+            "description": "Remove all broad except Exception: blocks and catch explicit subclasses where unavoidable.",
+            "dependencies": [],
+            "details": "Ensure that all modules handle exceptions explicitly using the new exception hierarchy.",
+            "status": "pending",
+            "testStrategy": "Grep for 'except Exception' – expect 0 matches."
+          },
+          {
+            "id": 4,
+            "title": "Update __init__.py for compatibility",
+            "description": "Add module-level re-export for exceptions in __init__.py for backwards compatibility.",
+            "dependencies": [],
+            "details": "Include the line 'from .exceptions import *  # noqa' in __init__.py.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Unit test exception hierarchy",
+            "description": "Create unit tests to validate the propagation of the new exceptions.",
+            "dependencies": [],
+            "details": "Write tests to ensure that raising ValidationError in search correctly propagates.",
+            "status": "pending",
+            "testStrategy": "Unit test: raise ValidationError in search and assert correct propagation."
+          }
+        ]
       },
       {
         "id": 33,
@@ -23,7 +69,139 @@
           32
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and implement validators.py with validate_search_params function",
+            "description": "Create a new validators.py module containing the validate_search_params function as specified in the PRD, covering validation logic for query, limit, filters, and date formats.",
+            "dependencies": [],
+            "details": "Ensure the function enforces syntactic and semantic validation for all input parameters, including type checking, range clamping, and RFC3339 date format verification.",
+            "status": "pending",
+            "testStrategy": "Unit test validate_search_params with valid and invalid inputs for each parameter; assert correct validation and error raising."
+          },
+          {
+            "id": 2,
+            "title": "Integrate input validation into search() and find_literal() API boundaries",
+            "description": "Modify search() and find_literal() functions to invoke validate_search_params before any database access, ensuring all incoming parameters are validated.",
+            "dependencies": [
+              "33.1"
+            ],
+            "details": "Refactor API boundary logic to call the validator and halt execution on validation failure, raising ValidationError as needed.",
+            "status": "pending",
+            "testStrategy": "Parameterized tests for search() and find_literal() with invalid inputs; verify ValidationError is raised and no DB access occurs."
+          },
+          {
+            "id": 3,
+            "title": "Implement clamping, type coercion, and strict filter/date validation",
+            "description": "Within validate_search_params, clamp limit to 1–200, coerce or reject invalid types, verify filters is a dict, and enforce RFC3339 date format for date fields.",
+            "dependencies": [
+              "33.1"
+            ],
+            "details": "Apply best practices for type checking, range validation, and format enforcement to prevent malformed or malicious data from entering the system.",
+            "status": "pending",
+            "testStrategy": "Unit and fuzz tests for edge cases: negative/overflow limits, non-dict filters, malformed dates, and random unicode input; expect ValidationError."
+          },
+          {
+            "id": 4,
+            "title": "Implement and propagate ValidationError on input validation failure",
+            "description": "Ensure that any validation failure in validate_search_params results in raising a ValidationError, and that this error is properly propagated and handled at the API boundary.",
+            "dependencies": [
+              "33.2",
+              "33.3"
+            ],
+            "details": "Update exception handling to catch and propagate ValidationError, providing clear error messages without exposing sensitive details.",
+            "status": "pending",
+            "testStrategy": "Unit test error propagation; assert ValidationError is raised and handled correctly in search() and find_literal()."
+          },
+          {
+            "id": 5,
+            "title": "Develop comprehensive test suite for input validation layer",
+            "description": "Create parameterized and fuzz tests covering all validation scenarios, including negative/overflow limits, empty queries, wrong filter types, bad date formats, and random unicode input.",
+            "dependencies": [
+              "33.4"
+            ],
+            "details": "Ensure the test suite verifies correct validation behavior, error raising, and system robustness against malformed input.",
+            "status": "pending",
+            "testStrategy": "Run pytest with parameterized and fuzz cases; assert ValidationError is raised for all invalid inputs and no crashes occur."
+          },
+          {
+            "id": 6,
+            "title": "Design parameter-specific validation logic",
+            "description": "Define validation rules for each input parameter (query, limit, filters, date) according to PRD and security best practices.",
+            "dependencies": [],
+            "details": "Specify type, range, and format constraints for each parameter. Document edge cases such as empty strings, unicode, and malformed data. Ensure RFC3339 compliance for date fields and dictionary structure for filters.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement validators.py with modular validation functions",
+            "description": "Develop a validators.py module containing reusable functions for each parameter, including a composite validate_search_params entry point.",
+            "dependencies": [
+              "33.6"
+            ],
+            "details": "Implement type checks, range clamping (limit 1–200), and format validation. Ensure functions raise ValidationError with clear messages on failure. Structure code for maintainability and extensibility.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Integrate validation into search() and find_literal() API boundaries",
+            "description": "Call the validation layer at the start of each API method before any database access.",
+            "dependencies": [
+              "33.7"
+            ],
+            "details": "Update search() and find_literal() to invoke validate_search_params. Ensure all input is validated and errors are propagated before further processing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement robust error propagation and standardized messaging",
+            "description": "Define and enforce a consistent ValidationError structure and error response format for API consumers.",
+            "dependencies": [
+              "33.8"
+            ],
+            "details": "Standardize error codes, messages, and field-specific details. Ensure sensitive implementation details are not leaked in responses. Log detailed errors internally for debugging.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Handle edge cases and fuzz/unicode input scenarios",
+            "description": "Expand validation logic to address edge cases such as unicode, fuzzed input, and ambiguous or borderline values.",
+            "dependencies": [
+              "33.7"
+            ],
+            "details": "Test and refine validators to reject or sanitize problematic input. Document and handle cases like control characters, excessive length, and non-ASCII data.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Develop layered test strategy: unit, integration, fuzz, and security tests",
+            "description": "Create comprehensive tests for all validation logic, covering normal, edge, and malicious input.",
+            "dependencies": [
+              "33.7",
+              "33.10"
+            ],
+            "details": "Write parameterized unit tests for each validator. Add integration tests for API endpoints. Implement fuzz and unicode tests to ensure resilience. Include negative and security-focused test cases.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Document validation layer design, usage, and extension points",
+            "description": "Produce clear documentation for the validation system, including parameter rules, error formats, and integration instructions.",
+            "dependencies": [
+              "33.7",
+              "33.9"
+            ],
+            "details": "Describe how to use and extend validators.py, expected error responses, and guidelines for adding new parameters or rules. Include examples for developers and API consumers.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 34,
@@ -37,7 +215,125 @@
           33
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define ALLOWED_LITERAL_FIELDS frozenset",
+            "description": "Create a frozenset named ALLOWED_LITERAL_FIELDS in basic_search.py to specify which fields are permitted for literal searches, ensuring only whitelisted fields are used in SQL queries.",
+            "dependencies": [],
+            "details": "Add the frozenset at the module level and document its intended use for field validation in find_literal().",
+            "status": "pending",
+            "testStrategy": "Verify that only fields present in ALLOWED_LITERAL_FIELDS are accepted by find_literal(); attempts to use non-whitelisted fields should raise an error."
+          },
+          {
+            "id": 2,
+            "title": "Implement _escape_like(pattern) utility",
+            "description": "Develop the _escape_like(pattern) function using the double-escape technique to safely escape special characters for SQL LIKE patterns.",
+            "dependencies": [
+              "34.1"
+            ],
+            "details": "Ensure the function escapes %, _, and the escape character itself, following SQL standards for LIKE pattern safety.",
+            "status": "pending",
+            "testStrategy": "Unit test with patterns containing %, _, and escape characters; confirm output matches expected escaped strings."
+          },
+          {
+            "id": 3,
+            "title": "Refactor WHERE clause construction for parameterized queries",
+            "description": "Modify find_literal() to build the WHERE clause only for allowed fields and use parameterized query placeholders (e.g., '?') to prevent SQL injection.",
+            "dependencies": [
+              "34.1",
+              "34.2"
+            ],
+            "details": "Validate field names against ALLOWED_LITERAL_FIELDS, construct the WHERE clause dynamically, and ensure all user input is passed as parameters.",
+            "status": "pending",
+            "testStrategy": "Static analysis and targeted SQL injection test cases; confirm no direct interpolation and that only allowed fields are used."
+          },
+          {
+            "id": 4,
+            "title": "Update SQL execution to use SimpleDB cursor with parameters",
+            "description": "Ensure SQL statements are executed via SimpleDB cursor's execute(sql, params) method, passing all user input as parameters.",
+            "dependencies": [
+              "34.3"
+            ],
+            "details": "Remove any direct string interpolation from SQL execution and verify that all queries use parameterized execution.",
+            "status": "pending",
+            "testStrategy": "Run SQL injection test cases and inspect query logs to confirm parameterization; static scan with bandit for injection risks."
+          },
+          {
+            "id": 5,
+            "title": "Remove f-string SQL interpolation and update unit tests",
+            "description": "Eliminate any f-string or direct string interpolation in SQL queries within find_literal(), and update unit tests to reflect the new function signature and behavior.",
+            "dependencies": [
+              "34.4"
+            ],
+            "details": "Refactor code to remove unsafe SQL construction, revise unit tests to cover whitelisting, escaping, and parameterization.",
+            "status": "pending",
+            "testStrategy": "Run all updated unit tests, including SQL injection scenarios and signature changes; ensure tests pass and coverage is maintained."
+          },
+          {
+            "id": 6,
+            "title": "Define ALLOWED_LITERAL_FIELDS frozenset",
+            "description": "Create and document the frozenset ALLOWED_LITERAL_FIELDS in basic_search.py to whitelist fields allowed in SQL WHERE clauses.",
+            "dependencies": [],
+            "details": "Identify all fields safe for literal search usage and include them in ALLOWED_LITERAL_FIELDS to enforce field whitelisting and prevent injection via unauthorized fields.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement _escape_like(pattern) utility",
+            "description": "Develop the _escape_like(pattern) function using a double-escape technique to safely escape special characters in LIKE patterns.",
+            "dependencies": [],
+            "details": "Ensure the utility correctly escapes %, _, and escape characters to prevent LIKE pattern injection vulnerabilities.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Construct parameterized WHERE clause for allowed fields",
+            "description": "Build the SQL WHERE clause dynamically only for fields in ALLOWED_LITERAL_FIELDS using ? placeholders for parameters.",
+            "dependencies": [],
+            "details": "Use the whitelisted fields and escaped LIKE patterns to construct a secure WHERE clause that prevents SQL injection by avoiding direct string interpolation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Refactor SQL execution to use SimpleDB cursor with parameterized queries",
+            "description": "Modify the find_literal() function to execute SQL statements via SimpleDB cursor's execute(sql, params) method using parameterized queries.",
+            "dependencies": [],
+            "details": "Remove any direct SQL string interpolation and ensure all query parameters are passed separately to the execute method to enforce query safety.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Remove unsafe f-string SQL interpolations",
+            "description": "Identify and eliminate all f-string or other unsafe SQL interpolations in find_literal() and related code to prevent injection risks.",
+            "dependencies": [],
+            "details": "Replace any dynamic SQL string building with parameterized queries and ensure no user input is directly embedded into SQL strings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Integrate static analysis checks for SQL injection vulnerabilities",
+            "description": "Add static code analysis using tools like Bandit to detect and prevent SQL injection risks in the refactored codebase.",
+            "dependencies": [],
+            "details": "Configure static analysis to scan for unsafe SQL patterns, verify parameterized query usage, and ensure compliance with security standards.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Develop comprehensive unit tests for SQL injection and performance",
+            "description": "Update and expand unit tests to cover the new find_literal() signature, verify SQL injection prevention, LIKE escaping, and query performance.",
+            "dependencies": [],
+            "details": "Include test cases from PRD to confirm no results or exceptions occur on injection attempts, validate LIKE pattern escaping, and check SQLite query plans for index usage.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 35,
@@ -50,7 +346,122 @@
           34
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement batched enrichment function",
+            "description": "Develop the _enrich_vector_results_batch function in basic_search.py to fetch content data in 500-item chunks, following the PRD snippet.",
+            "dependencies": [],
+            "details": "Ensure the function processes input vectors in batches of 500, efficiently retrieving associated content data in bulk.",
+            "status": "pending",
+            "testStrategy": "Unit test with 1000 fake vector rows; verify only 2 DB calls are made by patching and counting cursor.execute."
+          },
+          {
+            "id": 2,
+            "title": "Remove or rename legacy enrichment function",
+            "description": "Deprecate or rename the old _enrich_vector_results function and update all references throughout the codebase to use the new batch function.",
+            "dependencies": [],
+            "details": "Search for all call sites of the old function and refactor them to use _enrich_vector_results_batch, ensuring consistency.",
+            "status": "pending",
+            "testStrategy": "Run integration tests to confirm all enrichment calls use the new batch function and legacy code is fully removed."
+          },
+          {
+            "id": 3,
+            "title": "Optimize content ID batching logic",
+            "description": "Use list comprehension to build the content_id list and iterate over it in 500-item ranges for batch processing.",
+            "dependencies": [],
+            "details": "Implement efficient batching logic using Python list comprehensions and range-based iteration to split content IDs into 500-item chunks.",
+            "status": "pending",
+            "testStrategy": "Unit test batching logic with various input sizes (e.g., 499, 500, 1001) to ensure correct chunking."
+          },
+          {
+            "id": 4,
+            "title": "Gracefully handle missing IDs and database timeouts",
+            "description": "Ensure the batch enrichment function handles missing content IDs without failure and raises EnrichmentError on DB timeouts.",
+            "dependencies": [],
+            "details": "Implement error handling to skip or log missing IDs and raise a custom EnrichmentError if a database timeout occurs during batch fetch.",
+            "status": "pending",
+            "testStrategy": "Simulate missing IDs and DB timeouts in unit tests; assert missing IDs are handled and EnrichmentError is raised as expected."
+          },
+          {
+            "id": 5,
+            "title": "Update and expand test coverage for batch enrichment",
+            "description": "Develop and run comprehensive unit and performance tests for the new batch enrichment function, ensuring correctness and efficiency.",
+            "dependencies": [],
+            "details": "Write tests to cover normal, edge, and error cases, including performance benchmarks for 1000-row batches (<200 ms).",
+            "status": "pending",
+            "testStrategy": "Unit test with 1000 fake vector rows (assert 2 DB calls); performance test to ensure <200 ms for 1000 rows on sample DB."
+          },
+          {
+            "id": 6,
+            "title": "Design and Implement Batched Enrichment Function",
+            "description": "Develop the _enrich_vector_results_batch function in basic_search.py to process content data in 500-item chunks, ensuring efficient bulk data retrieval and enrichment.",
+            "dependencies": [],
+            "details": "Follow the PRD snippet for function structure. Ensure the function accepts a list of content IDs, splits them into 500-item batches, and fetches enrichment data for each batch in a single DB call.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Remove Legacy Enrichment Logic and Update References",
+            "description": "Deprecate or remove the old _enrich_vector_results function and update all code locations that reference it to use the new batched function.",
+            "dependencies": [
+              "35.6"
+            ],
+            "details": "Search for all call sites of the legacy function, replace them with the new batch function, and ensure naming consistency throughout the codebase.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Optimize Batching Logic for Content ID Processing",
+            "description": "Implement and validate efficient batching logic using list comprehensions and range iteration to build and process content_id lists in 500-item chunks.",
+            "dependencies": [
+              "35.6"
+            ],
+            "details": "Ensure batching logic is robust, handles edge cases (e.g., non-divisible batch sizes), and is easy to maintain. Use Pythonic idioms for clarity and performance.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement Robust Error and Timeout Handling",
+            "description": "Add logic to gracefully handle missing IDs and raise EnrichmentError on DB timeouts or failures during batch enrichment.",
+            "dependencies": [
+              "35.6"
+            ],
+            "details": "Ensure missing IDs do not break the enrichment process and that all exceptions are logged and propagated according to error handling standards.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Develop Functional and Performance Test Coverage",
+            "description": "Create unit and performance tests to validate correct batch enrichment behavior, including DB call minimization and performance guarantees.",
+            "dependencies": [
+              "35.7",
+              "35.8",
+              "35.9"
+            ],
+            "details": "Write tests to assert only 2 DB calls for 1000 vector rows and that enrichment completes in under 200 ms on sample data. Include tests for error and edge cases.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Document Batch Enrichment Implementation and Migration",
+            "description": "Update developer documentation to describe the new batch enrichment function, usage patterns, migration steps, and error handling expectations.",
+            "dependencies": [
+              "35.7",
+              "35.8",
+              "35.9",
+              "35.10"
+            ],
+            "details": "Provide clear migration instructions for developers, document function signatures, and outline best practices for using the new batch enrichment logic.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 36,
@@ -63,7 +474,129 @@
           35
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Singleton Connection Pool in db.py",
+            "description": "Create a db.py module that provides a `get_connection()` function, ensuring a single cached sqlite3.Connection instance is reused throughout the application.",
+            "dependencies": [],
+            "details": "The connection should be created with `check_same_thread=False` and cached at the module level to guarantee singleton behavior in single-user mode.",
+            "status": "pending",
+            "testStrategy": "Unit test: Call `get_connection()` from multiple locations and verify the same connection object is returned."
+          },
+          {
+            "id": 2,
+            "title": "Apply Required PRAGMA Settings on Connection Initialization",
+            "description": "Configure the SQLite connection with PRAGMA settings: `journal_mode=WAL`, `busy_timeout`, and `synchronous=NORMAL` immediately after connection creation.",
+            "dependencies": [],
+            "details": "Ensure PRAGMA statements are executed only once per connection. WAL mode should persist across connections, but settings must be applied on initialization to guarantee correct behavior.",
+            "status": "pending",
+            "testStrategy": "Integration test: After initialization, query each PRAGMA and assert the expected values are set."
+          },
+          {
+            "id": 3,
+            "title": "Replace Direct sqlite3.connect Calls with get_connection()",
+            "description": "Refactor all modules in the package to use `get_connection()` from db.py instead of direct sqlite3.connect calls.",
+            "dependencies": [],
+            "details": "Update imports and usages to ensure all database access goes through the singleton connection, preventing accidental creation of multiple connections.",
+            "status": "pending",
+            "testStrategy": "Code search: Ensure no direct sqlite3.connect calls remain. Functional test: Application operates normally after refactor."
+          },
+          {
+            "id": 4,
+            "title": "Document Thread Safety and Single-Process Guarantee",
+            "description": "Add clear documentation in db.py and project docs explaining the use of `check_same_thread=False` and the assumption of single-process, single-user mode.",
+            "dependencies": [],
+            "details": "Documentation should warn about risks if used in a multi-process context and clarify the intended usage pattern.",
+            "status": "pending",
+            "testStrategy": "Documentation review: Confirm presence and clarity of thread/process safety notes."
+          },
+          {
+            "id": 5,
+            "title": "Validate and Test WAL Mode and PRAGMA Settings Under Concurrency",
+            "description": "Perform integration tests simulating concurrent access (e.g., ThreadPool) to ensure no `database is locked` errors and that PRAGMA settings persist.",
+            "dependencies": [],
+            "details": "Run concurrent read/write operations and verify WAL mode is active and no locking issues occur. Query PRAGMA values during tests to confirm settings.",
+            "status": "pending",
+            "testStrategy": "Integration test: Concurrent access with assertions on error-free operation and correct PRAGMA values."
+          },
+          {
+            "id": 6,
+            "title": "Design and implement singleton connection pool in db.py",
+            "description": "Create a singleton class in db.py that manages a single sqlite3.Connection instance, ensuring only one connection exists and is reused throughout the application.",
+            "dependencies": [],
+            "details": "Use the Singleton pattern (e.g., override __new__) to restrict instantiation to one object. The class should expose a get_connection() method that returns the cached connection, creating it if necessary.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Apply and validate PRAGMA settings on connection initialization",
+            "description": "Ensure WAL journal mode, busy_timeout, and synchronous=NORMAL are set once per connection and persist for the connection's lifetime.",
+            "dependencies": [
+              "36.6"
+            ],
+            "details": "On connection creation, execute PRAGMA statements: journal_mode=WAL, busy_timeout, synchronous=NORMAL. Validate by querying PRAGMA values after setting.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Refactor codebase to use get_connection() instead of direct sqlite3.connect",
+            "description": "Replace all direct calls to sqlite3.connect in the codebase with the singleton's get_connection() method.",
+            "dependencies": [
+              "36.6"
+            ],
+            "details": "Search for all sqlite3.connect usages and refactor them to use the new connection pool interface, ensuring consistent connection management.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Document thread and process safety guarantees and limitations",
+            "description": "Provide clear documentation on the thread/process safety of the singleton connection pool, including the use of check_same_thread=False and single-process assumptions.",
+            "dependencies": [
+              "36.6"
+            ],
+            "details": "Explain why check_same_thread=False is safe in this context, reference SQLite documentation, and warn about multi-process limitations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement concurrency and locking tests for singleton connection",
+            "description": "Develop tests to simulate concurrent access (e.g., via ThreadPool) and verify no 'database is locked' errors occur under expected usage.",
+            "dependencies": [
+              "36.8"
+            ],
+            "details": "Write integration tests that perform concurrent reads/writes using the singleton connection, confirming correct behavior and error handling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Verify persistence and correctness of PRAGMA settings",
+            "description": "Test that PRAGMA settings (WAL, busy_timeout, synchronous) remain active and correct for the lifetime of the connection.",
+            "dependencies": [
+              "36.7"
+            ],
+            "details": "Query PRAGMA values after various operations and connection reuse to ensure settings are not lost or reset.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Review and update documentation for connection management and usage",
+            "description": "Update project documentation to describe the new connection pool, PRAGMA settings, usage patterns, and any caveats for developers.",
+            "dependencies": [
+              "36.8",
+              "36.9"
+            ],
+            "details": "Provide code examples, describe best practices, and highlight any changes developers must follow when accessing the database.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 37,
@@ -76,7 +609,53 @@
           36
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Delete search_intelligence/main.py",
+            "description": "Remove the deprecated main.py file from the search_intelligence module.",
+            "dependencies": [],
+            "details": "Locate and delete the file search_intelligence/main.py from the codebase.",
+            "status": "pending",
+            "testStrategy": "Verify that search_intelligence/main.py no longer exists in the repository."
+          },
+          {
+            "id": 2,
+            "title": "Remove SearchIntelligenceService class and replace usages",
+            "description": "Eliminate the SearchIntelligenceService class and update all code that imports or uses it to call search() or find_literal() directly.",
+            "dependencies": [],
+            "details": "Search the codebase for all references to SearchIntelligenceService, remove the class definition, and refactor dependent code to use search() or find_literal() as appropriate.",
+            "status": "pending",
+            "testStrategy": "Grep for 'SearchIntelligenceService' and confirm zero matches. Run tests to ensure refactored code works."
+          },
+          {
+            "id": 3,
+            "title": "Refactor __init__.py to export only public APIs",
+            "description": "Reduce search_intelligence/__init__.py to 13 lines, exporting only search, find_literal, vector_store_available, and exception re-exports.",
+            "dependencies": [],
+            "details": "Edit __init__.py to remove obsolete imports and ensure only the specified public APIs and exceptions are exported.",
+            "status": "pending",
+            "testStrategy": "Check that __init__.py is 13 lines or fewer and only exports the intended symbols."
+          },
+          {
+            "id": 4,
+            "title": "Verify removal of all obsolete references",
+            "description": "Ensure there are no remaining references to SearchIntelligenceService or main.py in the codebase.",
+            "dependencies": [],
+            "details": "Use grep or similar tools to search for any lingering references to SearchIntelligenceService and main.py.",
+            "status": "pending",
+            "testStrategy": "Grep for 'SearchIntelligenceService' and 'main.py' and confirm both return zero results."
+          },
+          {
+            "id": 5,
+            "title": "Run and validate test suite",
+            "description": "Execute the full test suite to confirm that all changes have not introduced errors or ImportErrors.",
+            "dependencies": [],
+            "details": "Run 'pytest -q' or the project's test runner to ensure all tests pass and no ImportErrors occur.",
+            "status": "pending",
+            "testStrategy": "All tests must pass without ImportError or failures."
+          }
+        ]
       },
       {
         "id": 38,
@@ -89,7 +668,153 @@
           37
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit and Document All Field Name Usages",
+            "description": "Identify every instance of the fields to be renamed (e.g., ‘relevance_score’, ‘id’) across the codebase and MCP server, including data mappers, dataclasses, serialization logic, and API interfaces.",
+            "dependencies": [],
+            "details": "Create a comprehensive inventory of all locations where the target field names are used, including code, configuration files, and documentation. Document the current and intended field names for each instance.",
+            "status": "pending",
+            "testStrategy": "Peer review of the inventory to ensure completeness before proceeding to code changes."
+          },
+          {
+            "id": 2,
+            "title": "Update Data Mappers and Serialization Logic",
+            "description": "Refactor data mappers in basic_search.py and related modules to output the standardized schema, ensuring all renamed fields are consistently serialized.",
+            "dependencies": [
+              "38.1"
+            ],
+            "details": "Modify all relevant data mapping functions and serialization code to use the new field names. Ensure that the output schema matches the new standard and update any related documentation.",
+            "status": "pending",
+            "testStrategy": "Run integration tests to verify that search() returns dicts with the exact new key set."
+          },
+          {
+            "id": 3,
+            "title": "Refactor MCP Server and Associated Dataclasses",
+            "description": "Update infrastructure/mcp_servers/search_intelligence_mcp.py and all associated dataclasses to use the standardized field names, ensuring internal and external consistency.",
+            "dependencies": [
+              "38.1"
+            ],
+            "details": "Change all dataclass definitions, API handlers, and internal references to use the new field names. Update OpenAPI schemas and any related validation logic.",
+            "status": "pending",
+            "testStrategy": "Run MCP server functional tests and validate field names using jsonschema."
+          },
+          {
+            "id": 4,
+            "title": "Implement Temporary Compatibility Shim with Deprecation Warning",
+            "description": "Introduce a shim layer in the MCP server that accepts both old and new field names for incoming data, but emits a deprecation warning when old names are used.",
+            "dependencies": [
+              "38.2",
+              "38.3"
+            ],
+            "details": "Develop middleware or input validation logic that maps old field names to new ones, logs or returns a deprecation warning, and ensures only new names are emitted in responses.",
+            "status": "pending",
+            "testStrategy": "Test with payloads using both old and new field names; verify correct mapping and presence of deprecation warnings."
+          },
+          {
+            "id": 5,
+            "title": "Update and Validate Downstream Consumers and Documentation",
+            "description": "Update all downstream tools, scripts, and documentation to use the new standardized field names, and ensure all references are consistent.",
+            "dependencies": [
+              "38.2",
+              "38.3",
+              "38.4"
+            ],
+            "details": "Modify any client code, test scripts, and documentation that reference the affected fields. Communicate changes to stakeholders and provide migration guidance.",
+            "status": "pending",
+            "testStrategy": "Run contract and integration tests on downstream consumers to confirm correct field usage; review documentation for accuracy."
+          },
+          {
+            "id": 6,
+            "title": "Audit all field usages across codebase and MCP server",
+            "description": "Perform a comprehensive audit to identify all occurrences of fields to be renamed, such as 'relevance_score' and 'id', in code, dataclasses, serializers, and schemas.",
+            "dependencies": [],
+            "details": "Search through source files, tests, documentation, and downstream consumers to catalog every usage of the target fields to ensure no references are missed during renaming.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Refactor data mappers and serializers to use standardized field names",
+            "description": "Update data mappers in basic_search.py and any other relevant modules to output the new standardized schema with renamed fields.",
+            "dependencies": [
+              "38.6"
+            ],
+            "details": "Modify mapper functions to replace 'relevance_score' with 'semantic_score' and 'id' with 'content_id', ensuring serialization consistency and backward compatibility where needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Update MCP server dataclasses and schemas",
+            "description": "Modify dataclasses and JSON schemas in infrastructure/mcp_servers/search_intelligence_mcp.py and related files to reflect the new field names.",
+            "dependencies": [
+              "38.6"
+            ],
+            "details": "Change field names in dataclasses, update type annotations, and adjust schema validation rules to align with the standardized naming conventions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement compatibility shim in MCP layer",
+            "description": "Create a temporary shim layer in the MCP server to accept both old and new field names, emitting deprecation warnings for the old names.",
+            "dependencies": [
+              "38.7",
+              "38.8"
+            ],
+            "details": "Ensure the shim translates old field names to new ones internally and logs warnings to facilitate gradual migration without breaking existing clients.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Update downstream consumers to use new field names",
+            "description": "Identify and modify all downstream consumers of the MCP server and search modules to consume the updated field names.",
+            "dependencies": [
+              "38.9"
+            ],
+            "details": "Adjust client code, APIs, and integrations to handle 'semantic_score' and 'content_id' instead of the deprecated names, coordinating with teams as needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Develop and run comprehensive contract and integration tests",
+            "description": "Create and execute tests to validate that all components correctly handle the renamed fields and maintain serialization contracts.",
+            "dependencies": [
+              "38.9",
+              "38.10"
+            ],
+            "details": "Include integration tests for search() outputs, MCP server functional tests using jsonschema, and downstream consumer contract tests to ensure end-to-end correctness.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Document field name changes and deprecation timeline",
+            "description": "Prepare documentation outlining the field renaming, compatibility shim usage, and schedule for deprecation of old field names.",
+            "dependencies": [
+              "38.9"
+            ],
+            "details": "Provide clear guidance for developers and consumers on the changes, migration steps, and expected timelines for removing deprecated fields.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 13,
+            "title": "Plan and execute removal of compatibility shims post-migration",
+            "description": "After downstream consumers have migrated, remove the temporary compatibility shims and deprecated field support from the MCP server.",
+            "dependencies": [
+              "38.11",
+              "38.12"
+            ],
+            "details": "Coordinate with dependent teams to confirm migration completion before purging shim code to reduce technical debt and simplify the codebase.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 39,
@@ -102,7 +827,61 @@
           38
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit Codebase for Compatibility Shims and Hybrid Search Remnants",
+            "description": "Systematically search the codebase for outdated compatibility shims, __init__ alias exports, and hybrid search code using markers such as TODO or HYBRID_SEARCH comments.",
+            "dependencies": [],
+            "details": "Use code search tools (e.g., grep, ripgrep) to locate all references to compatibility shims, alias exports in __init__.py, and hybrid search logic. Document all findings for review.",
+            "status": "pending",
+            "testStrategy": "Verify that all identified code sections are listed and reviewed by a peer before proceeding to deletion."
+          },
+          {
+            "id": 2,
+            "title": "Remove Identified Dead Code and Adjust Imports",
+            "description": "Delete the outdated functions, modules, and alias exports identified in the audit. Update all affected imports and references throughout the codebase to ensure consistency.",
+            "dependencies": [
+              "39.1"
+            ],
+            "details": "Carefully remove each shim, alias, and hybrid search remnant. Refactor import statements in dependent modules to prevent ImportError or broken references.",
+            "status": "pending",
+            "testStrategy": "Run static import checks (e.g., `python -m pip install check-imports`) and ensure all tests pass without ImportError."
+          },
+          {
+            "id": 3,
+            "title": "Refactor Modules to Maintain Line Count Constraints",
+            "description": "After code removal, review all affected modules to ensure none exceed 450 lines. Split or reorganize modules as needed to comply with architectural guidelines.",
+            "dependencies": [
+              "39.2"
+            ],
+            "details": "Check line counts using tools (e.g., wc -l). If any module exceeds 450 lines, refactor by extracting logical components into new modules and updating imports accordingly.",
+            "status": "pending",
+            "testStrategy": "Confirm all modules are ≤450 lines and that the codebase builds and runs successfully."
+          },
+          {
+            "id": 4,
+            "title": "Validate Codebase Integrity and Test Coverage",
+            "description": "Run the full test suite and static analysis to ensure that code removal did not reduce test coverage or introduce regressions.",
+            "dependencies": [
+              "39.3"
+            ],
+            "details": "Execute the project's test suite (e.g., pytest) and compare coverage reports before and after cleanup. Address any failures or coverage drops.",
+            "status": "pending",
+            "testStrategy": "Coverage percentage must remain unchanged; all tests must pass."
+          },
+          {
+            "id": 5,
+            "title": "Document Cleanup and Communicate Changes",
+            "description": "Update internal documentation and communicate the removal of shims and hybrid search code to the team, including any required migration steps.",
+            "dependencies": [
+              "39.4"
+            ],
+            "details": "Revise README, developer guides, and code comments to reflect the new architecture. Notify stakeholders of breaking changes and provide guidance for any necessary codebase adjustments.",
+            "status": "pending",
+            "testStrategy": "Peer review of documentation updates and confirmation from team leads that communication requirements are met."
+          }
+        ]
       },
       {
         "id": 40,
@@ -115,7 +894,151 @@
           39
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor existing test files to use new API",
+            "description": "Update all 15 affected test files to import and utilize the new 'search' and 'find_literal' APIs, ensuring compatibility with the updated codebase.",
+            "dependencies": [],
+            "details": "Replace legacy imports and function calls with the new API signatures. Ensure all tests run successfully with the updated interfaces.",
+            "status": "pending",
+            "testStrategy": "Run `pytest -n auto` and confirm all refactored tests pass without errors."
+          },
+          {
+            "id": 2,
+            "title": "Update fixtures paths in test files",
+            "description": "Modify fixture paths in all updated test files to reflect any changes in directory structure or naming conventions introduced by the API update.",
+            "dependencies": [
+              "40.1"
+            ],
+            "details": "Review each test file for fixture usage and update paths as needed to prevent import or loading errors.",
+            "status": "pending",
+            "testStrategy": "Verify all tests can locate and load fixtures correctly by running the full test suite."
+          },
+          {
+            "id": 3,
+            "title": "Implement dedicated security and boundary tests",
+            "description": "Create a new test module (tests/test_semantic_search_security.py) to implement SQL injection (SQLi) and boundary condition tests for the semantic search functionality.",
+            "dependencies": [
+              "40.1"
+            ],
+            "details": "Design tests that inject malicious and edge-case inputs, expecting proper validation and error handling (e.g., ValidationError).",
+            "status": "pending",
+            "testStrategy": "Ensure all security and boundary tests trigger expected exceptions and are green under `pytest -n auto`."
+          },
+          {
+            "id": 4,
+            "title": "Add batch enrichment performance stress test",
+            "description": "Develop a performance benchmark test for batch enrichment using pytest-benchmark to measure and track execution time under load.",
+            "dependencies": [
+              "40.1"
+            ],
+            "details": "Integrate pytest-benchmark in a dedicated test to simulate high-volume batch enrichment and collect performance metrics for regression tracking[1][2][5].",
+            "status": "pending",
+            "testStrategy": "Run the benchmark test and confirm results are generated and performance is within acceptable thresholds."
+          },
+          {
+            "id": 5,
+            "title": "Verify test coverage and quality criteria",
+            "description": "Ensure the expanded test suite achieves at least 90% code coverage and meets all outlined quality and security criteria.",
+            "dependencies": [
+              "40.1",
+              "40.2",
+              "40.3",
+              "40.4"
+            ],
+            "details": "Run coverage analysis tools and review test results to confirm all new and refactored tests contribute to the required coverage and validation goals.",
+            "status": "pending",
+            "testStrategy": "Generate a coverage report and confirm ≥ 90% coverage; all tests (including security and performance) must pass."
+          },
+          {
+            "id": 6,
+            "title": "Refactor Test Files to Use New API",
+            "description": "Update each of the 15 affected test files to import and utilize the new search and find_literal API methods.",
+            "dependencies": [],
+            "details": "Systematically review and refactor all legacy test files, ensuring compatibility with the updated API and removing deprecated imports.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Update Test Fixtures and Paths",
+            "description": "Revise fixture definitions and update file paths to align with new API requirements and test file locations.",
+            "dependencies": [
+              "40.6"
+            ],
+            "details": "Ensure all fixtures are compatible with the refactored tests and that their paths are correctly referenced throughout the suite.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create Dedicated Security and Boundary Test File",
+            "description": "Develop tests/test_semantic_search_security.py to implement SQL injection, boundary, and malicious input validation tests.",
+            "dependencies": [
+              "40.6",
+              "40.7"
+            ],
+            "details": "Design tests that intentionally inject malicious input and verify that the system raises ValidationError or handles threats securely.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Integrate Performance Benchmarking",
+            "description": "Add batch enrichment stress tests using pytest-benchmark to measure and validate performance under load.",
+            "dependencies": [
+              "40.6",
+              "40.7"
+            ],
+            "details": "Implement stress scenarios and ensure results are captured for performance analysis and regression tracking.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Parameterize and Expand Boundary Test Coverage",
+            "description": "Use pytest parameterization to systematically test edge cases and input boundaries across the suite.",
+            "dependencies": [
+              "40.6",
+              "40.8"
+            ],
+            "details": "Apply @pytest.mark.parametrize to relevant test functions, covering a wide range of valid and invalid inputs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Analyze and Report Test Coverage",
+            "description": "Run coverage analysis to ensure the suite achieves at least 90% code coverage, identifying and addressing any gaps.",
+            "dependencies": [
+              "40.6",
+              "40.7",
+              "40.8",
+              "40.9",
+              "40.10"
+            ],
+            "details": "Utilize coverage tools to generate reports, review uncovered lines, and add tests as needed to meet coverage targets.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Validate Test Suite in CI Pipeline",
+            "description": "Execute the full test suite in the CI environment, confirming all tests pass in parallel and meet green status requirements.",
+            "dependencies": [
+              "40.6",
+              "40.7",
+              "40.8",
+              "40.9",
+              "40.10",
+              "40.11"
+            ],
+            "details": "Configure CI to run pytest -n auto, verify security and performance tests execute correctly, and ensure coverage thresholds are enforced.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 41,
@@ -129,7 +1052,125 @@
           40
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Identify and update imports to use search_intelligence.search",
+            "description": "Locate all import statements in the four tools under infrastructure/mcp_servers and utilities that reference the old search intelligence service and update them to import from search_intelligence.search.",
+            "dependencies": [],
+            "details": "Review each tool script for existing imports related to search intelligence and replace them with the new module path as specified by the updated API.",
+            "status": "pending",
+            "testStrategy": "Verify that all updated scripts import search_intelligence.search without import errors."
+          },
+          {
+            "id": 2,
+            "title": "Replace get_search_intelligence_service() calls",
+            "description": "Find and refactor all usages of get_search_intelligence_service() in the four tools to use the new API methods as required.",
+            "dependencies": [
+              "41.1"
+            ],
+            "details": "Update function calls and any related logic to align with the new API, ensuring compatibility with the updated service interface.",
+            "status": "pending",
+            "testStrategy": "Run each tool in dry-run mode to confirm that the new API calls execute without runtime errors."
+          },
+          {
+            "id": 3,
+            "title": "Adjust JSON handling for new field names",
+            "description": "Update all JSON parsing and serialization logic in the tools to use the new field names, specifically semantic_score and content_id.",
+            "dependencies": [
+              "41.2"
+            ],
+            "details": "Search for all references to the old field names in code handling JSON data and replace them with the new schema fields.",
+            "status": "pending",
+            "testStrategy": "Test with sample payloads to ensure correct extraction and output of semantic_score and content_id fields."
+          },
+          {
+            "id": 4,
+            "title": "Add unit tests for each tool using pytest-subprocess",
+            "description": "Implement unit tests for each updated tool script, using pytest-subprocess to mock subprocess calls and validate tool behavior.",
+            "dependencies": [
+              "41.3"
+            ],
+            "details": "Write tests that simulate CLI invocation and subprocess interactions, ensuring tools handle expected and edge-case scenarios.",
+            "status": "pending",
+            "testStrategy": "Run pytest to confirm all tests pass, including subprocess mocks and correct handling of JSON output."
+          },
+          {
+            "id": 5,
+            "title": "Validate CLI and contract tests for updated tools",
+            "description": "Perform CLI invocation in dry-run mode and run contract tests using sample payloads to ensure tools return exit code 0 and correct JSON keys.",
+            "dependencies": [
+              "41.4"
+            ],
+            "details": "Execute each tool from the command line with representative inputs, verifying output structure and exit codes as per requirements.",
+            "status": "pending",
+            "testStrategy": "Check that CLI returns exit code 0 and output JSON contains semantic_score and content_id; confirm contract tests pass."
+          },
+          {
+            "id": 6,
+            "title": "Update Imports to Use search_intelligence.search",
+            "description": "Refactor all four tools under infrastructure/mcp_servers and utilities to import from search_intelligence.search instead of legacy modules.",
+            "dependencies": [],
+            "details": "Identify all import statements referencing deprecated search intelligence modules and replace them with the new search_intelligence.search import. Ensure compatibility with the new API structure.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Refactor API Calls to Replace get_search_intelligence_service()",
+            "description": "Update all usages of get_search_intelligence_service() to the new API call pattern as required by search_intelligence.search.",
+            "dependencies": [
+              "41.6"
+            ],
+            "details": "Locate all instances of get_search_intelligence_service() in the codebase. Replace with the new API call method, ensuring correct parameter passing and error handling according to updated API specifications.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Adjust JSON Handling for New Field Schema",
+            "description": "Modify JSON parsing and serialization logic to support new field names such as semantic_score and content_id.",
+            "dependencies": [
+              "41.7"
+            ],
+            "details": "Audit all tool scripts for JSON field usage. Update logic to read and write semantic_score and content_id fields, ensuring backward compatibility where necessary.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement Unit Tests with pytest-subprocess Mocks",
+            "description": "Add comprehensive unit tests for each tool script using pytest-subprocess to mock external calls and subprocesses.",
+            "dependencies": [
+              "41.8"
+            ],
+            "details": "Write unit tests that simulate CLI invocation and subprocess interactions. Validate correct handling of new API responses and field schemas. Ensure tests cover error cases and edge scenarios.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Validate CLI and Contract Tests",
+            "description": "Run CLI dry-run and contract tests to verify correct exit codes and JSON output structure for all updated tools.",
+            "dependencies": [
+              "41.9"
+            ],
+            "details": "Invoke each tool via CLI in dry-run mode, checking for exit code 0 and correct JSON keys. Execute contract tests using sample payloads to confirm compliance with new API and schema requirements.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Update Documentation and Migration Guides",
+            "description": "Revise inline docstrings, update CHANGELOG, and create migration guides reflecting API and field schema changes.",
+            "dependencies": [
+              "41.10"
+            ],
+            "details": "Document all code changes, update the CHANGELOG, and draft migration instructions for downstream teams. Ensure documentation covers new import patterns, API usage, field schema, and testing strategies.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 42,
@@ -142,7 +1183,115 @@
           41
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update CLI script imports to use new search_intelligence.search functions",
+            "description": "Refactor all 7 CLI scripts in tools/scripts/cli/ to replace deprecated imports with the new search_intelligence.search module functions.",
+            "dependencies": [],
+            "details": "Identify all instances of deprecated imports in each CLI script and replace them with the appropriate functions from search_intelligence.search. Ensure no deprecated modules remain.",
+            "status": "pending",
+            "testStrategy": "Run each CLI script with --help to verify no import-related stack traces occur."
+          },
+          {
+            "id": 2,
+            "title": "Refactor argument parsing to support new limit bounds",
+            "description": "Modify argument parsing logic in each CLI script to accept and validate new limit bounds as specified in the updated requirements.",
+            "dependencies": [
+              "42.1"
+            ],
+            "details": "Update the argument parser configuration to include new limit parameters. Implement input validation to ensure bounds are respected and errors are handled gracefully.",
+            "status": "pending",
+            "testStrategy": "Invoke each CLI with various limit values and verify correct parsing and error handling."
+          },
+          {
+            "id": 3,
+            "title": "Implement --validate flag for validator-only execution",
+            "description": "Add a --validate flag to each CLI script, enabling users to run only the validation routines without executing the full pipeline.",
+            "dependencies": [
+              "42.2"
+            ],
+            "details": "Extend argument parsing to recognize --validate. Refactor main execution logic to conditionally run validators when the flag is present.",
+            "status": "pending",
+            "testStrategy": "Run each CLI with --validate and confirm only validators execute, with expected output and no side effects."
+          },
+          {
+            "id": 4,
+            "title": "Refactor pipeline orchestrator to integrate updated CLI handlers and remove deprecated imports",
+            "description": "Update the pipeline orchestrator to use the refactored CLI handlers and ensure all deprecated imports are removed.",
+            "dependencies": [
+              "42.3"
+            ],
+            "details": "Review orchestrator code for any direct or indirect usage of deprecated imports. Integrate the new CLI handler interfaces and ensure compatibility.",
+            "status": "pending",
+            "testStrategy": "Run end-to-end tests in the staging DB to confirm orchestrator executes successfully with updated handlers."
+          },
+          {
+            "id": 5,
+            "title": "Perform comprehensive testing and validation of refactored scripts and orchestrator",
+            "description": "Conduct thorough testing of all updated CLI scripts and the pipeline orchestrator to ensure correct functionality and stability.",
+            "dependencies": [
+              "42.4"
+            ],
+            "details": "Execute all CLI scripts with --help, limit bounds, and --validate. Run orchestrator in staging DB and verify successful completion. Address any issues found.",
+            "status": "pending",
+            "testStrategy": "Confirm no stack traces on --help, correct behavior for all argument combinations, and successful orchestrator runs in staging."
+          },
+          {
+            "id": 6,
+            "title": "Refactor CLI Imports to Use New Functions",
+            "description": "Update all 7 CLI scripts to replace deprecated imports with the new search_intelligence.search module and ensure all references are updated.",
+            "dependencies": [],
+            "details": "Review each CLI script in tools/scripts/cli/*.py, identify deprecated imports, and refactor them to use the new functions from search_intelligence.search. Remove any unused or obsolete imports.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Update Argument Parsing for Limit Bounds",
+            "description": "Modify argument parsing logic in each CLI script to support new limit bounds, ensuring correct validation and error handling.",
+            "dependencies": [],
+            "details": "Integrate new argument options for limit bounds using the chosen parsing library. Validate input values and provide clear error messages for invalid bounds.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement --validate Flag in CLI Scripts",
+            "description": "Add a --validate flag to each CLI script to enable running validators only, bypassing other operations.",
+            "dependencies": [],
+            "details": "Extend argument parsing to recognize --validate. Refactor script logic to execute only validation routines when the flag is present.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Integrate CLI Changes with Pipeline Orchestrator",
+            "description": "Update the pipeline orchestrator to utilize the refactored CLI scripts and new functions, ensuring compatibility and correct workflow execution.",
+            "dependencies": [],
+            "details": "Modify orchestrator logic to call updated CLI handlers, pass new arguments, and handle --validate mode appropriately. Test integration points for robustness.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Perform End-to-End Testing of Refactored CLI and Orchestrator",
+            "description": "Conduct comprehensive end-to-end tests to verify that all CLI scripts and the orchestrator function correctly with the new changes.",
+            "dependencies": [],
+            "details": "Run each CLI script with various argument combinations, including --help and --validate. Execute full pipeline runs in a staging environment and confirm expected outcomes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Update User Documentation for CLI and Orchestrator",
+            "description": "Revise user-facing documentation to reflect CLI import changes, new argument options, --validate flag usage, and orchestrator integration steps.",
+            "dependencies": [],
+            "details": "Document updated CLI usage, argument formats, and orchestrator workflows. Include examples and troubleshooting tips for common issues.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 43,
@@ -156,7 +1305,61 @@
           42
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement get_logger helper with structlog and JSON sinks",
+            "description": "Create a reusable get_logger function that returns a structlog-wrapped logger configured to output logs in JSON format when available.",
+            "dependencies": [],
+            "details": "Set up structlog with processors including JSONRenderer. Ensure the logger is accessible throughout the codebase for consistent structured logging.",
+            "status": "pending",
+            "testStrategy": "Verify logger output format is JSON using unit tests; check logger instantiation in multiple modules."
+          },
+          {
+            "id": 2,
+            "title": "Audit and refactor logger.warning usage in critical paths",
+            "description": "Identify all instances of logger.warning used for critical errors and refactor them to use logger.error followed by raising the appropriate exception.",
+            "dependencies": [
+              "43.1"
+            ],
+            "details": "Review codebase for logger.warning calls in error-handling logic. Replace with logger.error and ensure exceptions are raised to propagate errors correctly.",
+            "status": "pending",
+            "testStrategy": "Use caplog in unit tests to assert ERROR level logs are emitted for critical paths; confirm exceptions are raised as expected."
+          },
+          {
+            "id": 3,
+            "title": "Attach exception context to error logs",
+            "description": "Ensure all error logs include relevant exception context, such as stack traces and error messages, to improve debugging and traceability.",
+            "dependencies": [
+              "43.2"
+            ],
+            "details": "Modify error logging statements to include exception information using exc_info or equivalent structlog features. Validate that logs capture full exception details.",
+            "status": "pending",
+            "testStrategy": "Force errors in tests and assert that logs contain stack traces and exception messages."
+          },
+          {
+            "id": 4,
+            "title": "Integrate request_id and trace_id metadata into logs",
+            "description": "Enhance log entries by attaching request_id and trace_id metadata wherever available, supporting improved traceability across distributed systems.",
+            "dependencies": [
+              "43.3"
+            ],
+            "details": "Update logging calls to include request_id and trace_id as structured fields. Ensure propagation of these IDs through relevant application layers.",
+            "status": "pending",
+            "testStrategy": "Simulate requests with unique IDs and verify logs consistently include correct metadata."
+          },
+          {
+            "id": 5,
+            "title": "Validate logging and error reporting improvements via testing",
+            "description": "Design and execute unit and chaos tests to confirm that logging changes meet requirements for error level, context inclusion, and metadata propagation.",
+            "dependencies": [
+              "43.4"
+            ],
+            "details": "Implement tests using caplog to capture and assert log levels and content. Perform chaos tests (e.g., force VectorStoreError) to ensure logs contain stack traces and context.",
+            "status": "pending",
+            "testStrategy": "Run automated test suite and review log outputs for compliance with structured logging, error level, and metadata standards."
+          }
+        ]
       },
       {
         "id": 44,
@@ -169,7 +1372,53 @@
           42
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refresh CHANGELOG with Recent Updates",
+            "description": "Review recent code changes and update the CHANGELOG to accurately reflect all new features, bug fixes, and breaking changes.",
+            "dependencies": [],
+            "details": "Gather commit history and PR summaries since the last release. Summarize changes in a clear, user-facing format following project conventions.",
+            "status": "pending",
+            "testStrategy": "Verify that the CHANGELOG includes all relevant updates and is free of formatting errors."
+          },
+          {
+            "id": 2,
+            "title": "Update SERVICES_API.md with Latest API Changes",
+            "description": "Revise the SERVICES_API.md file to document all current API endpoints, parameters, and expected responses, ensuring alignment with the latest implementation.",
+            "dependencies": [],
+            "details": "Cross-reference codebase and auto-generated docs to ensure manual documentation is accurate and complete.",
+            "status": "pending",
+            "testStrategy": "Ensure SERVICES_API.md matches the auto-generated API documentation and passes internal review."
+          },
+          {
+            "id": 3,
+            "title": "Regenerate Inline Docstrings and Auto-Generate API Docs",
+            "description": "Review and update inline docstrings throughout the codebase, then auto-generate API documentation using pdoc.",
+            "dependencies": [],
+            "details": "Ensure all public functions, classes, and modules have clear, comprehensive docstrings. Run pdoc to generate up-to-date HTML documentation.",
+            "status": "pending",
+            "testStrategy": "Run `pydocstyle` to confirm docstring compliance and build docs with mkdocs, ensuring no warnings."
+          },
+          {
+            "id": 4,
+            "title": "Draft Migration Guide for Semantic Search",
+            "description": "Create MIGRATION_SEMANTIC_SEARCH.md to guide downstream teams through migration, including code examples and best practices.",
+            "dependencies": [],
+            "details": "Document step-by-step migration instructions, highlight breaking changes, and provide before/after code snippets for common scenarios.",
+            "status": "pending",
+            "testStrategy": "Have a downstream team member review the guide for clarity and completeness; update based on feedback."
+          },
+          {
+            "id": 5,
+            "title": "Add PRD Success Criteria Checklist to Documentation",
+            "description": "Integrate a Product Requirements Document (PRD) success criteria checklist into the documentation to help teams validate feature readiness.",
+            "dependencies": [],
+            "details": "Draft a checklist covering functional, performance, and acceptance criteria. Place it in a prominent section of the documentation.",
+            "status": "pending",
+            "testStrategy": "Confirm the checklist is visible, actionable, and referenced in relevant documentation sections."
+          }
+        ]
       },
       {
         "id": 45,
@@ -184,12 +1433,120 @@
           43
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Conduct Locust Load Test for Search Performance",
+            "description": "Simulate 20 concurrent searches each returning 100 results using Locust, and verify that the average response time is less than 1 second.",
+            "dependencies": [],
+            "details": "Configure Locust scenarios to match production-like search queries and collect detailed performance metrics. Ensure the test covers realistic data and query patterns.",
+            "status": "pending",
+            "testStrategy": "Attach Locust report; assert that average response time for all simulated searches is <1s."
+          },
+          {
+            "id": 2,
+            "title": "Profile Memory Usage with tracemalloc",
+            "description": "Run memory profiling during load tests using tracemalloc to ensure peak memory usage does not exceed 100 MB.",
+            "dependencies": [
+              "45.1"
+            ],
+            "details": "Start tracemalloc before load test execution, take snapshots at key intervals, and analyze peak memory usage. Filter and report memory allocations by relevant modules.",
+            "status": "pending",
+            "testStrategy": "Review tracemalloc output for peak usage; confirm it remains below 100 MB. Attach profiling report."
+          },
+          {
+            "id": 3,
+            "title": "Perform Full Security Scan",
+            "description": "Run comprehensive security scans using Bandit and Safety to identify and remediate vulnerabilities in the codebase and dependencies.",
+            "dependencies": [
+              "45.2"
+            ],
+            "details": "Execute Bandit for static code analysis and Safety for dependency vulnerability checks. Document and address any critical findings.",
+            "status": "pending",
+            "testStrategy": "CI pipeline must pass security gates; attach scan reports and verify no critical issues remain."
+          },
+          {
+            "id": 4,
+            "title": "Manual Smoke Test via CLI & MCP",
+            "description": "Conduct manual smoke testing of core features using both CLI and MCP interfaces to validate end-to-end functionality post-benchmarking and security validation.",
+            "dependencies": [
+              "45.3"
+            ],
+            "details": "Test key user flows and edge cases, ensuring no regressions or critical failures. Document results and any issues found.",
+            "status": "pending",
+            "testStrategy": "Log all test cases and outcomes; confirm all critical paths function as expected."
+          },
+          {
+            "id": 5,
+            "title": "Tag Release in Git",
+            "description": "Create and push the v1.3.0-semantic-fix tag in the git repository after all validation steps are complete.",
+            "dependencies": [
+              "45.4"
+            ],
+            "details": "Ensure all previous subtasks are successfully completed, then tag the release and update release notes as needed.",
+            "status": "pending",
+            "testStrategy": "Verify tag presence in remote repository; confirm release notes are accurate and complete."
+          },
+          {
+            "id": 6,
+            "title": "Design Load Test Scenarios with Locust",
+            "description": "Define and implement Locust scenarios to simulate 20 concurrent searches, each returning 100 results, targeting an average response time of less than 1 second.",
+            "dependencies": [],
+            "details": "Specify user behavior scripts, configure Locust parameters, and document expected KPIs for benchmarking.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Setup and Execute Memory Profiling with tracemalloc",
+            "description": "Integrate tracemalloc into the test environment to monitor and record peak memory usage during load tests, ensuring it remains below 100 MB.",
+            "dependencies": [],
+            "details": "Start tracemalloc at application launch, capture snapshots before and after load, and analyze statistics for top memory-consuming lines and modules[1][2][3][4].",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Integrate and Run Security Scans",
+            "description": "Configure CI pipeline to run Bandit and Safety security scans on the codebase, ensuring all critical vulnerabilities are addressed.",
+            "dependencies": [],
+            "details": "Automate scan execution, collect reports, and verify that no high-severity issues remain before release.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Conduct Manual Smoke Testing",
+            "description": "Perform manual smoke tests via CLI and MCP to validate core search and result retrieval functionality under typical usage conditions.",
+            "dependencies": [],
+            "details": "Document test cases, expected outcomes, and any anomalies observed during manual validation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Tag Release in Git",
+            "description": "Create and push the v1.3.0-semantic-fix tag in the git repository after all validation steps are complete.",
+            "dependencies": [],
+            "details": "Ensure changelog is updated and release notes reflect benchmarking, profiling, and security validation outcomes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Compile and Distribute Benchmarking & Validation Report",
+            "description": "Aggregate results from load tests, memory profiling, security scans, and manual smoke testing into a comprehensive release report.",
+            "dependencies": [],
+            "details": "Include Locust KPIs, tracemalloc memory stats, security scan summaries, and manual test findings. Distribute to stakeholders for final approval.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-26T12:35:13.360Z",
-      "updated": "2025-09-04T09:39:30.563Z",
+      "updated": "2025-09-05T03:09:20.288Z",
       "description": "Tasks for master context"
     }
   }

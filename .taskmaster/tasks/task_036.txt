@@ -1,0 +1,14 @@
+# Task ID: 36
+# Title: Optimize SQLite connection settings and lightweight pooling
+# Status: pending
+# Dependencies: 35
+# Priority: medium
+# Description: Apply WAL journal, busy_timeout, synchronous=NORMAL and implement singleton connection pool for single-user mode.
+# Details:
+1. Create db.py; implement `get_connection()` caching sqlite3.Connection with PRAGMA settings executed once.
+2. Replace direct sqlite3.connect calls in package with get_connection().
+3. Ensure threadsafety by check_same_thread=False (single process guarantee documented).
+
+# Test Strategy:
+• Integration test: concurrent ThreadPool search calls – no `database is locked` errors.
+• Confirm PRAGMA settings by querying `PRAGMA journal_mode` and `PRAGMA synchronous`.

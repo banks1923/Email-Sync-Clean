@@ -1,0 +1,14 @@
+# Task ID: 41
+# Title: Update MCP server tools to new API and field schema
+# Status: pending
+# Dependencies: 38, 40
+# Priority: medium
+# Description: Modify 4 tools under infrastructure/mcp_servers and utilities to import search_intelligence.search and respect new field names.
+# Details:
+1. Replace `get_search_intelligence_service()` calls.
+2. Adjust JSON handling for semantic_score/content_id.
+3. Add unit tests for each tool script using pytest-subprocess.
+
+# Test Strategy:
+• CLI invocation in dry-run mode returns exit code 0 and correct JSON keys.
+• Contract tests using sample payloads.

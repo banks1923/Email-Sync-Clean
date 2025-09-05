@@ -1,0 +1,14 @@
+# Task ID: 43
+# Title: Strengthen logging and error reporting
+# Status: pending
+# Dependencies: 32, 42
+# Priority: low
+# Description: Ensure critical errors are logged at ERROR level, deprecate misuse of logger.warning, and include exception context.
+# Details:
+1. Add get_logger helper returning structlog-wrapped logger with JSON sinks when available.
+2. Replace logger.warning usages for critical paths → logger.error then raise.
+3. Attach request_id / trace_id metadata where possible.
+
+# Test Strategy:
+• Unit test capturing logs with caplog – assert level.
+• Chaos test: force VectorStoreError – logs contain stack + context.

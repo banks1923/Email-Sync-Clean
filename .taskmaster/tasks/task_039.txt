@@ -1,0 +1,14 @@
+# Task ID: 39
+# Title: Delete compatibility shims and other dead hybrid-search code
+# Status: pending
+# Dependencies: 38
+# Priority: medium
+# Description: Purge outdated functions, __init__ alias exports, and hybrid search remnants to reduce architectural debt.
+# Details:
+1. Identify shims via TODO/HYBRID_SEARCH comments.
+2. Remove modules; adjust imports.
+3. Ensure none exceed 450 lines after cleanup.
+
+# Test Strategy:
+• Coverage run – unchanged % after deletion.
+• Static import check: `python -m pip install check-imports`; expect pass.

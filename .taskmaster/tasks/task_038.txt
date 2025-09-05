@@ -1,0 +1,14 @@
+# Task ID: 38
+# Title: Standardize field names across codebase and MCP server
+# Status: pending
+# Dependencies: 37
+# Priority: high
+# Description: Rename ‘relevance_score’→‘semantic_score’, ‘id’→‘content_id’, etc., ensuring serialization consistency.
+# Details:
+1. Update data mappers in basic_search.py to output standardized schema.
+2. Modify infrastructure/mcp_servers/search_intelligence_mcp.py and associated dataclasses.
+3. Provide temporary shim in MCP layer to accept both names but emit deprecation warning.
+
+# Test Strategy:
+• Integration test: search() returns dict with exact key set.
+• MCP server functional tests validate field names using jsonschema.

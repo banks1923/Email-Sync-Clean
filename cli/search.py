@@ -12,6 +12,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import service locator
 from tools.scripts.cli.service_locator import get_locator
+from lib.exceptions import (
+    ValidationError,
+    VectorStoreError,
+    EnrichmentError,
+    SearchError,
+)
 
 
 def search_emails(query, limit=5, hybrid=True, mode="semantic"):
@@ -51,12 +57,12 @@ def search_emails(query, limit=5, hybrid=True, mode="semantic"):
         if not vector_store_available():
             print("❌ Vector store not available - please ensure Qdrant is running")
             return False
-        
+
         print("🔍 Running semantic vector search...")
-        
+
         # Perform semantic search
         results = search(query=query, limit=limit)
-        
+
         if results:
             print(f"✅ Found {len(results)} semantic matches")
             display_semantic_results(results, "🧠 Semantic Search Results", limit)
@@ -64,9 +70,19 @@ def search_emails(query, limit=5, hybrid=True, mode="semantic"):
         else:
             print("❌ No results found")
             return False
-            
-    except Exception as e:
-        print(f"❌ Search error: {e}")
+
+    except ValidationError as e:
+        print(f"❌ Invalid query: {e}")
+        return False
+    except VectorStoreError as e:
+        print(f"💥 Vector store error: {e}")
+        print("ℹ️  Start Qdrant or run 'tools/scripts/vsearch admin health --deep'.")
+        return False
+    except EnrichmentError as e:
+        print(f"❌ Result enrichment failed: {e}")
+        return False
+    except SearchError as e:
+        print(f"❌ Search failed: {e}")
         return False
 
 
@@ -79,12 +95,12 @@ def find_literal_pattern(pattern, limit=50):
     
     try:
         from lib.search import find_literal
-        
+
         print("🔍 Scanning for exact matches...")
-        
+
         # Perform literal search
         results = find_literal(pattern=pattern, limit=limit)
-        
+
         if results:
             print(f"✅ Found {len(results)} documents with exact matches")
             display_literal_results(results, "🔤 Literal Pattern Matches", limit)
@@ -92,9 +108,15 @@ def find_literal_pattern(pattern, limit=50):
         else:
             print(f"❌ No documents found containing '{pattern}'")
             return False
-            
-    except Exception as e:
-        print(f"❌ Literal search error: {e}")
+
+    except EnrichmentError as e:
+        print(f"❌ Literal search enrichment failed: {e}")
+        return False
+    except ValidationError as e:
+        print(f"❌ Invalid pattern: {e}")
+        return False
+    except SearchError as e:
+        print(f"❌ Literal search failed: {e}")
         return False
 
 
@@ -143,9 +165,18 @@ def hybrid_search_command(query: str, limit: int = 10, why: bool = False, keywor
         display_hybrid_results(results, "🔎 Hybrid Search Results", limit=limit, why=why)
         return True
 
-    except Exception as e:
-        print(f"💥 Hybrid search failed: {e}")
+    except VectorStoreError as e:
+        print(f"💥 Vector store unavailable: {e}")
         print("ℹ️  Run 'tools/scripts/vsearch admin health --deep' to diagnose.")
+        return False
+    except ValidationError as e:
+        print(f"❌ Invalid query: {e}")
+        return False
+    except EnrichmentError as e:
+        print(f"❌ Result enrichment failed: {e}")
+        return False
+    except SearchError as e:
+        print(f"❌ Hybrid search failed: {e}")
         return False
 
 

@@ -66,6 +66,9 @@ token.json
 *.log
 logs/
 
+# Patch files
+*.patch
+
 # Temporary files
 *.tmp
 *.temp

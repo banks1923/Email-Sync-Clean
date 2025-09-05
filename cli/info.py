@@ -6,12 +6,19 @@ Handles: info, pdf-stats, transcription-stats commands
 
 import sys
 from pathlib import Path
+import sqlite3
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import new clean services
 from lib.db import SimpleDB
+from lib.exceptions import (
+    ValidationError,
+    VectorStoreError,
+    EnrichmentError,
+    SearchError,
+)
 
 # Import service locator for backward compatibility
 try:
@@ -45,7 +52,7 @@ def show_info():
         # Show last sync times if available
         if stats.get("latest_email_date"):
             print(f"  🕐 Latest email: {stats['latest_email_date']}")
-    except Exception as e:
+    except sqlite3.Error as e:
         print(f"❌ Database error: {e}")
 
     # Vector service status using clean services
@@ -58,17 +65,12 @@ def show_info():
         print("  ✅ Status: Connected")
         print(f"  📊 Collection: {store.collection_name}")
         print(f"  📐 Dimensions: {store.vector_size} (Legal BERT)")
+        print("  🔍 Semantic search: Available")
 
-        # Try to get vector count
-        try:
-            # This is a simple check - actual count requires Qdrant query
-            print("  🔍 Semantic search: Available")
-        except Exception:
-            print("  ⚠️  Semantic search: Requires Qdrant running")
-
-    except Exception:
+    except (ImportError, ConnectionError, OSError) as e:
         print("\n🧠 Vector Service:")
         print("  ❌ Status: Not available")
+        print(f"  💡 {e}")
         print("  💡 Run 'docker run -p 6333:6333 qdrant/qdrant' to enable")
 
     # Embedding service status
@@ -92,7 +94,7 @@ def show_info():
     try:
         # Check if semantic search is available
         from lib.search import vector_store_available
-        
+
         if vector_store_available():
             print("  ✅ Semantic Search: AI-powered similarity using Legal BERT")
             print("  ✅ Hybrid Search: Combines both for best results")
@@ -100,7 +102,7 @@ def show_info():
         else:
             print("  ⚠️  Semantic Search: Requires vector service")
             print("  ⚠️  Hybrid Search: Requires vector service")
-    except Exception:
+    except ImportError:
         print("  ⚠️  Semantic Search: Requires vector service")
         print("  ⚠️  Hybrid Search: Requires vector service")
 
@@ -168,7 +170,7 @@ def show_pdf_stats():
 
         return True
 
-    except Exception as e:
+    except sqlite3.Error as e:
         print(f"❌ PDF stats error: {e}")
         return False
 
@@ -230,7 +232,7 @@ def show_transcription_stats():
 
         return True
 
-    except Exception as e:
+    except sqlite3.Error as e:
         print(f"❌ Transcription stats error: {e}")
         return False
 

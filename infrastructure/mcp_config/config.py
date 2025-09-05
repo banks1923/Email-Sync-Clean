@@ -28,8 +28,8 @@ if PYDANTIC_AVAILABLE:
         MCP Configuration with Pydantic validation.
         """
 
-        # Project paths
-        project_root: Path = Field(default=Path("/Users/jim/Projects/Email-Sync-Clean-Backup"))
+        # Project paths (default to current working directory)
+        project_root: Path = Field(default=Path.cwd())
 
         # Optional API keys (loaded from environment)
         anthropic_api_key: SecretStr | None = Field(None, alias="ANTHROPIC_API_KEY")
@@ -39,7 +39,7 @@ if PYDANTIC_AVAILABLE:
         mistral_api_key: SecretStr | None = Field(None, alias="MISTRAL_API_KEY")
 
         class Config:
-            env_file = "/Users/jim/Secrets/.env"
+            env_file = "/secrets/.env"
             env_file_encoding = "utf-8"
             extra = "ignore"  # Ignore extra environment variables
 
@@ -204,7 +204,7 @@ else:
     @dataclass
     class MCPConfig:
         project_root: Path = field(
-            default_factory=lambda: Path("/Users/jim/Projects/Email-Sync-Clean-Backup")
+            default_factory=lambda: Path.cwd()
         )
 
         def get_mcp_servers(self) -> dict[str, dict[str, Any]]:

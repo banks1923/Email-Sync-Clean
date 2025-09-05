@@ -1,0 +1,14 @@
+# Task ID: 42
+# Title: Refactor CLI handlers and service orchestrator
+# Status: pending
+# Dependencies: 41
+# Priority: medium
+# Description: Update 7 CLI scripts and pipeline orchestrator to use new functions, remove deprecated imports.
+# Details:
+1. tools/scripts/cli/*.py – import search_intelligence.search.
+2. Update argument parsing to include new limit bounds.
+3. Add --validate flag to run validators only.
+
+# Test Strategy:
+• Invoke each CLI with --help – no stack trace.
+• End-to-end test: pipeline orchestrator runs successfully in staging DB.

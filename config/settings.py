@@ -233,7 +233,8 @@ class Settings(BaseSettings):
     system: SystemSettings = SystemSettings()
 
     class Config:
-        env_file = [".env", "~/Secrets/.env"]  # Check local first, then secrets
+        # Prefer container/ops path, then project .env, then user Secrets
+        env_file = ["/secrets/.env", ".env", "~/Secrets/.env"]
         env_file_encoding = "utf-8"
         case_sensitive = False
         extra = "ignore"  # Ignore extra environment variables

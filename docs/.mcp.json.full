@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["/Users/jim/Projects/mcp-sequential-thinking/run_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/jim/Projects/mcp-sequential-thinking",
+        "MCP_STORAGE_DIR": "data/system_data/sequential_thinking"
+      }
+    },
+    "search-intelligence": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["infrastructure/mcp_servers/search_intelligence_mcp.py"],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    },
+    "legal-intelligence": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["infrastructure/mcp_servers/legal_intelligence_mcp.py"],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}

@@ -1,93 +1,125 @@
 {
 	"meta": {
-		"generatedAt": "2025-08-26T15:22:24.836Z",
-		"tasksAnalyzed": 10,
-		"totalTasks": 10,
-		"analysisCount": 10,
+		"generatedAt": "2025-09-05T03:06:58.640Z",
+		"tasksAnalyzed": 14,
+		"totalTasks": 14,
+		"analysisCount": 14,
 		"thresholdScore": 5,
 		"projectName": "Email Sync",
 		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 21,
-			"taskTitle": "Project & Environment Setup + Dependency Pinning",
-			"complexityScore": 6,
+			"taskId": 32,
+			"taskTitle": "Introduce explicit Search exception hierarchy",
+			"complexityScore": 5,
 			"recommendedSubtasks": 6,
-			"expansionPrompt": "Break down the dependency management and compatibility verification into discrete subtasks: 1) Dependency version audit and updates, 2) Qdrant vector store compatibility verification, 3) Database schema compatibility check, 4) Testing infrastructure updates, 5) Existing script migration planning, 6) Integration validation and rollback preparation.",
-			"reasoning": "Moderate-high complexity due to coordination across multiple systems (vector store, database, CI/CD) with risk of breaking existing functionality. Requires careful sequencing and compatibility validation across different components."
+			"expansionPrompt": "Expand this task by breaking down exception class design (base vs. specific), module creation, codebase-wide refactoring (per module), updating import paths, explicit exception handling refactor, backward compatibility exports, and comprehensive test coverage for each exception type.",
+			"reasoning": "This task involves moderate complexity due to cross-cutting refactoring, explicit error handling, and backward compatibility. It requires careful coordination across multiple modules and robust testing, but follows standard Python patterns for exception hierarchies and is well-scoped with clear subtasks."
 		},
 		{
-			"taskId": 22,
-			"taskTitle": "Implement Token-Based DocumentChunker",
+			"taskId": 33,
+			"taskTitle": "Implement comprehensive input validation layer",
 			"complexityScore": 7,
 			"recommendedSubtasks": 7,
-			"expansionPrompt": "Decompose the chunker implementation into specialized components: 1) Tokenizer integration (tiktoken + sentencepiece fallback), 2) spaCy sentence detection setup, 3) Document type-specific pre-processing logic, 4) Core sliding window chunking algorithm, 5) Chunk metadata and ID generation, 6) Streaming generator implementation, 7) CLI interface and testing framework.",
-			"reasoning": "High complexity due to sophisticated algorithm combining multiple tokenizers, document-specific logic, sliding window with overlap calculations, and sentence boundary preservation. Multiple edge cases and performance considerations for different document types."
+			"expansionPrompt": "Expand this task by detailing validator design (per parameter), implementation of type/range/format checks, integration points for each API boundary, error propagation and messaging, edge-case handling (e.g., unicode, fuzz), and a layered test strategy (unit, integration, fuzz, security).",
+			"reasoning": "Input validation at API boundaries is critical for security and correctness, requiring careful handling of types, ranges, and formats. The need for robust error propagation, comprehensive testing (including fuzzing), and integration with exception handling increases complexity."
 		},
 		{
-			"taskId": 23,
-			"taskTitle": "Quality Scoring & Gating Module",
-			"complexityScore": 5,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Structure the quality scoring implementation: 1) Mathematical scoring algorithm implementation using numpy/scipy, 2) Chunk metadata integration for contextual scoring, 3) Configuration management with Pydantic settings, 4) Quality gate decorator and filtering logic, 5) Integration testing with chunker output validation.",
-			"reasoning": "Moderate complexity focused on mathematical implementation. Well-defined requirements with clear scoring formula, but requires integration with multiple components and proper configuration management."
-		},
-		{
-			"taskId": 24,
-			"taskTitle": "Database Schema Migration Scripts",
-			"complexityScore": 6,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Structure the schema migration systematically: 1) Current schema state analysis and documentation, 2) content_embeddings table design and necessity evaluation, 3) SimpleDB migration script implementation, 4) Index creation and foreign key constraint validation, 5) Data integrity testing with existing 663 items.",
-			"reasoning": "Moderate-high complexity due to data migration risks and working with existing production data. SimpleDB pattern reduces complexity but requires careful handling of 663 existing items ready for embedding."
-		},
-		{
-			"taskId": 25,
-			"taskTitle": "Pipeline Integration: Chunking, Quality Gating & Embedding Ingestion",
+			"taskId": 34,
+			"taskTitle": "Refactor find_literal() for SQL-safe whitelisted searches",
 			"complexityScore": 8,
 			"recommendedSubtasks": 7,
-			"expansionPrompt": "Break down the complex integration: 1) Service orchestrator integration with existing infrastructure, 2) Batch processing implementation for 663 items, 3) Chunking and quality gating pipeline coordination, 4) Embedding service integration with batch optimization, 5) Vector store upsert operations, 6) Idempotency and error handling, 7) Metrics tracking and CLI integration.",
-			"reasoning": "High complexity due to integration of multiple sophisticated components, processing large data volume (663 items), and requiring idempotency. Coordination between chunker, quality scorer, embedding service, and vector store with existing infrastructure."
+			"expansionPrompt": "Expand this task by specifying field whitelisting logic, LIKE pattern escaping utility, parameterized query construction, SQL execution refactor, removal of unsafe patterns, static analysis integration, and detailed test coverage for SQLi and performance.",
+			"reasoning": "This task is high complexity due to the need for secure SQL construction, field whitelisting, custom escaping, and static analysis. It requires deep understanding of SQL injection vectors, careful refactoring, and extensive testing to ensure both security and performance."
 		},
 		{
-			"taskId": 26,
-			"taskTitle": "Document-Level Retrieval, RRF Aggregation & Dynamic Weighting",
-			"complexityScore": 8,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Decompose the advanced search implementation: 1) Dynamic weight calculation algorithm for query analysis, 2) Two-stage hybrid search enhancement, 3) Chunk-to-document aggregation logic, 4) RRF scoring implementation and ranking, 5) Result diversity enforcement and exact match boosting, 6) Performance optimization for <200ms p95 latency, 7) Integration with existing search_intelligence service.",
-			"reasoning": "High complexity involving sophisticated search algorithms, mathematical RRF aggregation, dynamic weighting, and strict performance requirements. Requires deep integration with existing search infrastructure while maintaining backward compatibility."
-		},
-		{
-			"taskId": 27,
-			"taskTitle": "Feature Flags & Dual Index Routing",
-			"complexityScore": 5,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Structure the feature flag system: 1) Pydantic settings configuration with environment variable support, 2) CLI integration and command extensions for vsearch, 3) Pipeline routing logic implementation, 4) Persistent configuration storage and management, 5) Documentation and testing of flag switching behavior.",
-			"reasoning": "Moderate complexity with well-defined configuration management requirements. Standard feature flag implementation with CLI integration, but requires careful routing logic and persistence across sessions."
-		},
-		{
-			"taskId": 28,
-			"taskTitle": "Re-Embedding & Migration Script",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Structure the batch processing system: 1) CLI argument parsing and configuration setup, 2) Database query optimization for 663 items selection, 3) ThreadPoolExecutor parallel processing implementation, 4) Checkpoint/resume functionality with JSON persistence, 5) Progress monitoring and ETA calculation with loguru, 6) Validation modes and error handling.",
-			"reasoning": "High complexity due to parallel processing coordination, checkpoint/resume functionality, and processing large data volume. Requires robust error handling and state management for long-running batch operations."
-		},
-		{
-			"taskId": 29,
-			"taskTitle": "Evaluation Framework & Gold Standard Test Harness",
+			"taskId": 35,
+			"taskTitle": "Replace N+1 enrichment with batched enrichment function",
 			"complexityScore": 6,
 			"recommendedSubtasks": 6,
-			"expansionPrompt": "Build the evaluation system: 1) Gold standard query dataset creation and categorization, 2) CLI-based query execution and result parsing, 3) Metrics calculation engine (precision@10, recall@10, F1), 4) Report generation in CSV and Markdown formats, 5) Baseline metrics storage and regression detection, 6) Make command integration and automation.",
-			"reasoning": "Moderate-high complexity requiring comprehensive evaluation framework design. Integration with existing CLI tools and need for robust metrics calculation and reporting system with regression detection capabilities."
+			"expansionPrompt": "Expand this task by detailing batch function implementation, legacy code removal, call site updates, batching logic optimization, error/timeout handling, and both functional and performance test coverage.",
+			"reasoning": "Batching enrichment reduces DB load and complexity, but requires careful handling of chunking, error propagation, and backward compatibility. The need for performance guarantees and robust error handling adds moderate complexity."
 		},
 		{
-			"taskId": 30,
-			"taskTitle": "A/B Testing, Monitoring Dashboards & Cutover Readiness",
+			"taskId": 36,
+			"taskTitle": "Optimize SQLite connection settings and lightweight pooling",
 			"complexityScore": 7,
 			"recommendedSubtasks": 7,
-			"expansionPrompt": "Structure the monitoring and cutover system: 1) Monitoring script development with metrics collection, 2) Side-by-side pipeline comparison logic, 3) Performance metrics tracking and trend analysis, 4) Report generation with rich console output, 5) Testing procedure automation, 6) Cutover readiness checklist and validation, 7) Rollback procedures and safety mechanisms.",
-			"reasoning": "High complexity due to comprehensive monitoring system requirements, A/B testing coordination, and critical cutover procedures. Requires robust performance tracking, comparison logic, and fail-safe mechanisms for production system migration."
+			"expansionPrompt": "Expand this task by specifying singleton connection pool implementation, PRAGMA settings application, codebase-wide connection refactor, thread/process safety documentation, concurrency testing, and validation of PRAGMA persistence.",
+			"reasoning": "Connection pooling and PRAGMA tuning for SQLite require careful handling of concurrency, resource management, and documentation. Ensuring thread/process safety and correct PRAGMA application across the codebase increases complexity."
+		},
+		{
+			"taskId": 37,
+			"taskTitle": "Remove SearchIntelligenceService class and deprecated main.py",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand this task by breaking down file deletions, class removal, import refactoring, __init__.py cleanup, codebase-wide reference checks, and regression testing.",
+			"reasoning": "This is a well-bounded cleanup and refactor task. While it touches multiple files, the changes are straightforward and mostly mechanical, with low risk if regression tests are comprehensive."
+		},
+		{
+			"taskId": 38,
+			"taskTitle": "Standardize field names across codebase and MCP server",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand this task by detailing a full audit of field usages, refactoring mappers and serializers, updating dataclasses and schemas, implementing compatibility shims, updating downstream consumers, and comprehensive contract/integration testing.",
+			"reasoning": "Field renaming across multiple layers (core, MCP, downstream consumers) is high complexity due to the risk of breaking serialization contracts, the need for compatibility shims, and the requirement for exhaustive testing and documentation."
+		},
+		{
+			"taskId": 39,
+			"taskTitle": "Delete compatibility shims and other dead hybrid-search code",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand this task by specifying codebase audit for shims, systematic code removal, import refactoring, module size checks, test coverage validation, and documentation updates.",
+			"reasoning": "While the task is mostly code removal, it requires careful auditing to avoid breaking dependencies, maintaining module size constraints, and ensuring no coverage or functionality regressions."
+		},
+		{
+			"taskId": 40,
+			"taskTitle": "Revise and expand automated test suite",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Expand this task by breaking down test refactoring (per file), fixture updates, new security and boundary test creation, performance benchmarking integration, coverage analysis, and CI validation.",
+			"reasoning": "Updating and expanding a large test suite is complex due to the need for broad coverage, new security/performance tests, and ensuring all legacy and new tests pass under CI with high coverage."
+		},
+		{
+			"taskId": 41,
+			"taskTitle": "Update MCP server tools to new API and field schema",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand this task by specifying import updates, API call refactoring, JSON schema handling, new unit tests (with subprocess mocks), CLI/contract test validation, and documentation updates.",
+			"reasoning": "This task involves moderate complexity due to the need to update multiple tools, refactor for new APIs and schemas, and ensure robust testing, but follows standard patterns for CLI and tool updates."
+		},
+		{
+			"taskId": 42,
+			"taskTitle": "Refactor CLI handlers and service orchestrator",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand this task by detailing CLI import refactoring, argument parsing updates, --validate flag implementation, orchestrator integration, end-to-end testing, and user documentation.",
+			"reasoning": "CLI and orchestrator refactoring is moderately complex due to the number of scripts, argument parsing changes, and the need for robust end-to-end and user-facing validation."
+		},
+		{
+			"taskId": 43,
+			"taskTitle": "Strengthen logging and error reporting",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand this task by specifying logger helper implementation, codebase-wide logging audit, error/exception context integration, metadata propagation, structured log validation, and chaos testing.",
+			"reasoning": "Logging improvements are moderately complex, requiring codebase-wide changes, structured logging setup, and robust testing, but follow established patterns with limited risk."
+		},
+		{
+			"taskId": 44,
+			"taskTitle": "Update documentation and migration guides",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand this task by breaking down CHANGELOG updates, API documentation refresh, docstring and auto-doc generation, migration guide drafting, and PRD checklist integration.",
+			"reasoning": "Documentation updates are low to moderate complexity, requiring thoroughness and accuracy but following standard documentation and review practices."
+		},
+		{
+			"taskId": 45,
+			"taskTitle": "Final performance benchmarking & validation",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand this task by detailing load test scenario design, memory profiling setup, security scan integration, manual smoke testing, release tagging, and reporting.",
+			"reasoning": "Final benchmarking and validation is moderately complex due to the need for coordinated load, memory, and security testing, as well as manual and automated validation before release."
 		}
 	]
 }

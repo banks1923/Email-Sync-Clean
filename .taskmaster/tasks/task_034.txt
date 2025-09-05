@@ -1,0 +1,18 @@
+# Task ID: 34
+# Title: Refactor find_literal() for SQL-safe whitelisted searches
+# Status: pending
+# Dependencies: 32, 33
+# Priority: high
+# Description: Eliminate SQL injection by parameterized queries, whitelist fields, and integrate LIKE pattern escaping.
+# Details:
+1. Define ALLOWED_LITERAL_FIELDS frozenset in basic_search.py.
+2. Implement `_escape_like(pattern)` utility using double-escape technique.
+3. Build WHERE clause only for allowed fields; use `?` placeholders.
+4. Execute via SimpleDB cursor `execute(sql, params)`.
+5. Remove any f-string SQL interpolation.
+6. Unit tests updated to new signature.
+
+# Test Strategy:
+• SQL injection test cases from PRD – verify no results & no exceptions.
+• Static scan with bandit – expect no high severities.
+• Examine sqlite `query_plan` – ensure indices still used.

@@ -1,0 +1,14 @@
+# Task ID: 44
+# Title: Update documentation and migration guides
+# Status: pending
+# Dependencies: 42
+# Priority: low
+# Description: Refresh CHANGELOG, SERVICES_API.md, inline docstrings, and create migration guide for downstream teams.
+# Details:
+1. Auto-generate API docs via pdoc.
+2. Draft MIGRATION_SEMANTIC_SEARCH.md with code examples.
+3. Add PRD success criteria checklist to docs.
+
+# Test Strategy:
+• `pydocstyle` passes.
+• Build docs with mkdocs – no warnings.

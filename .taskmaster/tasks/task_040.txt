@@ -1,0 +1,16 @@
+# Task ID: 40
+# Title: Revise and expand automated test suite
+# Status: pending
+# Dependencies: 39
+# Priority: high
+# Description: Update 15 affected test files to new API and add dedicated security, performance, and boundary tests.
+# Details:
+1. Refactor existing tests to import search, find_literal.
+2. Create tests/test_semantic_search_security.py implementing SQLi & boundary tests.
+3. Add batch enrichment stress test with pytest-benchmark.
+4. Update fixtures paths as needed.
+
+# Test Strategy:
+• `pytest -n auto` all green.
+• Security tests intentionally inject malicious input – expect ValidationError.
+• Coverage ≥ 90%.
