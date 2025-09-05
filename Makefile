@@ -260,34 +260,16 @@ reset: ## Nuclear reset - use when system is completely broken
 # =============================================================================
 
 ensure-qdrant: ## Ensure Qdrant vector database is running
-	@if ! curl -s http://localhost:6333/readyz >/dev/null 2>&1; then \
-		echo "🚀 Starting vector database..."; \
-		if [ ! -f ~/bin/qdrant ]; then \
-			echo "❌ Qdrant not installed. Run 'make setup' first"; \
-			exit 1; \
-		fi; \
-		QDRANT__STORAGE__PATH=./qdrant_data ~/bin/qdrant > qdrant.log 2>&1 & \
-		echo "   Waiting for startup..."; \
-		for i in 1 2 3 4 5; do \
-			sleep 2; \
-			if curl -s http://localhost:6333/readyz >/dev/null 2>&1; then \
-				echo "✅ Vector database started"; \
-				break; \
-			fi; \
-			if [ $$i -eq 5 ]; then \
-				echo "❌ Failed to start vector database. Check qdrant.log"; \
-				exit 1; \
-			fi; \
-		done; \
-	fi
+	@./scripts/shell/manage_qdrant.sh start
 
 stop-qdrant: ## Stop Qdrant vector database
-	@if pgrep -f "qdrant" >/dev/null 2>&1; then \
-		echo "🛑 Stopping vector database..."; \
-		pkill -f "qdrant"; \
-		sleep 2; \
-		echo "✅ Vector database stopped"; \
-	fi
+	@./scripts/shell/manage_qdrant.sh stop
+
+restart-qdrant: ## Restart Qdrant vector database
+	@./scripts/shell/manage_qdrant.sh restart
+
+qdrant-status: ## Check Qdrant vector database status
+	@./scripts/shell/manage_qdrant.sh status
 
 install-qdrant: ## Install Qdrant vector database
 	@echo "📦 Installing vector database..."

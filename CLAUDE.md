@@ -111,6 +111,10 @@ Performance budgets: <300ms DB, <500ms vector control-plane, <50ms embeddings (m
 
 ### Quick Development Setup
 ```bash
+# Start Qdrant vector database (if not running)
+make ensure-qdrant
+# Or use the script directly: ./scripts/shell/manage_qdrant.sh start
+
 # Check system status
 tools/scripts/vsearch info
 
@@ -142,6 +146,10 @@ python3 scripts/data/generate_embeddings.py
 | | `make diagnose` | Deep system diagnostic |
 | | `make backup` | Backup your data |
 | | `make reset` | Nuclear reset (when broken) |
+| **Qdrant** | `make ensure-qdrant` | Start Qdrant if not running |
+| | `make stop-qdrant` | Stop Qdrant database |
+| | `make restart-qdrant` | Restart Qdrant database |
+| | `make qdrant-status` | Check Qdrant status |
 | **Content** | `make search QUERY="terms"` | Search documents |
 | | `make upload FILE="doc.pdf"` | Upload document |
 | | `make sync` | Sync Gmail emails |
@@ -188,6 +196,7 @@ Email Sync/
 │   ├── search.py       # Semantic search & literal patterns
 │   ├── embeddings.py   # Legal BERT embeddings
 │   ├── vector_store.py # Qdrant vector operations
+│   ├── validators.py   # Input validation layer [NEW: 2025-09-05]
 │   └── utilities/      # Helper functions
 ├── shared/             # Shared utilities & database
 
@@ -247,6 +256,17 @@ Email Sync/
 - **External secrets**: Use `~/Secrets/.env` with direnv auto-loading via `.envrc`
 - **Documentation linting**: `make docs-check` and `make docs-fix` for markdown quality
 - **Complexity analysis**: `make complexity-check` and `make complexity-report` with radon
+
+**Environment Configuration (`.envrc`):**
+- **Purpose**: Sets environment variables only (no process management)
+- **Secrets Loading**: Prefers `/secrets/.env`, falls back to `~/Secrets/.env`, then `./.env`
+- **Project Variables**:
+  - `PYTHONPATH`: Set to project root
+  - `LOG_LEVEL`: Default INFO
+  - `QDRANT__STORAGE__PATH`: ./qdrant_data
+  - `QDRANT__LOG__PATH`: ./logs/qdrant.log
+  - `MCP_STORAGE_DIR`: data/sequential_thinking
+- **Qdrant Management**: Use `make ensure-qdrant` or `./scripts/shell/manage_qdrant.sh`
 
 **Major Update (2025-08-23)**: Configuration alignment completed:
 - **Database Path Alignment**: All services use `data/system_data/emails.db` via centralized `get_db_path()`

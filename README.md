@@ -193,8 +193,12 @@ tools/scripts/vsearch info
 
 ### 4. Optional: Enable Semantic Search
 ```bash
-# Qdrant is installed locally - starts automatically
-# No Docker required
+# Start Qdrant vector database (if not running)
+make ensure-qdrant
+# Or: ./scripts/shell/manage_qdrant.sh start
+
+# Check Qdrant status
+make qdrant-status
 
 # Semantic search works automatically when Qdrant is running
 tools/scripts/vsearch search "legal contract"

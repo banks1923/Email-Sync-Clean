@@ -4,6 +4,83 @@
 
 ## Recent Changes
 
+### [2025-09-05] - Environment Loader Fix and Qdrant Management Improvements
+
+#### Fixed
+- **direnv Environment Loader Hanging**
+  - Removed Qdrant startup logic from `.envrc` that was causing direnv to hang
+  - Eliminated echo statements from `.envrc` that interfered with direnv's execution model
+  - `.envrc` now only sets environment variables as intended
+  - Fixed "direnv export taking a while to execute" issue
+
+#### Added
+- **Qdrant Management Script (`scripts/shell/manage_qdrant.sh`)**
+  - Dedicated script for managing Qdrant vector database
+  - Commands: `start`, `stop`, `restart`, `status`
+  - Proper process management with graceful shutdown
+  - Log file management and status reporting
+
+#### Changed
+- **Makefile Qdrant Targets**
+  - `make ensure-qdrant` - Now uses dedicated management script
+  - `make stop-qdrant` - Properly stops Qdrant service
+  - `make restart-qdrant` - Added for convenience
+  - `make qdrant-status` - Check if Qdrant is running
+
+### [2025-09-05] - Exception Testing and Vector Store Availability Fixes
+
+#### Fixed
+- **Vector Store Availability Issues**
+  - Moved `os` import from local function scope to module level in `lib/search.py`
+  - Fixed exception handling in `vector_store_available()` to properly catch Qdrant probe failures
+  - Added nested try-catch for Qdrant client.get_collections() to handle all exception types
+  - Eliminated local import anti-pattern that prevented proper mocking in tests
+
+- **Test Infrastructure Improvements**
+  - Fixed all 11 exception propagation tests in `tests/lib/test_search_exceptions.py`
+  - Updated mock targets from `lib.search.os.getenv` to `os.getenv` (correct module)
+  - Fixed test isolation issues with environment variables
+  - Updated validation tests to match new architecture where `search()` validates, not `semantic_search()`
+
+#### Added
+- **Exception Tests (tests/lib/test_search_exceptions.py)**
+  - Comprehensive ValidationError propagation tests
+  - VectorStoreError propagation tests
+  - Vector store availability tests with proper mocking
+  - Test coverage for TEST_MODE, ALLOW_VECTOR_MOCK environment variables
+  - All 11 tests passing with proper exception handling
+
+### [2025-09-05] - Comprehensive Input Validation Layer Implementation
+
+#### Added
+- **Input Validation Layer (lib/validators.py)**
+  - Comprehensive validation for `search()` and `find_literal()` API boundaries
+  - Parameter validation with type coercion and bounds checking:
+    - Query/pattern: Non-empty string validation, control character removal, length limits (1000 chars)
+    - Limit: Automatic clamping to 1-200 range with type coercion
+    - Filters: Dictionary validation with field-specific rules
+    - Fields: List validation against allowed field names
+  - RFC3339 date format validation for date filters
+  - Source type validation against allowed values
+  - Unicode-safe validation with control character stripping
+  - Fail-fast validation with detailed ValidationError messages
+
+#### Changed
+- **lib/search.py**: Integrated validation at API boundaries
+  - `search()` now validates all inputs before processing
+  - `find_literal()` now validates pattern, limit, and fields
+  - Removed redundant validation from `semantic_search()` internal function
+
+#### Added Tests
+- **tests/test_validators.py**: 222 comprehensive test cases
+  - Parameterized tests for all validation scenarios
+  - Edge case testing for boundary conditions
+  - Fuzz testing with 150 random unicode/numeric inputs
+  - SQL injection pattern handling verification
+  - Performance testing (< 0.5s for 1000 validations)
+  - Integration tests for complete validation flows
+  - 92% code coverage on new validation module
+
 ### [2025-09-05] - Phase 1 Critical Fixes: Test Infrastructure & Error Handling
 
 #### Fixed
