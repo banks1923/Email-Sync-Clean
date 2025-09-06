@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from infrastructure.documents.chunker.document_chunker import (
+from infrastructure import (
     DocumentChunk,
     DocumentChunker,
     DocumentType,

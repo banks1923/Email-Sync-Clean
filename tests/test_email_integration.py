@@ -13,10 +13,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from scripts.data.parse_messages import EmailBatchProcessor
-
-from email_parsing.message_deduplicator import MessageDeduplicator
+from gmail import MessageDeduplicator
 from lib.db import SimpleDB
+from scripts.data.parse_messages import EmailBatchProcessor
 
 
 class TestEmailDeduplicationIntegration(unittest.TestCase):

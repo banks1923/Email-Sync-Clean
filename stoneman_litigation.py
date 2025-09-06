@@ -3,10 +3,11 @@
 Stoneman Discovery & Deposition Prep Tool
 Generate discovery questions and find contradictions
 """
-import sqlite3
 import re
-from pathlib import Path
+import sqlite3
 from datetime import datetime
+from pathlib import Path
+
 
 def generate_discovery_questions():
     """Generate specific discovery questions based on case issues"""

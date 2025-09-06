@@ -14,7 +14,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from email_parsing.message_deduplicator import (
+from gmail import (
     MessageDeduplicator,
     ParsedMessage,
     process_email_file,

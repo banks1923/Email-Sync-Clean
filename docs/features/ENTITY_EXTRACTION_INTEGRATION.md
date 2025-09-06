@@ -8,7 +8,7 @@ The unified entity extraction system processes all content types (emails, PDFs, 
 
 ### Components
 
-- **UnifiedEntityProcessor** (`shared/unified_entity_processor.py`) - Core extraction pipeline
+- **EntityService** (`services/entity/main.py`) - Core extraction pipeline
 - **EntityHandler** (`tools/scripts/cli/entity_handler.py`) - CLI interface
 - **Quality Filters** - OCR garbage detection and removal
 - **Database Integration** - Full entity-to-content attribution
@@ -74,9 +74,9 @@ tools/scripts/vsearch search-entities --entity-type PERSON --entity-value "Smith
 ### Python API
 
 ```python
-from shared.unified_entity_processor import UnifiedEntityProcessor
+from services.entity.main import EntityService
 
-processor = UnifiedEntityProcessor()
+processor = EntityService()
 
 # Process entities from all content
 result = processor.process_content_entities(max_content=100)
@@ -245,7 +245,7 @@ python3 scripts/show_entity_proof.py
 
 ### Quality Thresholds
 
-Adjustable in `shared/unified_entity_processor.py`:
+Adjustable in `services/entity/main.py`:
 
 ```python
 # Content quality filter (symbol density)

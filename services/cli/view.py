@@ -10,11 +10,12 @@ If the 'rich' library is unavailable, falls back to plain text output.
 
 import argparse
 from typing import Dict, List
+
 from lib.exceptions import (
-    ValidationError,
-    VectorStoreError,
     EnrichmentError,
     SearchError,
+    ValidationError,
+    VectorStoreError,
 )
 
 

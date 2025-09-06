@@ -9,12 +9,9 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from entity.main import EntityService
-
-# Direct service imports - service registry was removed as unused
-# Services are now imported directly when needed
-from gmail.main import GmailService
-from lib.timeline.main import TimelineService
+from gmail import GmailService
+from lib import TimelineService
+from services import EntityService
 
 # Notes service removed - migrated to document pipeline
 
@@ -66,7 +63,7 @@ class ServiceLocator:
         """
         Get PDF service instance.
         """
-        from pdf.wiring import build_pdf_service
+        from services import build_pdf_service
 
         return build_pdf_service()
 

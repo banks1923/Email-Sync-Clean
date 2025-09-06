@@ -4,6 +4,89 @@
 
 ## Recent Changes
 
+### [2025-09-06] - Database Schema Migration & High-ROI Metadata Fields
+
+#### Added
+- **Database Migration System** (Task 2)
+  - Created migration framework in `tools/migrations/`:
+    - `analyze_duplicates.py` - Pre-migration duplicate detection
+    - `migrate_schema.py` - Atomic migration with automatic backup
+    - `verify_migration.py` - Post-migration validation
+  - New Makefile commands:
+    - `make db.migrate` - Run schema migration
+    - `make db.verify` - Verify schema integrity
+  
+- **High-ROI Metadata Fields**
+  - `sha256` (TEXT UNIQUE) - Content deduplication, prevents duplicate ingestion
+  - `embedding_generated` (INTEGER) - Track vector generation, avoid redundant API calls
+  - `quality_score` (REAL) - Filter low-quality OCR results, prioritize search
+  - `is_validated` (INTEGER) - Content verification status
+  - Successfully migrated with 0 duplicates found, FTS5 remains synchronized
+
+#### Added
+- **FTS5 Full-Text Search Engine**
+  - Created `lib/fts5_setup.py` with FTS5Manager class
+  - Virtual table `content_unified_fts` with porter tokenizer
+  - Automatic synchronization triggers (INSERT, UPDATE, DELETE)
+  - 100-1000x performance improvement over LIKE queries
+  - Successfully indexed 1 document, fully synchronized
+
+### [2025-09-06] - Complete Import Architecture Enforcement
+
+#### Fixed
+- **Import Architecture**: Complete enforcement of two-level import rule across entire codebase
+  - Fixed all 74 import violations (30 in tests, 44 in production code)
+  - Added missing exports to package __init__.py files:
+    - `lib`: Added TimelineService, ErrorHandler, retry functions
+    - `services`: Added PDF wiring functions (build_pdf_service, get_pdf_service)
+    - `infrastructure`: Added all MCP server functions and quality scoring utilities
+    - `gmail`: Already had complete exports
+  - Updated validation script to distinguish internal vs external imports (allows internal, blocks cross-package deep imports)
+  - Fixed pre-commit hook to use python3 instead of python
+  - Applied isort formatting to standardize import ordering
+  - **Result**: 0 import violations, all imports pass validation
+
+### [2025-09-06] - Import Fixes & Package Interface Completion
+
+#### Fixed
+- **Critical Broken Imports** (Task 1.10)
+  - `services/cli/upload.py`: Replaced non-existent `lib.shared.ingestion.simple_upload_processor` with `services.pdf.wiring.get_pdf_service`
+  - `services/cli/entity.py`: Replaced non-existent `lib.shared.processors.unified_entity_processor` with `services.entity.main.EntityService`
+  - `gmail/main.py`: Removed non-existent `lib.shared.processors.thread_manager` imports, added local `deduplicate_messages` function
+  - All files now import correctly without runtime crashes
+
+#### Completed
+- **Hybrid Search with RRF** (Task 3.6, 3.7)
+  - Full `hybrid_search()` function implemented in `lib/search.py`
+  - Reciprocal Rank Fusion algorithm with k=60
+  - Result merging and deduplication logic
+  - Explainability with match sources and reasons
+  - Note: Currently uses `keyword_search` module; FTS5 implementation pending for performance improvement
+
+### [2025-09-06] - Import Depth Enforcement & Public API Refactor
+
+#### Added
+- **Import Depth Enforcement System**
+  - Created `scripts/validate_imports.py` to detect deep import violations
+  - Configured import-linter in `pyproject.toml` with forbidden module patterns
+  - Integrated validation into CI/CD via `.github/workflows/quality-checks.yml`
+  - Added pre-commit hook configuration in `.pre-commit-config.yaml`
+  - New Makefile targets: `make validate-imports` and `make validate`
+
+#### Changed
+- **Public API Exports for All Packages**
+  - `lib/__init__.py`: Exports SimpleDB, search functions, embeddings, vector store
+  - `services/__init__.py`: Exports PDFService, EntityService, DocumentSummarizer
+  - `infrastructure/__init__.py`: Exports DocumentChunker, QualityScoreCalculator
+  - `gmail/__init__.py`: Exports GmailService, NearDuplicateDetector, MessageDeduplicator
+
+#### Implementation Status
+- ✅ All package __init__.py files updated with __all__ exports
+- ✅ Import-linter configuration added to pyproject.toml
+- ✅ Python validation script created and tested
+- ✅ CI/CD and pre-commit hooks configured
+- ⚠️  73 existing deep import violations detected (to be fixed in next phase)
+
 ### [2025-09-05] - NLP Bug Fix & System Verification
 
 #### Fixed

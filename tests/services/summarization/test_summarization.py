@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from summarization.engine import (
+from services.summarization.engine import (
     DocumentSummarizer,
     TextRankSummarizer,
     TFIDFSummarizer,

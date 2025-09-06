@@ -16,9 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from loguru import logger
 
-from entity.main import EntityService
-from lib.db import SimpleDB
-from summarization import get_document_summarizer
+from lib import SimpleDB
+from services import EntityService
+from services.summarization import get_document_summarizer
 
 # Logger is now imported globally from loguru
 

@@ -1,0 +1,43 @@
+# Task ID: 4
+# Title: Enhance Timeline with UTC Normalization, Source Linking, and Filtering
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Update timeline_events schema to store normalized UTC timestamps, raw timestamp strings, timezone identifiers, source references, and relevant text quotes. Implement timeline UI components with party/source filters and iCal export functionality.
+# Details:
+Add columns occurred_at_utc (DATETIME), occurred_at_raw (TEXT), tz (TEXT), source_ref (TEXT), and quote (TEXT) to timeline_events table. Modify ingestion pipelines to store both raw and normalized timestamps. Develop timeline UI components that allow filtering by party and source. Implement iCal export feature for timeline events. Ensure timeline events are properly ordered by UTC timestamps.
+
+# Test Strategy:
+Unit test timestamp normalization logic and storage. Integration test timeline UI filters and iCal export with sample data. Verify dual timestamp storage correctness. Confirm timeline events display in correct order and filters work as expected.
+
+# Subtasks:
+## 1. Update timeline_events schema for UTC normalization and metadata [pending]
+### Dependencies: None
+### Description: Add columns occurred_at_utc (DATETIME), occurred_at_raw (TEXT), tz (TEXT), source_ref (TEXT), and quote (TEXT) to the timeline_events table to support normalized UTC timestamps, raw timestamp strings, timezone identifiers, source references, and relevant text quotes.
+### Details:
+Modify the database schema to include all specified columns, ensuring proper data types and constraints for accurate storage and retrieval of temporal and source metadata.
+
+## 2. Implement dual timestamp ingestion and normalization logic [pending]
+### Dependencies: 4.1
+### Description: Modify ingestion pipelines to store both raw and normalized UTC timestamps, along with timezone identifiers, ensuring accurate conversion and storage of event times.
+### Details:
+Update ingestion logic to parse incoming timestamps, convert to UTC using the provided timezone identifier, and store both the original and normalized values. Ensure compatibility with daylight-saving and timezone database updates.
+
+## 3. Develop timeline UI components with party/source filtering [pending]
+### Dependencies: 4.1, 4.2
+### Description: Create UI components for the timeline that allow users to filter events by party and source, leveraging the new schema fields for dynamic filtering.
+### Details:
+Design and implement filter controls in the timeline UI, ensuring efficient querying and display of filtered events. Integrate with backend to support real-time filtering based on party and source_ref fields.
+
+## 4. Implement iCal export functionality for timeline events [pending]
+### Dependencies: 4.1, 4.2
+### Description: Enable export of timeline events to iCal format, ensuring all relevant metadata (UTC timestamp, raw timestamp, timezone, source, quote) is included in the exported file.
+### Details:
+Develop backend and/or frontend logic to generate iCal files from timeline events, mapping schema fields to appropriate iCal properties. Ensure compatibility with major calendar applications.
+
+## 5. Ensure timeline event ordering and filter correctness by UTC [pending]
+### Dependencies: 4.1, 4.2, 4.3
+### Description: Implement logic to order timeline events by occurred_at_utc and verify that filtering and display are consistent with normalized timestamps.
+### Details:
+Update backend queries and UI logic to sort events by UTC timestamps. Validate that filtered and exported events maintain correct chronological order regardless of original timezone.
+

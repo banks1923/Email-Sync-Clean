@@ -181,3 +181,43 @@ target-version = "py38"
 [tool.bandit]
 exclude_dirs = ["tests", "venv", ".venv"]
 skips = ["B101", "B601"]  # Skip assert_used and paramiko tests
+
+[tool.import-linter]
+root_package = "."
+include_external_packages = false
+
+[[tool.import-linter.contracts]]
+name = "Forbid deep imports from lib"
+type = "forbidden"
+source_modules = ["*"]
+forbidden_modules = [
+    "lib.*.*.* ",
+    "lib.*.*.*.*",
+]
+
+[[tool.import-linter.contracts]]
+name = "Forbid deep imports from services"
+type = "forbidden"
+source_modules = ["*"]
+forbidden_modules = [
+    "services.*.*.* ",
+    "services.*.*.*.*",
+]
+
+[[tool.import-linter.contracts]]
+name = "Forbid deep imports from infrastructure"
+type = "forbidden"
+source_modules = ["*"]
+forbidden_modules = [
+    "infrastructure.*.*.* ",
+    "infrastructure.*.*.*.*",
+]
+
+[[tool.import-linter.contracts]]
+name = "Forbid deep imports from gmail"
+type = "forbidden"
+source_modules = ["*"]
+forbidden_modules = [
+    "gmail.*.*.* ",
+    "gmail.*.*.*.*",
+]

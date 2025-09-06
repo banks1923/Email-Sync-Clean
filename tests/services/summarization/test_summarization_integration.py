@@ -13,8 +13,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from gmail.main import GmailService
 from lib.db import SimpleDB
-from pdf.wiring import get_pdf_service
-from summarization.engine import get_document_summarizer
+from services.pdf.wiring import get_pdf_service
+from services.summarization.engine import get_document_summarizer
 
 
 class TestPDFSummarizationIntegration(unittest.TestCase):

@@ -47,6 +47,10 @@ jobs:
       run: |
         flake8 .
 
+    - name: Validate Import Depth
+      run: |
+        python scripts/validate_imports.py
+
     - name: Run MyPy type checker
       run: |
         mypy gmail_service search_service vector_service

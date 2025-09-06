@@ -24,7 +24,7 @@ class TestSearchIntelligenceMCPParameters:
         Test search_entities correctly maps document_id to doc_id (REGRESSION
         TEST).
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
+        from infrastructure import search_entities
 
         # Mock the service and its method
         mock_service = Mock()
@@ -50,7 +50,7 @@ class TestSearchIntelligenceMCPParameters:
         """
         Test search_similar correctly maps document_id to doc_id.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_similar
+        from infrastructure import search_similar
 
         # Mock the service
         mock_service = Mock()
@@ -82,7 +82,7 @@ class TestSearchIntelligenceMCPParameters:
         Test search_smart parameter mapping to function API and output
         formatting.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
+        from infrastructure import search_smart
 
         # Mock the function API
         mock_search_fn.return_value = [
@@ -113,7 +113,7 @@ class TestSearchIntelligenceMCPParameters:
         """
         Test search_smart without query expansion (semantic-only).
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_smart
+        from infrastructure import search_smart
 
         mock_search_fn.return_value = []
 
@@ -129,7 +129,7 @@ class TestSearchIntelligenceMCPParameters:
         """
         Test search_summarize parameter validation.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_summarize
+        from infrastructure import search_summarize
 
         # Mock database and summarizer
         mock_db = Mock()
@@ -181,7 +181,7 @@ class TestLegalIntelligenceMCPParameters:
         """
         Test legal entity extraction parameter validation.
         """
-        from infrastructure.mcp_servers.legal_intelligence_mcp import legal_extract_entities
+        from infrastructure import legal_extract_entities
 
         # Mock the service
         mock_service = Mock()
@@ -213,7 +213,7 @@ class TestLegalIntelligenceMCPParameters:
         """
         Test legal timeline parameter validation.
         """
-        from infrastructure.mcp_servers.legal_intelligence_mcp import legal_timeline_events
+        from infrastructure import legal_timeline_events
 
         mock_service = Mock()
         mock_service.generate_case_timeline.return_value = {
@@ -248,7 +248,7 @@ class TestLegalIntelligenceMCPParameters:
         """
         Test legal knowledge graph parameter validation.
         """
-        from infrastructure.mcp_servers.legal_intelligence_mcp import legal_knowledge_graph
+        from infrastructure import legal_knowledge_graph
 
         mock_service = Mock()
         mock_service.build_relationship_graph.return_value = {
@@ -278,7 +278,7 @@ class TestMCPErrorHandling:
         """
         Test search_entities with missing required parameters.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
+        from infrastructure import search_entities
 
         # Should handle missing both document_id and text
         result = search_entities()
@@ -289,7 +289,7 @@ class TestMCPErrorHandling:
         """
         Test search_entities error handling when service fails.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_entities
+        from infrastructure import search_entities
 
         # Mock service to raise exception
         mock_service = Mock()
@@ -306,7 +306,7 @@ class TestMCPErrorHandling:
         """
         Test search_process_all with invalid operation.
         """
-        from infrastructure.mcp_servers.search_intelligence_mcp import search_process_all
+        from infrastructure import search_process_all
 
         result = search_process_all(operation="invalid_operation")
 

@@ -14,17 +14,17 @@ def main(argv=None):
 
     args, rest = parser.parse_known_args(argv)
     if args.cmd == 'search':
-        from cli.search import main as run
+        from services.cli.search import main as run
     elif args.cmd == 'embed':
-        from cli.embed import main as run
+        from services.cli.embed import main as run
     elif args.cmd == 'db':
-        from cli.db import main as run
+        from services.cli.db import main as run
     elif args.cmd == 'index':
-        from cli.index import main as run
+        from services.cli.index import main as run
     elif args.cmd == 'admin':
-        from cli.admin import main as run
+        from services.cli.admin import main as run
     elif args.cmd == 'view':
-        from cli.view import main as run
+        from services.cli.view import main as run
     else:
         parser.error('unknown command')
         return 2

@@ -123,6 +123,17 @@ The system uses SQLite with advanced message-level deduplication and foreign key
 - `document_summaries` - Document summaries
 - `entities` - Extracted entities
 
+**Metadata Fields:**
+- `sha256` - Deduplication
+- `embedding_generated` - Track vectors
+- `quality_score` - Filter quality
+- `is_validated` - Verification status
+
+```bash
+make db.migrate  # Apply migration
+make db.verify   # Verify schema
+```
+
 > **For complete database schema documentation, see [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)**
 
 ## VERIFICATION: System Health

@@ -161,6 +161,27 @@ status: ## Quick system health check
 	@echo "🔍 Search status:"
 	@tools/scripts/vsearch info 2>/dev/null || echo "❌ Search system unavailable"
 
+# =============================================================================
+# DATABASE MIGRATION COMMANDS
+# =============================================================================
+
+db.migrate: ## Apply database schema migration (adds metadata fields)
+	@echo "🔄 Running database migration..."
+	@echo ""
+	@echo "This will add high-ROI metadata fields:"
+	@echo "  • sha256 - Content deduplication"
+	@echo "  • embedding_generated - Track vector generation"
+	@echo "  • quality_score - Filter low-quality content"  
+	@echo "  • is_validated - Content verification status"
+	@echo ""
+	@$(PYTHON) tools/migrations/analyze_duplicates.py
+	@echo ""
+	@$(PYTHON) tools/migrations/migrate_schema.py
+
+db.verify: ## Verify database schema and integrity
+	@echo "🔍 Verifying database schema..."
+	@$(PYTHON) tools/migrations/verify_migration.py
+
 diagnose: ## Deep system diagnostic (when things are broken)
 	@echo "🔬 Running deep system diagnostic..."
 	@echo ""
@@ -375,3 +396,12 @@ pipeline-stop: ## Stop the background pipeline process
 	if [ -z "$$PID" ]; then echo "❌ No PID file found (logs/pipeline.pid)"; exit 0; fi; \
 	if ps -p "$$PID" >/dev/null 2>&1; then echo "🛑 Killing $$PID"; kill "$$PID"; sleep 1; else echo "ℹ️  Process not running"; fi; \
 	rm -f logs/pipeline.pid
+
+# Validate import depth rules
+validate-imports: ## Check for deep import violations
+	@echo "🔍 Validating import depth rules..."
+	@python3 scripts/validate_imports.py
+
+# Run all validation checks
+validate: validate-imports ## Run all validation checks
+	@echo "✅ All validations passed"

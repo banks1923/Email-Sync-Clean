@@ -15,7 +15,7 @@ sys.path.append(str(project_root))
 
 from loguru import logger
 
-from shared.processors.unified_entity_processor import UnifiedEntityProcessor
+from services.entity.main import EntityService
 
 
 class EntityHandler:
@@ -24,7 +24,7 @@ class EntityHandler:
     """
 
     def __init__(self):
-        self.processor = UnifiedEntityProcessor()
+        self.processor = EntityService()
 
     def extract_entities_unified(self, args) -> dict[str, Any]:
         """

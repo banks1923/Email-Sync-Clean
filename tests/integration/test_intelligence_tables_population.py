@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from pdf.wiring import get_pdf_service
+from services import get_pdf_service
 from tests.integration.test_helpers import (
     cleanup_test_files,
     create_test_database,

@@ -1,0 +1,43 @@
+# Task ID: 5
+# Title: Establish Quality Assurance with Import Validation and Smoke Tests
+# Status: pending
+# Dependencies: 1, 2, 3, 4
+# Priority: medium
+# Description: Develop import validation script to prevent deep imports, write 5-10 end-to-end smoke tests covering ingestion, search, timeline, and API imports, set up CI integration, and document changes with rollback procedures.
+# Details:
+Implement import validation script as per Task 1. Write smoke tests including: email ingestion to searchable content, PDF upload with OCR to searchable chunks, hybrid search returning expected results, timeline events ordering and filtering, and public API import resolution. Integrate tests into CI pipeline. Document all changes in CHANGELOG.md, update README.md and CLAUDE.md with new import patterns and best practices. Create rollback scripts and procedures for database and codebase.
+
+# Test Strategy:
+Run smoke tests in CI on every commit to ensure no regressions. Validate import validation script blocks forbidden imports. Confirm documentation accuracy by peer review. Test rollback procedures in staging environment.
+
+# Subtasks:
+## 1. Develop Import Validation Script to Prevent Deep Imports [pending]
+### Dependencies: None
+### Description: Create a script that scans the codebase and blocks imports deeper than two levels, as defined by project import rules, to prevent deep imports and unintended dependencies.
+### Details:
+Implement logic to detect and fail on deep imports (e.g., 'package/submodule/component') except for allowed cases. Integrate with CI and pre-commit hooks. Reference Task 1 for import validation requirements.
+
+## 2. Write End-to-End Smoke Tests for Core Ingestion and Search Flows [pending]
+### Dependencies: None
+### Description: Develop 5-10 smoke tests covering email ingestion to searchable content, PDF upload with OCR to searchable chunks, hybrid search returning expected results, timeline events ordering and filtering, and public API import resolution.
+### Details:
+Implement tests that simulate real user workflows, ensuring each major feature (ingestion, search, timeline, API import) is exercised. Use representative data and validate expected outcomes.
+
+## 3. Integrate Import Validation and Smoke Tests into CI Pipeline [pending]
+### Dependencies: None
+### Description: Configure the CI pipeline to automatically run the import validation script and all smoke tests on every commit to catch regressions and import violations early.
+### Details:
+Update CI configuration files to include steps for running the validation script and executing the smoke test suite. Ensure failures block merges.
+
+## 4. Document Quality Assurance Changes and Best Practices [pending]
+### Dependencies: None
+### Description: Update CHANGELOG.md, README.md, and CLAUDE.md to reflect new import validation rules, smoke test coverage, and recommended import patterns and best practices.
+### Details:
+Clearly describe the purpose and usage of the import validation script, outline smoke test scenarios, and provide guidance on compliant import patterns. Include rationale for changes.
+
+## 5. Create and Test Rollback Scripts and Procedures [pending]
+### Dependencies: None
+### Description: Develop scripts and documented procedures to roll back both database and codebase changes related to import validation and smoke test integration.
+### Details:
+Implement rollback mechanisms for database migrations and code changes. Document step-by-step rollback instructions for both automated and manual recovery.
+

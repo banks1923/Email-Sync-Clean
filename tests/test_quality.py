@@ -6,12 +6,15 @@ Tests quality score calculation and chunk filtering.
 
 import pytest
 
-from infrastructure.documents.chunker.document_chunker import DocumentChunk
-from infrastructure.documents.quality.quality_score import (
-    ChunkQualityScorer,
+from infrastructure import (
+    DocumentChunk,
+    QualityScoreCalculator,
     QualitySettings,
     quality_gate,
 )
+
+# Note: ChunkQualityScorer is renamed to QualityScoreCalculator in public API
+ChunkQualityScorer = QualityScoreCalculator  # Alias for compatibility
 
 
 class TestQualitySettings:
@@ -467,7 +470,7 @@ class TestIntegrationWithChunker:
         """
         Test that chunker can apply quality scoring.
         """
-        from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
+        from infrastructure import DocumentChunker, DocumentType
 
         # Create chunker with quality scoring
         chunker = DocumentChunker(
@@ -499,7 +502,7 @@ class TestIntegrationWithChunker:
         """
         Test using quality gate decorator with chunker output.
         """
-        from infrastructure.documents.chunker.document_chunker import DocumentChunker, DocumentType
+        from infrastructure import DocumentChunker, DocumentType
         
         chunker = DocumentChunker(
             target_tokens=30,

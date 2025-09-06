@@ -212,7 +212,7 @@ class ServiceTestHarness:
         """
         Test entity extraction service.
         """
-        from entity.main import EntityService
+        from services import EntityService
 
         es = EntityService()
         details = {}
@@ -253,7 +253,7 @@ class ServiceTestHarness:
         """
         Test summarization service.
         """
-        from summarization import get_document_summarizer
+        from services.summarization import get_document_summarizer
 
         summarizer = get_document_summarizer()
         details = {}

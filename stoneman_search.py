@@ -3,11 +3,11 @@
 Stoneman Dispute Legal Search Tool
 Quick search and analysis for the mold/habitability case
 """
-import sqlite3
-import re
-from pathlib import Path
-from datetime import datetime
 import json
+import re
+import sqlite3
+from datetime import datetime
+from pathlib import Path
 
 # Your case documents
 STONEMAN_DIR = Path("/Users/jim/Projects/Litigator_solo/data/Stoneman_dispute")

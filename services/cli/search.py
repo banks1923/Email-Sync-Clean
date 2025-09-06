@@ -10,14 +10,15 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Import service locator
-from tools.scripts.cli.service_locator import get_locator
 from lib.exceptions import (
-    ValidationError,
-    VectorStoreError,
     EnrichmentError,
     SearchError,
+    ValidationError,
+    VectorStoreError,
 )
+
+# Import service locator
+from tools.scripts.cli.service_locator import get_locator
 
 
 def search_emails(query, limit=5, hybrid=True, mode="semantic"):

@@ -4,20 +4,21 @@ Simple Web UI for Litigator Search System
 Provides browser-based access to search and content viewing
 """
 
-from flask import Flask, render_template_string, request, jsonify
-from pathlib import Path
-import sys
 import json
+import sys
 from datetime import datetime
+from pathlib import Path
+
+from flask import Flask, jsonify, render_template_string, request
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from lib.search import search, find_literal, hybrid_search
 from lib.db import SimpleDB
-from lib.vector_store import get_vector_store
 from lib.embeddings import get_embedding_service
+from lib.search import find_literal, hybrid_search, search
+from lib.vector_store import get_vector_store
 
 app = Flask(__name__)
 

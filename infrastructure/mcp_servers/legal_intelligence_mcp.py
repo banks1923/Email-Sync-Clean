@@ -40,10 +40,8 @@ from mcp.types import TextContent, Tool
 
 # Check service availability
 try:
-    from entity.main import EntityService
-    from lib.db import SimpleDB
-    from lib.embeddings import get_embedding_service
-    from lib.timeline.main import TimelineService
+    from lib import SimpleDB, TimelineService, get_embedding_service
+    from services import EntityService
     
     SERVICES_AVAILABLE = True
 except ImportError as e:

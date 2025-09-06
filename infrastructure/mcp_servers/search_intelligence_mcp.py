@@ -22,13 +22,13 @@ from mcp.types import TextContent, Tool
 # Import lib functions directly
 try:
     from lib.db import SimpleDB
-    from lib.search import find_literal, search
     from lib.exceptions import (
+        EnrichmentError,
         SearchError,
         ValidationError,
         VectorStoreError,
-        EnrichmentError,
     )
+    from lib.search import find_literal, search
     SERVICES_AVAILABLE = True
 except ImportError as e:
     print(f"Services not available: {e}", file=sys.stderr)

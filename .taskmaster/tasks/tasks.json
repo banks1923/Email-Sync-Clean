@@ -99,5 +99,475 @@
       "updated": "2025-09-05T09:24:48.847Z",
       "description": "Tasks for master context"
     }
+  },
+  "refactor": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Refactor Imports for Ergonomics and Enforce Import Rules",
+        "description": "Simplify all public API imports to a maximum of two levels by adding __all__ exports in package __init__.py files, configure import-linter to enforce import depth rules, and create a validation script for CI/pre-commit to prevent deep imports.",
+        "details": "Modify __init__.py files in all relevant packages (e.g., lib, services, infrastructure) to re-export public APIs using __all__. Configure import-linter with the provided rules to forbid imports deeper than two levels. Develop a Python script that scans the codebase for import violations and fails if any deep imports are found. Integrate this script into CI and pre-commit hooks. Update pyproject.toml to include import-linter configuration.",
+        "testStrategy": "Unit test the validation script with sample files containing allowed and forbidden imports. Run import-linter manually and via CI to ensure no deep imports pass. Verify that all public APIs can be imported with two-level imports only. Confirm no runtime import errors occur after refactor.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor __init__.py Files to Define Public APIs Using __all__",
+            "description": "Update all relevant package __init__.py files (e.g., lib, services, infrastructure) to explicitly define and re-export the public API using the __all__ variable, ensuring only intended modules and objects are exposed for import.",
+            "dependencies": [],
+            "details": "Review each package's structure, identify public modules and objects, and add them to the __all__ list in __init__.py. Ensure internal implementations remain private and are not included in __all__. Maintain consistency and document the public API for each package.",
+            "status": "done",
+            "testStrategy": "Attempt wildcard and explicit imports from each package to verify only public APIs are accessible. Confirm that internal modules are not importable via wildcard imports."
+          },
+          {
+            "id": 2,
+            "title": "Configure import-linter to Enforce Import Depth Rules",
+            "description": "Set up import-linter with rules that restrict imports to a maximum of two levels within the codebase, preventing deep imports that bypass the defined public API.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Define import-linter contracts in the configuration to forbid imports deeper than two levels. Update pyproject.toml or the relevant configuration file to include these rules. Document the configuration for team reference.",
+            "status": "done",
+            "testStrategy": "Run import-linter manually to ensure it detects and reports violations of the import depth rule. Validate that allowed imports pass and forbidden deep imports are flagged."
+          },
+          {
+            "id": 3,
+            "title": "Develop Python Validation Script for Import Depth Enforcement",
+            "description": "Create a Python script that scans the codebase for import statements violating the two-level import rule and fails if any violations are found.",
+            "dependencies": [
+              "1.2"
+            ],
+            "details": "Implement logic to parse Python files, analyze import statements, and check for imports exceeding two levels. Output detailed error messages for violations. Ensure the script is efficient and maintainable.",
+            "status": "done",
+            "testStrategy": "Unit test the script with sample files containing both compliant and non-compliant imports. Verify that the script accurately detects violations and passes valid cases."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Validation Script into CI and Pre-commit Hooks",
+            "description": "Add the import validation script to the project's CI pipeline and pre-commit hooks to automatically block deep imports during development and continuous integration.",
+            "dependencies": [
+              "1.3"
+            ],
+            "details": "Update CI configuration files (e.g., GitHub Actions, GitLab CI) and pre-commit hook definitions to run the validation script on every commit and pull request. Ensure failures block merges and commits with import violations.",
+            "status": "done",
+            "testStrategy": "Trigger CI and pre-commit workflows with both valid and invalid import patterns to confirm that violations are caught and compliant code passes."
+          },
+          {
+            "id": 5,
+            "title": "Verify and Document Import Refactor and Enforcement",
+            "description": "Test the refactored import structure, confirm no runtime import errors, and update project documentation to reflect the new import patterns and enforcement mechanisms.",
+            "dependencies": [
+              "1.4"
+            ],
+            "details": "Manually and automatically test that all public APIs are accessible via two-level imports and that no runtime errors occur after refactoring. Update README.md and internal docs to describe the import rules, usage of __all__, and enforcement tools.",
+            "status": "done",
+            "testStrategy": "Run end-to-end tests and manual import checks. Peer review documentation for clarity and completeness. Confirm that developers can follow the new import patterns without confusion."
+          },
+          {
+            "id": 6,
+            "title": "Update lib/__init__.py with public API exports",
+            "description": "Add re-exports for SimpleDB, search, semantic_search, keyword_search, get_embedding_service, get_vector_store, get_semantic_pipeline to lib/__init__.py with proper __all__ definition",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 7,
+            "title": "Update services/__init__.py with service exports",
+            "description": "Add re-exports for PDFService, EntityService, and other service classes from services/__init__.py with proper __all__ definition",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 8,
+            "title": "Update infrastructure/__init__.py with infrastructure exports",
+            "description": "Add re-exports for DocumentChunker, DocumentChunk, QualityScoreCalculator, and pipeline functions from infrastructure/__init__.py with proper __all__ definition",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 9,
+            "title": "Update gmail/__init__.py with Gmail service exports",
+            "description": "Add re-exports for GmailService, NearDuplicateDetector, MessageDeduplicator from gmail/__init__.py with proper __all__ definition",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 10,
+            "title": "Fix broken imports in CLI and Gmail modules",
+            "description": "Remove or fix broken import statements that reference non-existent modules to prevent runtime crashes",
+            "details": "Fix the following broken imports:\n1. services/cli/upload.py:15 - Remove 'from lib.shared.ingestion.simple_upload_processor import get_upload_processor' (module doesn't exist)\n2. services/cli/entity.py:18 - Remove 'from lib.shared.processors.unified_entity_processor import UnifiedEntityProcessor' (module doesn't exist)  \n3. gmail/main.py:13,473 - Remove 'from lib.shared.processors.thread_manager import' (module doesn't exist)\n\nThese imports reference modules that were likely removed during refactoring. Either remove the imports and related functionality, or implement the missing modules if the functionality is still needed.\n<info added on 2025-09-06T04:45:41.712Z>\nCompleted fixes for all three broken imports as follows:  \n1. In services/cli/upload.py, replaced the non-existent import from lib.shared.ingestion.simple_upload_processor with services.pdf.wiring.get_pdf_service.  \n2. In services/cli/entity.py, replaced the non-existent import of UnifiedEntityProcessor from lib.shared.processors.unified_entity_processor with services.entity.main.EntityService.  \n3. In gmail/main.py, removed the non-existent import from lib.shared.processors.thread_manager and added a local deduplicate_messages function to replace the missing functionality.  \n\nAll affected files now import correctly and no longer cause crashes on startup.\n</info added on 2025-09-06T04:45:41.712Z>",
+            "status": "done",
+            "dependencies": [
+              "1.1"
+            ],
+            "parentTaskId": 1
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Enhance Database Schema with Metadata Fields and Migration",
+        "description": "Add high-ROI metadata fields to the content_unified table for a single-user system: content hash (sha256), embedding generation status, quality score, and simplified validation status. Create minimal migration scripts and verify schema integrity.",
+        "status": "done",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "details": "Implement a minimal migration script that adds the following columns to content_unified: sha256 (TEXT UNIQUE), embedding_generated (INTEGER DEFAULT 0), quality_score (REAL DEFAULT 1.0), and validation_status (BOOLEAN, optional). Backfill existing records with sensible defaults. Remove previously planned fields emb_model, pipeline_rev, and ocr_engine as unnecessary for single-user context. Update Makefile with db.migrate and db.verify commands for streamlined migration and verification. Test backup and restore cycles to ensure data safety. Use atomic transactions to ensure migration safety.",
+        "testStrategy": "Run migration on a test database and verify all new columns exist with correct types, constraints, and defaults. Confirm no performance degradation by benchmarking typical queries before and after migration. Validate backup and restore processes work correctly post-migration. Write unit tests for schema validation focusing on the simplified metadata fields.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Metadata Fields for content_unified Table",
+            "description": "Specify the data types, constraints, and default values for new metadata columns: sha256, embedding_generated, quality_score, and validation_status (boolean, optional).",
+            "status": "done",
+            "dependencies": [],
+            "details": "Consult stakeholders to finalize field definitions and ensure compatibility with existing data models. Document schema changes for future reference.\n<info added on 2025-09-06T04:26:26.430Z>\nAdded the metadata column to the content_unified table with a JSON default value of '{}'. The column was successfully added using an ALTER TABLE statement and initialized with basic metadata for all existing records. This update resolves the keyword search errors caused by the previously missing metadata column. The implementation was completed in the script located at tools/diagnostics/master_fix.py.\n</info added on 2025-09-06T04:26:26.430Z>",
+            "testStrategy": "Review schema design with team and validate field definitions against requirements."
+          },
+          {
+            "id": 2,
+            "title": "Implement Migration Script to Add Metadata Columns",
+            "description": "Develop a minimal migration script that atomically adds sha256, embedding_generated, quality_score, and optional validation_status columns to content_unified and backfills existing records with sensible defaults.",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "Use a migration framework (e.g., Alembic, Liquibase) to ensure transactional safety. Script should handle schema changes and initial data population. Exclude emb_model, pipeline_rev, and ocr_engine fields from migration as they are unnecessary.",
+            "testStrategy": "Run migration on a test database, verify columns are added with correct types and defaults, and confirm atomicity."
+          },
+          {
+            "id": 3,
+            "title": "Update Makefile with Migration and Verification Commands",
+            "description": "Add db.migrate and db.verify targets to the Makefile to automate schema migration and integrity verification processes for the simplified metadata fields.",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
+            "details": "Ensure commands invoke migration scripts and perform post-migration checks. Document usage in project README.",
+            "testStrategy": "Execute Makefile targets in CI and local environments, confirming successful migration and verification."
+          },
+          {
+            "id": 4,
+            "title": "Test Backup and Restore Cycles for Data Safety",
+            "description": "Perform backup and restore operations before and after migration to ensure no data loss and full recoverability.",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
+            "details": "Use pg_dump and pg_restore or equivalent tools to validate backup integrity and restoration of migrated schema and data.",
+            "testStrategy": "Restore backups to a test environment and verify all records and schema changes are present and correct."
+          },
+          {
+            "id": 5,
+            "title": "Benchmark and Validate Schema Integrity Post-Migration",
+            "description": "Run performance benchmarks and integrity checks on the migrated schema to ensure no degradation and correct operation.",
+            "status": "done",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Test typical queries, validate new columns, and run unit tests for schema validation. Address any performance or integrity issues found.",
+            "testStrategy": "Compare query performance before and after migration, run automated schema validation tests, and review results with stakeholders."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Hybrid Search with FTS5 and Reciprocal Rank Fusion",
+        "description": "Create a hybrid search system combining SQLite FTS5 full-text search with semantic embedding search results using Reciprocal Rank Fusion (RRF). Add query logging and ensure index synchronization.",
+        "details": "Create FTS5 virtual table content_unified_fts with specified tokenizer and columns. Implement the RRF algorithm as per provided formula to fuse keyword and semantic search results. Limit per-source top-k results before fusion. Update search module to support hybrid search mode with options for keyword_only, semantic_only, and rrf. Add query logging mechanism for analysis. Ensure triggers or mechanisms keep FTS5 index synchronized with content_unified table.",
+        "testStrategy": "Unit test RRF function with mock keyword and semantic results to verify scoring correctness. Integration test hybrid search end-to-end with real data, measuring latency (<500ms) and relevance improvements over semantic-only search. Verify FTS5 index updates on content changes. Validate query logs are correctly recorded.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create and Configure FTS5 Virtual Table",
+            "description": "Define and create the FTS5 virtual table 'content_unified_fts' with the specified tokenizer and columns, ensuring it mirrors the structure required for full-text search over the unified content.",
+            "dependencies": [],
+            "details": "Implement the FTS5 table using the appropriate CREATE VIRTUAL TABLE statement, specifying all necessary columns and tokenizer options. Ensure the table is ready for full-text queries and supports efficient indexing.\n<info added on 2025-09-06T04:40:18.645Z>\nEvaluate the current keyword_search implementation's performance and relevance compared to what FTS5 would provide. If keyword_search meets latency and accuracy requirements, FTS5 may not be necessary. However, if performance improvements or advanced ranking features like BM25 scoring are desired, FTS5 should be implemented. FTS5 offers significant query speed improvements (up to 30%) over older full-text search methods and supports advanced indexing and ranking capabilities that can enhance search relevance and efficiency, especially for large datasets. If FTS5 is deemed beneficial, proceed to create the virtual table with appropriate tokenizer options and columns as originally planned. Otherwise, document that FTS5 implementation is not needed and update the subtask status accordingly.\n</info added on 2025-09-06T04:40:18.645Z>\n<info added on 2025-09-06T04:41:04.418Z>\nReplace the current LIKE-based keyword_search implementation with a properly defined FTS5 virtual table to achieve production-quality full-text search. Implement the FTS5 table using a CREATE VIRTUAL TABLE statement specifying all necessary columns and tokenizer options to support advanced search features such as BM25 relevance scoring, proper tokenization, phrase queries, and proximity search (NEAR). This approach provides 30-50% faster search performance, cleaner SQL-native integration, and improved search relevance and efficiency compared to the existing keyword_search method. Ensure the FTS5 virtual table is fully synchronized with the main content table and integrated into the search pipeline to replace the legacy keyword_search functionality.\n</info added on 2025-09-06T04:41:04.418Z>",
+            "status": "done",
+            "testStrategy": "Verify table creation with schema inspection and run sample MATCH queries to confirm correct indexing and tokenization."
+          },
+          {
+            "id": 2,
+            "title": "Implement Reciprocal Rank Fusion (RRF) Algorithm",
+            "description": "Develop the RRF algorithm to combine ranked results from FTS5 keyword search and semantic embedding search, applying the provided formula and limiting each source to top-k results before fusion.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Implement the RRF scoring function as specified, ensuring it accepts two ranked lists (keyword and semantic), applies the reciprocal rank formula, and outputs a fused, re-ranked result set. Enforce per-source top-k truncation before fusion.",
+            "status": "done",
+            "testStrategy": "Unit test the RRF function with mock ranked lists to verify correct scoring, ranking, and handling of ties and truncation."
+          },
+          {
+            "id": 3,
+            "title": "Update Search Module to Support Hybrid Modes",
+            "description": "Extend the search module to support 'keyword_only', 'semantic_only', and 'rrf' (hybrid) modes, routing queries appropriately and integrating the RRF fusion logic.",
+            "dependencies": [
+              "3.2"
+            ],
+            "details": "Modify the search API and internal logic to accept a mode parameter, execute the correct search pipeline for each mode, and return results in a consistent format. Integrate the RRF fusion for hybrid mode.\n<info added on 2025-09-06T05:01:11.788Z>\nImplemented a unified_search function in lib/search.py that accepts a mode parameter with supported values: 'semantic_only', 'keyword_only', and 'rrf'. The function validates the mode and routes the query to the corresponding search function—semantic search, keyword search, or Reciprocal Rank Fusion (RRF) hybrid search—ensuring consistent result formatting across modes. Additionally, unified_search was exported from lib/__init__.py to provide public API access, enabling external modules to invoke the hybrid search functionality seamlessly.\n</info added on 2025-09-06T05:01:11.788Z>",
+            "status": "in-progress",
+            "testStrategy": "Integration test all search modes with real and synthetic data, verifying correct routing, result consistency, and performance."
+          },
+          {
+            "id": 4,
+            "title": "Implement Query Logging Mechanism",
+            "description": "Add a robust query logging system to capture search queries, modes, timestamps, and relevant metadata for analysis and monitoring.",
+            "dependencies": [
+              "3.3"
+            ],
+            "details": "Design and implement a logging mechanism (e.g., database table or log file) that records each search query, selected mode, user/session info, and response metadata. Ensure logs are accessible for downstream analysis.",
+            "status": "pending",
+            "testStrategy": "Test logging with various search scenarios, confirm all relevant data is captured, and validate log integrity and accessibility."
+          },
+          {
+            "id": 5,
+            "title": "Ensure FTS5 Index Synchronization with Triggers or Mechanisms",
+            "description": "Implement triggers or synchronization mechanisms to keep the FTS5 index in 'content_unified_fts' consistent with the underlying 'content_unified' table on insert, update, and delete operations.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Create database triggers or equivalent logic to propagate changes from 'content_unified' to the FTS5 virtual table, ensuring no drift between the main table and the search index.",
+            "status": "pending",
+            "testStrategy": "Perform insert, update, and delete operations on 'content_unified' and verify that the FTS5 index reflects all changes immediately and accurately."
+          },
+          {
+            "id": 6,
+            "title": "Create RRF score calculation function",
+            "description": "Implement the core RRF scoring function with formula: score = Σ(1 / (k + rank)) where k=60, handling duplicate document IDs across result sets",
+            "details": "<info added on 2025-09-06T04:36:10.014Z>\nThe RRF score calculation function has been implemented in lib/search.py spanning lines 376 to 488. This function computes the score using the formula score = Σ(1 / (k + rank)) with k set to 60, consistent with standard RRF practice. It correctly handles duplicate document IDs by summing their scores across multiple result lists. The full hybrid_search() function now integrates this RRF scoring, merging semantic and keyword search results while properly deduplicating documents to produce a unified ranked list.\n</info added on 2025-09-06T04:36:10.014Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 7,
+            "title": "Implement result merging and deduplication logic",
+            "description": "Create function to merge keyword and semantic results, handle duplicate document IDs, combine scores, and sort by final RRF score",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 8,
+            "title": "Add per-source top-k limiting",
+            "description": "Implement logic to limit results per source type (emails, PDFs, etc.) to prevent dominance of one content type in final results",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 9,
+            "title": "Write comprehensive unit tests for RRF algorithm",
+            "description": "Create test cases for RRF scoring, result merging, edge cases (empty results, single source), and verify correct ranking",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 10,
+            "title": "Benchmark RRF performance vs pure semantic search",
+            "description": "Compare search latency and relevance metrics between RRF hybrid search and existing pure semantic search to validate improvements",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 11,
+            "title": "Create INSERT trigger for FTS5 synchronization",
+            "description": "Implement SQLite trigger that automatically inserts new content_unified records into content_unified_fts virtual table",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 12,
+            "title": "Create UPDATE trigger for FTS5 synchronization",
+            "description": "Implement SQLite trigger that updates content_unified_fts when content_unified records are modified",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 13,
+            "title": "Create DELETE trigger for FTS5 synchronization",
+            "description": "Implement SQLite trigger that removes records from content_unified_fts when content_unified records are deleted",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 14,
+            "title": "Test and verify FTS5 trigger operations and index consistency",
+            "description": "Write tests to verify triggers fire correctly on INSERT/UPDATE/DELETE and that FTS5 index remains synchronized with source table",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Enhance Timeline with UTC Normalization, Source Linking, and Filtering",
+        "description": "Update timeline_events schema to store normalized UTC timestamps, raw timestamp strings, timezone identifiers, source references, and relevant text quotes. Implement timeline UI components with party/source filters and iCal export functionality.",
+        "details": "Add columns occurred_at_utc (DATETIME), occurred_at_raw (TEXT), tz (TEXT), source_ref (TEXT), and quote (TEXT) to timeline_events table. Modify ingestion pipelines to store both raw and normalized timestamps. Develop timeline UI components that allow filtering by party and source. Implement iCal export feature for timeline events. Ensure timeline events are properly ordered by UTC timestamps.",
+        "testStrategy": "Unit test timestamp normalization logic and storage. Integration test timeline UI filters and iCal export with sample data. Verify dual timestamp storage correctness. Confirm timeline events display in correct order and filters work as expected.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update timeline_events schema for UTC normalization and metadata",
+            "description": "Add columns occurred_at_utc (DATETIME), occurred_at_raw (TEXT), tz (TEXT), source_ref (TEXT), and quote (TEXT) to the timeline_events table to support normalized UTC timestamps, raw timestamp strings, timezone identifiers, source references, and relevant text quotes.",
+            "dependencies": [],
+            "details": "Modify the database schema to include all specified columns, ensuring proper data types and constraints for accurate storage and retrieval of temporal and source metadata.",
+            "status": "pending",
+            "testStrategy": "Verify schema changes via migration scripts and confirm new columns exist with correct types. Test insertion and retrieval of sample data for all new fields."
+          },
+          {
+            "id": 2,
+            "title": "Implement dual timestamp ingestion and normalization logic",
+            "description": "Modify ingestion pipelines to store both raw and normalized UTC timestamps, along with timezone identifiers, ensuring accurate conversion and storage of event times.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Update ingestion logic to parse incoming timestamps, convert to UTC using the provided timezone identifier, and store both the original and normalized values. Ensure compatibility with daylight-saving and timezone database updates.",
+            "status": "pending",
+            "testStrategy": "Unit test timestamp parsing and normalization with diverse sample inputs, including edge cases for DST and timezone changes. Validate dual storage correctness."
+          },
+          {
+            "id": 3,
+            "title": "Develop timeline UI components with party/source filtering",
+            "description": "Create UI components for the timeline that allow users to filter events by party and source, leveraging the new schema fields for dynamic filtering.",
+            "dependencies": [
+              "4.1",
+              "4.2"
+            ],
+            "details": "Design and implement filter controls in the timeline UI, ensuring efficient querying and display of filtered events. Integrate with backend to support real-time filtering based on party and source_ref fields.",
+            "status": "pending",
+            "testStrategy": "Integration test UI filters with sample data, verifying correct event display and filter responsiveness. Confirm backend queries return expected results."
+          },
+          {
+            "id": 4,
+            "title": "Implement iCal export functionality for timeline events",
+            "description": "Enable export of timeline events to iCal format, ensuring all relevant metadata (UTC timestamp, raw timestamp, timezone, source, quote) is included in the exported file.",
+            "dependencies": [
+              "4.1",
+              "4.2"
+            ],
+            "details": "Develop backend and/or frontend logic to generate iCal files from timeline events, mapping schema fields to appropriate iCal properties. Ensure compatibility with major calendar applications.",
+            "status": "pending",
+            "testStrategy": "Test iCal export with sample events, verifying correct formatting and metadata inclusion. Import exported files into calendar apps to confirm event accuracy."
+          },
+          {
+            "id": 5,
+            "title": "Ensure timeline event ordering and filter correctness by UTC",
+            "description": "Implement logic to order timeline events by occurred_at_utc and verify that filtering and display are consistent with normalized timestamps.",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3"
+            ],
+            "details": "Update backend queries and UI logic to sort events by UTC timestamps. Validate that filtered and exported events maintain correct chronological order regardless of original timezone.",
+            "status": "pending",
+            "testStrategy": "Integration test timeline ordering with mixed timezone data. Confirm events display in correct order after filtering and in exported iCal files."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Establish Quality Assurance with Import Validation and Smoke Tests",
+        "description": "Develop import validation script to prevent deep imports, write 5-10 end-to-end smoke tests covering ingestion, search, timeline, and API imports, set up CI integration, and document changes with rollback procedures.",
+        "details": "Implement import validation script as per Task 1. Write smoke tests including: email ingestion to searchable content, PDF upload with OCR to searchable chunks, hybrid search returning expected results, timeline events ordering and filtering, and public API import resolution. Integrate tests into CI pipeline. Document all changes in CHANGELOG.md, update README.md and CLAUDE.md with new import patterns and best practices. Create rollback scripts and procedures for database and codebase.",
+        "testStrategy": "Run smoke tests in CI on every commit to ensure no regressions. Validate import validation script blocks forbidden imports. Confirm documentation accuracy by peer review. Test rollback procedures in staging environment.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Import Validation Script to Prevent Deep Imports",
+            "description": "Create a script that scans the codebase and blocks imports deeper than two levels, as defined by project import rules, to prevent deep imports and unintended dependencies.",
+            "dependencies": [],
+            "details": "Implement logic to detect and fail on deep imports (e.g., 'package/submodule/component') except for allowed cases. Integrate with CI and pre-commit hooks. Reference Task 1 for import validation requirements.",
+            "status": "pending",
+            "testStrategy": "Unit test the script with sample files containing both allowed and forbidden imports. Run the script in CI to ensure it blocks deep imports as intended."
+          },
+          {
+            "id": 2,
+            "title": "Write End-to-End Smoke Tests for Core Ingestion and Search Flows",
+            "description": "Develop 5-10 smoke tests covering email ingestion to searchable content, PDF upload with OCR to searchable chunks, hybrid search returning expected results, timeline events ordering and filtering, and public API import resolution.",
+            "dependencies": [],
+            "details": "Implement tests that simulate real user workflows, ensuring each major feature (ingestion, search, timeline, API import) is exercised. Use representative data and validate expected outcomes.",
+            "status": "pending",
+            "testStrategy": "Run smoke tests locally and in CI on every commit. Confirm all tests pass and cover the specified scenarios. Review test coverage for completeness."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Import Validation and Smoke Tests into CI Pipeline",
+            "description": "Configure the CI pipeline to automatically run the import validation script and all smoke tests on every commit to catch regressions and import violations early.",
+            "dependencies": [],
+            "details": "Update CI configuration files to include steps for running the validation script and executing the smoke test suite. Ensure failures block merges.",
+            "status": "pending",
+            "testStrategy": "Trigger CI runs on test branches with both passing and failing cases to verify correct behavior. Monitor CI logs for accurate reporting."
+          },
+          {
+            "id": 4,
+            "title": "Document Quality Assurance Changes and Best Practices",
+            "description": "Update CHANGELOG.md, README.md, and CLAUDE.md to reflect new import validation rules, smoke test coverage, and recommended import patterns and best practices.",
+            "dependencies": [],
+            "details": "Clearly describe the purpose and usage of the import validation script, outline smoke test scenarios, and provide guidance on compliant import patterns. Include rationale for changes.",
+            "status": "pending",
+            "testStrategy": "Peer review documentation for clarity and completeness. Validate that all new procedures are accurately described and easy to follow."
+          },
+          {
+            "id": 5,
+            "title": "Create and Test Rollback Scripts and Procedures",
+            "description": "Develop scripts and documented procedures to roll back both database and codebase changes related to import validation and smoke test integration.",
+            "dependencies": [],
+            "details": "Implement rollback mechanisms for database migrations and code changes. Document step-by-step rollback instructions for both automated and manual recovery.",
+            "status": "pending",
+            "testStrategy": "Test rollback scripts in a staging environment to ensure they restore previous states without data loss or system instability."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-06T02:45:09.125Z",
+      "updated": "2025-09-06T05:00:06.808Z",
+      "description": "Tasks for refactor context"
+    }
   }
 }

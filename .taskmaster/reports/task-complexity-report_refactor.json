@@ -1,0 +1,53 @@
+{
+	"meta": {
+		"generatedAt": "2025-09-06T03:17:38.073Z",
+		"tasksAnalyzed": 5,
+		"totalTasks": 5,
+		"analysisCount": 5,
+		"thresholdScore": 5,
+		"projectName": "Email Sync",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Refactor Imports for Ergonomics and Enforce Import Rules",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the task by detailing steps to identify all public APIs per package, define __all__ exports, configure import-linter rules precisely, develop and test the import validation script, and integrate it into CI and pre-commit hooks with documentation.",
+			"reasoning": "This task involves multiple coordinated changes across codebase structure (__init__.py), tooling configuration (import-linter), scripting (validation script), and CI integration, requiring careful dependency management and testing to avoid runtime import errors."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Enhance Database Schema with Metadata Fields and Migration",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand by specifying data types and constraints for new metadata fields, designing and implementing atomic migration scripts with backfill logic, updating automation commands, testing backup/restore, and benchmarking performance post-migration.",
+			"reasoning": "Schema migration with multiple new fields and backfilling existing data requires careful design to maintain data integrity and performance, plus automation and testing to ensure safe deployment."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Hybrid Search with FTS5 and Reciprocal Rank Fusion",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand by detailing creation of FTS5 virtual table with tokenizer setup, implementing and unit testing the RRF fusion algorithm, updating search module for hybrid modes, adding query logging, and ensuring index synchronization with triggers.",
+			"reasoning": "Combining full-text and semantic search with a fusion algorithm involves complex database setup, algorithm implementation, integration into search workflows, and ensuring real-time index consistency, demanding thorough testing and performance validation."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Enhance Timeline with UTC Normalization, Source Linking, and Filtering",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand by defining schema changes for dual timestamps and metadata, implementing ingestion logic for normalization, developing UI filters for party/source, adding iCal export functionality, and ensuring correct event ordering and filtering by UTC.",
+			"reasoning": "This task spans database schema updates, data ingestion logic, frontend UI development, and export features, requiring coordination across backend and frontend with attention to timezone correctness and user experience."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Establish Quality Assurance with Import Validation and Smoke Tests",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand by developing the import validation script, writing comprehensive smoke tests covering ingestion, search, timeline, and API imports, integrating tests into CI, documenting changes and best practices, and creating rollback procedures.",
+			"reasoning": "QA establishment involves scripting, test development across multiple system areas, CI pipeline integration, documentation, and rollback planning, all critical for maintaining system stability and developer workflow."
+		}
+	]
+}

@@ -11,9 +11,15 @@ This package provides Gmail API integration with features including:
 """
 
 from .config import GmailConfig
+
+# Deduplication
+from .deduplication.near_duplicate_detector import NearDuplicateDetector
 from .gmail_api import GmailAPI
 from .main import GmailService
 from .oauth import GmailAuth
+
+# Parsing
+from .parsing.message_deduplicator import MessageDeduplicator
 
 # EmailStorage removed - use SimpleDB directly
 
@@ -31,4 +37,8 @@ __all__ = [
     "GmailAPI",
     "GmailConfig",
     "get_gmail_service",
+    # Deduplication
+    "NearDuplicateDetector",
+    # Parsing
+    "MessageDeduplicator",
 ]

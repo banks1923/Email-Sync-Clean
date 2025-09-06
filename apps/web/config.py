@@ -1,7 +1,9 @@
 """Web UI Configuration - Centralized settings for expansion."""
 
-from pydantic import BaseSettings, Field
 from typing import Optional
+
+from pydantic import BaseSettings, Field
+
 
 class WebUISettings(BaseSettings):
     """Configuration for Web UI with future expansion in mind."""

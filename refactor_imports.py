@@ -4,14 +4,16 @@ LibCST-based import refactoring tool for Litigator Solo microservice architectur
 Performs comprehensive import transformations with precise AST manipulation.
 """
 
+import argparse
+import json
 import os
 import sys
-import json
 from pathlib import Path
-from typing import Dict, List, Set, Union, Optional
+from typing import Dict, List, Optional, Set, Union
+
 import libcst as cst
 from libcst import metadata
-import argparse
+
 
 class ImportRewriter(cst.CSTTransformer):
     """LibCST transformer for rewriting imports according to refactoring plan."""

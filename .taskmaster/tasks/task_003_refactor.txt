@@ -1,0 +1,99 @@
+# Task ID: 3
+# Title: Implement Hybrid Search with FTS5 and Reciprocal Rank Fusion
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Create a hybrid search system combining SQLite FTS5 full-text search with semantic embedding search results using Reciprocal Rank Fusion (RRF). Add query logging and ensure index synchronization.
+# Details:
+Create FTS5 virtual table content_unified_fts with specified tokenizer and columns. Implement the RRF algorithm as per provided formula to fuse keyword and semantic search results. Limit per-source top-k results before fusion. Update search module to support hybrid search mode with options for keyword_only, semantic_only, and rrf. Add query logging mechanism for analysis. Ensure triggers or mechanisms keep FTS5 index synchronized with content_unified table.
+
+# Test Strategy:
+Unit test RRF function with mock keyword and semantic results to verify scoring correctness. Integration test hybrid search end-to-end with real data, measuring latency (<500ms) and relevance improvements over semantic-only search. Verify FTS5 index updates on content changes. Validate query logs are correctly recorded.
+
+# Subtasks:
+## 1. Create and Configure FTS5 Virtual Table [pending]
+### Dependencies: None
+### Description: Define and create the FTS5 virtual table 'content_unified_fts' with the specified tokenizer and columns, ensuring it mirrors the structure required for full-text search over the unified content.
+### Details:
+Implement the FTS5 table using the appropriate CREATE VIRTUAL TABLE statement, specifying all necessary columns and tokenizer options. Ensure the table is ready for full-text queries and supports efficient indexing.
+
+## 2. Implement Reciprocal Rank Fusion (RRF) Algorithm [pending]
+### Dependencies: 3.1
+### Description: Develop the RRF algorithm to combine ranked results from FTS5 keyword search and semantic embedding search, applying the provided formula and limiting each source to top-k results before fusion.
+### Details:
+Implement the RRF scoring function as specified, ensuring it accepts two ranked lists (keyword and semantic), applies the reciprocal rank formula, and outputs a fused, re-ranked result set. Enforce per-source top-k truncation before fusion.
+
+## 3. Update Search Module to Support Hybrid Modes [pending]
+### Dependencies: 3.2
+### Description: Extend the search module to support 'keyword_only', 'semantic_only', and 'rrf' (hybrid) modes, routing queries appropriately and integrating the RRF fusion logic.
+### Details:
+Modify the search API and internal logic to accept a mode parameter, execute the correct search pipeline for each mode, and return results in a consistent format. Integrate the RRF fusion for hybrid mode.
+
+## 4. Implement Query Logging Mechanism [pending]
+### Dependencies: 3.3
+### Description: Add a robust query logging system to capture search queries, modes, timestamps, and relevant metadata for analysis and monitoring.
+### Details:
+Design and implement a logging mechanism (e.g., database table or log file) that records each search query, selected mode, user/session info, and response metadata. Ensure logs are accessible for downstream analysis.
+
+## 5. Ensure FTS5 Index Synchronization with Triggers or Mechanisms [pending]
+### Dependencies: 3.1
+### Description: Implement triggers or synchronization mechanisms to keep the FTS5 index in 'content_unified_fts' consistent with the underlying 'content_unified' table on insert, update, and delete operations.
+### Details:
+Create database triggers or equivalent logic to propagate changes from 'content_unified' to the FTS5 virtual table, ensuring no drift between the main table and the search index.
+
+## 6. Create RRF score calculation function [done]
+### Dependencies: None
+### Description: Implement the core RRF scoring function with formula: score = Σ(1 / (k + rank)) where k=60, handling duplicate document IDs across result sets
+### Details:
+<info added on 2025-09-06T04:36:10.014Z>
+The RRF score calculation function has been implemented in lib/search.py spanning lines 376 to 488. This function computes the score using the formula score = Σ(1 / (k + rank)) with k set to 60, consistent with standard RRF practice. It correctly handles duplicate document IDs by summing their scores across multiple result lists. The full hybrid_search() function now integrates this RRF scoring, merging semantic and keyword search results while properly deduplicating documents to produce a unified ranked list.
+</info added on 2025-09-06T04:36:10.014Z>
+
+## 7. Implement result merging and deduplication logic [done]
+### Dependencies: None
+### Description: Create function to merge keyword and semantic results, handle duplicate document IDs, combine scores, and sort by final RRF score
+### Details:
+
+
+## 8. Add per-source top-k limiting [pending]
+### Dependencies: None
+### Description: Implement logic to limit results per source type (emails, PDFs, etc.) to prevent dominance of one content type in final results
+### Details:
+
+
+## 9. Write comprehensive unit tests for RRF algorithm [pending]
+### Dependencies: None
+### Description: Create test cases for RRF scoring, result merging, edge cases (empty results, single source), and verify correct ranking
+### Details:
+
+
+## 10. Benchmark RRF performance vs pure semantic search [pending]
+### Dependencies: None
+### Description: Compare search latency and relevance metrics between RRF hybrid search and existing pure semantic search to validate improvements
+### Details:
+
+
+## 11. Create INSERT trigger for FTS5 synchronization [pending]
+### Dependencies: None
+### Description: Implement SQLite trigger that automatically inserts new content_unified records into content_unified_fts virtual table
+### Details:
+
+
+## 12. Create UPDATE trigger for FTS5 synchronization [pending]
+### Dependencies: None
+### Description: Implement SQLite trigger that updates content_unified_fts when content_unified records are modified
+### Details:
+
+
+## 13. Create DELETE trigger for FTS5 synchronization [pending]
+### Dependencies: None
+### Description: Implement SQLite trigger that removes records from content_unified_fts when content_unified records are deleted
+### Details:
+
+
+## 14. Test and verify FTS5 trigger operations and index consistency [pending]
+### Dependencies: None
+### Description: Write tests to verify triggers fire correctly on INSERT/UPDATE/DELETE and that FTS5 index remains synchronized with source table
+### Details:
+
+

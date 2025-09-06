@@ -4,13 +4,14 @@ Detailed import analysis for finding all import dependencies.
 Creates comprehensive mapping of what imports what.
 """
 
+import ast
+import json
 import os
 import re
-import ast
-from pathlib import Path
 from collections import defaultdict, deque
+from pathlib import Path
 from typing import Dict, List, Set, Tuple
-import json
+
 
 def analyze_file_imports(file_path: Path) -> Dict:
     """Extract all import information from a file."""

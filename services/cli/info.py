@@ -4,9 +4,9 @@ Info Handler - Fixed version using clean services
 Handles: info, pdf-stats, transcription-stats commands
 """
 
+import sqlite3
 import sys
 from pathlib import Path
-import sqlite3
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -14,10 +14,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 # Import new clean services
 from lib.db import SimpleDB
 from lib.exceptions import (
-    ValidationError,
-    VectorStoreError,
     EnrichmentError,
     SearchError,
+    ValidationError,
+    VectorStoreError,
 )
 
 # Import service locator for backward compatibility

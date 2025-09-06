@@ -19,8 +19,9 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from lib.timeline.database import TimelineDatabase
-from lib.timeline.main import TimelineService
+from lib import TimelineService, get_timeline_service
+
+# Note: TimelineDatabase is not exposed in public API, using service instead
 
 
 class TestTimelineCore:
@@ -34,9 +35,8 @@ class TestTimelineCore:
         """
         service = TimelineService(db_path=isolated_timeline_db_path)
 
-        # Verify tables were created
-        db = TimelineDatabase(db_path=isolated_timeline_db_path)
-        tables = db.fetch("SELECT name FROM sqlite_master WHERE type='table'")
+        # Verify tables were created through service's db
+        tables = service.db.fetch("SELECT name FROM sqlite_master WHERE type='table'")
         table_names = [t["name"] for t in tables]
 
         assert "timeline_events" in table_names

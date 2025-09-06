@@ -4,17 +4,19 @@ Comprehensive System Diagnostics - Surface ALL Issues in One Shot
 Eliminates whack-a-mole debugging by checking everything systematically.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from loguru import logger
-from typing import Dict, List, Tuple, Any
 import json
 import time
 import traceback
 from collections import defaultdict
+from typing import Any, Dict, List, Tuple
+
+from loguru import logger
 
 # Configure diagnostic logging
 logger.remove()
@@ -27,12 +29,14 @@ logger.add(
     backtrace=True
 )
 
+from config.settings import settings
+
 # Import all components to test
 from lib.db import SimpleDB
 from lib.embeddings import get_embedding_service
+from lib.search import find_literal, hybrid_search, search
 from lib.vector_store import get_vector_store
-from lib.search import search, hybrid_search, find_literal
-from config.settings import settings
+
 # Note: Import errors will be caught and reported
 
 try:
@@ -202,7 +206,7 @@ class SystemDiagnostics:
                     )
                     
             # Check vector dimensions
-            if vector_count > 0:
+            if vector_count is not None and vector_count > 0:
                 sample = client.retrieve(
                     collection_name='vectors_v2',
                     ids=[vectors[0].id],

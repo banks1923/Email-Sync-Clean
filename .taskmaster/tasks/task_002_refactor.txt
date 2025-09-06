@@ -1,0 +1,46 @@
+# Task ID: 2
+# Title: Enhance Database Schema with Metadata Fields and Migration
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Add new metadata fields to the content_unified table to track embedding models, pipeline revisions, content hashes, OCR engine, validation status, quality score, JSON metadata, and embedding generation status. Create migration scripts and verify schema integrity.
+# Details:
+Implement a migration script that adds the specified columns (sha256, emb_model, pipeline_rev, ocr_engine, validation_status, quality_score, metadata, embedding_generated) to content_unified. Ensure existing records are backfilled with sensible defaults. Update Makefile with db.migrate and db.verify commands. Test backup and restore cycles to prevent data loss. Use atomic transactions to ensure migration safety.
+
+# Test Strategy:
+Run migration on a test database and verify all new columns exist with correct types and constraints. Confirm no performance degradation by benchmarking typical queries before and after migration. Validate backup and restore processes work correctly post-migration. Write unit tests for schema validation.
+
+# Subtasks:
+## 1. Design Metadata Fields for content_unified Table [pending]
+### Dependencies: None
+### Description: Specify the data types, constraints, and default values for new metadata columns: sha256, emb_model, pipeline_rev, ocr_engine, validation_status, quality_score, metadata (JSON), and embedding_generated.
+### Details:
+Consult stakeholders to finalize field definitions and ensure compatibility with existing data models. Document schema changes for future reference.
+<info added on 2025-09-06T04:26:26.430Z>
+Added the metadata column to the content_unified table with a JSON default value of '{}'. The column was successfully added using an ALTER TABLE statement and initialized with basic metadata for all existing records. This update resolves the keyword search errors caused by the previously missing metadata column. The implementation was completed in the script located at tools/diagnostics/master_fix.py.
+</info added on 2025-09-06T04:26:26.430Z>
+
+## 2. Implement Migration Script to Add Metadata Columns [pending]
+### Dependencies: 2.1
+### Description: Develop a migration script that atomically adds the specified metadata columns to the content_unified table and backfills existing records with sensible defaults.
+### Details:
+Use a migration framework (e.g., Alembic, Liquibase) to ensure transactional safety. Script should handle schema changes and initial data population.
+
+## 3. Update Makefile with Migration and Verification Commands [pending]
+### Dependencies: 2.2
+### Description: Add db.migrate and db.verify targets to the Makefile to automate schema migration and integrity verification processes.
+### Details:
+Ensure commands invoke migration scripts and perform post-migration checks. Document usage in project README.
+
+## 4. Test Backup and Restore Cycles for Data Safety [pending]
+### Dependencies: 2.2
+### Description: Perform backup and restore operations before and after migration to ensure no data loss and full recoverability.
+### Details:
+Use pg_dump and pg_restore or equivalent tools to validate backup integrity and restoration of migrated schema and data.
+
+## 5. Benchmark and Validate Schema Integrity Post-Migration [pending]
+### Dependencies: 2.3, 2.4
+### Description: Run performance benchmarks and integrity checks on the migrated schema to ensure no degradation and correct operation.
+### Details:
+Test typical queries, validate new columns, and run unit tests for schema validation. Address any performance or integrity issues found.
+

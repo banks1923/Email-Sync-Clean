@@ -10,8 +10,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from email_parsing.message_deduplicator import MessageDeduplicator
-from lib.db import SimpleDB
+from gmail import MessageDeduplicator
+from lib import SimpleDB
 
 
 def parse_all_emails_file(file_path: str):

@@ -12,7 +12,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from shared.ingestion.simple_upload_processor import get_upload_processor
+from services.pdf.wiring import get_pdf_service
 
 
 def upload_pdf(pdf_path, source="upload"):
@@ -23,8 +23,8 @@ def upload_pdf(pdf_path, source="upload"):
 
     try:
         # Process directly without pipeline
-        processor = get_upload_processor()
-        result = processor.process_file(Path(pdf_path), source=source)
+        pdf_service = get_pdf_service()
+        result = pdf_service.process_pdf(pdf_path, source=source)
 
         if not result["success"]:
             print(f"❌ Processing error: {result['error']}")
@@ -49,8 +49,25 @@ def upload_directory(dir_path, limit=None):
     print("📋 Using direct processing")
 
     try:
-        processor = get_upload_processor()
-        result = processor.process_directory(Path(dir_path), limit=limit)
+        pdf_service = get_pdf_service()
+        # Process each PDF in the directory
+        pdf_files = list(Path(dir_path).glob("*.pdf"))[:limit] if limit else list(Path(dir_path).glob("*.pdf"))
+        success_count = 0
+        failed_files = []
+        
+        for pdf_file in pdf_files:
+            result = pdf_service.process_pdf(str(pdf_file), source="upload")
+            if result["success"]:
+                success_count += 1
+            else:
+                failed_files.append({"file": pdf_file.name, "error": result.get("error", "Unknown error")})
+        
+        result = {
+            "success": True,
+            "success_count": success_count,
+            "total_files": len(pdf_files),
+            "failed_files": failed_files
+        }
 
         if result["success"]:
             print(f"✅ Processed {result['success_count']}/{result['total_files']} files")

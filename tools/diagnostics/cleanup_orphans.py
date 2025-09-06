@@ -4,15 +4,17 @@ Clean up ALL orphaned vectors and fix data alignment.
 Nuclear option - removes all vectors without database records.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from loguru import logger
-from lib.db import SimpleDB
-from config.settings import settings
 from qdrant_client import QdrantClient
+
+from config.settings import settings
+from lib.db import SimpleDB
 
 # Configure logging
 logger.remove()
@@ -155,7 +157,7 @@ def verify_system():
     
     try:
         from lib.search import hybrid_search
-        
+
         # Test search
         results = hybrid_search("test", limit=1)
         logger.success(f"✅ Search works - returned {len(results)} results")

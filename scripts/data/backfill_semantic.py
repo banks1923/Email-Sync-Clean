@@ -12,7 +12,7 @@ from loguru import logger
 
 from lib.db import SimpleDB
 from lib.pipelines import get_semantic_pipeline
-from summarization import get_document_summarizer
+from services.summarization import get_document_summarizer
 
 
 def backfill_semantic(

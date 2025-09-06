@@ -3,12 +3,12 @@
 Stoneman Case Analysis - Quick Stats & Exhibits
 Generate litigation exhibits and statistical analysis
 """
-import sqlite3
+import json
 import re
-from pathlib import Path
+import sqlite3
 from collections import Counter, defaultdict
 from datetime import datetime
-import json
+from pathlib import Path
 
 STONEMAN_DIR = Path("/Users/jim/Projects/Litigator_solo/data/Stoneman_dispute")
 

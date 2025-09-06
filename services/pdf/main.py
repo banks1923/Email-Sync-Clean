@@ -24,8 +24,8 @@ from loguru import logger
 # Type-only imports to avoid runtime coupling
 if TYPE_CHECKING:  # pragma: no cover
     from lib.db import SimpleDB
-    from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
-    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
+    from services.pdf.pdf_processor_enhanced import EnhancedPDFProcessor
+    from services.pdf.pdf_storage_enhanced import EnhancedPDFStorage
 
 # Resource protection constants
 MAX_CONCURRENT_UPLOADS = 10  # Maximum concurrent upload operations
@@ -428,7 +428,7 @@ class PDFService:
         Enable idempotent writes with SHA256 deduplication.
         """
         try:
-            from pdf.pdf_idempotent_writer import make_pdf_write_idempotent
+            from services.pdf.pdf_idempotent_writer import make_pdf_write_idempotent
 
             make_pdf_write_idempotent(self)
             logger.info("✅ Idempotent writes enabled with SHA256 deduplication")

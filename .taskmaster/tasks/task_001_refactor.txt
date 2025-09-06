@@ -1,0 +1,78 @@
+# Task ID: 1
+# Title: Refactor Imports for Ergonomics and Enforce Import Rules
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Simplify all public API imports to a maximum of two levels by adding __all__ exports in package __init__.py files, configure import-linter to enforce import depth rules, and create a validation script for CI/pre-commit to prevent deep imports.
+# Details:
+Modify __init__.py files in all relevant packages (e.g., lib, services, infrastructure) to re-export public APIs using __all__. Configure import-linter with the provided rules to forbid imports deeper than two levels. Develop a Python script that scans the codebase for import violations and fails if any deep imports are found. Integrate this script into CI and pre-commit hooks. Update pyproject.toml to include import-linter configuration.
+
+# Test Strategy:
+Unit test the validation script with sample files containing allowed and forbidden imports. Run import-linter manually and via CI to ensure no deep imports pass. Verify that all public APIs can be imported with two-level imports only. Confirm no runtime import errors occur after refactor.
+
+# Subtasks:
+## 1. Refactor __init__.py Files to Define Public APIs Using __all__ [done]
+### Dependencies: None
+### Description: Update all relevant package __init__.py files (e.g., lib, services, infrastructure) to explicitly define and re-export the public API using the __all__ variable, ensuring only intended modules and objects are exposed for import.
+### Details:
+Review each package's structure, identify public modules and objects, and add them to the __all__ list in __init__.py. Ensure internal implementations remain private and are not included in __all__. Maintain consistency and document the public API for each package.
+
+## 2. Configure import-linter to Enforce Import Depth Rules [done]
+### Dependencies: 1.1
+### Description: Set up import-linter with rules that restrict imports to a maximum of two levels within the codebase, preventing deep imports that bypass the defined public API.
+### Details:
+Define import-linter contracts in the configuration to forbid imports deeper than two levels. Update pyproject.toml or the relevant configuration file to include these rules. Document the configuration for team reference.
+
+## 3. Develop Python Validation Script for Import Depth Enforcement [done]
+### Dependencies: 1.2
+### Description: Create a Python script that scans the codebase for import statements violating the two-level import rule and fails if any violations are found.
+### Details:
+Implement logic to parse Python files, analyze import statements, and check for imports exceeding two levels. Output detailed error messages for violations. Ensure the script is efficient and maintainable.
+
+## 4. Integrate Validation Script into CI and Pre-commit Hooks [done]
+### Dependencies: 1.3
+### Description: Add the import validation script to the project's CI pipeline and pre-commit hooks to automatically block deep imports during development and continuous integration.
+### Details:
+Update CI configuration files (e.g., GitHub Actions, GitLab CI) and pre-commit hook definitions to run the validation script on every commit and pull request. Ensure failures block merges and commits with import violations.
+
+## 5. Verify and Document Import Refactor and Enforcement [done]
+### Dependencies: 1.4
+### Description: Test the refactored import structure, confirm no runtime import errors, and update project documentation to reflect the new import patterns and enforcement mechanisms.
+### Details:
+Manually and automatically test that all public APIs are accessible via two-level imports and that no runtime errors occur after refactoring. Update README.md and internal docs to describe the import rules, usage of __all__, and enforcement tools.
+
+## 6. Update lib/__init__.py with public API exports [done]
+### Dependencies: None
+### Description: Add re-exports for SimpleDB, search, semantic_search, keyword_search, get_embedding_service, get_vector_store, get_semantic_pipeline to lib/__init__.py with proper __all__ definition
+### Details:
+
+
+## 7. Update services/__init__.py with service exports [done]
+### Dependencies: None
+### Description: Add re-exports for PDFService, EntityService, and other service classes from services/__init__.py with proper __all__ definition
+### Details:
+
+
+## 8. Update infrastructure/__init__.py with infrastructure exports [done]
+### Dependencies: None
+### Description: Add re-exports for DocumentChunker, DocumentChunk, QualityScoreCalculator, and pipeline functions from infrastructure/__init__.py with proper __all__ definition
+### Details:
+
+
+## 9. Update gmail/__init__.py with Gmail service exports [done]
+### Dependencies: None
+### Description: Add re-exports for GmailService, NearDuplicateDetector, MessageDeduplicator from gmail/__init__.py with proper __all__ definition
+### Details:
+
+
+## 10. Fix broken imports in CLI and Gmail modules [pending]
+### Dependencies: 1.1
+### Description: Remove or fix broken import statements that reference non-existent modules to prevent runtime crashes
+### Details:
+Fix the following broken imports:
+1. services/cli/upload.py:15 - Remove 'from lib.shared.ingestion.simple_upload_processor import get_upload_processor' (module doesn't exist)
+2. services/cli/entity.py:18 - Remove 'from lib.shared.processors.unified_entity_processor import UnifiedEntityProcessor' (module doesn't exist)  
+3. gmail/main.py:13,473 - Remove 'from lib.shared.processors.thread_manager import' (module doesn't exist)
+
+These imports reference modules that were likely removed during refactoring. Either remove the imports and related functionality, or implement the missing modules if the functionality is still needed.
+

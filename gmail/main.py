@@ -5,22 +5,35 @@ from loguru import logger
 
 from config.settings import get_db_path
 from lib.db import SimpleDB
-from summarization import get_document_summarizer
+from services.summarization import get_document_summarizer
 
 # Import advanced email parsing modules
 try:
-    from shared.email.email_cleaner import EmailCleaner
-    from shared.processors.thread_manager import (
-        ThreadService,
-        deduplicate_messages,
-        extract_thread_messages,
-    )
+    from gmail.utils.email_cleaner import EmailCleaner
 
+    # Thread management functionality will be handled locally
+    # since the shared processor module doesn't exist
+    
     ADVANCED_PARSING_AVAILABLE = True
     logger.info("Advanced email parsing modules loaded")
 except ImportError:
     ADVANCED_PARSING_AVAILABLE = False
     logger.warning("Advanced email parsing not available - using legacy processing")
+
+# Simple deduplication function to replace missing thread_manager
+def deduplicate_messages(messages, similarity_threshold=0.95):
+    """Simple deduplication based on content hash."""
+    seen = set()
+    unique = []
+    for msg in messages:
+        # Create hash from content for deduplication
+        content_hash = hashlib.sha256(
+            str(msg.get("content", "")).encode()
+        ).hexdigest()
+        if content_hash not in seen:
+            seen.add(content_hash)
+            unique.append(msg)
+    return unique
 
 # Legacy EmailThreadProcessor removed - using advanced parsing only
 
@@ -470,9 +483,13 @@ class GmailService:
                 # Convert QuotedMessage objects to dictionaries for deduplication
                 message_dicts = []
                 for msg in all_messages:
-                    from shared.processors.thread_manager import quoted_message_to_dict
-
-                    message_dicts.append(quoted_message_to_dict(msg))
+                    # Convert to dict directly since thread_manager doesn't exist
+                    msg_dict = {
+                        "content": msg.content if hasattr(msg, 'content') else str(msg),
+                        "sender": msg.sender if hasattr(msg, 'sender') else None,
+                        "date": msg.date if hasattr(msg, 'date') else None,
+                    }
+                    message_dicts.append(msg_dict)
 
                 # Deduplicate messages (preserve evidence while removing exact duplicates)
                 unique_message_dicts = deduplicate_messages(

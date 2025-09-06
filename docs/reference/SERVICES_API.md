@@ -79,14 +79,14 @@ filtered = service.filter_messages_by_sender(messages, sender_filter)
 
 ### Quick Start
 ```python
-# Recommended: Use SimpleUploadProcessor for file uploads
-from shared.ingestion.simple_upload_processor import get_upload_processor
+# Recommended: Use PDFService for file uploads
+from services.pdf.wiring import get_pdf_service
 
-processor = get_upload_processor()
-result = processor.process_file(Path("document.pdf"))  # Handles all file types
+pdf_service = get_pdf_service()
+result = pdf_service.process_pdf("document.pdf")  # Handles PDF files
 
 # Advanced: Direct PDF service usage
-from pdf.wiring import build_pdf_service
+from services.pdf.wiring import build_pdf_service
 
 service = build_pdf_service()
 result = service.upload_single_pdf("document.pdf")  # Auto-detects OCR need

@@ -11,12 +11,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import numpy as np
+import pytest
+
 from lib.db import SimpleDB
 from lib.embeddings import get_embedding_service
+from lib.search import hybrid_search, search
 from lib.vector_store import get_vector_store
-from lib.search import search, hybrid_search
-import pytest
-import numpy as np
 
 
 class TestRealIntegration:

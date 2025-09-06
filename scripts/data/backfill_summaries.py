@@ -11,7 +11,7 @@ import time
 from loguru import logger
 
 from lib.db import SimpleDB
-from summarization import get_document_summarizer
+from services.summarization import get_document_summarizer
 
 
 def backfill_summaries(batch_size: int = 50, source_type: str = None, limit: int = None):

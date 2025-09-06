@@ -1,0 +1,58 @@
+LITIGATOR SOLO REFACTORING SUMMARY
+==================================
+
+Files moved: 54
+Import changes: 51
+
+Import Changes:
+  - from entity.main -> from services.entity.main
+  - from summarization -> from services.summarization
+  - from entity.main -> from services.entity.main
+  - from pdf.wiring -> from services.pdf.wiring
+  - from entity.main -> from services.entity.main
+  - from summarization.main -> from services.summarization.main
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from pdf.wiring -> from services.pdf.wiring
+  - from pdf.wiring -> from services.pdf.wiring
+  - from deduplication.near_duplicate_detector -> from gmail.deduplication.near_duplicate_detector
+  - from summarization.engine -> from services.summarization.engine
+  - from pdf.wiring -> from services.pdf.wiring
+  - from summarization.engine -> from services.summarization.engine
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from email_parsing.message_deduplicator -> from gmail.parsing.message_deduplicator
+  - from summarization -> from services.summarization
+  - from summarization -> from services.summarization
+  - from entity.main -> from services.entity.main
+  - from entity.main -> from services.entity.main
+  - from shared.utils.error_handler -> from lib.utils.error_handler
+  - from shared.utils.retry_helper -> from lib.utils.retry_helper
+  - from summarization -> from services.summarization
+  - from shared.email.email_cleaner -> from gmail.utils.email_cleaner
+  - from shared.processors.thread_manager -> from lib.shared.processors.thread_manager
+  - from shared.processors.thread_manager -> from lib.shared.processors.thread_manager
+  - from pdf.pdf_processor_enhanced -> from services.pdf.pdf_processor_enhanced
+  - from pdf.pdf_storage_enhanced -> from services.pdf.pdf_storage_enhanced
+  - from pdf.pdf_idempotent_writer -> from services.pdf.pdf_idempotent_writer
+  - from pdf.main -> from services.pdf.main
+  - from pdf.pdf_processor_enhanced -> from services.pdf.pdf_processor_enhanced
+  - from pdf.pdf_storage_enhanced -> from services.pdf.pdf_storage_enhanced
+  - from pdf.text_only_processor -> from services.pdf.text_only_processor
+  - from pdf.pdf_validator -> from services.pdf.pdf_validator
+  - from pdf.database_health_monitor -> from services.pdf.database_health_monitor
+  - from pdf.database_error_recovery -> from services.pdf.database_error_recovery
+  - from summarization -> from services.summarization
+  - from pdf.pdf_health -> from services.pdf.pdf_health
+  - from pdf.main -> from services.pdf.main
+  - from entity.main -> from services.entity.main
+  - from summarization -> from services.summarization
+  - from shared.ingestion.simple_upload_processor -> from lib.shared.ingestion.simple_upload_processor
+  - from shared.processors.unified_entity_processor -> from lib.shared.processors.unified_entity_processor
+  - from cli.search -> from services.cli.search
+  - from cli.embed -> from services.cli.embed
+  - from cli.db -> from services.cli.db
+  - from cli.index -> from services.cli.index
+  - from cli.admin -> from services.cli.admin
+  - from cli.view -> from services.cli.view

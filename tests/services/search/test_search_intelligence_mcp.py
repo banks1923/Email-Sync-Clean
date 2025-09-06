@@ -9,7 +9,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from infrastructure.mcp_servers.search_intelligence_mcp import (
+from infrastructure import (
     search_cluster,
     search_entities,
     search_process_all,

@@ -3,8 +3,10 @@ Tests for EmbeddingService.
 """
 
 from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
+
 from lib.embeddings import EmbeddingService, get_embedding_service
 
 

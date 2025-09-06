@@ -13,7 +13,7 @@ Architecture:
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pdf.main import PDFService
+    from services.pdf.main import PDFService
 
 
 def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
@@ -21,8 +21,8 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     Build PDF service with lazy-loaded providers.
     """
     from lib.db import SimpleDB
-    from pdf.pdf_processor_enhanced import EnhancedPDFProcessor
-    from pdf.pdf_storage_enhanced import EnhancedPDFStorage
+    from services.pdf.pdf_processor_enhanced import EnhancedPDFProcessor
+    from services.pdf.pdf_storage_enhanced import EnhancedPDFStorage
 
     # Construct core instances once; providers capture these by closure
     db = SimpleDB(db_path)
@@ -32,26 +32,26 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     # Lazy provider factories (imports only on first call)
     def make_ocr():
         # Text-only processor - OCR handled externally
-        from pdf.text_only_processor import TextOnlyProcessor
+        from services.pdf.text_only_processor import TextOnlyProcessor
         return TextOnlyProcessor()
 
     def make_validator():
-        from pdf.pdf_validator import PDFValidator
+        from services.pdf.pdf_validator import PDFValidator
 
         return PDFValidator()
 
     def make_health_monitor():
-        from pdf.database_health_monitor import DatabaseHealthMonitor
+        from services.pdf.database_health_monitor import DatabaseHealthMonitor
 
         return DatabaseHealthMonitor(db_path)
 
     def make_error_recovery():
-        from pdf.database_error_recovery import DatabaseErrorRecovery
+        from services.pdf.database_error_recovery import DatabaseErrorRecovery
 
         return DatabaseErrorRecovery(db_path)
 
     def make_summarizer():
-        from summarization import get_document_summarizer
+        from services.summarization import get_document_summarizer
 
         return get_document_summarizer()
 
@@ -59,7 +59,7 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
 
     def make_health_manager():
         """Special case: needs other components assembled. Reuse core instances."""
-        from pdf.pdf_health import PDFHealthManager
+        from services.pdf.pdf_health import PDFHealthManager
 
         try:
             from loguru import logger  # optional dependency
@@ -84,7 +84,7 @@ def build_pdf_service(db_path: str = "data/emails.db") -> "PDFService":
     }
 
     # Create facade with only 3 core dependencies + providers
-    from pdf.main import PDFService
+    from services.pdf.main import PDFService
 
     return PDFService(
         db=db,

@@ -49,7 +49,7 @@ def test_mcp_tools_list():
     Validate search MCP tool names exist.
     """
     print("🧪 Testing MCP tool registration...")
-    from infrastructure.mcp_servers.search_intelligence_mcp import SearchIntelligenceMCPServer
+    from infrastructure import SearchIntelligenceMCPServer
     server = SearchIntelligenceMCPServer()
     # Access tools via the server's _tools dict or call list_tools method
     try:

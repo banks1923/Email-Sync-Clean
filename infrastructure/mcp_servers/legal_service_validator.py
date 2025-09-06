@@ -52,7 +52,7 @@ class LegalServiceValidator:
             return self._validation_cache['entity_service']
             
         try:
-            from entity.main import EntityService
+            from services import EntityService
 
             # Test instantiation
             service = EntityService()
@@ -107,7 +107,7 @@ class LegalServiceValidator:
             return self._validation_cache['timeline_service']
             
         try:
-            from lib.timeline.main import TimelineService
+            from lib import TimelineService
 
             # Test instantiation
             service = TimelineService()

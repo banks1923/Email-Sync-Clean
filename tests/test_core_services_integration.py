@@ -285,10 +285,9 @@ class TestServiceIntegration:
         """
         from search_intelligence import basic_search as search
 
-        from entity.main import EntityService
         from lib.db import SimpleDB
         from lib.embeddings import EmbeddingService
-        from summarization.main import DocumentSummarizer
+        from services import DocumentSummarizer, EntityService
 
         return {
             "embeddings": EmbeddingService(),

@@ -1,5 +1,6 @@
-import re
 import os
+import re
+
 
 def generate_command_reference():
     """

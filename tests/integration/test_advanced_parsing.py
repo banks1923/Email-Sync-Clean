@@ -94,7 +94,7 @@ def test_advanced_parsing():
             all_messages = extract_thread_messages(thread_emails)
 
             # Convert to dictionaries for deduplication testing
-            from email_parsing.message_deduplicator import quoted_message_to_dict
+            from gmail import quoted_message_to_dict
 
             message_dicts = [quoted_message_to_dict(msg) for msg in all_messages]
             unique_message_dicts = deduplicate_messages(message_dicts, similarity_threshold=0.95)

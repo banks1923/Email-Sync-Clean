@@ -4,15 +4,18 @@ Fix ALL System Issues - One-Shot Solution
 Addresses all 9 errors found by diagnostics.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from loguru import logger
-from lib.db import SimpleDB
-from config.settings import settings
 import sqlite3
+
+from loguru import logger
+
+from config.settings import settings
+from lib.db import SimpleDB
 
 # Configure logging
 logger.remove()
@@ -157,6 +160,7 @@ def fix_vector_alignment():
     
     try:
         from qdrant_client import QdrantClient
+
         from lib.embeddings import get_embedding_service
         
         client = QdrantClient(host="localhost", port=6333)

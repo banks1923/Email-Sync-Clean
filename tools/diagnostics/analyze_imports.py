@@ -4,14 +4,15 @@ Comprehensive import analysis for Litigator_solo refactoring.
 Extracts all imports, maps dependencies, and identifies refactoring needs.
 """
 
+import ast
+import json
 import os
 import re
-import ast
 import sys
-from pathlib import Path
 from collections import defaultdict, deque
-from typing import Dict, List, Set, Tuple, Optional
-import json
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
 
 class ImportAnalyzer:
     def __init__(self, project_root: str):
